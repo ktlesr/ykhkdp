@@ -18,20 +18,31 @@ export function EylemFormu({
   children,
   className,
   surum,
+  id,
+  onSonuc,
 }: {
   eylem: (onceki: EylemSonucu | null, form: FormData) => Promise<EylemSonucu>;
   children: ReactNode;
   className?: string;
   surum?: string;
+  /** Portal'a taşınan butonlar `form="<id>"` ile bu forma bağlanır. */
+  id?: string;
+  /** Her sonuçta çağrılır — üstteki katmanı kapatmak için. Hata mesajı
+   *  formun içinde gösterilir; katman açık kalırsa kullanıcı onu göremez. */
+  onSonuc?: (sonuc: EylemSonucu) => void;
 }) {
   const [durum, gonder] = useActionState(eylem, null);
 
   useEffect(() => {
-    if (durum?.ok) kayitSatiri(durum.mesaj, surum);
+    if (!durum) return;
+    if (durum.ok) kayitSatiri(durum.mesaj, surum);
+    onSonuc?.(durum);
+    // onSonuc kasten bağımlılık değil: her render'da yeni kapanış üretilebiliyor.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [durum, surum]);
 
   return (
-    <form action={gonder} className={className}>
+    <form id={id} action={gonder} className={className}>
       {durum && !durum.ok && (
         <div
           role="alert"
@@ -49,10 +60,13 @@ export function Gonder({
   children,
   varyant = "dolu",
   className,
+  form,
 }: {
   children: ReactNode;
   varyant?: "dolu" | "cizgi" | "amber";
   className?: string;
+  /** Buton portal içindeyse formun id'si — DOM'da form dışında kalır. */
+  form?: string;
 }) {
   const { pending } = useFormStatus();
   const stil = {
@@ -64,6 +78,7 @@ export function Gonder({
   return (
     <button
       type="submit"
+      form={form}
       disabled={pending}
       className={cn(
         "min-h-11 cursor-pointer border px-[13px] py-[9px] font-mono text-[10.5px] uppercase tracking-[.1em]",

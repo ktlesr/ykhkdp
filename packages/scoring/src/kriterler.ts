@@ -21,16 +21,74 @@ export type Kriter = (typeof KRITERLER)[number];
 
 export const KRITER_ETIKET: Record<Kriter, string> = {
   plan_uyumu: "Üst ölçekli plan uyumu",
-  yerel_potansiyel: "Yerel kaynak ve girdi potansiyeli",
+  yerel_potansiyel: "Yerel kaynak, girdi ve hammadde potansiyeli",
   pazar_talep: "Pazar ve talep",
-  deger_zinciri: "Değer zinciri ve ekosistem tamamlayıcılığı",
+  deger_zinciri: "Mevcut yerel değer zinciri ve ekosistem tamamlayıcılığı",
   istihdam_katma_deger: "İstihdam ve katma değer etkisi",
-  uygulanabilirlik: "Uygulanabilirlik — arazi, enerji, altyapı, işgücü",
+  uygulanabilirlik: "Yerel uygulanabilirlik — arazi, enerji, altyapı, işgücü",
   yatirimci_ilgisi: "Yatırımcı ilgisi ve gerçekleşme olasılığı",
   surdurulebilirlik: "Çevresel ve sosyal sürdürülebilirlik",
 };
 
+/**
+ * Kriter grupları.
+ *
+ * Programın adı Yerel Kalkınma Hamlesi'dir: bir yatırım konusunun asıl
+ * gerekçesi "bu konuyu neden BU ilde/ilçede yapıyoruz" sorusunun cevabıdır.
+ * `yerellik` grubu bu soruyu cevaplayan üç kriteri toplar ve toplam ağırlığın
+ * en büyük payını taşır — bu bir kalibrasyon tercihi değil, ürün kuralıdır.
+ */
+export const GRUPLAR = ["yerellik", "etki", "gerceklesme", "uyum"] as const;
+export type Grup = (typeof GRUPLAR)[number];
+
+export const GRUP_ETIKET: Record<Grup, string> = {
+  yerellik: "Neden burada?",
+  etki: "Ne üretir?",
+  gerceklesme: "Gerçekleşir mi?",
+  uyum: "Politikayla uyum",
+};
+
+export const GRUP_ACIKLAMA: Record<Grup, string> = {
+  yerellik:
+    "Konunun bu ile ve ilçeye bağlanma gerekçesi: yerel kaynak ve girdi, mevcut değer zinciri, " +
+    "arazi-enerji-altyapı-işgücü donanımı. Aynı konu başka bir ilde yapılabiliyorsa bu grup düşer.",
+  etki: "Yatırımın ilde ürettiği istihdam, katma değer ve çevresel-sosyal sonuç.",
+  gerceklesme: "Pazarın ve yatırımcı ilgisinin konuyu gerçekten hayata geçirme olasılığı.",
+  uyum: "Üst ölçekli plan ve program hedefleriyle uyum.",
+};
+
+export const KRITER_GRUBU: Record<Kriter, Grup> = {
+  yerel_potansiyel: "yerellik",
+  deger_zinciri: "yerellik",
+  uygulanabilirlik: "yerellik",
+  istihdam_katma_deger: "etki",
+  surdurulebilirlik: "etki",
+  pazar_talep: "gerceklesme",
+  yatirimci_ilgisi: "gerceklesme",
+  plan_uyumu: "uyum",
+};
+
+/**
+ * "Neden burada?" grubunun toplam ağırlıkta taşıması gereken en düşük pay.
+ * Hiçbir ajans kalibrasyonu bunun altına inemez; `agirlikSetiGecerli()` reddeder.
+ * Sürümlü parametre değil, ürün kuralıdır — bu yüzden ağırlık setinde değil,
+ * kriter modelinde durur.
+ */
+export const YERELLIK_TABANI = 0.4;
+
 export type Agirliklar = Record<Kriter, number>;
+
+export function grupAgirligi(agirliklar: Agirliklar, grup: Grup): number {
+  return KRITERLER.filter((k) => KRITER_GRUBU[k] === grup).reduce((t, k) => t + agirliklar[k], 0);
+}
+
+export function gruplaraGore(agirliklar: Agirliklar): Array<{ grup: Grup; agirlik: number; kriterler: Kriter[] }> {
+  return GRUPLAR.map((grup) => ({
+    grup,
+    agirlik: grupAgirligi(agirliklar, grup),
+    kriterler: KRITERLER.filter((k) => KRITER_GRUBU[k] === grup),
+  }));
+}
 
 /**
  * Sürümlü ağırlık kaydı. Üretimde `packages/database`'ten gelir; buradaki
@@ -55,14 +113,18 @@ export const TR33_2027_V1: AgirlikSeti = {
   ajans: "TR33",
   donem: "2027",
   agirliklar: {
-    plan_uyumu: 0.16,
-    yerel_potansiyel: 0.16,
-    pazar_talep: 0.14,
-    deger_zinciri: 0.12,
-    istihdam_katma_deger: 0.12,
+    // yerellik · %44 — "neden burada?" en büyük pay
+    yerel_potansiyel: 0.18,
+    deger_zinciri: 0.14,
     uygulanabilirlik: 0.12,
-    yatirimci_ilgisi: 0.1,
+    // etki · %24
+    istihdam_katma_deger: 0.16,
     surdurulebilirlik: 0.08,
+    // gerçekleşme · %20
+    pazar_talep: 0.12,
+    yatirimci_ilgisi: 0.08,
+    // uyum · %12
+    plan_uyumu: 0.12,
   },
   devamlilikPayi: 5,
   kanitEsigi: 55,
@@ -83,6 +145,22 @@ export function agirlikSetiGecerli(set: AgirlikSeti): { gecerli: boolean; sebep?
   if (set.slotSayisi < 1) return { gecerli: false, sebep: "Slot sayısı en az 1 olmalı." };
   if (set.kanitEsigi < 0 || set.kanitEsigi > 100) {
     return { gecerli: false, sebep: "Kanıt eşiği 0–100 aralığında olmalı." };
+  }
+
+  // Ürün kuralı: "neden burada?" en büyük payı taşır.
+  const yerellik = grupAgirligi(set.agirliklar, "yerellik");
+  if (yerellik + 1e-9 < YERELLIK_TABANI) {
+    return {
+      gecerli: false,
+      sebep:
+        `“Neden burada?” grubunun payı %${(yerellik * 100).toFixed(0)} — taban %${YERELLIK_TABANI * 100}. ` +
+        "Yerel Kalkınma Hamlesi'nde bir konunun asıl gerekçesi o ile bağlanma nedenidir; " +
+        "bu payın altına inen ağırlık seti kullanılamaz.",
+    };
+  }
+  const enBuyuk = GRUPLAR.map((g) => grupAgirligi(set.agirliklar, g)).reduce((a, b) => Math.max(a, b));
+  if (yerellik < enBuyuk) {
+    return { gecerli: false, sebep: "“Neden burada?” grubu en büyük ağırlığa sahip olmalı." };
   }
   return { gecerli: true };
 }

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { adayDetay, adayTabanPuani, donemGetir } from "@ykh/database";
 import { DOGRULAMA_ETIKET, epistemik, type DogrulamaDurumu } from "@ykh/domain";
-import { KRITER_ETIKET, type Kriter } from "@ykh/scoring";
+import { GRUP_ACIKLAMA, GRUP_ETIKET, gruplaraGore, KRITER_ETIKET, type Kriter } from "@ykh/scoring";
 import { EvidenceBand } from "@/components/evidence-band.tsx";
 import { EP } from "@/components/epistemic-frame.tsx";
 import { KunyeCekmecesi } from "@/components/kunye-cekmecesi.tsx";
@@ -196,36 +196,67 @@ export default async function Blok2({
                 </p>
               </div>
             )}
-            {kirilimGorunur && (Object.keys(d.set.agirliklar) as Kriter[]).map((kr) => {
-              const p = puanlar.get(kr);
-              const dogrulandi = p?.dogrulandi ?? false;
-              return (
-                <div key={kr} className="border-b border-b-[#E9E5DB] px-[18px] py-3 last:border-b-0">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <span className="text-[12.5px] leading-[1.35] text-ink-soft">{KRITER_ETIKET[kr]}</span>
-                    <span className={cn("num text-[14px]", dogrulandi ? "text-ink" : "text-unverif")}>
-                      {dogrulandi ? p!.puan : "—"}
+            {kirilimGorunur &&
+              gruplaraGore(d.set.agirliklar).map(({ grup, agirlik, kriterler: grupKriterleri }) => (
+                <div key={grup} className="border-b border-b-ink last:border-b-0">
+                  {/* Grup başlığı — "Neden burada?" en ağır grup olarak vurgulanır */}
+                  <div
+                    className={cn(
+                      "flex items-baseline justify-between gap-3 px-[18px] py-2.5",
+                      grup === "yerellik" ? "bg-ink text-paper" : "bg-paper",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "font-mono text-[10px] uppercase tracking-[.12em]",
+                        grup === "yerellik" ? "text-paper" : "text-ink-mute",
+                      )}
+                    >
+                      {GRUP_ETIKET[grup]}
+                    </span>
+                    <span className={cn("num text-[12px]", grup === "yerellik" ? "text-paper" : "text-ink-soft")}>
+                      %{(agirlik * 100).toFixed(0)}
                     </span>
                   </div>
-                  <div className="mt-1.5 flex items-center gap-2">
-                    <div className="h-[7px] flex-1 border border-hairline bg-surface">
-                      <div
-                        className={cn("h-full", dogrulandi ? "bg-ink" : "tex-unverified")}
-                        style={{ width: `${dogrulandi ? p!.puan : 100}%` }}
-                      />
-                    </div>
-                    <span className="num text-[10px] text-ink-mute">
-                      ağırlık {(d.set.agirliklar[kr] * 100).toFixed(0)}%
-                    </span>
-                  </div>
-                  {!dogrulandi && (
-                    <div className="mt-1 font-mono text-[9.5px] uppercase tracking-[.08em] text-unverif">
-                      <span aria-hidden>◌</span> Doğrulanmadı — puana 0 girer
-                    </div>
+
+                  {grup === "yerellik" && (
+                    <p className="border-b border-b-[#E9E5DB] bg-paper px-[18px] py-2.5 text-[12px] leading-[1.45] text-ink-soft">
+                      {GRUP_ACIKLAMA.yerellik}
+                    </p>
                   )}
+
+                  {grupKriterleri.map((kr) => {
+                    const p = puanlar.get(kr);
+                    const dogrulandi = p?.dogrulandi ?? false;
+                    return (
+                      <div key={kr} className="border-b border-b-[#E9E5DB] px-[18px] py-3 last:border-b-0">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <span className="text-[12.5px] leading-[1.35] text-ink-soft">{KRITER_ETIKET[kr]}</span>
+                          <span className={cn("num text-[14px]", dogrulandi ? "text-ink" : "text-unverif")}>
+                            {dogrulandi ? p!.puan : "—"}
+                          </span>
+                        </div>
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <div className="h-[7px] flex-1 border border-hairline bg-surface">
+                            <div
+                              className={cn("h-full", dogrulandi ? "bg-ink" : "tex-unverified")}
+                              style={{ width: `${dogrulandi ? p!.puan : 100}%` }}
+                            />
+                          </div>
+                          <span className="num text-[10px] text-ink-mute">
+                            ağırlık {(d.set.agirliklar[kr] * 100).toFixed(0)}%
+                          </span>
+                        </div>
+                        {!dogrulandi && (
+                          <div className="mt-1 font-mono text-[9.5px] uppercase tracking-[.08em] text-unverif">
+                            <span aria-hidden>◌</span> Doğrulanmadı — puana 0 girer
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
+              ))}
           </div>
         </div>
 

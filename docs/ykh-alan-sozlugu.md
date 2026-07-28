@@ -29,6 +29,30 @@ literatür eşlemesi içindir.
 | erişim sınıfı | access class | `access_class` | "Veri sınıfı" |
 | doğrulama durumu | verification status | `dogrulama_durumu` | bkz. epistemik gramer |
 
+## Kriter grupları — "neden burada?" kuralı
+
+Programın adı **Yerel** Kalkınma Hamlesi'dir. Bir yatırım konusunun asıl
+gerekçesi, o konuyu neden **bu ilde ve ilçede** yaptığımızdır. Sekiz kriter
+dört gruba ayrılır ve `yerellik` grubu en büyük payı taşır.
+
+| Grup | UI etiketi | Kriterler | TR33-2027-v1 payı |
+|---|---|---|---|
+| `yerellik` | "Neden burada?" | yerel_potansiyel, deger_zinciri, uygulanabilirlik | **%44** |
+| `etki` | "Ne üretir?" | istihdam_katma_deger, surdurulebilirlik | %24 |
+| `gerceklesme` | "Gerçekleşir mi?" | pazar_talep, yatirimci_ilgisi | %20 |
+| `uyum` | "Politikayla uyum" | plan_uyumu | %12 |
+
+`YERELLIK_TABANI = 0.40` bir kalibrasyon parametresi değil, **ürün kuralıdır**:
+
+- Hiçbir ajans/dönem ağırlık seti yerellik payını %40'ın altına indiremez.
+- Yerellik her zaman en büyük grup olmak zorundadır.
+- `agirlikSetiGecerli()` ihlali reddeder; `donemGetir()` geçersiz setle
+  sıralama hesaplamak yerine hata fırlatır (fail-closed).
+- Pay, karar raporunda ve öneri formunda yazıyla ilan edilir (§1.4).
+
+Aynı hizalama öneri dosyası puanında da vardır: "İl, ilçe ve neden burada
+gerekçesi" (24) + "Yerel uygulanabilirlik" (20) = **44 puan**, en büyük pay.
+
 ## Sonuç etiketleri (brief §2 — birebir)
 
 | Etiket | Koşul |

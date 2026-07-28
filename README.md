@@ -28,6 +28,11 @@ Bu ürün, birleştirilmiş bir "genel skor" üretmeyi reddetmesiyle ayrışır:
   puana katılmaz.
 - **Destek sayısı puan girdisi değildir.** İlgi sinyalidir.
 - **Gizli katsayı yoktur.** Devamlılık payı ekranda ve raporda yazıyla ilan edilir.
+- **En büyük payı "neden burada?" taşır.** Program yerel kalkınmadır: sekiz
+  kriterin yerellik grubu (yerel kaynak ve girdi, mevcut değer zinciri, yerel
+  arazi-enerji-işgücü donanımı) toplam ağırlığın **%44'ü**dür ve hiçbir ajans
+  kalibrasyonu bunu %40'ın altına indiremez. Aynı konu başka bir ilde de aynı
+  şekilde yapılabiliyorsa gerekçesi zayıftır.
 
 ## Hızlı başlangıç
 

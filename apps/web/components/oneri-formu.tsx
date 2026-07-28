@@ -45,14 +45,15 @@ export function OneriFormu({
   const [benzerler, setBenzerler] = useState<Benzer[] | null>(null);
   const [bekliyor, gecis] = useTransition();
 
-  // Kademe 1 alanlarının dosya puanına katkısı (Blok 3 tablosu).
+  // Dosya puanı adımları. Ağırlıklar kriter setiyle hizalıdır: "neden burada?"
+  // grubuna karşılık gelen iki adım toplam 44 puan taşır ve en büyük paydır.
   const adimlar = [
-    { ad: "Konu başlığı ve tanım", puan: 18, tam: baslik.length > 8 && tanim.length > 40 },
-    { ad: "İl, ilçe ve “neden burada” gerekçesi", puan: 14, tam: neden.length > 30 },
-    { ad: "NACE sınıflandırmasını onaylama", puan: 12, tam: naceOnay },
-    { ad: "En az bir kanıt kartı", puan: 22, tam: false },
-    { ad: "Yatırımcı ilgisi veya talep belgesi", puan: 18, tam: false },
-    { ad: "Uygulanabilirlik alanları (arazi, enerji, işgücü)", puan: 16, tam: false },
+    { ad: "İl, ilçe ve “neden burada” gerekçesi", puan: 24, tam: neden.length > 30, yerel: true },
+    { ad: "Yerel uygulanabilirlik (arazi, enerji, işgücü)", puan: 20, tam: false, yerel: true },
+    { ad: "En az bir kanıt kartı", puan: 18, tam: false, yerel: false },
+    { ad: "Konu başlığı ve tanım", puan: 14, tam: baslik.length > 8 && tanim.length > 40, yerel: false },
+    { ad: "Yatırımcı ilgisi veya talep belgesi", puan: 14, tam: false, yerel: false },
+    { ad: "NACE sınıflandırmasını onaylama", puan: 10, tam: naceOnay, yerel: false },
   ];
   const dosyaPuani = adimlar.reduce((t, a) => t + (a.tam ? a.puan : 0), 0);
 
@@ -80,7 +81,12 @@ export function OneriFormu({
             <span>Öneri ver</span>
           </div>
 
-          <EylemFormu eylem={oneriEylemi} className="px-4 pt-[18px] pb-4">
+          <EylemFormu
+            id="oneri-formu"
+            eylem={oneriEylemi}
+            className="px-4 pt-[18px] pb-4"
+            onSonuc={() => setBenzerler(null)}
+          >
             <input type="hidden" name="donemId" value={donemId} />
             <input type="hidden" name="tur" value={tur} />
             <input type="hidden" name="ilce" value={ilce} />
@@ -185,16 +191,22 @@ export function OneriFormu({
             </div>
 
             <label className={ETIKET} htmlFor="neden">
-              Neden burada?
+              Neden burada? · en ağır soru
             </label>
             <textarea
               id="neden"
               name="neden"
-              rows={3}
+              rows={4}
               value={neden}
               onChange={(e) => setNeden(e.target.value)}
-              className="w-full resize-y border border-hairline bg-[#FDFCFA] px-3 py-[11px] text-[13.5px] leading-[1.5] text-ink"
+              className="w-full resize-y border border-ink bg-[#FDFCFA] px-3 py-[11px] text-[13.5px] leading-[1.5] text-ink"
             />
+            <p className="mt-1.5 text-[12px] leading-[1.45] text-ink-soft">
+              Puanın en büyük payı (<b>%44</b>) bu sorunun cevabına ait. Bu konuyu neden{" "}
+              <b>{ilAdi}</b> ve seçtiğiniz ilçede yapmalı: hangi yerel kaynak, hangi mevcut sanayi,
+              hangi arazi-enerji-işgücü donanımı? Konu başka bir ilde de aynı şekilde yapılabiliyorsa
+              bu bölüm zayıf kalır.
+            </p>
 
             {/* AI NACE önerisi — onay olmadan sınıflandırma boş kalır */}
             <button
@@ -304,7 +316,7 @@ export function OneriFormu({
                     >
                       Bu dosyaya destek ver ve kanıtımı ekle
                     </a>
-                    <Gonder varyant="amber" className="w-full">
+                    <Gonder form="oneri-formu" varyant="amber" className="w-full">
                       Yine de ayrı öneri olarak gönder
                     </Gonder>
                     <button
@@ -323,7 +335,7 @@ export function OneriFormu({
                   </div>
                   <div className="mt-2 font-display text-[22px] leading-[1.16]">Öneri ayrı kayıt olarak gidiyor</div>
                   <div className="mt-3.5">
-                    <Gonder className="w-full">Öneriyi gönder</Gonder>
+                    <Gonder form="oneri-formu" className="w-full">Öneriyi gönder</Gonder>
                   </div>
                 </div>
               )}
@@ -390,7 +402,7 @@ export function OneriFormu({
                 <div>
                   <div className="text-[13.5px] font-medium text-ink">{a.ad}</div>
                   <div className="mt-[3px] font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
-                    {a.puan >= 22 ? "Dosya güçlendirme" : "Hızlı öneri"}
+                    {a.yerel ? "Neden burada? · en ağır grup" : "Destekleyici"}
                   </div>
                 </div>
                 <div

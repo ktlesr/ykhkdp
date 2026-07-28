@@ -21,6 +21,11 @@ Kod yazmadan önce dosya planı çıkar ve onaylat. Plan onaylanmadan dosya açm
 9. Arayüz dili Türkçe, sade fiil, kısaltma yok.
 10. Hareket yalnızca durum değişimini anlaşılır kılmak için.
 
+11. **"Neden burada?" en büyük paydır.** Yerellik grubu (yerel kaynak, mevcut
+    değer zinciri, yerel uygulanabilirlik) toplam ağırlığın en az %40'ını
+    taşır ve her zaman en büyük gruptur. Program yerel kalkınmadır; bir konu
+    başka bir ilde de aynı şekilde yapılabiliyorsa gerekçesi zayıftır.
+
 ## Kodda hiçbir zaman
 
 - İl, ajans veya bölge sabitlenmez. `(ajans, dönem)` anahtarlı sürümlü kayıt.

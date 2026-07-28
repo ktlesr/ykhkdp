@@ -1,6 +1,6 @@
 import { adaylariGetir, donemGetir, kararGetir } from "@ykh/database";
 import { kararRaporu } from "@ykh/reporting";
-import { ayardan, hesapla } from "@ykh/scoring";
+import { ayardan, grupAgirligi, hesapla } from "@ykh/scoring";
 import { ANONIM_BAGLAM } from "@/lib/kamu.ts";
 
 /**
@@ -31,6 +31,7 @@ export async function GET(
     kilitZamani: karar?.kilit_zamani ?? null,
     kilitleyen: karar?.kilitleyen ?? null,
     gerekceler: (karar?.gerekceler as { konu: string; gerekce: string }[]) ?? [],
+    yerellikPayi: grupAgirligi(d.set.agirliklar, "yerellik"),
   });
 
   return new Response(html, {

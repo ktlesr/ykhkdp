@@ -3,7 +3,7 @@ import { adaylariGetir, denetle, donemGetir, islem, kararGetir, type Baglam } fr
 import { aiMaliyeti, log } from "@ykh/observability";
 import { kararRaporu } from "@ykh/reporting";
 import { kaynakPaketi } from "@ykh/retrieval";
-import { ayardan, hesapla } from "@ykh/scoring";
+import { ayardan, grupAgirligi, hesapla } from "@ykh/scoring";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -93,6 +93,7 @@ export const ISLER: Record<string, (b: Baglam, yuk: Record<string, unknown>) => 
       kilitZamani: karar?.kilit_zamani ?? null,
       kilitleyen: karar?.kilitleyen ?? null,
       gerekceler: (karar?.gerekceler as { konu: string; gerekce: string }[]) ?? [],
+    yerellikPayi: grupAgirligi(d.set.agirliklar, "yerellik"),
     });
 
     await mkdir(CIKTI_KLASORU, { recursive: true });

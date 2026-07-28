@@ -1,5 +1,5 @@
 import type { Aday, DonemDurumu, EpistemikDurum, Koken, OneriDurumu, Rol } from "@ykh/domain";
-import type { AgirlikSeti, Kriter } from "@ykh/scoring";
+import { agirlikSetiGecerli, type AgirlikSeti, type Kriter } from "@ykh/scoring";
 import type postgres from "postgres";
 import { denetle, islem, type Baglam } from "./baglanti.ts";
 import { jetonOzeti, oturumJetonu, parolaDogrula, parolaOzetle } from "./parola.ts";
@@ -118,6 +118,25 @@ export async function donemGetir(b: Baglam, ilKod: string, yil: string): Promise
       where i.kod = ${ilKod} and d.yil = ${yil}
     `;
     if (!d) return null;
+
+    const set: AgirlikSeti = {
+      surum: d.surum,
+      ajans: d.ajans_kod,
+      donem: d.yil,
+      agirliklar: d.agirliklar,
+      devamlilikPayi: d.devamlilik_payi,
+      kanitEsigi: d.kanit_esigi,
+      devirSiniri: d.devir_siniri,
+      slotSayisi: d.slot_sayisi,
+    };
+
+    // Fail-closed: geçersiz ağırlık setiyle sıralama hesaplanmaz. Sessizce
+    // yanlış bir liste üretmektense hiç üretmemek doğrudur.
+    const gecerlilik = agirlikSetiGecerli(set);
+    if (!gecerlilik.gecerli) {
+      throw new Error(`Ağırlık seti ${set.surum} kullanılamaz: ${gecerlilik.sebep}`);
+    }
+
     return {
       donemId: d.donem_id,
       ilKod: d.il_kod,
@@ -126,16 +145,7 @@ export async function donemGetir(b: Baglam, ilKod: string, yil: string): Promise
       ajans: d.ajans,
       yil: d.yil,
       durum: d.durum,
-      set: {
-        surum: d.surum,
-        ajans: d.ajans_kod,
-        donem: d.yil,
-        agirliklar: d.agirliklar,
-        devamlilikPayi: d.devamlilik_payi,
-        kanitEsigi: d.kanit_esigi,
-        devirSiniri: d.devir_siniri,
-        slotSayisi: d.slot_sayisi,
-      },
+      set,
     };
   });
 }

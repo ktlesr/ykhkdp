@@ -19,6 +19,8 @@ export type RaporGirdisi = {
   kilitZamani: string | null;
   kilitleyen: string | null;
   gerekceler: Array<{ konu: string; gerekce: string }>;
+  /** "Neden burada?" grubunun ağırlıktaki payı — §1.4, katsayı ilan edilir */
+  yerellikPayi?: number;
 };
 
 const KACIS: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" };
@@ -77,6 +79,7 @@ export function kararRaporu(g: RaporGirdisi): string {
   <div><span class="etiket">Sürüm</span> <span class="mono">${k(g.surum)}</span></div>
   <div><span class="etiket">Devamlılık payı</span> <span class="mono">+${g.hesap.pay}</span> — gizli katsayı yoktur, sürümlü parametredir</div>
   <div><span class="etiket">Kanıt eşiği</span> <span class="mono">${g.hesap.esik}/100</span></div>
+  ${g.yerellikPayi === undefined ? "" : `<div><span class="etiket">Neden burada?</span> ağırlığın <span class="mono">%${Math.round(g.yerellikPayi * 100)}</span>'i — yerel gerekçe en büyük paydır</div>`}
   <div><span class="etiket">Durum</span> ${g.kilitZamani ? `Kilitli · ${k(g.kilitZamani)} · ${k(g.kilitleyen ?? "")}` : "Taslak · kilitlenmedi"}</div>
 </div>
 

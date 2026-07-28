@@ -107,7 +107,7 @@ export function KararTabakasi({
   );
 }
 
-/** Blok 3 gönderim anındaki benzerlik katmanı — alt ortada, amber üst kenar. */
+/** Blok 3 gönderim anındaki benzerlik katmanı — ekran ortasında, amber üst kenar. */
 export function BenzerlikKatmani({
   acik,
   kapat,
@@ -122,7 +122,7 @@ export function BenzerlikKatmani({
       <Dialog.Portal>
         <Dialog.Overlay className={cn(PERDE, "bg-[rgba(16,20,25,.55)]")} />
         <Dialog.Content
-          className="fixed bottom-0 left-1/2 z-50 max-h-[92vh] w-[440px] max-w-full -translate-x-1/2 animate-sheet-in overflow-auto border border-ink border-t-[5px] border-t-unverif bg-[#FDFCFA] shadow-none outline-none"
+          className="fixed top-1/2 left-1/2 z-50 max-h-[calc(100vh-64px)] w-[440px] max-w-[calc(100vw-48px)] -translate-x-1/2 -translate-y-1/2 animate-sheet-in overflow-auto border border-ink border-t-[5px] border-t-unverif bg-[#FDFCFA] shadow-none outline-none"
           aria-describedby={undefined}
         >
           {children}

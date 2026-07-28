@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { Aday } from "@ykh/domain";
-import { agirlikSetiGecerli, KRITERLER, TR33_2027_V1, type AgirlikSeti } from "./kriterler.ts";
+import { agirlikSetiGecerli, grupAgirligi, gruplaraGore, KRITERLER, TR33_2027_V1, YERELLIK_TABANI, type AgirlikSeti } from "./kriterler.ts";
 import { kirilim, kriterPuanlariniTopla, stratejikPuan, type KriterPuanlari } from "./puan.ts";
 import { ayardan, hesapla, slotKimlikleri } from "./siralama.ts";
 import { adaylariPuanla, kriterDuyarliligi, senaryolariCalistir } from "./duyarlilik.ts";
@@ -36,6 +36,70 @@ test("TR33-2027-v1 ağırlıkları 1'e toplanır", () => {
 test("bozuk ağırlık seti fail-closed reddedilir", () => {
   const bozuk: AgirlikSeti = { ...TR33_2027_V1, agirliklar: { ...TR33_2027_V1.agirliklar, plan_uyumu: 0.5 } };
   assert.equal(agirlikSetiGecerli(bozuk).gecerli, false);
+});
+
+// ── "neden burada?" — programın asıl sorusu ────────────────────────────────
+
+test("“Neden burada?” grubu en az %40 ve en büyük paydır", () => {
+  const yerellik = grupAgirligi(TR33_2027_V1.agirliklar, "yerellik");
+  assert.ok(yerellik >= YERELLIK_TABANI, `yerellik payı ${yerellik} < ${YERELLIK_TABANI}`);
+  assert.equal(yerellik, 0.44);
+
+  const digerleri = (["etki", "gerceklesme", "uyum"] as const).map((g) =>
+    grupAgirligi(TR33_2027_V1.agirliklar, g),
+  );
+  assert.ok(digerleri.every((x) => x < yerellik), "yerellik en büyük grup olmalı");
+});
+
+test("yerellik payı tabanın altına düşen ağırlık seti reddedilir", () => {
+  // yerel_potansiyel'den 0.10 alıp plan_uyumu'na verirsek yerellik %34'e düşer
+  const zayif: AgirlikSeti = {
+    ...TR33_2027_V1,
+    agirliklar: { ...TR33_2027_V1.agirliklar, yerel_potansiyel: 0.08, plan_uyumu: 0.22 },
+  };
+  const r = agirlikSetiGecerli(zayif);
+  assert.equal(r.gecerli, false);
+  assert.match(r.sebep ?? "", /Neden burada/);
+  assert.match(r.sebep ?? "", /%34/);
+});
+
+test("yerellik taban üstünde ama en büyük değilse reddedilir", () => {
+  // yerellik %40, etki %42 → toplam 1 ama yerellik en büyük değil
+  const dengesiz: AgirlikSeti = {
+    ...TR33_2027_V1,
+    agirliklar: {
+      yerel_potansiyel: 0.16, deger_zinciri: 0.12, uygulanabilirlik: 0.12, // yerellik 0.40
+      istihdam_katma_deger: 0.32, surdurulebilirlik: 0.10,                 // etki 0.42
+      pazar_talep: 0.08, yatirimci_ilgisi: 0.06,                            // gerçekleşme 0.14
+      plan_uyumu: 0.04,                                                     // uyum 0.04
+    },
+  };
+  assert.equal(agirlikSetiGecerli(dengesiz).gecerli, false);
+});
+
+test("her kriter tam olarak bir gruba ait", () => {
+  const gruplanan = gruplaraGore(TR33_2027_V1.agirliklar).flatMap((g) => g.kriterler);
+  assert.equal(gruplanan.length, KRITERLER.length);
+  assert.equal(new Set(gruplanan).size, KRITERLER.length);
+  const toplam = gruplaraGore(TR33_2027_V1.agirliklar).reduce((t, g) => t + g.agirlik, 0);
+  assert.ok(Math.abs(toplam - 1) < 1e-9);
+});
+
+test("yerel gerekçesi güçlü aday, yalnızca pazarı güçlü adayı geçer", () => {
+  const yerelGuclu = tumu(50);
+  yerelGuclu.yerel_potansiyel = 95;
+  yerelGuclu.deger_zinciri = 95;
+  yerelGuclu.uygulanabilirlik = 95;
+
+  const pazarGuclu = tumu(50);
+  pazarGuclu.pazar_talep = 95;
+  pazarGuclu.yatirimci_ilgisi = 95;
+  pazarGuclu.istihdam_katma_deger = 95;
+
+  assert.ok(
+    stratejikPuan(yerelGuclu, TR33_2027_V1) > stratejikPuan(pazarGuclu, TR33_2027_V1),
+    "yerel gerekçesi ağır basmalı",
+  );
 });
 
 // ── puan ───────────────────────────────────────────────────────────────────
