@@ -1,0 +1,189 @@
+@import "tailwindcss";
+
+/* ── §2 Tasarım token'ları ────────────────────────────────────────────────
+   Tailwind v4 CSS-first. README'nin tailwind.config bloğu birebir aynı
+   değerlerle burada; ayrı bir tailwind.config.ts yok.                      */
+
+@theme {
+  --color-ink: #101419;
+  --color-ink-soft: #3c4350;
+  --color-ink-mute: #5c6470;
+
+  --color-navy: #1b2a47;
+  --color-navy-tint: #ebeef4;
+  --color-navy-line: #42557a;
+
+  --color-paper: #f6f4ef;
+  --color-page: #eeebe4;
+  --color-surface: #ffffff;
+
+  --color-hairline: #c9c4b8;
+  --color-hairline-soft: #e2ded4;
+
+  --color-verified: #1d5b4a;
+  --color-verified-tint: #eaf4f0;
+  --color-verified-line: #2c7a64;
+
+  --color-unverif: #8a6a1f;
+  --color-unverif-tint: #fbf4e2;
+  --color-unverif-line: #c9a557;
+
+  --color-absent: #6b6259;
+  --color-absent-tint: #f1eee7;
+
+  --color-conflict: #8c2f24;
+  --color-conflict-tint: #f7eae8;
+  --color-conflict-line: #b4655b;
+
+  --font-display: var(--font-newsreader), Georgia, serif;
+  --font-sans: var(--font-plex-sans), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  /* §1.8 — border-radius > 3px yasak. Ölçek tavana çakılı. */
+  --radius-xs: 2px;
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 3px;
+  --radius-xl: 3px;
+  --radius-2xl: 3px;
+  --radius-3xl: 3px;
+  --radius-4xl: 3px;
+
+  /* §1.8 — gölge yasak. */
+  --shadow-2xs: none;
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-2xl: none;
+
+  /* animasyon: yalnızca §2'de tanımlı dördü */
+  --animate-sheet-in: sheetIn 0.2s ease-out;
+  --animate-drawer-in: drawerIn 0.2s ease-out;
+  --animate-ledger-in: ledgerIn 0.18s ease-out;
+  --animate-veil-in: veilIn 0.16s ease-out;
+}
+
+@keyframes sheetIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes drawerIn {
+  from { opacity: 0.4; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes ledgerIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes veilIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── Koyu tema ────────────────────────────────────────────────────────────
+   @layer theme içindeki :root'u katmansız blok her zaman ezer.             */
+[data-theme="dark"] {
+  --color-ink: #e8e4db;
+  --color-ink-soft: #b8bec7;
+  --color-ink-mute: #8e959f;
+  --color-paper: #12161b;
+  --color-page: #0c0f13;
+  --color-surface: #161b21;
+  --color-hairline: #2a3039;
+  --color-hairline-soft: #1e242b;
+  --color-verified: #6fbfa3;
+  --color-unverif: #d9b25f;
+  --color-absent: #9a9186;
+  --color-conflict: #d98a7b;
+}
+
+@layer base {
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    background: var(--color-page);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  a {
+    color: var(--color-navy);
+    text-decoration: none;
+  }
+  ::selection {
+    background: var(--color-navy);
+    color: var(--color-paper);
+  }
+  /* §9 — odak halkası her etkileşimli öğede görünür */
+  :focus-visible {
+    outline: 2px solid var(--color-unverif);
+    outline-offset: 2px;
+  }
+}
+
+/* ── Durum dokuları (§2) ─────────────────────────────────────────────────
+   §1.2: renk tek başına taşıyıcı olamaz — doku zorunlu eş.                 */
+.tex-unverified {
+  background: repeating-linear-gradient(135deg, #fff 0 5px, #fbf4e2 5px 10px);
+}
+.tex-absent {
+  background: repeating-linear-gradient(45deg, #fff 0 5px, #f1eee7 5px 10px);
+}
+.tex-slot {
+  background: repeating-linear-gradient(135deg, #fff 0 6px, #f1eee7 6px 12px);
+}
+/* Kanıt Bandı hücre dolguları (§3) */
+.cell-hatch {
+  background: repeating-linear-gradient(135deg, #101419 0 1.5px, #fff 1.5px 4px);
+}
+.cell-solid {
+  background: #101419;
+}
+.cell-void {
+  background: repeating-linear-gradient(45deg, #fff 0 3px, #e9e5db 3px 6px);
+}
+.cell-empty {
+  background: #fff;
+}
+
+/* koyu temada dokular ters çevrilir (§2) */
+[data-theme="dark"] .tex-unverified {
+  background: repeating-linear-gradient(135deg, #161b21 0 5px, #2b2413 5px 10px);
+}
+[data-theme="dark"] .tex-absent,
+[data-theme="dark"] .tex-slot {
+  background: repeating-linear-gradient(45deg, #161b21 0 5px, #232a33 5px 10px);
+}
+[data-theme="dark"] .cell-hatch {
+  background: repeating-linear-gradient(135deg, #ede9e0 0 1.5px, #101419 1.5px 4px);
+}
+[data-theme="dark"] .cell-solid {
+  background: #ede9e0;
+}
+[data-theme="dark"] .cell-void {
+  background: repeating-linear-gradient(45deg, #101419 0 3px, #232a33 3px 6px);
+}
+[data-theme="dark"] .cell-empty {
+  background: #1a1f26;
+}
+
+/* §2 — tüm sayılar mono + tabular */
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* §1.10 / §11 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

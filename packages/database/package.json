@@ -1,0 +1,25 @@
+{
+  "name": "@ykh/database",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./migrate": "./src/migrate.ts",
+    "./seed": "./src/seed.ts"
+  },
+  "scripts": {
+    "migrate": "node src/cli.ts up",
+    "migrate:down": "node src/cli.ts down",
+    "seed": "node src/cli.ts seed",
+    "reset": "node src/cli.ts reset",
+    "test": "node --test src/*.test.ts"
+  },
+  "dependencies": {
+    "@ykh/domain": "workspace:*",
+    "@ykh/scoring": "workspace:*",
+    "postgres": "3.4.9"
+  }
+}

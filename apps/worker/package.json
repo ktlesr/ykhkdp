@@ -1,0 +1,20 @@
+{
+  "name": "@ykh/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.ts",
+    "start": "node src/index.ts",
+    "test": "node --test src/*.test.ts"
+  },
+  "dependencies": {
+    "@ykh/ai-gateway": "workspace:*",
+    "@ykh/database": "workspace:*",
+    "@ykh/domain": "workspace:*",
+    "@ykh/observability": "workspace:*",
+    "@ykh/reporting": "workspace:*",
+    "@ykh/retrieval": "workspace:*",
+    "@ykh/scoring": "workspace:*"
+  }
+}

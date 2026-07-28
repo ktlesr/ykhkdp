@@ -1,0 +1,13 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# next'in geçişli bağımlılıkları — GHSA-qx2v-qp2m-jg93 (postcss XSS),
+# postcss sourceMappingURL path traversal (2 kayıt) ve sharp/libvips
+# CVE-2026-33327/33328/35590/35591. Yamalı sürüme zorlanıyor.
+overrides:
+  postcss: "8.5.24"
+  sharp: "0.35.3"
+
+onlyBuiltDependencies:
+  - "@electric-sql/pglite"

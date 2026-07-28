@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: ykhkdp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ykh_owner
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ykh_dev_parola}
+      POSTGRES_DB: ykhkdp
+    ports:
+      - "5470:5432"
+    volumes:
+      - ykhkdp-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ykh_owner -d ykhkdp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  ykhkdp-pgdata:
