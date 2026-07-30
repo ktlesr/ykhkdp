@@ -36,7 +36,8 @@ export type YuklemeGirdisi = {
 export type Parca = { bolum: string; metin: string };
 
 const SAYFA = /^\s*(\d{1,4})\s*\/\s*\d{1,4}\s*$/;
-const ICINDEKILER = /\.{4,}\s*\d+\s*$/;
+/** İçindekiler satırı: noktalı dolgu + sayfa numarası. Tablo boruları çevrildikten sonra bakılır. */
+const ICINDEKILER = /\.{3,}\s*\d+(\s*·.*)?$/;
 const BASLIK = /^\s{0,3}#{1,6}\s+\S/;
 /** "449.", "881.4." gibi numaralı madde başı — 12. Kalkınma Planı bu biçimde. */
 const MADDE = /(?:^|\n)(\d{1,4}(?:\.\d{1,3})*)\.\s+\p{Lu}/gu;
@@ -90,6 +91,12 @@ function markdownsuz(satir: string): string {
   return satir
     .replace(/^\s{0,3}#{1,6}\s+/, "")
     .replace(/\*\*|__|(?<![\p{L}\d])[*_](?![\s*_])/gu, "")
+    // Satır içi HTML: <u>Karar Tarihi</u> gibi. Metinde kalırsa modelin alıntısı
+    // etiketi atar, belgedeki metinle birebir eşleşmez ve alıntı düşer.
+    .replace(/<\/?[a-zA-Z][a-zA-Z0-9]{0,9}(?:\s[^<>]{0,80})?>/g, "")
+    // Tablo satırı: boruları ayırıcıya çevir. Aksi hâlde içindekiler satırları
+    // boru içinde kaldığı için ICINDEKILER kalıbına yakalanmıyor.
+    .replace(/^\s*\|(.*)\|\s*$/, (_, ic: string) => ic.split("|").map((h) => h.trim()).join(" · "))
     .trim();
 }
 
@@ -195,9 +202,14 @@ export function parcala(hamMetin: string, parcaBoyu = 2500): Parca[] {
   }));
 }
 
+/** Göreli yolu depo köküne göre çözer — komut hangi paketten çalışırsa çalışsın. */
+export function yolCoz(dosya: string): string {
+  return isAbsolute(dosya) ? dosya : resolve(KOK, dosya);
+}
+
 /** Belgeyi parçalayıp veritabanına yazar. Aynı `ad` varsa önce siler. */
 export async function belgeYukle(g: YuklemeGirdisi): Promise<{ parca: number; karakter: number }> {
-  const yol = isAbsolute(g.dosya) ? g.dosya : resolve(KOK, g.dosya);
+  const yol = yolCoz(g.dosya);
   const ham = await readFile(yol, "utf8");
   const parcalar = parcala(ham, g.parcaBoyu ?? 2500);
   if (!parcalar.length) throw new Error(`${yol}: ayrıştırılabilir metin bulunamadı.`);

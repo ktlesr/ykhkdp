@@ -160,7 +160,11 @@ kapsama    %70  Σ kriter payı × o kriteri destekleyen alıntının en iyi ör
   `surdurulebilirlik` (%8) dayanaksız kalmaktan pahalıdır: "neden burada?"
   cevaplanmadıysa dayanak düşer.
 - **Boş eşleme meşrudur.** O kriter ekranda "dayanaksız kriter" yazar.
-- **Var olmayan alıntı sırasına dayandırmak sert rettir.**
+- **Numaralandırma kusuru kredi kaybıdır, ret değil.** Alıntı numarasını model
+  kendisi verir (dizi indeksi değil — model 0 tabanlı indekste yanılıyor).
+  Çözülemeyen veya belirsiz bir referans eşlemeden düşer, denetime yazılır ve
+  dayanağı azaltır. Sert ret yalnızca belge kimliğinin yalan söylediği durumda:
+  o güvenlik ihlalidir, muhasebe hatası değil.
 - Hiç alıntı yoksa 0. Belge yüklenmemiş bir ilde tüm dayanaklar 0 kalır ve
   slotlar boş görünür — doğru davranış budur.
 
@@ -186,11 +190,15 @@ parça verilemez (400 KB – 1 MB); paragraf sınırında **parçalara** bölün
 parça ayrı `belge` satırı olur — tam metin araması ilgili parçayı bulur, alıntı
 o parçanın metninde birebir aranır.
 
-| Belge | Parça | Atıf çıpası (`belge.bolum`) |
-|---|---|---|
-| TR33 Bölge Planı 2024-2028 | 91 | `s. 92–93` — sayfa işareti |
-| On İkinci Kalkınma Planı 2024-2028 | 252 | `madde 613.1–614.4` — numaralı madde |
-| Bölgesel Gelişme Ulusal Stratejisi 2024-2028 | 276 | `8.4. TURİZM` — en yakın başlık |
+| Belge | Kapsam | Parça | Atıf çıpası (`belge.bolum`) |
+|---|---|---|---|
+| TR33 Bölge Planı 2024-2028 | `ajans_kod='TR33'` | 86 | `s. 92–93` — sayfa işareti |
+| On İkinci Kalkınma Planı 2024-2028 | ulusal | 248 | `madde 613.1–614.4` — numaralı madde |
+| Bölgesel Gelişme Ulusal Stratejisi 2024-2028 | ulusal | 260 | `8.4. TURİZM` — en yakın başlık |
+
+**Kapsam ayrımı `belgePaketi()` filtresindedir:** ile özgü → ajansa özgü → ulusal.
+Bölge planı yalnızca kendi ajansının illerinde pakete girer; kalkınma planı ve
+BGUS her ilde girer. Kodda hiçbir il veya ajans sabitlenmez.
 
 Çıpa sırası: sayfa → madde → başlık → `parça n/m`. Kimsenin bulamayacağı bir
 adres atıf değildir; sıralı numara yalnızca son çare.
@@ -200,7 +208,10 @@ kolon-farkındalıksız çıkarılan metinde iki kolon aynı satırda birleşiyo
 belgede birebir hiçbir cümle kalmıyor — bu hâldeki 12KP ile yapılan
 değerlendirmeler bütünüyle reddedildi. Yapı farkındalıklı (başlık, tablo,
 paragraf) çıkarımla üç belge de doğrulanabilir hâle geldi. Yeni belge eklenirken
-ölçüt basit: **paragraf tek satırda bütün mü.**
+ölçüt basit: **paragraf tek satırda bütün mü.** `pnpm belge:dogrula <dosya>` bunu
+yüklemeden önce ölçer: ortalama satır uzunluğu, cümle ortasında biten satır oranı,
+satır sonu tirelemesi, çıpa dağılımı, düzgün cümle oranı. Kötü çıkarımda ortalama
+satır ~60–72 karakter, iyi çıkarımda ~150–220.
 
 ## 8. Yığın
 
@@ -249,6 +260,10 @@ kilidi, künye çekmecesi) bu üründe **yok**.
 
 ## 11. Bilinen sınırlar
 
+- Eval kümesi (`pnpm ai:eval`) örnek başına üç koşu yapıp medyan alır — tek koşu
+  aynı örnekte dayanak 52 ve 94 verdi. Bantlar geniş; asıl kontrol **ayırt etme**:
+  aynı başlık, biri yerele bağlı gerekçeyle, diğeri "ülkemizde bu sektör
+  önemlidir" gerekçesiyle; yerellik farkı ölçülür.
 - `OPENAI_API_KEY` yoksa çevrimdışı deterministik istemci çalışır: belgelerden
   birebir alıntı çıkarır ama puanları ve NACE eşleşmesini kaba üretir. Doğrulama
   zinciri her iki modda aynıdır.

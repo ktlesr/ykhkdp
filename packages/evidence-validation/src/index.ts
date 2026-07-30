@@ -24,7 +24,13 @@ export type BelgeKaydi = {
 
 export type Paket = { id: string; belgeler: BelgeKaydi[] };
 
-export type Alinti = { belge_id: number; alinti: string };
+/**
+ * `no` alıntının kendi numarası; kriter eşlemesi buna referans verir.
+ *
+ * Dizi indeksi kullanmıyoruz: model 0 tabanlı indekste yanılıyor. Numarayı
+ * kendisi verdiğinde tek şart kendi kendisiyle tutarlı olması.
+ */
+export type Alinti = { no: number; belge_id: number; alinti: string };
 
 export type HataKodu =
   | "belge_yok"
@@ -32,7 +38,8 @@ export type HataKodu =
   | "alinti_eslesmiyor"
   | "kaynaksiz_sayi"
   | "puan_araligi"
-  | "alinti_no_gecersiz";
+  | "alinti_no_gecersiz"
+  | "alinti_no_tekrar";
 
 export type Hata = { kod: HataKodu; mesaj: string };
 
@@ -134,24 +141,26 @@ export function degerlendirmeyiDogrula(
     hatalar.push({ kod: "puan_araligi", mesaj: "Kriter puanı 0–100 aralığında tam sayı olmalı." });
   }
 
-  // Var olmayan alıntıya işaret eden eşleme sahte dayanaktır → sert ret.
-  for (const p of cikti.puanlar) {
-    for (const no of p.alinti_no ?? []) {
-      if (!Number.isInteger(no) || no < 0 || no >= cikti.alintilar.length) {
-        hatalar.push({
-          kod: "alinti_no_gecersiz",
-          mesaj: `${p.kriter} kriteri var olmayan ${no}. alıntıya dayandırıldı (${cikti.alintilar.length} alıntı var).`,
-        });
-      }
-    }
-  }
-
   const dogrulanan: Alinti[] = [];
   const dusenler: Hata[] = [];
-  /** eski sıra → doğrulanan listesindeki yeni sıra; düşen alıntı listede yok */
+
+  /**
+   * Tekrar eden numara referansı belirsizleştirir: iki adaydan hangisi
+   * kastedildiği bilinemez, o yüzden ikisi de kullanılamaz sayılır.
+   */
+  const sayim = new Map<number, number>();
+  for (const a of cikti.alintilar) sayim.set(a.no, (sayim.get(a.no) ?? 0) + 1);
+  const belirsiz = new Set([...sayim].filter(([, n]) => n > 1).map(([no]) => no));
+  for (const no of belirsiz) {
+    dusenler.push({
+      kod: "alinti_no_tekrar",
+      mesaj: `${no} numarası birden çok alıntıya verilmiş; hangisi kastedildiği belirsiz, eşleme düşürüldü.`,
+    });
+  }
+  /** alıntı no → doğrulanan listesindeki konum; düşen alıntı haritada yok */
   const yeniSira = new Map<number, number>();
 
-  for (const [eski, a] of cikti.alintilar.entries()) {
+  for (const a of cikti.alintilar) {
     const belge = paket.belgeler.find((b) => b.id === a.belge_id);
     // Uydurulmuş belge kimliği ve paket dışı belge GÜVENLİK ihlalidir → sert ret.
     if (!belge) {
@@ -173,23 +182,43 @@ export function degerlendirmeyiDogrula(
       });
       continue;
     }
-    yeniSira.set(eski, dogrulanan.length);
+    if (!belirsiz.has(a.no)) yeniSira.set(a.no, dogrulanan.length);
     dogrulanan.push(a);
   }
 
-  // Kriter → doğrulanmış alıntı eşlemesi. Düşen alıntılar eşlemeden de düşer.
+  /**
+   * Kriter → doğrulanmış alıntı eşlemesi.
+   *
+   * Çözülemeyen referans (düşen alıntı, belirsiz numara, hiç verilmemiş numara)
+   * eşlemeden çıkar ve denetime yazılır. Bu SERT RET DEĞİL: alıntı listesinin
+   * kendisi doğrulanmış durumda, kusur muhasebede. Cezası kredi kaybıdır ve
+   * doğru yönde fail-closed'dır — doğrulanamayan destek sayılmaz.
+   */
   const kriterDayanagi: KriterDayanagi = {};
   for (const p of cikti.puanlar) {
-    kriterDayanagi[p.kriter] = (p.alinti_no ?? [])
-      .map((no) => yeniSira.get(no))
-      .filter((no): no is number => no !== undefined);
+    const cozulen: number[] = [];
+    for (const no of p.alinti_no ?? []) {
+      const konum = yeniSira.get(no);
+      if (konum === undefined) {
+        dusenler.push({
+          kod: "alinti_no_gecersiz",
+          mesaj: `${p.kriter} kriteri ${no} numaralı alıntıya dayandırıldı; bu numara çözülemedi, eşleme düşürüldü.`,
+        });
+        continue;
+      }
+      cozulen.push(konum);
+    }
+    kriterDayanagi[p.kriter] = cozulen;
   }
 
-  if (cikti.alintilar.length && dusenler.length / cikti.alintilar.length > UYDURMA_ESIGI) {
+  // Uydurma eşiği YALNIZCA belgede bulunamayan alıntıları sayar; numaralandırma
+  // kusuru uydurma değildir ve bu orana girmez.
+  const eslesmeyen = dusenler.filter((h) => h.kod === "alinti_eslesmiyor").length;
+  if (cikti.alintilar.length && eslesmeyen / cikti.alintilar.length > UYDURMA_ESIGI) {
     hatalar.push({
       kod: "alinti_eslesmiyor",
       mesaj:
-        `Alıntıların ${dusenler.length}/${cikti.alintilar.length}'i belgede bulunamadı — ` +
+        `Alıntıların ${eslesmeyen}/${cikti.alintilar.length}'i belgede bulunamadı — ` +
         "çoğunluk uydurma sayılır ve çıktının tamamı reddedilir.",
     });
     hatalar.push(...dusenler);

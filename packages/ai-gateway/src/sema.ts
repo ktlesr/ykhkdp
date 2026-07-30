@@ -18,6 +18,14 @@ const KRITER = z.enum([
 
 const Alinti = z
   .object({
+    /**
+     * Alıntının KENDİ numarası; `puanlar[].alinti_no` buna referans verir.
+     *
+     * Dizi indeksi kullanmıyoruz: model 0 tabanlı indekslemede yanılıyor
+     * (5 alıntı için "5. alıntı" yazdı). Numarayı kendisi verince tek şart
+     * kendi kendisiyle tutarlı olması — bunu yapabiliyor.
+     */
+    no: z.number().int().min(0).max(99),
     belge_id: z.number().int().positive(),
     /** belgede birebir geçen kısa alıntı; doğrulayıcı bunu belgede arar */
     alinti: z.string().min(10).max(400),
@@ -35,11 +43,11 @@ export const Degerlendirme = z
             puan: z.number().int().min(0).max(100),
             not: z.string().min(5).max(300),
             /**
-             * Bu puanı dayandırdığı alıntıların `alintilar` içindeki sırası
-             * (0'dan başlar). Boş liste meşrudur: o kriter "dayanaksız kriter"
-             * olarak görünür ve dayanak puanını düşürür.
+             * Bu puanı dayandırdığı alıntıların `alintilar[].no` değerleri.
+             * Boş liste meşrudur: o kriter "dayanaksız kriter" olarak görünür
+             * ve dayanak puanını düşürür.
              */
-            alinti_no: z.array(z.number().int().min(0).max(7)).max(8),
+            alinti_no: z.array(z.number().int().min(0).max(99)).max(8),
           })
           .strict(),
       )

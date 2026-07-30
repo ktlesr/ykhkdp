@@ -147,11 +147,16 @@ export async function seed(): Promise<{ ozet: string }> {
   }
 
   // ── üst ölçekli belgeler ────────────────────────────────────────────────
-  // ponytail: demo için kısa özet metinler. Gerçek belgeler /belgeler ekranından yüklenir.
+  //
+  // ponytail: demo için kısa özet metinler; testler ve dev bunlarla 2 MB gerçek
+  // belge olmadan çalışır. Gerçek belge yüklendiğinde bunlar YERİNE geçer —
+  // `belgeYukle` aynı `ad`'a sahip satırları siliyor, bu yüzden isimler
+  // `RESMI_BELGELER` içindeki adlarla BİREBİR aynı olmalı. Aksi hâlde /belgeler
+  // ekranında hem 252 parçalı gerçek plan hem 1 parçalı özeti görünür.
   const belgeler = [
     { ad: "TR33 Bölge Planı 2024-2028", tur: "bolge_plani", yil: "2024", ajans: "TR33", il: null,
       metin: "TR33 Bölgesi'nde tekstil ve hazır giyim, deri, seramik ve gıda işleme öncelikli imalat sektörleridir. Bölgede tekstil geri dönüşümü ve teknik tekstil, katma değeri yükseltecek dönüşüm alanları olarak tanımlanmıştır. Jeotermal kaynakların seracılıkta kullanımı bölgesel öncelikler arasındadır. Uşak'ta deri ve tekstil ihtisas organize sanayi bölgeleri altyapısı mevcuttur. Kütahya'da seramik ve bor türevleri, madencilik temelli ihtisaslaşma alanlarıdır. Tarımsal ürünlerde soğuk zincir ve kurutma altyapısı eksikliği bölgesel bir darboğazdır." },
-    { ad: "On İkinci Kalkınma Planı (2024-2028)", tur: "kalkinma_plani", yil: "2024", ajans: null, il: null,
+    { ad: "On İkinci Kalkınma Planı 2024-2028", tur: "kalkinma_plani", yil: "2024", ajans: null, il: null,
       metin: "Yeşil ve dijital dönüşüm, döngüsel ekonomi ve kaynak verimliliği temel eksenlerdir. Tekstil, hazır giyim ve deri sektörlerinde geri dönüşüm oranlarının artırılması ve ikincil hammadde kullanımının yaygınlaştırılması hedeflenmiştir. Yenilenebilir enerji kaynaklarının sanayide ısı amaçlı kullanımı desteklenecektir. Tarımsal ürünlerde hasat sonrası kayıpların azaltılması, soğuk zincir ve depolama kapasitesinin artırılması öngörülmüştür. Kritik hammaddelerde ve ileri malzemelerde yurt içi üretim kapasitesi güçlendirilecektir." },
     { ad: "Orta Vadeli Program 2026-2028", tur: "ovp", yil: "2026", ajans: null, il: null,
       metin: "İhracatta katma değeri yüksek ürün gruplarına geçiş önceliklidir. Enerji verimliliği yatırımları ve atık ısı geri kazanımı teşvik edilecektir. İthalata bağımlılığı yüksek ara mallarda yurt içi üretim özendirilecektir. Bölgesel gelişme farklarının azaltılması için yatırım teşvik sisteminde iller arası farklılaştırma sürdürülecektir." },

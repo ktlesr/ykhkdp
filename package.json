@@ -15,7 +15,9 @@
     "typecheck": "pnpm --filter @ykh/web typecheck",
     "audit": "pnpm audit --prod",
     "ai:test": "pnpm --filter @ykh/ai-gateway sinama",
-    "db:belgeler": "pnpm --filter @ykh/database belgeler"
+    "ai:eval": "pnpm --filter @ykh/degerlendirme eval",
+    "db:belgeler": "pnpm --filter @ykh/database belgeler",
+    "belge:dogrula": "pnpm --filter @ykh/database belge-dogrula"
   },
   "packageManager": "pnpm@10.19.0",
   "engines": {

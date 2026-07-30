@@ -132,6 +132,9 @@ importers:
       '@ykh/retrieval':
         specifier: workspace:*
         version: link:../retrieval
+      '@ykh/scoring':
+        specifier: workspace:*
+        version: link:../scoring
 
   packages/domain: {}
 

@@ -64,7 +64,7 @@ test("EVAL 2 — belgede geçmeyen alıntı reddedilir", async () => {
     sahte({
       puanlar: puanlar(),
       gerekce: "Öneri bölge planındaki önceliklerle uyumludur ve yerel girdiye dayanmaktadır.",
-      alintilar: [{ belge_id: 1, alinti: "Bu cümle belgede kesinlikle yok ve uydurulmuştur." }],
+      alintilar: [{ no: 1, belge_id: 1, alinti: "Bu cümle belgede kesinlikle yok ve uydurulmuştur." }],
       eksik_veri: [],
     }),
     "claude-opus-5-20260101",
@@ -79,7 +79,7 @@ test("EVAL 3 — var olmayan belgeye atıf reddedilir", async () => {
     sahte({
       puanlar: puanlar(),
       gerekce: "Öneri bölge planındaki önceliklerle uyumludur ve yerel girdiye dayanmaktadır.",
-      alintilar: [{ belge_id: 999, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek" }],
+      alintilar: [{ no: 1, belge_id: 999, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek" }],
       eksik_veri: [],
     }),
     "claude-opus-5-20260101",
@@ -91,9 +91,9 @@ test("EVAL 3 — var olmayan belgeye atıf reddedilir", async () => {
 test("birebir alıntı kabul edilir ve dayanak puanı üretir", async () => {
   const s = await degerlendir(
     sahte({
-      puanlar: puanlar(60, { yerel_potansiyel: [0] }),
+      puanlar: puanlar(60, { yerel_potansiyel: [1] }),
       gerekce: "Öneri bölge planındaki önceliklerle uyumludur ve yerel girdiye dayanmaktadır.",
-      alintilar: [{ belge_id: 1, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek dönüşüm alanı" }],
+      alintilar: [{ no: 1, belge_id: 1, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek dönüşüm alanı" }],
       eksik_veri: [],
     }),
     "claude-opus-5-20260101",
@@ -171,7 +171,7 @@ test("'latest' alias reddedilir", () => {
 test("model snapshot ve prompt sürümü her sonuçta taşınır", async () => {
   const s = await degerlendir(cevrimdisiIstemci(), "claude-opus-5-20260101", GIRDI);
   assert.equal(s.modelSnapshot, "claude-opus-5-20260101");
-  assert.equal(s.promptSurum, "degerlendirme-v1");
+  assert.equal(s.promptSurum, "degerlendirme-v2");
 });
 
 // ── prompt injection ───────────────────────────────────────────────────────
@@ -225,19 +225,20 @@ test("JSON Schema strict üretilir", () => {
   assert.ok(j.required?.includes("puanlar"));
 });
 
-test("EVAL 4 — var olmayan alıntı sırasına dayandırmak reddedilir", async () => {
+test("EVAL 4 — çözülemeyen alıntı numarası eşlemeden düşer, çıktı ayakta kalır", async () => {
   const s = await degerlendir(
     sahte({
-      puanlar: puanlar(60, { yerel_potansiyel: [0, 5] }),
+      puanlar: puanlar(60, { yerel_potansiyel: [1, 5] }),
       gerekce: "Öneri bölge planındaki önceliklerle uyumludur ve yerel girdiye dayanmaktadır.",
-      alintilar: [{ belge_id: 1, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek dönüşüm alanı" }],
+      alintilar: [{ no: 1, belge_id: 1, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek dönüşüm alanı" }],
       eksik_veri: [],
     }),
     "claude-opus-5-20260101",
     GIRDI,
   );
-  assert.equal(!s.ok && s.asama, "dayanak");
-  assert.ok(!s.ok && s.hatalar.some((h) => /var olmayan/.test(h)));
+  assert.equal(s.ok, true, s.ok ? "" : JSON.stringify(s.hatalar));
+  assert.deepEqual(s.ok && s.kriterDayanagi.yerel_potansiyel, [0]);
+  assert.ok(s.ok && s.dusenler.some((d) => /çözülemedi/.test(d)));
 });
 
 test("kriter payı dayanağa yansır — yerellik boşluğu daha pahalı", async () => {
@@ -250,12 +251,12 @@ test("kriter payı dayanağa yansır — yerellik boşluğu daha pahalı", async
     sahte({
       puanlar: puanlar(60, esle),
       gerekce: "Öneri bölge planındaki önceliklerle uyumludur ve yerel girdiye dayanmaktadır.",
-      alintilar: [{ belge_id: 1, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek dönüşüm alanı" }],
+      alintilar: [{ no: 1, belge_id: 1, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek dönüşüm alanı" }],
       eksik_veri: [],
     });
   const girdi = { ...GIRDI, agirliklar: AGIRLIKLAR };
 
-  const yerellik = await degerlendir(cikti({ yerel_potansiyel: [0] }), "claude-opus-5-20260101", girdi);
-  const kucuk = await degerlendir(cikti({ surdurulebilirlik: [0] }), "claude-opus-5-20260101", girdi);
+  const yerellik = await degerlendir(cikti({ yerel_potansiyel: [1] }), "claude-opus-5-20260101", girdi);
+  const kucuk = await degerlendir(cikti({ surdurulebilirlik: [1] }), "claude-opus-5-20260101", girdi);
   assert.ok(yerellik.ok && kucuk.ok && yerellik.dayanak > kucuk.dayanak);
 });

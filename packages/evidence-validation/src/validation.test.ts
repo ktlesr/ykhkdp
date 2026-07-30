@@ -28,8 +28,8 @@ test("birebir alıntı geçer ve eşlendiği kriter dayanağa sayılır", () => 
   const s = degerlendirmeyiDogrula(
     {
       gerekce: "Bölge planı önceliklerine uygundur.",
-      alintilar: [{ belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" }],
-      puanlar: puanSeti({ yerel_potansiyel: [0] }),
+      alintilar: [{ no: 1, belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" }],
+      puanlar: puanSeti({ yerel_potansiyel: [1] }),
     },
     PAKET,
   );
@@ -41,28 +41,48 @@ test("birebir alıntı geçer ve eşlendiği kriter dayanağa sayılır", () => 
 
 test("eşlenmemiş alıntı dayanağa katkı vermez — sayı değil kapsama ölçülür", () => {
   const alintilar = [
-    { belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" },
-    { belge_id: 2, alinti: "Enerji verimliliği yatırımları" },
+    { no: 1, belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" },
+    { no: 2, belge_id: 2, alinti: "Enerji verimliliği yatırımları" },
   ];
   const eslenmemis = degerlendirmeyiDogrula({ gerekce: "Uygundur.", alintilar, puanlar }, PAKET);
   const eslenmis = degerlendirmeyiDogrula(
-    { gerekce: "Uygundur.", alintilar, puanlar: puanSeti({ yerel_potansiyel: [0], plan_uyumu: [1] }) },
+    { gerekce: "Uygundur.", alintilar, puanlar: puanSeti({ yerel_potansiyel: [1], plan_uyumu: [2] }) },
     PAKET,
   );
   assert.equal(eslenmemis.gecerli && eslenmemis.dayanak, 0, "hiçbir kritere bağlanmayan alıntı dayanak üretmez");
   assert.ok(eslenmis.gecerli && eslenmis.dayanak > 0);
 });
 
-test("var olmayan alıntı sırasına dayandırmak sert reddedilir", () => {
+test("çözülemeyen alıntı numarası eşlemeden düşer, çıktı reddedilmez", () => {
   const s = degerlendirmeyiDogrula(
     {
       gerekce: "Uygundur.",
-      alintilar: [{ belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" }],
-      puanlar: puanSeti({ yerel_potansiyel: [0, 3] }),
+      alintilar: [{ no: 1, belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" }],
+      // 3 numaralı alıntı hiç verilmedi: muhasebe kusuru, uydurma değil.
+      puanlar: puanSeti({ yerel_potansiyel: [1, 3] }),
     },
     PAKET,
   );
-  assert.ok(!s.gecerli && s.hatalar.some((h) => h.kod === "alinti_no_gecersiz"));
+  assert.equal(s.gecerli, true, "alıntı listesi doğrulanmışken çıktı çöpe atılmaz");
+  assert.deepEqual(s.gecerli && s.kriterDayanagi.yerel_potansiyel, [0], "çözülen referans kalır");
+  assert.ok(s.gecerli && s.dusenler.some((h) => h.kod === "alinti_no_gecersiz"), "denetime yazılır");
+});
+
+test("aynı numara iki alıntıya verilmişse o eşleme belirsizdir ve düşer", () => {
+  const s = degerlendirmeyiDogrula(
+    {
+      gerekce: "Uygundur.",
+      alintilar: [
+        { no: 1, belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" },
+        { no: 1, belge_id: 2, alinti: "Enerji verimliliği yatırımları" },
+      ],
+      puanlar: puanSeti({ yerel_potansiyel: [1] }),
+    },
+    PAKET,
+  );
+  assert.equal(s.gecerli, true);
+  assert.deepEqual(s.gecerli && s.kriterDayanagi.yerel_potansiyel, [], "belirsiz referans krediye dönüşmez");
+  assert.ok(s.gecerli && s.dusenler.some((h) => h.kod === "alinti_no_tekrar"));
 });
 
 test("zayıf örtüşen parçadan gelen dayanak daha düşük", () => {
@@ -73,8 +93,8 @@ test("zayıf örtüşen parçadan gelen dayanak daha düşük", () => {
     ]);
   const girdi = {
     gerekce: "Uygundur.",
-    alintilar: [{ belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" }],
-    puanlar: puanSeti({ yerel_potansiyel: [0] }),
+    alintilar: [{ no: 1, belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" }],
+    puanlar: puanSeti({ yerel_potansiyel: [1] }),
   };
   const ilgili = degerlendirmeyiDogrula(girdi, kur(1));
   const zayif = degerlendirmeyiDogrula(girdi, kur(0.1));
@@ -83,7 +103,7 @@ test("zayıf örtüşen parçadan gelen dayanak daha düşük", () => {
 
 test("uydurulmuş alıntı reddedilir", () => {
   const s = degerlendirmeyiDogrula(
-    { gerekce: "Uygundur.", alintilar: [{ belge_id: 1, alinti: "bu cümle belgede yok" }], puanlar },
+    { gerekce: "Uygundur.", alintilar: [{ no: 1, belge_id: 1, alinti: "bu cümle belgede yok" }], puanlar },
     PAKET,
   );
   assert.ok(!s.gecerli && s.hatalar.some((h) => h.kod === "alinti_eslesmiyor"));
@@ -91,7 +111,7 @@ test("uydurulmuş alıntı reddedilir", () => {
 
 test("olmayan belge reddedilir", () => {
   const s = degerlendirmeyiDogrula(
-    { gerekce: "Uygundur.", alintilar: [{ belge_id: 99, alinti: "tekstil ve deri" }], puanlar },
+    { gerekce: "Uygundur.", alintilar: [{ no: 99, belge_id: 99, alinti: "tekstil ve deri" }], puanlar },
     PAKET,
   );
   assert.ok(!s.gecerli && s.hatalar.some((h) => h.kod === "belge_yok"));
@@ -100,7 +120,7 @@ test("olmayan belge reddedilir", () => {
 test("pakete dahil olmayan belge reddedilir — model onu görmüş olamaz", () => {
   const sahte = { id: "p", belgeler: [{ id: 1, ad: "x", metin: METIN, pakete_dahil: false }] };
   const s = degerlendirmeyiDogrula(
-    { gerekce: "Uygundur.", alintilar: [{ belge_id: 1, alinti: "tekstil ve deri" }], puanlar },
+    { gerekce: "Uygundur.", alintilar: [{ no: 1, belge_id: 1, alinti: "tekstil ve deri" }], puanlar },
     sahte,
   );
   assert.ok(!s.gecerli && s.hatalar.some((h) => h.kod === "pakette_yok"));
@@ -134,20 +154,21 @@ test("azınlıkta kalan eşleşmeyen alıntı düşürülür, çıktı ayakta ka
     {
       gerekce: "Bölge planı önceliklerine uygundur.",
       alintilar: [
-        { belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" },
-        { belge_id: 1, alinti: "katma değeri yükseltecek dönüşüm alanı" },
-        { belge_id: 2, alinti: "Enerji verimliliği yatırımları" },
-        { belge_id: 1, alinti: "bu cümle belgede hiç yok" },
+        { no: 1, belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" },
+        { no: 2, belge_id: 1, alinti: "katma değeri yükseltecek dönüşüm alanı" },
+        { no: 3, belge_id: 2, alinti: "Enerji verimliliği yatırımları" },
+        { no: 4, belge_id: 1, alinti: "bu cümle belgede hiç yok" },
       ],
-      puanlar: puanSeti({ yerel_potansiyel: [0, 3], deger_zinciri: [1], plan_uyumu: [2] }),
+      puanlar: puanSeti({ yerel_potansiyel: [1, 4], deger_zinciri: [2], plan_uyumu: [3] }),
     },
     PAKET,
   );
   assert.equal(s.gecerli, true, "1/4 düşen alıntı tüm değerlendirmeyi çöpe atmaz");
   assert.equal(s.gecerli && s.dogrulanan.length, 3);
-  assert.equal(s.gecerli && s.dusenler.length, 1);
+  // biri belgede bulunamadı, ayrıca ona yapılan eşleme de çözülemedi → iki kayıt
+  assert.equal(s.gecerli && s.dusenler.filter((h) => h.kod === "alinti_eslesmiyor").length, 1);
   // Düşen alıntı eşlemeden de düşer; kalan sıralar yeni diziye göre kayar.
-  assert.deepEqual(s.gecerli && s.kriterDayanagi.yerel_potansiyel, [0], "düşen 3. alıntı eşlemeden çıktı");
+  assert.deepEqual(s.gecerli && s.kriterDayanagi.yerel_potansiyel, [0], "düşen 4 no'lu alıntı eşlemeden çıktı");
   assert.deepEqual(s.gecerli && s.kriterDayanagi.plan_uyumu, [2]);
   assert.equal(
     s.gecerli && s.dayanak,
@@ -160,9 +181,9 @@ test("çoğunluk eşleşmiyorsa çıktının tamamı reddedilir", () => {
     {
       gerekce: "Uygundur.",
       alintilar: [
-        { belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" },
-        { belge_id: 1, alinti: "bu cümle belgede hiç yok" },
-        { belge_id: 1, alinti: "bu cümle de belgede hiç yok" },
+        { no: 1, belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" },
+        { no: 2, belge_id: 1, alinti: "bu cümle belgede hiç yok" },
+        { no: 3, belge_id: 1, alinti: "bu cümle de belgede hiç yok" },
       ],
       puanlar,
     },
@@ -176,10 +197,10 @@ test("paket dışı belge tek başına bile sert reddedilir — güvenlik ihlali
     {
       gerekce: "Uygundur.",
       alintilar: [
-        { belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" },
-        { belge_id: 1, alinti: "katma değeri yükseltecek dönüşüm alanı" },
-        { belge_id: 2, alinti: "Enerji verimliliği yatırımları" },
-        { belge_id: 99, alinti: "tekstil ve deri" },
+        { no: 1, belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" },
+        { no: 2, belge_id: 1, alinti: "katma değeri yükseltecek dönüşüm alanı" },
+        { no: 3, belge_id: 2, alinti: "Enerji verimliliği yatırımları" },
+        { no: 4, belge_id: 99, alinti: "tekstil ve deri" },
       ],
       puanlar,
     },
@@ -189,7 +210,7 @@ test("paket dışı belge tek başına bile sert reddedilir — güvenlik ihlali
 });
 
 test("dayanak puanı belge çeşitliliğiyle artar", () => {
-  const alintilar = [{ belge_id: 1, alinti: "a" }, { belge_id: 2, alinti: "b" }];
+  const alintilar = [{ no: 1, belge_id: 1, alinti: "a" }, { no: 2, belge_id: 2, alinti: "b" }];
   const tek = dayanakPuani(alintilar, PAKET, eslemeSeti({ yerel_potansiyel: [0], deger_zinciri: [0] }));
   const cift = dayanakPuani(alintilar, PAKET, eslemeSeti({ yerel_potansiyel: [0], deger_zinciri: [1] }));
   assert.ok(cift > tek, "aynı belgeden iki kriter, iki ayrı belgeden iki kriter kadar güçlü değil");
@@ -201,7 +222,7 @@ function eslemeSeti(eslesme: Partial<Record<(typeof KRITERLER)[number], number[]
 }
 
 test("kriter kapsaması arttıkça dayanak artar", () => {
-  const alintilar = [{ belge_id: 1, alinti: "a" }, { belge_id: 2, alinti: "b" }];
+  const alintilar = [{ no: 1, belge_id: 1, alinti: "a" }, { no: 2, belge_id: 2, alinti: "b" }];
   const iki = dayanakPuani(alintilar, PAKET, eslemeSeti({ yerel_potansiyel: [0], plan_uyumu: [1] }));
   const dort = dayanakPuani(
     alintilar,
@@ -216,8 +237,8 @@ test("kıvrık kesme işareti ve tire farkı alıntıyı reddetmez", () => {
   const s = degerlendirmeyiDogrula(
     {
       gerekce: "Uygundur.",
-      alintilar: [{ belge_id: 1, alinti: "Kayseri’de savunma sanayi 2024–2028 döneminde" }],
-      puanlar: puanSeti({ yerel_potansiyel: [0] }),
+      alintilar: [{ no: 1, belge_id: 1, alinti: "Kayseri’de savunma sanayi 2024–2028 döneminde" }],
+      puanlar: puanSeti({ yerel_potansiyel: [1] }),
     },
     paket,
   );
@@ -229,26 +250,26 @@ test("… ile kısaltılmış alıntı parçaları sırayla doğrulanır", () =>
     { id: 1, ad: "X", metin: "Başta Ankara olmak üzere Konya ve Kayseri'de savunma ve havacılık sektörü öne çıkmaktadır." },
   ]);
   const dogru = degerlendirmeyiDogrula(
-    { gerekce: "Uygundur.", alintilar: [{ belge_id: 1, alinti: "Başta Ankara olmak üzere … savunma ve havacılık sektörü" }], puanlar },
+    { gerekce: "Uygundur.", alintilar: [{ no: 1, belge_id: 1, alinti: "Başta Ankara olmak üzere … savunma ve havacılık sektörü" }], puanlar },
     paket,
   );
   assert.equal(dogru.gecerli, true, "her parça sırayla geçiyorsa kabul");
 
   const tersSira = degerlendirmeyiDogrula(
-    { gerekce: "Uygundur.", alintilar: [{ belge_id: 1, alinti: "savunma ve havacılık sektörü … Başta Ankara olmak üzere" }], puanlar },
+    { gerekce: "Uygundur.", alintilar: [{ no: 1, belge_id: 1, alinti: "savunma ve havacılık sektörü … Başta Ankara olmak üzere" }], puanlar },
     paket,
   );
   assert.equal(tersSira.gecerli, false, "sıra bozuksa reddedilir — kompozit uydurma engellenir");
 
   const uydurma = degerlendirmeyiDogrula(
-    { gerekce: "Uygundur.", alintilar: [{ belge_id: 1, alinti: "Başta Ankara olmak üzere … deniz ticareti filosu" }], puanlar },
+    { gerekce: "Uygundur.", alintilar: [{ no: 1, belge_id: 1, alinti: "Başta Ankara olmak üzere … deniz ticareti filosu" }], puanlar },
     paket,
   );
   assert.equal(uydurma.gecerli, false, "parçalardan biri uydurmaysa reddedilir");
 });
 
 test("ağırlıklı kapsama: büyük paylı kriterin dayanaksız kalması pahalı", () => {
-  const alintilar = [{ belge_id: 1, alinti: "a" }, { belge_id: 2, alinti: "b" }];
+  const alintilar = [{ no: 1, belge_id: 1, alinti: "a" }, { no: 2, belge_id: 2, alinti: "b" }];
   // TR33-2027-v1'e yakın paylar: yerel_potansiyel %18, surdurulebilirlik %8.
   const agirliklar = {
     yerel_potansiyel: 0.18, deger_zinciri: 0.14, uygulanabilirlik: 0.12,

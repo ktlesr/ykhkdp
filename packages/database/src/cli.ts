@@ -1,7 +1,8 @@
 import { kapat } from "./baglanti.ts";
 import { asagi, sifirla, yukari } from "./migrate.ts";
 import { seed } from "./seed.ts";
-import { belgeYukle, RESMI_BELGELER } from "./belge-yukle.ts";
+import { belgeYukle, parcala, RESMI_BELGELER, yolCoz } from "./belge-yukle.ts";
+import { belgeDenetle, denetimiYaz } from "./belge-dogrula.ts";
 
 const komut = process.argv[2] ?? "up";
 
@@ -30,6 +31,22 @@ try {
       }
       break;
     }
+    case "belge-dogrula": {
+      // Yeni bir plan belgesini YÜKLEMEDEN önce kalitesini ölçer.
+      const yollar = process.argv.slice(3);
+      const hedefler = yollar.length ? yollar : RESMI_BELGELER.map((b) => b.dosya);
+      let kirilan = 0;
+      for (const yol of hedefler) {
+        const d = await belgeDenetle(yol);
+        const { readFile } = await import("node:fs/promises");
+        const ilk = parcala(await readFile(yolCoz(yol), "utf8"))[0]?.metin ?? null;
+        denetimiYaz(yol, d, ilk);
+        if (!d.gecti) kirilan++;
+      }
+      if (kirilan) process.exitCode = 1;
+      console.log();
+      break;
+    }
     case "reset": {
       await sifirla();
       const yeni = await yukari();
@@ -38,7 +55,7 @@ try {
       break;
     }
     default:
-      console.error(`Bilinmeyen komut: ${komut}. up | down [n] | seed | belgeler | reset`);
+      console.error(`Bilinmeyen komut: ${komut}. up | down [n] | seed | belgeler | belge-dogrula [dosya…] | reset`);
       process.exitCode = 1;
   }
 } catch (e) {

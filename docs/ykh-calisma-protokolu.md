@@ -63,3 +63,17 @@ pnpm worker                             # AI değerlendirme döngüsü
 ```
 
 `pnpm audit --prod` temiz olmadan sürüm çıkılmaz.
+
+## AI komutları
+
+```bash
+pnpm ai:test                            # bağlantı sınaması, tek çağrı, DB'ye yazmaz
+pnpm ai:eval                            # eval kümesi, örnek × 3 koşu medyanı
+YKH_EVAL_TEKRAR=5 pnpm ai:eval          # gürültü şüphesinde tekrarı artır
+pnpm db:belgeler                        # docs/ altındaki plan belgelerini yükler
+pnpm belge:dogrula [dosya…]             # YÜKLEMEDEN ÖNCE metin kalitesini ölçer
+```
+
+**Prompt veya şema değiştirdiysen `pnpm ai:eval` çalıştır.** Birim testler şema ve
+doğrulama katmanını tutar, çıktı kalitesini tutmaz. `prompt_surum` her değişiklikte
+artar — provenance sürümle taşınır, testler de sürümü kontrol eder.

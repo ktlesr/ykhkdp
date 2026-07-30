@@ -82,10 +82,10 @@ function uret(istek: ModelIstegi): unknown {
     .filter((w) => w.length > 5)
     .slice(0, 8);
 
-  const alintilar: Array<{ belge_id: number; alinti: string }> = [];
+  const alintilar: Array<{ no: number; belge_id: number; alinti: string }> = [];
   for (const b of belgeler.slice(0, 3)) {
     const c = cumleBul(b.metin, anahtarlar);
-    if (c) alintilar.push({ belge_id: b.id, alinti: c });
+    if (c) alintilar.push({ no: alintilar.length + 1, belge_id: b.id, alinti: c });
   }
 
   // ponytail: çevrimdışı istemci deterministik taban puan üretir; gerçek
@@ -97,7 +97,7 @@ function uret(istek: ModelIstegi): unknown {
       puan: Math.max(0, Math.min(100, taban + ((i * 7) % 13) - 6)),
       not: "Çevrimdışı istemci: belgelerdeki eşleşmeye göre taban puan.",
       // Bulunan alıntılar kriterlere sırayla dağıtılır; kalanlar dayanaksız kalır.
-      alinti_no: i < alintilar.length ? [i] : [],
+      alinti_no: i < alintilar.length ? [alintilar[i].no] : [],
     })),
     // Gerekçede SAYI YOK: doğrulayıcı belgede geçmeyen her sayısal ifadeyi
     // reddeder ve kendi çıktımızı kendimiz reddettirmiş oluruz.

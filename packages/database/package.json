@@ -17,7 +17,8 @@
     "reset": "node --env-file-if-exists=../../.env src/cli.ts reset",
     "test": "node --env-file-if-exists=../../.env --env-file-if-exists=../../.env.test --test src/*.test.ts",
     "nace": "node --env-file-if-exists=../../.env src/cli.ts nace",
-    "belgeler": "node --env-file-if-exists=../../.env src/cli.ts belgeler"
+    "belgeler": "node --env-file-if-exists=../../.env src/cli.ts belgeler",
+    "belge-dogrula": "node --env-file-if-exists=../../.env src/cli.ts belge-dogrula"
   },
   "dependencies": {
     "@ykh/domain": "workspace:*",
