@@ -8,7 +8,9 @@ import {
   belgeKapsami,
   BENZERLIK_ESIGI,
   girisYap,
+  misafirAc,
   naceAra,
+  oneriOlustur,
   naceGetir,
   oturumCoz,
   yakinKopyalar,
@@ -233,8 +235,11 @@ test("KVKK: kimlik pseudonimleşir, öneri zinciri korunur", async () => {
 // ── migration geri alma ────────────────────────────────────────────────────
 
 test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
-  const geri = await asagi(6);
-  assert.deepEqual(geri, ["0006_yakin_kopya", "0005_karsi_gorus", "0004_kriter_dayanagi", "0003_kurallar", "0002_rls", "0001_sema"]);
+  const geri = await asagi(7);
+  assert.deepEqual(geri, [
+    "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus", "0004_kriter_dayanagi",
+    "0003_kurallar", "0002_rls", "0001_sema",
+  ]);
   const [{ n }] = await sahip()<{ n: string }[]>`
     select count(*) as n from information_schema.tables where table_schema = 'public' and table_name = 'oneri'
   `;
@@ -242,7 +247,7 @@ test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
 
   assert.deepEqual(await yukari(), [
     "0001_sema", "0002_rls", "0003_kurallar", "0004_kriter_dayanagi",
-    "0005_karsi_gorus", "0006_yakin_kopya",
+    "0005_karsi_gorus", "0006_yakin_kopya", "0007_misafir",
   ]);
   await seed();
 });
@@ -312,4 +317,40 @@ test("belge kapsaması yerel belgesi olmayan ili gösterir", async () => {
   assert.ok(manisa && manisa.il_belgesi === 0, "Manisa'nın ile özgü belgesi yok");
   assert.ok(manisa && manisa.ajans_belgesi > 0, "ajans belgesi (bölge planı) her ilde geçerli");
   assert.ok(kapsam.every((x) => x.ulusal > 0), "ulusal belgeler her ilde geçerli");
+});
+
+// ── misafir · kayıt olmadan devam et ───────────────────────────────────────
+
+test("misafir oturumu kişisel veri olmadan açılır ve öneri verebilir", async () => {
+  const { jeton, ref } = await misafirAc();
+  const m = await oturumCoz(jeton);
+  assert.ok(m, "misafir oturumu çözülmeli");
+  assert.equal(m.misafir, true);
+  assert.equal(m.rol, "yatirimci");
+  assert.equal(m.eposta, null, "misafirde e-posta yok");
+  assert.equal(m.adSoyad, null, "misafirde ad soyad yok");
+
+  const [k] = await sahip()<{ n: string }[]>`select count(*) as n from kimlik where gonderen_ref = ${ref}`;
+  assert.equal(Number(k.n), 0, "kimlik satırı HİÇ oluşturulmaz — toplanan kişisel veri sıfır");
+
+  // Misafir kendi önerisini verebiliyor ve görebiliyor.
+  const misafir = baglamdan(m);
+  const [d] = await islem(misafir, (sql) => sql<{ id: number }[]>`select id from donem limit 1`);
+  const o = await oneriOlustur(misafir, {
+    donemId: Number(d.id),
+    baslik: "Misafir gönderimi denemesi",
+    gerekce: "Kayıt olmadan devam eden yatırımcı bu öneriyi gönderebilmeli ve sonra görebilmeli.",
+    ilce: "Merkez",
+    naceKod: null,
+  });
+  const kendi = await islem(misafir, (sql) => sql`select id from oneri where id = ${o.id}`);
+  assert.equal(kendi.length, 1, "misafir kendi önerisini görür");
+});
+
+test("misafir işareti ajansa görünür — kimin önerdiği saklanmaz", async () => {
+  const { ref } = await misafirAc();
+  const [g] = await islem(ajans, (sql) => sql<{ misafir: boolean }[]>`
+    select misafir from gonderen where ref = ${ref}
+  `);
+  assert.equal(g?.misafir, true);
 });

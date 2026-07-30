@@ -34,7 +34,7 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
       <UstBar
         kullanici={k}
         nav={[
-          { ad: "İller", yol: "/" },
+          { ad: "İller", yol: "/iller" },
           { ad: d.il, yol: `/il/${il}`, aktif: true },
           { ad: "Öneri ver", yol: `/oneri?il=${il}` },
           ...(k && onaylayabilir(k.rol) ? [{ ad: "Onay", yol: "/onay" }] : []),

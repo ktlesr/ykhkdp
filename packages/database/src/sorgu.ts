@@ -11,7 +11,14 @@ import { jetonOzeti, oturumJetonu, parolaDogrula, parolaOzetle } from "./parola.
 
 // ── oturum ─────────────────────────────────────────────────────────────────
 
-export type Kullanici = { ref: string; rol: Rol; eposta: string | null; adSoyad: string | null };
+export type Kullanici = {
+  ref: string;
+  rol: Rol;
+  eposta: string | null;
+  adSoyad: string | null;
+  /** kayıt olmadan devam eden gönderen — `kimlik` satırı yok */
+  misafir: boolean;
+};
 
 const ANONIM: Baglam = { gonderenRef: null, rol: "anonim" };
 
@@ -34,6 +41,23 @@ export async function kayitOl(
     const jeton = await oturumYarat(sql, ref);
     await denetle(sql, { gonderenRef: ref, rol: "yatirimci" }, "kayit_olundu", "gonderen", ref);
     return { ok: true as const, jeton };
+  });
+}
+
+/**
+ * Misafir oturumu açar — kişisel veri toplanmaz.
+ *
+ * "Kayıt olmadan devam et" yolu. `kimlik` satırı oluşturulmaz; öneri değişmez
+ * `gonderen.ref` anahtarına bağlanır ve yatırımcı oturum çerezi ile kendi
+ * önerisini takip edebilir. Çerez kaybolursa öneriye erişim biter — bilinen ve
+ * kabul edilmiş bedel; alternatifi kişisel veri toplamak.
+ */
+export async function misafirAc(): Promise<{ jeton: string; ref: string }> {
+  return islem(ANONIM, async (sql) => {
+    const [{ misafir_ac: ref }] = await sql<{ misafir_ac: string }[]>`select misafir_ac()`;
+    const jeton = await oturumYarat(sql, ref);
+    await denetle(sql, { gonderenRef: ref, rol: "yatirimci" }, "misafir_oturum_acildi", "gonderen", ref);
+    return { jeton, ref };
   });
 }
 
@@ -63,10 +87,14 @@ async function oturumYarat(sql: postgres.Sql, ref: string): Promise<string> {
 export async function oturumCoz(jeton: string | undefined): Promise<Kullanici | null> {
   if (!jeton) return null;
   return islem(ANONIM, async (sql) => {
-    const [s] = await sql<{ ref: string; rol: Rol; eposta: string | null; ad_soyad: string | null }[]>`
+    const [s] = await sql<
+      { ref: string; rol: Rol; eposta: string | null; ad_soyad: string | null; misafir: boolean }[]
+    >`
       select * from oturum_coz(${await jetonOzeti(jeton)})
     `;
-    return s ? { ref: s.ref, rol: s.rol, eposta: s.eposta, adSoyad: s.ad_soyad } : null;
+    return s
+      ? { ref: s.ref, rol: s.rol, eposta: s.eposta, adSoyad: s.ad_soyad, misafir: s.misafir }
+      : null;
   });
 }
 
@@ -143,6 +171,110 @@ export async function illeriListele(b: Baglam) {
   );
 }
 
+/**
+ * Tanıtım sayfasının sayıları — hepsi kamuya açık, hepsi gerçek.
+ *
+ * Landing sayfasında uydurma metrik yok: bu sayılar veritabanından geliyor ve
+ * boşsa boş görünüyor. "1000+ yatırımcı" gibi bir cümle bu üründe yazılamaz.
+ */
+export async function platformOzeti(b: Baglam) {
+  return islem(b, async (sql) => {
+    const [r] = await sql<
+      { il: number; ajans: number; nace: number; belge: number; parca: number; listede: number; bekleyen: number }[]
+    >`
+      select
+        (select count(*) from il)::int as il,
+        (select count(*) from ajans)::int as ajans,
+        (select count(*) from nace)::int as nace,
+        (select count(distinct ad) from belge)::int as belge,
+        (select count(*) from belge)::int as parca,
+        (select count(*) from oneri where durum = 'listede')::int as listede,
+        (select count(*) from oneri where durum in ('degerlendiriliyor','onay_bekliyor'))::int as bekleyen
+    `;
+    return r;
+  });
+}
+
+/**
+ * Tanıtım sayfası için GERÇEK bir değerlendirme kaydı.
+ *
+ * Landing sayfasının imza anı: mekanizmayı anlatmak yerine çalıştığını
+ * göstermek. Yalnızca `listede` (kamuya açık) öneriler arasından, en çok
+ * doğrulanmış alıntısı olan kayıt seçilir. Kayıt yoksa null döner ve sayfa
+ * uydurma bir örnek göstermez.
+ */
+export async function ornekDegerlendirme(b: Baglam) {
+  return islem(b, async (sql) => {
+    const [r] = await sql<
+      {
+        id: number; baslik: string; il: string; il_kod: string; ilce: string | null;
+        dayanak: number; gerekce: string; model_snapshot: string; prompt_surum: string;
+        alintilar: Array<{ belge_ad: string; bolum: string | null; alinti: string }>;
+        kriter_dayanagi: Record<string, number[]>;
+        karsi_gorus: Array<{ tur: string; iddia: string }>;
+      }[]
+    >`
+      select o.id, o.baslik, i.ad as il, i.kod as il_kod, o.ilce,
+             g.dayanak, g.gerekce, g.model_snapshot, g.prompt_surum,
+             g.alintilar, g.kriter_dayanagi, g.karsi_gorus
+      from oneri o
+      join degerlendirme g on g.oneri_id = o.id
+      join donem d on d.id = o.donem_id
+      join il i on i.kod = d.il_kod
+      where o.durum = 'listede' and jsonb_array_length(g.alintilar) > 0
+      order by jsonb_array_length(g.alintilar) desc, g.dayanak desc, o.id
+      limit 1
+    `;
+    return r ?? null;
+  });
+}
+
+export type Bolge = {
+  ajans_kod: string;
+  ajans: string;
+  iller: Array<{ kod: string; ad: string; yil: string; ilceler: string[] }>;
+};
+
+/**
+ * Öneri sihirbazının tüm coğrafyası — tek sorgu.
+ *
+ * Sihirbaz ajans bölgesi → il → ilçe adımlarını istemcide yürütüyor; her adımda
+ * sunucuya dönmek gereksiz gecikme. Yalnızca AÇIK DÖNEMİ olan iller döner:
+ * dönemi olmayan bir ile öneri verilemez, o yüzden seçenek olarak da sunulmaz.
+ *
+ * ponytail: tüm ilçeler tek seferde geliyor. 81 il × ~15 ilçe ≈ 1200 satır,
+ * JSON olarak önemsiz. Ölçü rahatsız edici olursa ilçeler adım 3'te ayrı bir
+ * sunucu eylemiyle çekilir ve sihirbazın yalnızca o adımı değişir.
+ */
+export async function bolgeler(b: Baglam): Promise<Bolge[]> {
+  const satirlar = await islem(b, (sql) =>
+    sql<{ ajans_kod: string; ajans: string; kod: string; ad: string; yil: string; ilceler: string[] }[]>`
+      select a.kod as ajans_kod, a.ad as ajans, i.kod, i.ad, d.yil,
+             coalesce(
+               array_agg(c.ad order by (c.ad <> 'Merkez'), c.ad) filter (where c.ad is not null),
+               '{}'
+             ) as ilceler
+      from donem d
+      join il i on i.kod = d.il_kod
+      join ajans a on a.kod = i.ajans_kod
+      left join ilce c on c.il_kod = i.kod
+      group by a.kod, a.ad, i.kod, i.ad, d.yil
+      order by a.ad, i.ad
+    `,
+  );
+
+  const out: Bolge[] = [];
+  for (const r of satirlar) {
+    let bolge = out.find((x) => x.ajans_kod === r.ajans_kod);
+    if (!bolge) {
+      bolge = { ajans_kod: r.ajans_kod, ajans: r.ajans, iller: [] };
+      out.push(bolge);
+    }
+    bolge.iller.push({ kod: r.kod, ad: r.ad, yil: r.yil, ilceler: r.ilceler });
+  }
+  return out;
+}
+
 export async function ilceler(b: Baglam, ilKod: string) {
   return islem(b, (sql) =>
     sql<{ ad: string }[]>`select ad from ilce where il_kod = ${ilKod} order by (ad <> 'Merkez'), ad`,
@@ -181,7 +313,7 @@ export type OneriGirdi = {
   donemId: number;
   baslik: string;
   gerekce: string;
-  ilce: string;
+  ilce: string | null;
   naceKod: string | null;
 };
 

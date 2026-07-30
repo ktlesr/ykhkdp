@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import test, { after, before } from "node:test";
 import {
-  adaylariGetir, baglamdan, belgeEkle, donemGetir, durumDegistir, girisYap, islem, kapat,
-  kayitOl, naceAra, onayKuyrugu, oneriGetir, oneriOlustur, oturumCoz, puanDuzelt, type Baglam,
+  adaylariGetir, baglamdan, belgeEkle, bolgeler, donemGetir, durumDegistir, girisYap, islem, kapat,
+  kayitOl, misafirAc, naceAra, onayKuyrugu, oneriGetir, oneriOlustur, ornekDegerlendirme, oturumCoz,
+  platformOzeti, puanDuzelt, ANONIM, type Baglam,
 } from "@ykh/database";
 import { sifirla, yukari } from "@ykh/database/migrate";
 import { DEMO_PAROLA, seed } from "@ykh/database/seed";
@@ -213,4 +214,67 @@ test("14 · anonim kişisel veri ve denetim izi göremez", async () => {
   // Onaylanmamış öneri kamuya kapalı
   const gorunen = await islem(anonim, (sql) => sql`select id from oneri where durum <> 'listede'`);
   assert.equal(gorunen.length, 0);
+});
+
+// ── tanıtım sayfası ve öneri sihirbazı ─────────────────────────────────────
+
+test("15 · tanıtım sayfası yalnızca gerçek sayı gösterir", async () => {
+  const ozet = await platformOzeti(ANONIM);
+  assert.ok(ozet.il > 0 && ozet.ajans > 0, "il ve ajans sayısı veritabanından gelir");
+  assert.equal(ozet.nace, 3190, "NACE Rev.2.1 tam yüklü");
+  assert.ok(ozet.belge > 0, "belge sayısı yüklü belgelerden");
+  assert.ok(ozet.listede >= 0 && ozet.bekleyen >= 0);
+});
+
+test("15b · tanıtım örneği yalnızca ONAYLANMIŞ ve alıntılı kayıttan seçilir", async () => {
+  const o = await ornekDegerlendirme(ANONIM);
+  if (!o) return; // henüz onaylanmış kayıt yoksa sayfa uydurma örnek göstermez
+  assert.ok(o.alintilar.length > 0, "alıntısız kayıt örnek olarak seçilmez");
+  const [durum] = await islem(ANONIM, (sql) =>
+    sql<{ durum: string }[]>`select durum from oneri where id = ${o.id}`,
+  );
+  assert.equal(durum.durum, "listede", "yalnızca kamuya açık kayıt tanıtımda görünür");
+  assert.ok(o.model_snapshot && o.model_snapshot !== "latest", "model künyesi taşınır");
+});
+
+test("16 · sihirbaz coğrafyası: yalnızca açık dönemi olan iller, ajansa göre gruplu", async () => {
+  const b = await bolgeler(ANONIM);
+  assert.ok(b.length > 0);
+  for (const x of b) {
+    assert.ok(x.ajans_kod && x.ajans, "ajans künyesi dolu");
+    assert.ok(x.iller.length > 0, "bölge en az bir il taşır");
+    for (const i of x.iller) {
+      assert.ok(i.yil, "il açık dönem yılı taşır — dönemi olmayan il seçenek olarak sunulmaz");
+      assert.ok(i.ilceler.length > 0, "ilçeler adım 4 için hazır gelir");
+      // Her ilin "Merkez" ilçesi yok (Manisa: Şehzadeler / Yunusemre). Varsa
+      // ilk sırada olmalı; yoksa alfabetik.
+      if (i.ilceler.includes("Merkez")) assert.equal(i.ilceler[0], "Merkez");
+    }
+  }
+});
+
+test("17 · misafir sihirbazdan öneri verebilir, adı hiçbir yerde tutulmaz", async () => {
+  const { jeton } = await misafirAc();
+  const m = await oturumCoz(jeton);
+  assert.ok(m?.misafir);
+
+  const misafir = baglamdan(m);
+  const [bolge] = await bolgeler(misafir);
+  const il = bolge.iller[0];
+  const d = await donemGetir(misafir, il.kod);
+  assert.ok(d, "seçilen ilin açık dönemi olmalı");
+
+  const o = await oneriOlustur(misafir, {
+    donemId: d.donemId,
+    baslik: "Sihirbazdan misafir gönderimi",
+    gerekce:
+      "Kayıt olmadan devam eden yatırımcı sihirbazın son adımında öneriyi gönderebilmeli ve sonra görebilmeli.",
+    ilce: il.ilceler[0],
+    naceKod: null,
+  });
+
+  const kendi = await islem(misafir, (sql) => sql`select id from oneri where id = ${o.id}`);
+  assert.equal(kendi.length, 1, "misafir kendi önerisini görür");
+  const anonim = await islem(ANONIM, (sql) => sql`select id from oneri where id = ${o.id}`);
+  assert.equal(anonim.length, 0, "onaylanmamış öneri anonime kapalı");
 });

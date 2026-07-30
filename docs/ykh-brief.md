@@ -23,18 +23,31 @@ taslaktır**; ajans onaylamadan hiçbir öneri sıralamaya girmez.
 Platform resmî Portal veya E-TUYS'un yerine geçmez; yatırımcı başvuruları başlamadan
 önceki politika hazırlama katmanıdır.
 
-## 2. Beş ekran
+## 2. Ekranlar
 
 | Yol | Kim | Ne |
 |---|---|---|
-| `/` | herkes | il listesi; her ilde kaç öneri listede, kaç tanesi onay bekliyor |
-| `/oneri` | yatırımcı | beş alanlı form: başlık · neden burada · il · ilçe · NACE (boş bırakılabilir) |
+| `/` | herkes | tanıtım sayfası; mekanizma, kriter payları ve **gerçek bir değerlendirme kaydı** |
+| `/iller` | herkes | il listesi; her ilde kaç öneri listede, kaç tanesi onay bekliyor |
+| `/oneri` | yatırımcı | **öneri sihirbazı**: kimlik → ajans bölgesi → il → öneri (tek route, dört adım) |
 | `/il/[il]` | herkes | o ilin sıralaması, slotlar, boş slot gerekçesi |
 | `/oneri/[id]` | herkes | AI bu puanı neye dayanarak verdi: gerekçe, belge alıntıları, kriter kırılımı |
 | `/onay` | ajans | AI puanladı, onay bekliyor: onayla · puanı düzelt · NACE'yi düzelt · reddet · yakın kopya işareti |
 | `/belgeler` | ajans | üst ölçekli belge yükleme + il bazlı kapsama — AI'nin dayanağı |
 
 Ayrıca `/giris` ve `/kayit`. Başka ekran yok.
+
+**Tanıtım sayfası** platformun başlangıç ekranıdır ve pazarlama yüzeyi olarak
+farklı kurallarla çalışır: ink panel + ölçü cetveli dokusu, ochre yalnızca
+"doğrulanmadı" anlamında. Sayılar veritabanından gelir; uydurma metrik yazılamaz.
+İmza bölümü mekanizmayı anlatmaz, **çalıştığını gösterir** — gerçek bir kaydın
+alıntılarını, atıf çıpalarını, model künyesini ve **belgeye bağlanamayan
+kriterini** açar. Onaylanmış kayıt yoksa örnek uydurulmaz, bölüm boş görünür.
+
+**Öneri sihirbazı** ekran eklemez: dört adım tek route ve tek istemci bileşeni
+içinde yürür, gönderim `oneriEylemi` ile aynı yoldan gider. Adımlar ekranı
+bölmek için değil KARARI bölmek için: yatırımcı önce nerede olduğuna, sonra ne
+önerdiğine odaklanır.
 
 ## 3. Üç rol
 
@@ -44,8 +57,14 @@ Ayrıca `/giris` ve `/kayit`. Başka ekran yok.
 | `ajans` | onaylar, reddeder, puanı ve NACE'yi düzeltir, belge yükler |
 | `yonetici` | ajansın her şeyi + kişisel veriye erişim (denetim) |
 
-Kurumsal kayıt, kurum doğrulama ve kurum onayı **yoktur**. Yatırımcı e-posta
-doğrulamalı bir hesapla girer.
+Kurumsal kayıt, kurum doğrulama ve kurum onayı **yoktur**.
+
+**Misafir yatırımcı:** öneri vermek için kayıt zorunlu değil. `misafir_ac()`
+kişisel veri olmadan bir `gonderen` satırı açar — `kimlik` tablosuna hiç yazılmaz
+— ve oturum çerezi verir. Toplanan kişisel veri sıfır; KVKK silme talebinde
+pseudonimleştirilecek bir şey yoktur. Bedeli açıkça yazılır: tarayıcı verisi
+silinirse öneriye erişim biter. `gonderen.misafir` ajansa görünür, çünkü kimin
+önerdiği ajans kararında saklanmaz.
 
 ## 4. Dört öneri durumu
 
@@ -292,7 +311,9 @@ Redis, S3/MinIO, pgvector, PostGIS **yok**. Gerekene kadar eklenmez.
 
 - **KVKK ayrımı:** öneri kişiye değil değişmez `gonderen.ref` anahtarına bağlanır;
   kişisel veri ayrı `kimlik` tablosunda. `kimlik_pseudonimlestir()` silme talebinde
-  kimliği siler, öneri zincirini bozmaz.
+  kimliği siler, öneri zincirini bozmaz. Misafir gönderende `kimlik` satırı hiç
+  oluşmaz (`gonderen.misafir = true`) — bu ayrım sonradan eklenmedi, model bunu
+  baştan destekliyordu.
 - **`denetim` append-only:** RLS'te update/delete politikası yok + trigger ikinci katman.
 - **Her tabloda `access_class`:** `kamuya_acik` | `kurum_ici` | `gizli`.
 

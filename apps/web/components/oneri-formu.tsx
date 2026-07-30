@@ -1,34 +1,33 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { EylemFormu, Gonder } from "./eylem-formu.tsx";
 import { NaceSecici } from "./nace-secici.tsx";
 import { ALAN_ETIKET, GIRDI } from "./ui.tsx";
 import { oneriEylemi } from "@/lib/eylem.ts";
 
-/** Beş alanlı öneri formu. Tüm dokunma hedefleri ≥44px. */
+/**
+ * Öneri formu — sihirbazın son adımı. Tüm dokunma hedefleri ≥44px.
+ *
+ * İl artık formda seçilmiyor: sihirbaz seçti ve gizli alan olarak taşınıyor.
+ * Eskiden il seçimi `router.replace` ile sayfayı yeniden yüklüyor ve yazılmış
+ * metni riske atıyordu; o yol kalktı.
+ */
 export function OneriFormu({
-  iller,
-  secili,
-  ilceler,
+  il,
   yerellikPayi,
 }: {
-  iller: Array<{ kod: string; ad: string }>;
-  secili: string;
-  ilceler: string[];
+  il: { kod: string; ad: string; ilceler: string[] };
   yerellikPayi: number;
 }) {
-  const router = useRouter();
   const [baslik, setBaslik] = useState("");
   const [gerekce, setGerekce] = useState("");
-  const ilAdi = iller.find((x) => x.kod === secili)?.ad ?? "";
 
   return (
     <EylemFormu eylem={oneriEylemi} className="mt-6 border border-ink bg-surface">
       <div className="flex items-center justify-between bg-ink px-4 py-2.5 font-mono text-[10px] uppercase tracking-[.12em] text-[#C9CDD3]">
         <span>Öneri formu</span>
-        <span>5 alan</span>
+        <span>{il.ad}</span>
       </div>
 
       <div className="px-4 py-5">
@@ -70,37 +69,19 @@ export function OneriFormu({
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-3 max-[520px]:grid-cols-1">
-          <div>
-            <label className={ALAN_ETIKET} htmlFor="il">
-              İl
-            </label>
-            <select
-              id="il"
-              name="il"
-              defaultValue={secili}
-              onChange={(e) => router.replace(`/oneri?il=${e.target.value}`)}
-              className={GIRDI}
-            >
-              {iller.map((x) => (
-                <option key={x.kod} value={x.kod}>
-                  {x.ad}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className={ALAN_ETIKET} htmlFor="ilce">
-              İlçe
-            </label>
-            <select id="ilce" name="ilce" className={GIRDI} defaultValue={ilceler[0] ?? ""}>
-              {ilceler.map((i) => (
-                <option key={i} value={i}>
-                  {i}
-                </option>
-              ))}
-            </select>
-          </div>
+        <input type="hidden" name="il" value={il.kod} />
+
+        <div className="mt-5 max-w-[320px]">
+          <label className={ALAN_ETIKET} htmlFor="ilce">
+            İlçe · {il.ad}
+          </label>
+          <select id="ilce" name="ilce" className={GIRDI} defaultValue={il.ilceler[0] ?? ""}>
+            {il.ilceler.map((i) => (
+              <option key={i} value={i}>
+                {i}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="mt-5">
@@ -116,7 +97,7 @@ export function OneriFormu({
         </div>
 
         <div className="mt-5">
-          <Gonder className="w-full">Öneriyi gönder{ilAdi ? ` · ${ilAdi}` : ""}</Gonder>
+          <Gonder className="w-full">Öneriyi değerlendirmeye gönder · {il.ad}</Gonder>
         </div>
         <p className="mt-2 text-[12px] leading-[1.45] text-ink-mute">
           Gönderdikten sonra yapay zekâ değerlendirir. Puan hazır olduğunda ajans onayına düşer.

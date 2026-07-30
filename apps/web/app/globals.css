@@ -187,3 +187,54 @@
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ── Tanıtım sayfası ──────────────────────────────────────────────────────
+   Gradyan, glow, gölge ve cam efekti yasak (§1.8). Atmosfer DOKU ile
+   kuruluyor: ink panelin üzerinde ölçü cetveli çizgileri. Ürünün kendisi de
+   durumları dokuyla taşıyor (tex-unverified, tex-absent) — aynı dil.        */
+.tex-cetvel {
+  background-image: repeating-linear-gradient(
+    to right,
+    color-mix(in oklab, #ede9e0 9%, transparent) 0 1px,
+    transparent 1px 48px
+  );
+}
+.tex-cetvel-ince {
+  background-image: repeating-linear-gradient(
+    to right,
+    color-mix(in oklab, #101419 7%, transparent) 0 1px,
+    transparent 1px 48px
+  );
+}
+
+/* Yalnızca konum kayması: içerik hiçbir anda gizlenmiyor, bu yüzden animasyon
+   çalışmasa da (arka sekme, headless) sayfa tam görünür. */
+@keyframes landingRise {
+  from {
+    transform: translateY(10px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.landing-rise {
+  animation: landingRise 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+/* Koyu panel — HER İKİ temada koyu kalır.
+   `bg-ink` kullanmak yanlış olurdu: koyu temada `--color-ink` açık renge
+   dönüyor ve üzerindeki sabit açık metin görünmez hâle geliyor. Bu panel bir
+   durum rengi değil, matbu bir künye alanı; temayla dönmemesi doğru. */
+.panel-koyu {
+  background: #101419;
+  color: #ede9e0;
+}
+.panel-koyu a {
+  color: #ede9e0;
+}
+/* Koyu panel üzerindeki dolu düğme: zemin de metin de sabit. */
+.dugme-ters {
+  background: #f6f4ef;
+  border-color: #f6f4ef;
+  color: #101419;
+}

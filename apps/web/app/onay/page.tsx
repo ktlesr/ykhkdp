@@ -9,7 +9,7 @@ import { baglam, kullanici } from "@/lib/oturum.ts";
 export default async function Onay() {
   const k = await kullanici();
   if (!k) redirect("/giris?hedef=%2Fonay");
-  if (!onaylayabilir(k.rol)) redirect("/");
+  if (!onaylayabilir(k.rol)) redirect("/iller");
 
   const b = await baglam();
   const [kuyruk, kopyalar] = await Promise.all([onayKuyrugu(b), kuyrukKopyalari(b)]);
@@ -19,7 +19,7 @@ export default async function Onay() {
       <UstBar
         kullanici={k}
         nav={[
-          { ad: "İller", yol: "/" },
+          { ad: "İller", yol: "/iller" },
           { ad: "Onay", yol: "/onay", aktif: true },
           { ad: "Belgeler", yol: "/belgeler" },
         ]}

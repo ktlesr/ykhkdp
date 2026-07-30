@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import {
   belgeEkle, belgeSil, cikisYap, donemGetir, girisYap, islem, kayitOl, naceAra, naceDuzelt,
-  oneriOlustur, puanDuzelt, durumDegistir,
+  misafirAc, oneriOlustur, puanDuzelt, durumDegistir,
 } from "@ykh/database";
 import { gecisIzinli, onaylayabilir, type OneriDurumu } from "@ykh/domain";
 import { log } from "@ykh/observability";
@@ -21,7 +21,7 @@ export async function girisEylemi(_o: EylemSonucu | null, f: FormData): Promise<
   const r = await girisYap(String(f.get("eposta") ?? ""), String(f.get("parola") ?? ""));
   if (!r.ok) return { ok: false, mesaj: r.hata };
   await oturumCerezi(r.jeton);
-  redirect(String(f.get("hedef") ?? "/"));
+  redirect(String(f.get("hedef") ?? "/iller"));
 }
 
 export async function kayitEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
@@ -39,6 +39,24 @@ export async function cikisEylemi(): Promise<void> {
   await cikisYap((await cookies()).get(COOKIE)?.value);
   await cerezSil();
   redirect("/");
+}
+
+/**
+ * Kayıt olmadan devam et.
+ *
+ * Kişisel veri toplanmaz: `kimlik` satırı hiç oluşturulmaz, yalnızca değişmez
+ * `gonderen.ref` ve oturum çerezi. Yatırımcı önerisini bu çerezle takip eder.
+ */
+export async function misafirEylemi(): Promise<EylemSonucu> {
+  const k = await kullanici();
+  if (k) return { ok: true, mesaj: "Oturum zaten açık." };
+  const { jeton } = await misafirAc();
+  await oturumCerezi(jeton);
+  log.info("misafir_oturum", {});
+  // revalidatePath YOK: sihirbaz adımı istemcide ilerliyor, route'u yenilemek
+  // yazılmakta olan formu ve adım durumunu riske atar. Çerez sunucuda hazır;
+  // `oneriEylemi` gönderim anında onu okuyor.
+  return { ok: true, mesaj: "Misafir olarak devam ediyorsunuz." };
 }
 
 // ── NACE arama (yatırımcı biliyorsa girer) ─────────────────────────────────
@@ -75,7 +93,9 @@ export async function oneriEylemi(_o: EylemSonucu | null, f: FormData): Promise<
     donemId: d.donemId,
     baslik,
     gerekce,
-    ilce: ilce || "Merkez",
+    // "Merkez" varsayılanı YOK: her ilin Merkez ilçesi yok (Manisa:
+    // Şehzadeler / Yunusemre). Uydurma ilçe adı yazmak yerine boş bırakılıyor.
+    ilce: ilce || null,
     naceKod: String(f.get("naceKod") ?? "") || null,
   });
   log.info("oneri_olusturuldu", { oneriId: o.id, il });

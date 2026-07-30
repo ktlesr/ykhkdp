@@ -33,6 +33,8 @@ kullanır. Türkçe terim kanoniktir.
 | kriter | `kriter` enum · `Kriter` | "Kriter" |
 | gönderen | `gonderen.ref` | görünmez (takma anahtar) |
 | kimlik | `kimlik` | "Hesap" |
+| misafir | `gonderen.misafir` · `misafir_ac()` | "Kayıt olmadan devam et" |
+| sihirbaz adımı | `Adim` (`kimlik`·`bolge`·`il`·`oneri`) | adım şeridi |
 | denetim | `denetim` | "Kayıt" |
 | erişim sınıfı | `access_class` | "Veri sınıfı" |
 

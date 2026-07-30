@@ -18,7 +18,11 @@
 7. **Reddedilen AI çıktısı kaydedilmez;** yalnızca denetime yazılır.
 8. Gradyan, glow, gölge, cam efekti, emoji, `border-radius > 3px` yasak.
 9. Arayüz dili Türkçe, sade fiil, kısaltma yok.
-10. **Ekran eklemeden önce sor.** Ürün beş ekran; altıncısı gerekçe ister.
+10. **Ekran eklemeden önce sor.** Tanıtım sayfası (`/`) ve `/iller` ayrımı
+    kullanıcı onayıyla eklendi; öneri sihirbazı yeni ekran DEĞİL, `/oneri`
+    içinde dört adım. Yeni bir route gerekçe ister.
+11. **Koyu panel token kullanmaz.** `bg-ink` koyu temada açık renge döner;
+    matbu künye alanları `.panel-koyu` ile her iki temada koyu kalır.
 
 ## Kodda hiçbir zaman
 

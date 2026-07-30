@@ -38,7 +38,7 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
       <UstBar
         kullanici={k}
         nav={[
-          { ad: "İller", yol: "/" },
+          { ad: "İller", yol: "/iller" },
           { ad: o.il, yol: `/il/${o.il_kod}` },
           ...(ajans ? [{ ad: "Onay", yol: "/onay" }] : []),
         ]}
