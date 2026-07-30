@@ -16,7 +16,6 @@
     "@ykh/database": "workspace:*",
     "@ykh/domain": "workspace:*",
     "@ykh/observability": "workspace:*",
-    "@ykh/reporting": "workspace:*",
     "@ykh/retrieval": "workspace:*",
     "@ykh/scoring": "workspace:*",
     "class-variance-authority": "0.7.1",

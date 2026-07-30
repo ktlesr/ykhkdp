@@ -1,267 +1,227 @@
-import { KRITERLER, TR33_2027_V1, type AgirlikSeti, type Kriter } from "@ykh/scoring";
+import { readFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { KRITERLER, TR33_2027_V1, type Kriter } from "@ykh/scoring";
 import { sahip } from "./baglanti.ts";
 import { parolaOzetle } from "./parola.ts";
 
-/**
- * Demo verisi. Sahip bağlantısıyla çalışır (RLS baypas) — seed bir yönetim
- * işidir, uygulama yolu değildir.
- *
- * Veri seti tasarım prototipiyle birebir aynı sonucu üretir: Uşak 2027'de
- * 2 korunuyor · 1 ekleniyor · 2 çıkıyor · 1 boş slot.
- */
+/** Demo verisi. Sahip bağlantısıyla çalışır (RLS baypas) — seed yönetim işidir. */
 
-// ponytail: demo parolası tek yerde ve açıkça yazılı. Üretimde seed çalışmaz.
 export const DEMO_PAROLA = "ykh-demo-2027";
 
-type AdayTohumu = {
+const VERI = join(dirname(fileURLToPath(import.meta.url)), "..", "data");
+
+type Tohum = {
   id: string;
-  ad: string;
+  baslik: string;
   koken: "mevcut" | "yeni";
   hedefPuan: number;
-  kanit: number;
+  dayanak: number;
   nace: string;
-  /** doğrulanmamış bir bulgusu var mı — epistemik gramer bunu kullanır */
-  aiBulgusu: boolean;
-  iddia: string;
+  gerekce: string;
 };
 
-const USAK_ADAYLAR: AdayTohumu[] = [
-  { id: "teknik-tekstil", ad: "Teknik tekstil ve dokusuz yüzey üretimi", koken: "mevcut", hedefPuan: 73, kanit: 82, nace: "NACE 13.95", aiBulgusu: false, iddia: "İl imalat sanayiinde teknik tekstil kapasitesi ve nitelikli işgücü mevcut." },
-  { id: "geri-donusum-elyaf", ad: "Tekstil kırpıklarından yüksek kaliteli geri dönüştürülmüş elyaf", koken: "yeni", hedefPuan: 74, kanit: 77, nace: "NACE 13.10 · GTİP 5505", aiBulgusu: false, iddia: "Tekstil kırpığı arzı il içinde sürdürülebilir hacimde." },
-  { id: "deri-ihtisas", ad: "Deri ve deri ürünlerinde ihtisas üretimi", koken: "mevcut", hedefPuan: 66, kanit: 71, nace: "NACE 15.11", aiBulgusu: false, iddia: "Deri OSB altyapısı ve arıtma kapasitesi ilave yatırıma açık." },
-  { id: "tarimsal-kurutma", ad: "Tarımsal kurutma ve soğuk zincir tesisi", koken: "yeni", hedefPuan: 69, kanit: 41, nace: "NACE 10.39", aiBulgusu: true, iddia: "İlçe bazlı yaş ürün kaybı soğuk zincir yatırımıyla azaltılabilir." },
-  { id: "jeotermal-sera", ad: "Jeotermal destekli sera ve ısı geri kazanımı", koken: "yeni", hedefPuan: 58, kanit: 63, nace: "NACE 01.13", aiBulgusu: false, iddia: "Jeotermal saha sıcaklığı sera ısıtması için yeterli." },
-  { id: "batarya-kalip", ad: "Batarya kasası için hassas kalıp imalatı", koken: "yeni", hedefPuan: 57, kanit: 29, nace: "NACE 25.73", aiBulgusu: false, iddia: "Kalıp imalatında hassas işleme kapasitesi mevcut." },
-  { id: "seramik-kaplama", ad: "Seramik kaplama malzemeleri", koken: "mevcut", hedefPuan: 53, kanit: 64, nace: "NACE 23.31", aiBulgusu: false, iddia: "Hammadde rezervi ve enerji maliyeti üretimi destekliyor." },
-  { id: "sut-isleme", ad: "Süt ve süt ürünleri işleme", koken: "mevcut", hedefPuan: 49, kanit: 38, nace: "NACE 10.51", aiBulgusu: true, iddia: "Çiğ süt arzı işleme kapasitesinin üzerinde." },
+const USAK: Tohum[] = [
+  { id: "teknik-tekstil", baslik: "Teknik tekstil ve dokusuz yüzey üretimi", koken: "mevcut", hedefPuan: 73, dayanak: 82, nace: "13.95", gerekce: "İlde teknik tekstil kapasitesi ve nitelikli işgücü mevcut; OSB'de hazır altyapı var." },
+  { id: "geri-donusum-elyaf", baslik: "Tekstil kırpıklarından geri dönüştürülmüş elyaf", koken: "yeni", hedefPuan: 74, dayanak: 77, nace: "13.10", gerekce: "Kırpık arzı il içinde toplanıyor ve bugün ağırlıklı olarak il dışına ham satılıyor." },
+  { id: "deri-ihtisas", baslik: "Deri ve deri ürünlerinde ihtisas üretimi", koken: "mevcut", hedefPuan: 66, dayanak: 71, nace: "15.11", gerekce: "Deri OSB altyapısı ve arıtma kapasitesi ilave yatırıma açık." },
+  { id: "tarimsal-kurutma", baslik: "Tarımsal kurutma ve soğuk zincir tesisi", koken: "yeni", hedefPuan: 69, dayanak: 41, nace: "10.39", gerekce: "İlçelerde yaş ürün kaybı yüksek; soğuk zincir yatırımı kaybı azaltır." },
+  { id: "jeotermal-sera", baslik: "Jeotermal destekli sera ve ısı geri kazanımı", koken: "yeni", hedefPuan: 58, dayanak: 63, nace: "01.13", gerekce: "Jeotermal saha sıcaklığı sera ısıtması için yeterli; kaynak ilde." },
+  { id: "batarya-kalip", baslik: "Batarya kasası için hassas kalıp ve metal şekillendirme", koken: "yeni", hedefPuan: 57, dayanak: 29, nace: "28.41", gerekce: "Kalıp imalatında hassas işleme kapasitesi var." },
+  { id: "seramik-kaplama", baslik: "Seramik kaplama malzemeleri üretimi", koken: "mevcut", hedefPuan: 53, dayanak: 64, nace: "23.31", gerekce: "Hammadde rezervi ilde; enerji maliyeti üretimi destekliyor." },
+  { id: "sut-isleme", baslik: "Süt ve süt ürünleri işleme", koken: "mevcut", hedefPuan: 49, dayanak: 38, nace: "10.51", gerekce: "Çiğ süt arzı mevcut işleme kapasitesinin üzerinde." },
 ];
 
-const KUTAHYA_ADAYLAR: AdayTohumu[] = [
-  { id: "kut-seramik", ad: "Karo ve sıhhi tesisat seramiği", koken: "mevcut", hedefPuan: 78, kanit: 80, nace: "NACE 23.31", aiBulgusu: false, iddia: "Kaolen rezervi ve mevcut tesis altyapısı güçlü." },
-  { id: "kut-bor", ad: "Bor türevleri ve ileri malzeme", koken: "mevcut", hedefPuan: 71, kanit: 68, nace: "NACE 20.13", aiBulgusu: false, iddia: "Bor işleme tesisine yakınlık girdi maliyetini düşürüyor." },
-  { id: "kut-manyezit", ad: "Manyezit bazlı refrakter üretimi", koken: "yeni", hedefPuan: 64, kanit: 61, nace: "NACE 23.20", aiBulgusu: false, iddia: "Refrakter talebi çelik sektörü büyümesiyle artıyor." },
-  { id: "kut-termal", ad: "Termal turizm destekli sağlık hizmetleri", koken: "yeni", hedefPuan: 60, kanit: 57, nace: "NACE 86.10", aiBulgusu: false, iddia: "Termal kaynak kapasitesi ve yatak arzı uyumlu." },
-  { id: "kut-gida", ad: "Kuru gıda paketleme ve lojistik", koken: "yeni", hedefPuan: 55, kanit: 33, nace: "NACE 10.85", aiBulgusu: true, iddia: "Lojistik koridoruna yakınlık avantaj sağlıyor." },
+const KUTAHYA: Tohum[] = [
+  { id: "kut-seramik", baslik: "Karo ve sıhhi tesisat seramiği", koken: "mevcut", hedefPuan: 78, dayanak: 80, nace: "23.31", gerekce: "Kaolen rezervi ilde; mevcut tesis altyapısı güçlü." },
+  { id: "kut-bor", baslik: "Bor türevleri ve ileri malzeme", koken: "mevcut", hedefPuan: 71, dayanak: 68, nace: "20.13", gerekce: "Bor işleme tesisine yakınlık girdi maliyetini düşürüyor." },
+  { id: "kut-manyezit", baslik: "Manyezit bazlı refrakter üretimi", koken: "yeni", hedefPuan: 64, dayanak: 61, nace: "23.20", gerekce: "Manyezit rezervi ilde; refrakter talebi çelik sektörüyle artıyor." },
+  { id: "kut-termal", baslik: "Termal turizm destekli sağlık hizmetleri", koken: "yeni", hedefPuan: 60, dayanak: 57, nace: "86.10", gerekce: "Termal kaynak kapasitesi ve yatak arzı uyumlu." },
+  { id: "kut-gida", baslik: "Kuru gıda paketleme ve lojistik", koken: "yeni", hedefPuan: 55, dayanak: 33, nace: "10.85", gerekce: "Lojistik koridoruna yakınlık avantaj sağlıyor." },
 ];
 
-/**
- * Sekiz kritere, ağırlıklı toplamı tam olarak `hedef` olan çeşitli puanlar dağıtır.
- * Ağırlıklar 1'e toplandığı için tüm puanları sabit bir miktar kaydırmak
- * toplamı aynı miktarda kaydırır — düzeltme tek satır.
- */
+/** Ağırlıklı toplamı tam olarak `hedef` olan çeşitli kriter puanları üretir. */
 const SAPMA = [8, -6, 4, -3, 5, -7, 2, -3];
 
-export function kriterPuanlariUret(hedef: number, set: AgirlikSeti, kaydir = 0): Record<Kriter, number> {
+export function kriterPuanlariUret(hedef: number, agirliklar: Record<Kriter, number>, kaydir = 0) {
   const sapmalar = KRITERLER.map((_, i) => SAPMA[(i + kaydir) % SAPMA.length]);
-  const agirlikliSapma = KRITERLER.reduce((t, k, i) => t + set.agirliklar[k] * sapmalar[i], 0);
+  const agirlikliSapma = KRITERLER.reduce((t, k, i) => t + agirliklar[k] * sapmalar[i], 0);
   const out = {} as Record<Kriter, number>;
   KRITERLER.forEach((k, i) => {
-    out[k] = Math.max(0, Math.min(100, hedef + sapmalar[i] - agirlikliSapma));
+    out[k] = Math.round(Math.max(0, Math.min(100, hedef + sapmalar[i] - agirlikliSapma)));
   });
   return out;
 }
 
-/** Hedef kanıt yeterliliğini 2–3 kanıt kartına böler. */
-function kanitDagit(hedef: number): number[] {
-  if (hedef <= 0) return [];
-  if (hedef <= 20) return [hedef];
-  const a = Math.round(hedef * 0.45);
-  const b = Math.round(hedef * 0.33);
-  return [a, b, hedef - a - b].filter((n) => n > 0);
+export async function naceYukle(): Promise<number> {
+  const sql = sahip();
+  const kayitlar = JSON.parse(await readFile(join(VERI, "nace.json"), "utf8")) as Array<{
+    kod: string;
+    tanim: string;
+    duzey: string;
+  }>;
+
+  // Düzey sırasıyla ekle ki ust_kod referansı hep var olsun.
+  const sira = ["kisim", "bolum", "grup", "sinif", "faaliyet"];
+  for (const d of sira) {
+    const grup = kayitlar.filter((k) => k.duzey === d);
+    for (let i = 0; i < grup.length; i += 500) {
+      const dilim = grup.slice(i, i + 500);
+      await sql`
+        insert into nace ${sql(
+          dilim.map((k) => ({ kod: k.kod, tanim: k.tanim, duzey: k.duzey })),
+          "kod",
+          "tanim",
+          "duzey",
+        )}
+        on conflict (kod) do nothing
+      `;
+    }
+  }
+  // Üst kodları tek sorguda bağla; olmayan üstü null bırak.
+  await sql`
+    update nace n set ust_kod = u.kod
+    from nace u
+    where u.kod = nace_ust_kod(n.kod) and n.ust_kod is null
+  `;
+  return kayitlar.length;
 }
 
 export async function seed(): Promise<{ ozet: string }> {
   const sql = sahip();
 
   await sql`
-    truncate denetim, is_kuyrugu, karar, destek, bulgu, kriter_puani, iddia_kanit, iddia,
-             kanit, aday, oneri, donem, agirlik_seti, ilce, il, ajans, oturum, kimlik, gonderen
-    restart identity cascade
+    truncate denetim, degerlendirme, oneri, belge, donem, agirlik_seti,
+             ilce, il, ajans, nace, oturum, kimlik, gonderen restart identity cascade
   `;
+
+  const naceSayisi = await naceYukle();
 
   // ── kullanıcılar ────────────────────────────────────────────────────────
   const ozet = await parolaOzetle(DEMO_PAROLA);
-  const kullanicilar = [
-    { eposta: "uzman@ykh.local", ad: "S. Aydın", rol: "ajans_uzmani" },
-    { eposta: "sektor@ykh.local", ad: "M. Yalçın", rol: "sektor_uzmani" },
-    { eposta: "kurul@ykh.local", ad: "H. Demir", rol: "kurul_uyesi" },
-    { eposta: "birey@ykh.local", ad: "A. Kaya", rol: "birey" },
-    { eposta: "gozlemci@ykh.local", ad: "N. Öz", rol: "gozlemci" },
-    { eposta: "denetci@ykh.local", ad: "T. Arslan", rol: "denetci" },
-  ] as const;
-
   const ref: Record<string, string> = {};
-  for (const k of kullanicilar) {
-    const [g] = await sql<{ ref: string }[]>`
-      insert into gonderen (rol, beyan_kurum, beyan_sektor)
-      values (${k.rol}::rol, ${k.rol === "birey" ? "Uşak Ticaret ve Sanayi Odası" : null}, ${k.rol === "birey" ? "Tekstil" : null})
-      returning ref
-    `;
+  for (const k of [
+    { eposta: "ajans@ykh.local", ad: "S. Aydın", rol: "ajans" },
+    { eposta: "yatirimci@ykh.local", ad: "A. Kaya", rol: "yatirimci" },
+    { eposta: "yonetici@ykh.local", ad: "T. Arslan", rol: "yonetici" },
+  ] as const) {
+    const [g] = await sql<{ ref: string }[]>`insert into gonderen (rol) values (${k.rol}::rol) returning ref`;
     ref[k.eposta] = g.ref;
-    await sql`
-      insert into kimlik (gonderen_ref, eposta, ad_soyad, parola_hash, eposta_dogrulandi)
-      values (${g.ref}, ${k.eposta}, ${k.ad}, ${ozet}, true)
-    `;
-  }
-
-  // 12 destekçi — destek sayısı puana girmez, yalnızca ilgi sinyali
-  const destekciler: string[] = [];
-  for (let i = 0; i < 12; i++) {
-    const [g] = await sql<{ ref: string }[]>`insert into gonderen (rol) values ('birey') returning ref`;
-    await sql`insert into kimlik (gonderen_ref, eposta, ad_soyad, parola_hash, eposta_dogrulandi)
-              values (${g.ref}, ${`destekci${i}@ykh.local`}, ${`Destekçi ${i + 1}`}, ${ozet}, true)`;
-    destekciler.push(g.ref);
+    await sql`insert into kimlik (gonderen_ref, eposta, ad_soyad, parola_hash)
+              values (${g.ref}, ${k.eposta}, ${k.ad}, ${ozet})`;
   }
 
   // ── coğrafya ────────────────────────────────────────────────────────────
   await sql`insert into ajans (kod, ad) values ('TR33', 'Zafer Kalkınma Ajansı')`;
-  await sql`
-    insert into il (kod, ad, ajans_kod) values
-      ('usak', 'Uşak', 'TR33'),
-      ('kutahya', 'Kütahya', 'TR33'),
-      ('manisa', 'Manisa', 'TR33'),
-      ('afyonkarahisar', 'Afyonkarahisar', 'TR33')
-  `;
+  await sql`insert into il (kod, ad, ajans_kod) values
+    ('usak','Uşak','TR33'), ('kutahya','Kütahya','TR33'),
+    ('manisa','Manisa','TR33'), ('afyonkarahisar','Afyonkarahisar','TR33')`;
   for (const [il, ilceler] of [
     ["usak", ["Merkez", "Banaz", "Eşme", "Karahallı", "Sivaslı", "Ulubey"]],
     ["kutahya", ["Merkez", "Tavşanlı", "Simav", "Gediz", "Emet"]],
+    ["manisa", ["Şehzadeler", "Yunusemre", "Akhisar", "Turgutlu", "Salihli"]],
+    ["afyonkarahisar", ["Merkez", "Sandıklı", "Dinar", "Bolvadin", "Emirdağ"]],
   ] as const) {
     for (const ad of ilceler) await sql`insert into ilce (il_kod, ad) values (${il}, ${ad})`;
   }
 
-  // ── ağırlık seti ────────────────────────────────────────────────────────
+  // ── ağırlık seti ve dönemler ────────────────────────────────────────────
   const set = TR33_2027_V1;
   await sql`
-    insert into agirlik_seti (surum, ajans_kod, donem_yil, agirliklar, devamlilik_payi, kanit_esigi, devir_siniri, slot_sayisi)
+    insert into agirlik_seti (surum, ajans_kod, donem_yil, agirliklar, devamlilik_payi, dayanak_esigi, devir_siniri, slot_sayisi)
     values (${set.surum}, ${set.ajans}, ${set.donem}, ${sql.json(set.agirliklar as never)},
-            ${set.devamlilikPayi}, ${set.kanitEsigi}, ${set.devirSiniri}, ${set.slotSayisi})
+            ${set.devamlilikPayi}, ${set.dayanakEsigi}, ${set.devirSiniri}, ${set.slotSayisi})
   `;
-
-  // ── dönemler ────────────────────────────────────────────────────────────
   const donemler: Record<string, number> = {};
-  for (const il of ["usak", "kutahya"]) {
+  for (const il of ["usak", "kutahya", "manisa", "afyonkarahisar"]) {
     const [d] = await sql<{ id: number }[]>`
-      insert into donem (il_kod, yil, durum, agirlik_seti_surum)
-      values (${il}, '2027', 'degerlendirme', ${set.surum})
-      returning id
+      insert into donem (il_kod, yil, agirlik_seti_surum) values (${il}, '2027', ${set.surum}) returning id
     `;
     donemler[il] = d.id;
   }
 
-  let kanitSayaci = 0;
-  const kanitKodu = () => `KNT-2026-${String(++kanitSayaci).padStart(4, "0")}`;
+  // ── üst ölçekli belgeler ────────────────────────────────────────────────
+  // ponytail: demo için kısa özet metinler. Gerçek belgeler /belgeler ekranından yüklenir.
+  const belgeler = [
+    { ad: "TR33 Bölge Planı 2024-2028", tur: "bolge_plani", yil: "2024", ajans: "TR33", il: null,
+      metin: "TR33 Bölgesi'nde tekstil ve hazır giyim, deri, seramik ve gıda işleme öncelikli imalat sektörleridir. Bölgede tekstil geri dönüşümü ve teknik tekstil, katma değeri yükseltecek dönüşüm alanları olarak tanımlanmıştır. Jeotermal kaynakların seracılıkta kullanımı bölgesel öncelikler arasındadır. Uşak'ta deri ve tekstil ihtisas organize sanayi bölgeleri altyapısı mevcuttur. Kütahya'da seramik ve bor türevleri, madencilik temelli ihtisaslaşma alanlarıdır. Tarımsal ürünlerde soğuk zincir ve kurutma altyapısı eksikliği bölgesel bir darboğazdır." },
+    { ad: "On İkinci Kalkınma Planı (2024-2028)", tur: "kalkinma_plani", yil: "2024", ajans: null, il: null,
+      metin: "Yeşil ve dijital dönüşüm, döngüsel ekonomi ve kaynak verimliliği temel eksenlerdir. Tekstil, hazır giyim ve deri sektörlerinde geri dönüşüm oranlarının artırılması ve ikincil hammadde kullanımının yaygınlaştırılması hedeflenmiştir. Yenilenebilir enerji kaynaklarının sanayide ısı amaçlı kullanımı desteklenecektir. Tarımsal ürünlerde hasat sonrası kayıpların azaltılması, soğuk zincir ve depolama kapasitesinin artırılması öngörülmüştür. Kritik hammaddelerde ve ileri malzemelerde yurt içi üretim kapasitesi güçlendirilecektir." },
+    { ad: "Orta Vadeli Program 2026-2028", tur: "ovp", yil: "2026", ajans: null, il: null,
+      metin: "İhracatta katma değeri yüksek ürün gruplarına geçiş önceliklidir. Enerji verimliliği yatırımları ve atık ısı geri kazanımı teşvik edilecektir. İthalata bağımlılığı yüksek ara mallarda yurt içi üretim özendirilecektir. Bölgesel gelişme farklarının azaltılması için yatırım teşvik sisteminde iller arası farklılaştırma sürdürülecektir." },
+    { ad: "Uşak İl Sanayi Durum Raporu 2026", tur: "il_raporu", yil: "2026", ajans: "TR33", il: "usak",
+      metin: "Uşak imalat sanayiinde tekstil ürünleri imalatı istihdamda ilk sıradadır. İlde battaniye ve ev tekstili üretimi yoğunlaşmıştır; konfeksiyon atölyelerinden çıkan kırpık atığı önemli hacimdedir ve büyük bölümü il dışına ham olarak satılmaktadır. Deri ihtisas organize sanayi bölgesinde arıtma kapasitesi ilave yatırıma açıktır. Seramik hammaddesi rezervleri il sınırları içindedir. İlçelerde meyve ve sebze üretiminde hasat sonrası kayıp yüksektir; soğuk hava deposu kapasitesi yetersizdir." },
+    { ad: "Kütahya İl Sanayi Durum Raporu 2026", tur: "il_raporu", yil: "2026", ajans: "TR33", il: "kutahya",
+      metin: "Kütahya'da seramik sağlık gereçleri ve karo üretimi ilin sanayi kimliğini belirlemektedir. Kaolen ve feldspat rezervleri il içindedir. Bor işleme tesisine yakınlık bor türevleri ve ileri malzeme üretimi için girdi avantajı sağlar. Manyezit rezervleri refrakter üretimini destekler. Termal kaynak kapasitesi sağlık turizmi için elverişlidir." },
+  ] as const;
 
-  async function adaylariKur(ilKod: string, tohumlar: AdayTohumu[]) {
-    const donemId = donemler[ilKod];
+  for (const b of belgeler) {
+    await sql`
+      insert into belge (ad, tur, yil, ajans_kod, il_kod, metin, yukleyen_ref)
+      values (${b.ad}, ${b.tur}::belge_turu, ${b.yil}, ${b.ajans}, ${b.il}, ${b.metin}, ${ref["ajans@ykh.local"]})
+    `;
+  }
+
+  // ── öneriler + AI değerlendirmeleri ─────────────────────────────────────
+  async function onerileriKur(ilKod: string, tohumlar: Tohum[]) {
     for (const [sira, t] of tohumlar.entries()) {
-      let oneriId: number | null = null;
-
-      if (t.koken === "yeni") {
-        const [o] = await sql<{ id: number }[]>`
-          insert into oneri (donem_id, gonderen_ref, tur, baslik, tanim, ilce, neden, nace, nace_onayli, durum)
-          values (${donemId}, ${ref["birey@ykh.local"]}, 'yeni', ${t.ad},
-                  ${`${t.ad} — ${t.iddia}`}, 'Merkez',
-                  ${"Girdi arzı ve mevcut sanayi altyapısı bu konuyu ilde uygulanabilir kılıyor."},
-                  ${t.nace}, true, 'konu_adayi')
-          returning id
-        `;
-        oneriId = o.id;
-        for (const dRef of destekciler.slice(0, 3 + ((sira * 4) % 9))) {
-          await sql`insert into destek (oneri_id, gonderen_ref) values (${oneriId}, ${dRef})`;
-        }
-      }
-
-      const [a] = await sql<{ id: number }[]>`
-        insert into aday (donem_id, oneri_id, ad, koken, nace)
-        values (${donemId}, ${oneriId}, ${t.ad}, ${t.koken}::koken, ${t.nace})
+      const [o] = await sql<{ id: number }[]>`
+        insert into oneri (donem_id, gonderen_ref, koken, baslik, gerekce, ilce, nace_kod, nace_kaynagi,
+                           durum, onaylayan_ref, onay_zamani)
+        values (${donemler[ilKod]},
+                ${t.koken === "mevcut" ? ref["ajans@ykh.local"] : ref["yatirimci@ykh.local"]},
+                ${t.koken}::koken, ${t.baslik}, ${t.gerekce}, 'Merkez',
+                ${t.nace}, ${t.koken === "mevcut" ? "ajans" : "kullanici"}::nace_kaynagi,
+                'listede', ${ref["ajans@ykh.local"]}, now())
         returning id
       `;
-
-      // kriter puanları — hepsi doğrulanmış (uzman değerlendirmesi tamam)
-      const puanlar = kriterPuanlariUret(t.hedefPuan, set, sira);
-      for (const kriter of KRITERLER) {
-        await sql`
-          insert into kriter_puani (aday_id, kriter, puan, dogrulandi, degerlendiren_ref, gerekce)
-          values (${a.id}, ${kriter}::kriter, ${Math.round(puanlar[kriter])}, true,
-                  ${ref["uzman@ykh.local"]}, 'Kanıt dosyası ve saha bilgisi değerlendirildi.')
-        `;
-      }
-
-      const [iddia] = await sql<{ id: number }[]>`
-        insert into iddia (aday_id, metin) values (${a.id}, ${t.iddia}) returning id
+      await sql`
+        insert into degerlendirme (oneri_id, puanlar, dayanak, gerekce, alintilar, model_snapshot, prompt_surum)
+        values (${o.id}, ${sql.json(kriterPuanlariUret(t.hedefPuan, set.agirliklar, sira) as never)},
+                ${t.dayanak},
+                ${`${t.gerekce} Üst ölçekli belgelerde bu yönde öncelik tanımlanmıştır.`},
+                ${sql.json([{ belge_ad: "TR33 Bölge Planı 2024-2028", alinti: "öncelikli imalat sektörleridir" }] as never)},
+                'claude-opus-5-20260101', 'degerlendirme-v1')
       `;
-
-      // uzman onaylı kanıtlar — toplamları t.kanit
-      for (const [k, katki] of kanitDagit(t.kanit).entries()) {
-        const [kn] = await sql<{ id: number }[]>`
-          insert into kanit (
-            kod, donem_id, aday_id, oneri_id, kaynak_kurum, belge, belge_surum, sayfa_tablo, yayim_tarihi,
-            cografi_kapsam, veri_donemi, alinti, sinirlilik, katki_puani,
-            dogrulama_durumu, dogrulayan_ref, dogrulama_zamani, belge_metni, span_baslangic, span_bitis
-          ) values (
-            ${kanitKodu()}, ${donemId}, ${a.id}, ${oneriId},
-            ${k === 0 ? "TÜİK — Bölgesel İstatistikler" : k === 1 ? "Uşak Ticaret ve Sanayi Odası" : "Sanayi ve Teknoloji Bakanlığı"},
-            ${k === 0 ? "Bölgesel İmalat Sanayi Katma Değer Tabloları" : k === 1 ? "Sektör Raporu 2026/1" : "OSB Doluluk ve Altyapı Raporu"},
-            ${k === 0 ? "2026-R2" : "2026/1"},
-            ${k === 0 ? "Tablo 4.2, s. 118" : k === 1 ? "s. 34 · Tablo 6" : "s. 12"},
-            ${k === 0 ? "2026-03-12" : "2026-02-04"}::date,
-            ${"TR33 · il düzeyi"}, '2019–2024',
-            ${`${t.iddia} Kaynak belgede ilgili tabloda bu bulguyu destekleyen seri yer almaktadır.`},
-            ${"Veri il düzeyindedir; ilçe kırılımı yoktur. Türetilen büyüklükler uzman incelemesi gerektirir."},
-            ${katki}, 'uzman_onayli', ${ref["uzman@ykh.local"]}, now(),
-            ${`Belge metni. ${t.iddia} Kaynak belgede ilgili tabloda bu bulguyu destekleyen seri yer almaktadır. Devamı...`},
-            ${14}, ${14 + t.iddia.length}
-          )
-          returning id
-        `;
-        await sql`insert into iddia_kanit (iddia_id, kanit_id) values (${iddia.id}, ${kn.id})`;
-      }
-
-      // doğrulanmamış AI bulgusu — puana GİRMEZ, ekranda görünür
-      if (t.aiBulgusu) {
-        const [kn] = await sql<{ id: number }[]>`
-          insert into kanit (
-            kod, donem_id, aday_id, oneri_id, kaynak_kurum, belge, sayfa_tablo, yayim_tarihi,
-            cografi_kapsam, alinti, sinirlilik, katki_puani, dogrulama_durumu
-          ) values (
-            ${kanitKodu()}, ${donemId}, ${a.id}, ${oneriId},
-            'Kaynak beyanı — doğrulanmadı', 'Sektör görüşmesi notu', 's. 3', '2026-05-20'::date,
-            'İl düzeyi', ${"AI, tanımdan bu iddiayı çıkardı; insan doğrulaması bekliyor."},
-            ${"Kaynak künyesi eksik; uzman doğrulaması olmadan puana giremez."},
-            ${24}, 'ai_bulgusu'
-          )
-          returning id
-        `;
-        await sql`insert into iddia_kanit (iddia_id, kanit_id) values (${iddia.id}, ${kn.id})`;
-        await sql`
-          insert into bulgu (oneri_id, aday_id, tip, icerik, model_snapshot, prompt_surum, kanit_id)
-          values (${oneriId}, ${a.id}, 'iddia_cikarimi',
-                  ${sql.json({ iddia: t.iddia, guven: "orta", not: "Kaynak paketi dışında sayı üretilmedi." } as never)},
-                  'claude-opus-5-20260101', 'iddia-cikarimi-v3', ${kn.id})
-        `;
-      }
     }
   }
 
-  await adaylariKur("usak", USAK_ADAYLAR);
-  await adaylariKur("kutahya", KUTAHYA_ADAYLAR);
+  await onerileriKur("usak", USAK);
+  await onerileriKur("kutahya", KUTAHYA);
 
-  // Kanıt bekleyen taze bir öneri — triyaj kuyruğunu boş bırakmamak için
+  // Onay bekleyen taze öneri — /onay kuyruğu boş kalmasın.
+  const [bekleyen] = await sql<{ id: number }[]>`
+    insert into oneri (donem_id, gonderen_ref, koken, baslik, gerekce, ilce, nace_kod, nace_kaynagi, durum)
+    values (${donemler["usak"]}, ${ref["yatirimci@ykh.local"]}, 'yeni',
+            'Atık ısıdan elektrik üretimi (ORC çevrimi)',
+            'Seramik ve tekstil tesislerindeki yüksek sıcaklık baca gazı il merkezindeki OSB''de yoğunlaşıyor; atık ısı kaynağı yerinde.',
+            'Merkez', '35.12', 'ai', 'onay_bekliyor')
+    returning id
+  `;
   await sql`
-    insert into oneri (donem_id, gonderen_ref, tur, baslik, tanim, ilce, neden, nace, durum)
-    values (${donemler["usak"]}, ${ref["birey@ykh.local"]}, 'yeni',
-            'Atık ısıdan elektrik üretimi (ORC)',
-            'Seramik ve tekstil tesislerindeki baca gazı atık ısısının ORC çevrimiyle elektriğe dönüştürülmesi.',
-            'Merkez', 'Yüksek sıcaklık atık ısı kaynakları il merkezinde yoğunlaşıyor.',
-            'NACE 35.11', 'kanit_bekliyor')
+    insert into degerlendirme (oneri_id, puanlar, dayanak, gerekce, alintilar, model_snapshot, prompt_surum)
+    values (${bekleyen.id}, ${sql.json(kriterPuanlariUret(64, set.agirliklar, 3) as never)}, 58,
+            'Enerji verimliliği ve atık ısı geri kazanımı OVP''de teşvik edilen alanlar arasında; ilde yüksek sıcaklık atık ısı kaynağı mevcut.',
+            ${sql.json([
+              { belge_ad: "Orta Vadeli Program 2026-2028", alinti: "atık ısı geri kazanımı teşvik edilecektir" },
+              { belge_ad: "Uşak İl Sanayi Durum Raporu 2026", alinti: "seramik hammaddesi rezervleri il sınırları içindedir" },
+            ] as never)},
+            'claude-opus-5-20260101', 'degerlendirme-v1')
   `;
 
-  const [{ count: adaySayisi }] = await sql<{ count: string }[]>`select count(*) from aday`;
-  const [{ count: kanitSayisi }] = await sql<{ count: string }[]>`select count(*) from kanit`;
+  // Değerlendirilmeyi bekleyen öneri — worker kuyruğu göstermek için
+  await sql`
+    insert into oneri (donem_id, gonderen_ref, koken, baslik, gerekce, ilce, durum)
+    values (${donemler["usak"]}, ${ref["yatirimci@ykh.local"]}, 'yeni',
+            'İkincil hammaddeden teknik iplik üretimi',
+            'Geri dönüştürülmüş elyaf arzı il içinde oluşuyor; iplik aşaması ilde yok, ürün il dışına gidiyor.',
+            'Banaz', 'degerlendiriliyor')
+  `;
+
+  const [{ count: oneriSayisi }] = await sql<{ count: string }[]>`select count(*) from oneri`;
+  const [{ count: belgeSayisi }] = await sql<{ count: string }[]>`select count(*) from belge`;
 
   return {
-    ozet:
-      `${kullanicilar.length + destekciler.length} kullanıcı · 4 il · 2 dönem · ` +
-      `${adaySayisi} aday · ${kanitSayisi} kanıt`,
+    ozet: `${naceSayisi} NACE kodu · 4 il · ${belgeSayisi} üst ölçekli belge · ${oneriSayisi} öneri · 3 kullanıcı`,
   };
 }

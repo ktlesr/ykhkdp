@@ -2,29 +2,49 @@ import type { ModelCevabi, ModelIstegi, ModelIstemcisi } from "./gateway.ts";
 
 /**
  * İki istemci:
+ *  - `cevrimdisiIstemci` — API anahtarı olmadan çalışır; belgelerden BİREBİR
+ *    alıntı çıkarır, uydurmaz. Geliştirme ve eval için.
+ *  - `openAiIstemci` — OPENAI_API_KEY varsa Responses API + Structured Outputs.
  *
- *  - `cevrimdisiIstemci` — API anahtarı olmadan çalışır. Kaynak paketinden
- *    deterministik, kaynağa bağlı çıktı üretir. Geliştirme ve eval için.
- *  - `openAiIstemci`     — OPENAI_API_KEY varsa Responses API + Structured Outputs.
- *
- * Gateway ikisini de aynı doğrulama zincirinden geçirir; "çevrimdışı" mod
- * güvenlik kontrollerini gevşetmez.
+ * Gateway ikisini de aynı doğrulama zincirinden geçirir; çevrimdışı mod
+ * hiçbir kontrolü gevşetmez.
  */
 
 export function istemciSec(): ModelIstemcisi {
   return process.env.OPENAI_API_KEY ? openAiIstemci() : cevrimdisiIstemci();
 }
 
-/** Kaynak bloğundaki evidence_id'leri ve cümleleri kullanarak çıktı kurar. */
+const KRITERLER = [
+  "plan_uyumu", "yerel_potansiyel", "pazar_talep", "deger_zinciri",
+  "istihdam_katma_deger", "uygulanabilirlik", "yatirimci_ilgisi", "surdurulebilirlik",
+] as const;
+
+function belgeleriCoz(kullanici: string): Array<{ id: number; ad: string; metin: string }> {
+  const out: Array<{ id: number; ad: string; metin: string }> = [];
+  for (const m of kullanici.matchAll(
+    /<belge id="(\d+)">\s*<kunye>([\s\S]*?)<\/kunye>\s*<icerik guvenilir="hayir">([\s\S]*?)<\/icerik>/g,
+  )) {
+    out.push({ id: Number(m[1]), ad: coz(m[2]).split(" · ")[0], metin: coz(m[3]) });
+  }
+  return out;
+}
+
+function coz(s: string): string {
+  return s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+}
+
+/** Metinden anahtar kelimeye en yakın cümleyi birebir çıkarır. */
+function cumleBul(metin: string, anahtarlar: string[]): string | null {
+  const cumleler = metin.split(/(?<=[.!?])\s+/).filter((c) => c.length >= 20 && c.length <= 380);
+  const puanla = (c: string) => anahtarlar.filter((a) => c.toLocaleLowerCase("tr-TR").includes(a)).length;
+  const en = cumleler.map((c) => ({ c, p: puanla(c) })).sort((a, b) => b.p - a.p)[0];
+  return en && en.p > 0 ? en.c.trim() : (cumleler[0]?.trim() ?? null);
+}
+
 export const cevrimdisiIstemci = (): ModelIstemcisi => ({
   ad: "cevrimdisi",
   async cagir(istek: ModelIstegi): Promise<ModelCevabi> {
-    const ids = [...istek.kullanici.matchAll(/evidence_id="([^"]+)"/g)].map((m) => m[1]);
-    const icerikler = [...istek.kullanici.matchAll(/<icerik guvenilir="hayir">([\s\S]*?)<\/icerik>/g)].map((m) =>
-      m[1].replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"),
-    );
-
-    const metin = JSON.stringify(uret(istek.semaAdi, ids, icerikler));
+    const metin = JSON.stringify(uret(istek));
     return {
       metin,
       girdiToken: Math.ceil((istek.sistem.length + istek.kullanici.length) / 4),
@@ -33,40 +53,56 @@ export const cevrimdisiIstemci = (): ModelIstemcisi => ({
   },
 });
 
-function ilkCumle(metin: string): string {
-  const c = metin.split(/(?<=[.!?])\s/)[0]?.trim() ?? metin.trim();
-  return c.length > 380 ? `${c.slice(0, 377)}...` : c;
-}
+function uret(istek: ModelIstegi): unknown {
+  const gorev = istek.kullanici.match(/<gorev>\n([\s\S]*?)\n<\/gorev>/)?.[1] ?? "";
 
-function uret(ad: ModelIstegi["semaAdi"], ids: string[], icerikler: string[]): unknown {
-  switch (ad) {
-    case "iddia_cikarimi":
-      return {
-        iddialar: ids.slice(0, 3).map((id, i) => ({
-          metin: ilkCumle(icerikler[i] ?? icerikler[0] ?? "Kaynakta belirtilen bulgu."),
-          evidence_ids: [id],
-          alinti: null,
-          guven: "orta",
-        })),
-        eksik_veri: ids.length ? [] : ["Kaynak paketi boş; iddia çıkarılamadı."],
-      };
-    case "nace_onerisi":
-      return {
-        kod: "13.10",
-        aciklama: "Tekstil elyafı hazırlama ve bükme",
-        guven: "dusuk",
-        gerekce: "Çevrimdışı istemci sabit öneri döndürür; kullanıcı onayı zorunludur.",
-      };
-    case "mukerrerlik":
-      return { benzer: [] };
-    case "gerekce_metni":
-      return {
-        metin:
-          "Karar, yalnızca uzman onaylı kanıta dayandırılmıştır. " +
-          (icerikler[0] ? ilkCumle(icerikler[0]) : "Kaynak paketindeki kayıtlar değerlendirilmiştir."),
-        evidence_ids: ids.slice(0, 3),
-      };
+  if (istek.semaAdi === "nace_onerisi") {
+    const adaylar = [...istek.kullanici.matchAll(/<kod deger="([^"]+)">([\s\S]*?)<\/kod>/g)].map((m) => ({
+      kod: m[1],
+      tanim: coz(m[2]),
+    }));
+    const kelimeler = gorev.toLocaleLowerCase("tr-TR").split(/\W+/).filter((w) => w.length > 4);
+    const skor = (t: string) => kelimeler.filter((w) => t.toLocaleLowerCase("tr-TR").includes(w)).length;
+    const sirali = [...adaylar].sort((a, b) => skor(b.tanim) - skor(a.tanim));
+    return {
+      adaylar: sirali.slice(0, 2).map((a, i) => ({
+        kod: a.kod,
+        gerekce: `Öneri metni “${a.tanim.slice(0, 80)}” tanımıyla örtüşüyor.`,
+        guven: i === 0 && skor(a.tanim) > 1 ? "orta" : "dusuk",
+      })),
+    };
   }
+
+  // degerlendirme
+  const belgeler = belgeleriCoz(istek.kullanici);
+  const gerekceMetni = gorev.match(/Neden burada \(yatırımcının gerekçesi\): ([\s\S]*)$/)?.[1] ?? "";
+  const anahtarlar = gerekceMetni
+    .toLocaleLowerCase("tr-TR")
+    .split(/\W+/)
+    .filter((w) => w.length > 5)
+    .slice(0, 8);
+
+  const alintilar: Array<{ belge_id: number; alinti: string }> = [];
+  for (const b of belgeler.slice(0, 3)) {
+    const c = cumleBul(b.metin, anahtarlar);
+    if (c) alintilar.push({ belge_id: b.id, alinti: c });
+  }
+
+  // ponytail: çevrimdışı istemci deterministik taban puan üretir; gerçek
+  // değerlendirme OPENAI_API_KEY ile yapılır. Amaç zinciri çalıştırmak.
+  const taban = 55 + Math.min(20, alintilar.length * 7);
+  return {
+    puanlar: KRITERLER.map((k, i) => ({
+      kriter: k,
+      puan: Math.max(0, Math.min(100, taban + ((i * 7) % 13) - 6)),
+      not: "Çevrimdışı istemci: belgelerdeki eşleşmeye göre taban puan.",
+    })),
+    gerekce:
+      "Çevrimdışı değerlendirme. Öneri, üst ölçekli belgelerde tanımlı önceliklerle " +
+      `${alintilar.length} noktada eşleşiyor. Gerçek puanlama için OPENAI_API_KEY tanımlanmalıdır.`,
+    alintilar,
+    eksik_veri: alintilar.length ? [] : ["Belgelerde öneriyle eşleşen ifade bulunamadı."],
+  };
 }
 
 /** OpenAI Responses API + Structured Outputs. */
@@ -85,26 +121,18 @@ export const openAiIstemci = (): ModelIstemcisi => ({
           { role: "system", content: istek.sistem },
           { role: "user", content: istek.kullanici },
         ],
-        text: {
-          format: {
-            type: "json_schema",
-            name: istek.semaAdi,
-            strict: true,
-            schema: istek.jsonSema,
-          },
-        },
+        text: { format: { type: "json_schema", name: istek.semaAdi, strict: true, schema: istek.jsonSema } },
       }),
     });
-
     if (!yanit.ok) throw new Error(`OpenAI ${yanit.status}: ${await yanit.text()}`);
+
     const j = (await yanit.json()) as {
       output_text?: string;
       output?: Array<{ content?: Array<{ text?: string }> }>;
       usage?: { input_tokens?: number; output_tokens?: number };
     };
-    const metin = j.output_text ?? j.output?.[0]?.content?.[0]?.text ?? "";
     return {
-      metin,
+      metin: j.output_text ?? j.output?.[0]?.content?.[0]?.text ?? "",
       girdiToken: j.usage?.input_tokens ?? 0,
       ciktiToken: j.usage?.output_tokens ?? 0,
     };

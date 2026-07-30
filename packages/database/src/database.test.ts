@@ -1,22 +1,14 @@
 import assert from "node:assert/strict";
 import test, { after, before } from "node:test";
-import { hesapla, ayardan } from "@ykh/scoring";
 import { ANONIM, islem, kapat, sahip, type Baglam } from "./baglanti.ts";
-import { asagi, yukari, sifirla } from "./migrate.ts";
-import { seed, DEMO_PAROLA } from "./seed.ts";
-import {
-  adaylariGetir, destekVer, donemGetir, girisYap, kanitDurumDegistir,
-  kararKilitle, oturumCoz, baglamdan, oneriOlustur, panelVerisi,
-} from "./sorgu.ts";
+import { asagi, sifirla, yukari } from "./migrate.ts";
+import { DEMO_PAROLA, seed } from "./seed.ts";
+import { baglamdan, girisYap, naceAra, naceGetir, oturumCoz } from "./sorgu.ts";
 
-/**
- * Bu dosya gerçek Postgres'e bağlanır. `pnpm db:reset` ile aynı şemayı kurar,
- * seed'ler ve RLS'in gerçekten uygulandığını kanıtlar.
- */
+/** Gerçek Postgres'e bağlanır; RLS'in gerçekten uygulandığını kanıtlar. */
 
-let uzman: Baglam;
-let kurul: Baglam;
-let birey: Baglam;
+let ajans: Baglam;
+let yatirimci: Baglam;
 
 async function girisBaglami(eposta: string): Promise<Baglam> {
   const r = await girisYap(eposta, DEMO_PAROLA);
@@ -30,113 +22,107 @@ before(async () => {
   await sifirla();
   await yukari();
   await seed();
-  uzman = await girisBaglami("uzman@ykh.local");
-  kurul = await girisBaglami("kurul@ykh.local");
-  birey = await girisBaglami("birey@ykh.local");
+  ajans = await girisBaglami("ajans@ykh.local");
+  yatirimci = await girisBaglami("yatirimci@ykh.local");
 });
 
 after(async () => {
   await kapat();
 });
 
-// ── sıralama: prototiple birebir ───────────────────────────────────────────
+// ── NACE ───────────────────────────────────────────────────────────────────
 
-test("Uşak 2027 sıralaması prototiple birebir aynı", async () => {
-  const d = await donemGetir(uzman, "usak", "2027");
-  assert.ok(d);
-  const adaylar = await adaylariGetir(uzman, d);
-  const h = hesapla(adaylar, ayardan(d.set));
+test("NACE Rev.2.1 yüklendi ve hiyerarşi bağlandı", async () => {
+  const [{ n }] = await islem(ANONIM, (sql) => sql<{ n: string }[]>`select count(*) as n from nace`);
+  assert.equal(Number(n), 3190);
 
-  assert.deepEqual(
-    h.ilkDort.map((s) => (s.bos ? "BOŞ" : s.ad)),
-    [
-      "Teknik tekstil ve dokusuz yüzey üretimi",
-      "Tekstil kırpıklarından yüksek kaliteli geri dönüştürülmüş elyaf",
-      "Deri ve deri ürünlerinde ihtisas üretimi",
-      "BOŞ",
-    ],
+  const [duzeyler] = await islem(ANONIM, (sql) =>
+    sql<{ kisim: string; bolum: string; sinif: string; faaliyet: string }[]>`
+      select
+        count(*) filter (where duzey = 'kisim') as kisim,
+        count(*) filter (where duzey = 'bolum') as bolum,
+        count(*) filter (where duzey = 'sinif') as sinif,
+        count(*) filter (where duzey = 'faaliyet') as faaliyet
+      from nace
+    `,
   );
-  assert.deepEqual(h.ozet, { korunuyor: 2, ekleniyor: 1, cikiyor: 2, bosSlot: 1 });
-  assert.equal(h.fark, 2);
-  assert.equal(h.saglamlik, 56);
-  assert.equal(h.agirlikSurumu, "TR33-2027-v1");
+  assert.equal(Number(duzeyler.kisim), 23);
+  assert.equal(Number(duzeyler.sinif), 651);
+
+  // 13.10.03 → 13.10 → 13.1 → 13
+  const [f] = await islem(ANONIM, (sql) =>
+    sql<{ ust_kod: string }[]>`select ust_kod from nace where kod = '13.10.03'`,
+  );
+  assert.equal(f.ust_kod, "13.10");
 });
 
-test("kriter puanları hedef taban puanları üretir", async () => {
-  const d = await donemGetir(uzman, "usak", "2027");
-  assert.ok(d);
-  const adaylar = await adaylariGetir(uzman, d);
-  const bul = (ad: string) => adaylar.find((a) => a.ad.startsWith(ad));
-  assert.equal(bul("Teknik tekstil")?.taban, 73);
-  assert.equal(bul("Tekstil kırpık")?.taban, 74);
-  assert.equal(bul("Deri")?.taban, 66);
-  assert.equal(bul("Tarımsal kurutma")?.taban, 69);
-});
+test("NACE araması kodla ve tanımla çalışır, yalnızca seçilebilir düzeyler", async () => {
+  const kod = await naceAra(ANONIM, "13.10");
+  assert.equal(kod[0]?.kod, "13.10");
 
-test("epistemik durum kanıt eşiğinden ve doğrulanmamış kanıttan türer", async () => {
-  const d = await donemGetir(uzman, "usak", "2027");
-  assert.ok(d);
-  const adaylar = await adaylariGetir(uzman, d);
-  assert.equal(adaylar.find((a) => a.ad.startsWith("Teknik"))?.ep, "onay");
-  assert.equal(adaylar.find((a) => a.ad.startsWith("Tarımsal"))?.ep, "ai");
-  assert.equal(adaylar.find((a) => a.ad.startsWith("Batarya"))?.ep, "yok");
+  const tanim = await naceAra(ANONIM, "elyaf");
+  assert.ok(tanim.length > 0);
+  assert.ok(tanim.every((x) => x.duzey === "sinif" || x.duzey === "faaliyet"));
+
+  assert.equal((await naceAra(ANONIM, "a")).length, 0, "tek harf arama yapmaz");
+  assert.equal((await naceGetir(ANONIM, "13.10"))?.tanim.includes("elyaf"), true);
 });
 
 // ── RLS ────────────────────────────────────────────────────────────────────
 
-test("RLS gerçekten uygulanıyor: anonim kişisel veri göremez", async () => {
-  const satirlar = await islem(ANONIM, (sql) => sql`select * from kimlik`);
-  assert.equal(satirlar.length, 0);
+test("anonim kişisel veri göremez", async () => {
+  assert.equal((await islem(ANONIM, (sql) => sql`select * from kimlik`)).length, 0);
+  assert.equal((await islem(ANONIM, (sql) => sql`select * from denetim`)).length, 0);
 });
 
-test("birey başkasının kimliğini göremez, kendisininkini görür", async () => {
-  const kendi = await islem(birey, (sql) => sql`select gonderen_ref from kimlik`);
+test("yatırımcı yalnızca kendi kimliğini görür", async () => {
+  const kendi = await islem(yatirimci, (sql) => sql`select gonderen_ref from kimlik`);
   assert.equal(kendi.length, 1);
 });
 
-test("birey kanıt doğrulayamaz — RLS update politikası reddeder", async () => {
-  const d = await donemGetir(uzman, "usak", "2027");
-  assert.ok(d);
-  const [k] = await islem(uzman, (sql) => sql<{ id: number }[]>`select id from kanit limit 1`);
-  const etkilenen = await islem(birey, (sql) =>
-    sql`update kanit set dogrulama_durumu = 'uzman_onayli' where id = ${k.id} returning id`,
+test("yatırımcı belge yükleyemez, ajans yükler", async () => {
+  const metin = "Deneme belge metni. ".repeat(20);
+  await assert.rejects(
+    () =>
+      islem(yatirimci, (sql) =>
+        sql`insert into belge (ad, tur, metin) values ('Yetkisiz', 'diger', ${metin})`,
+      ),
+    /row-level security|new row violates/i,
   );
-  assert.equal(etkilenen.length, 0);
+  await islem(ajans, (sql) => sql`insert into belge (ad, tur, metin) values ('Yetkili', 'diger', ${metin})`);
 });
 
-test("birey kriter puanı yazamaz", async () => {
+test("yatırımcı değerlendirme yazamaz", async () => {
   await assert.rejects(
-    () => islem(birey, (sql) => sql`insert into kriter_puani (aday_id, kriter, puan) values (1, 'plan_uyumu', 99)`),
+    () =>
+      islem(yatirimci, (sql) =>
+        sql`insert into degerlendirme (oneri_id, puanlar, model_snapshot, prompt_surum)
+            values (1, '{}'::jsonb, 'x', 'y')`,
+      ),
     /row-level security|new row violates/i,
   );
 });
 
-test("anonim öneri oluşturamaz", async () => {
-  await assert.rejects(
-    () => oneriOlustur(ANONIM, {
-      donemId: 1, tur: "yeni", baslik: "Anonim deneme", tanim: "x", ilce: "Merkez",
-      neden: "y", nace: null, naceOnayli: false,
-    }),
-    /row-level security|new row violates|null value/i,
+test("onaylanmamış öneri anonime kapalı, sahibine açık", async () => {
+  const anonimGoruyor = await islem(ANONIM, (sql) => sql`select id from oneri where durum <> 'listede'`);
+  assert.equal(anonimGoruyor.length, 0);
+
+  const sahibiGoruyor = await islem(yatirimci, (sql) =>
+    sql`select id from oneri where durum <> 'listede' and gonderen_ref = ${yatirimci.gonderenRef}`,
   );
+  assert.ok(sahibiGoruyor.length > 0);
 });
 
-test("denetim tablosu append-only — iki katman", async () => {
-  await islem(uzman, (sql) =>
-    sql`insert into denetim (aktor_ref, eylem, nesne_tip, nesne_id) values (null, 'test', 'test', '1')`,
+test("denetim append-only — iki katman", async () => {
+  await islem(ajans, (sql) =>
+    sql`insert into denetim (eylem, nesne_tip, nesne_id) values ('test', 'test', '1')`,
   );
-
-  // 1. katman: RLS'te update/delete politikası yok → hiçbir satır etkilenmez.
-  const guncel = await islem(uzman, (sql) =>
-    sql`update denetim set eylem = 'sahte' where id = (select min(id) from denetim) returning id`,
+  // 1. katman: update/delete politikası yok → 0 satır
+  assert.equal(
+    (await islem(ajans, (sql) => sql`update denetim set eylem = 'sahte' where id = (select min(id) from denetim) returning id`)).length,
+    0,
   );
-  assert.equal(guncel.length, 0);
-  const silinen = await islem(uzman, (sql) =>
-    sql`delete from denetim where id = (select min(id) from denetim) returning id`,
-  );
-  assert.equal(silinen.length, 0);
-
-  // 2. katman: RLS baypas edilse bile trigger reddeder.
+  // 2. katman: RLS baypas edilse bile trigger reddeder
   await assert.rejects(
     () => sahip()`update denetim set eylem = 'sahte' where id = (select min(id) from denetim)`,
     /append-only/i,
@@ -147,71 +133,92 @@ test("denetim tablosu append-only — iki katman", async () => {
   );
 });
 
-// ── iş kuralları ───────────────────────────────────────────────────────────
+// ── veritabanı iş kuralları ────────────────────────────────────────────────
 
-test("destek sayısı puanı değiştirmez", async () => {
-  const d = await donemGetir(uzman, "usak", "2027");
-  assert.ok(d);
-  const once = await adaylariGetir(uzman, d);
-  const [o] = await islem(uzman, (sql) =>
-    sql<{ id: number }[]>`select id from oneri where donem_id = ${d.donemId} and durum = 'konu_adayi' limit 1`,
-  );
-  await destekVer(birey, o.id);
-  const sonra = await adaylariGetir(uzman, d);
-  assert.deepEqual(
-    once.map((a) => [a.id, a.taban, a.kanit]),
-    sonra.map((a) => [a.id, a.taban, a.kanit]),
-  );
-});
-
-test("kanıt reddedilince yeterlilik düşer, onaylanınca geri gelir", async () => {
-  const d = await donemGetir(uzman, "usak", "2027");
-  assert.ok(d);
-  const [aday] = await islem(uzman, (sql) =>
-    sql<{ id: number }[]>`select id from aday where donem_id = ${d.donemId} order by id limit 1`,
-  );
-  const [k] = await islem(uzman, (sql) =>
-    sql<{ id: number; katki_puani: number }[]>`
-      select id, katki_puani from kanit where aday_id = ${aday.id} and dogrulama_durumu = 'uzman_onayli' order by id limit 1
-    `,
-  );
-  const oncekiler = await adaylariGetir(uzman, d);
-  const once = oncekiler.find((a) => a.id === String(aday.id))!.kanit;
-
-  await kanitDurumDegistir(uzman, k.id, "reddedildi", "Kaynak künyesi doğrulanamadı.");
-  const sonrakiler = await adaylariGetir(uzman, d);
-  assert.equal(sonrakiler.find((a) => a.id === String(aday.id))!.kanit, once - k.katki_puani);
-
-  await kanitDurumDegistir(uzman, k.id, "uzman_onayli", "Yeniden doğrulandı.");
-  const geri = await adaylariGetir(uzman, d);
-  assert.equal(geri.find((a) => a.id === String(aday.id))!.kanit, once);
-});
-
-test("panel verisi dönemden gerçek sayı üretir", async () => {
-  const d = await donemGetir(uzman, "usak", "2027");
-  assert.ok(d);
-  const p = await panelVerisi(uzman, d);
-  assert.equal(p.akis.length, 4);
-  assert.ok(p.akis[0].deger > 0);
-  assert.equal(p.saglik.reduce((t, s) => t + s.oran, 0) >= 99, true);
-});
-
-test("karar kilidi: kurul kilitler, kilitli dönem salt okunur olur", async () => {
-  const d = await donemGetir(kurul, "kutahya", "2027");
-  assert.ok(d);
-
-  const uzmanDenemesi = await kararKilitle(uzman, d.donemId, d.set.surum, { deneme: true }, []);
-  assert.equal(uzmanDenemesi.ok, false, "uzman kilitleyememeli");
-
-  const r = await kararKilitle(kurul, d.donemId, d.set.surum, { slotlar: [] }, [{ konu: "x", gerekce: "y" }]);
-  assert.equal(r.ok, true);
-
+test("NACE varsa kaynağı zorunlu — kim atadı kaybolmaz", async () => {
   await assert.rejects(
-    () => islem(uzman, (sql) => sql`update aday set ad = 'değişti' where donem_id = ${d.donemId}`),
-    /kilitli/i,
+    () =>
+      sahip()`
+        insert into oneri (donem_id, gonderen_ref, baslik, nace_kod)
+        values (1, (select ref from gonderen limit 1), 'Kaynaksız NACE denemesi', '13.10')
+      `,
+    /oneri_nace_kaynagi/,
   );
-  const tekrar = await kararKilitle(kurul, d.donemId, d.set.surum, {}, []);
-  assert.equal(tekrar.ok, false);
+});
+
+test("listede olan öneri onaylayan izi taşımak zorunda", async () => {
+  await assert.rejects(
+    () =>
+      sahip()`
+        insert into oneri (donem_id, gonderen_ref, baslik, durum)
+        values (1, (select ref from gonderen limit 1), 'İzsiz onay denemesi', 'listede')
+      `,
+    /oneri_onay_izi/,
+  );
+});
+
+test("ret gerekçesiz reddedilemez", async () => {
+  await assert.rejects(
+    () =>
+      sahip()`
+        insert into oneri (donem_id, gonderen_ref, baslik, durum)
+        values (1, (select ref from gonderen limit 1), 'Gerekçesiz ret denemesi', 'reddedildi')
+      `,
+    /oneri_ret_gerekcesi/,
+  );
+});
+
+test("model snapshot 'latest' olamaz", async () => {
+  await assert.rejects(
+    () =>
+      sahip()`
+        insert into degerlendirme (oneri_id, puanlar, model_snapshot, prompt_surum)
+        values ((select id from oneri limit 1), '{}'::jsonb, 'latest', 'v1')
+      `,
+    /snapshot_pinli/,
+  );
+});
+
+test("etkin puan düzeltmeyi tercih eder", async () => {
+  const [o] = await sahip()<{ id: number }[]>`
+    select oneri_id as id from degerlendirme where duzeltilmis_puanlar is null limit 1
+  `;
+  const [{ taban: once }] = await sahip()<{ taban: number }[]>`
+    select oneri_taban_puani(${o.id}, (select agirliklar from agirlik_seti limit 1)) as taban
+  `;
+  await sahip()`
+    update degerlendirme
+    set duzeltilmis_puanlar = (select jsonb_object_agg(k, 100) from unnest(enum_range(null::kriter)) k),
+        duzelten_ref = (select ref from gonderen where rol = 'ajans' limit 1)
+    where oneri_id = ${o.id}
+  `;
+  const [{ taban: sonra }] = await sahip()<{ taban: number }[]>`
+    select oneri_taban_puani(${o.id}, (select agirliklar from agirlik_seti limit 1)) as taban
+  `;
+  assert.equal(sonra, 100);
+  assert.notEqual(sonra, once);
+});
+
+test("KVKK: kimlik pseudonimleşir, öneri zinciri korunur", async () => {
+  const [g] = await sahip()<{ ref: string }[]>`
+    select o.gonderen_ref as ref from oneri o join kimlik k on k.gonderen_ref = o.gonderen_ref
+    where k.eposta is not null limit 1
+  `;
+  const [{ n: once }] = await sahip()<{ n: string }[]>`
+    select count(*) as n from oneri where gonderen_ref = ${g.ref}
+  `;
+  await sahip()`select kimlik_pseudonimlestir(${g.ref})`;
+
+  const [k] = await sahip()<{ eposta: string | null; pseudonimlestirildi: boolean }[]>`
+    select eposta, pseudonimlestirildi from kimlik where gonderen_ref = ${g.ref}
+  `;
+  assert.equal(k.eposta, null);
+  assert.equal(k.pseudonimlestirildi, true);
+
+  const [{ n: sonra }] = await sahip()<{ n: string }[]>`
+    select count(*) as n from oneri where gonderen_ref = ${g.ref}
+  `;
+  assert.equal(sonra, once, "öneriler korunmalı");
 });
 
 // ── migration geri alma ────────────────────────────────────────────────────
@@ -224,7 +231,6 @@ test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
   `;
   assert.equal(Number(n), 0);
 
-  const ileri = await yukari();
-  assert.deepEqual(ileri, ["0001_sema", "0002_rls", "0003_kurallar"]);
+  assert.deepEqual(await yukari(), ["0001_sema", "0002_rls", "0003_kurallar"]);
   await seed();
 });

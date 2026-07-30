@@ -10,6 +10,8 @@ overrides:
 
 importers:
 
+  .: {}
+
   apps/web:
     dependencies:
       '@radix-ui/react-dialog':
@@ -30,9 +32,6 @@ importers:
       '@ykh/observability':
         specifier: workspace:*
         version: link:../../packages/observability
-      '@ykh/reporting':
-        specifier: workspace:*
-        version: link:../../packages/reporting
       '@ykh/retrieval':
         specifier: workspace:*
         version: link:../../packages/retrieval
@@ -94,15 +93,9 @@ importers:
       '@ykh/observability':
         specifier: workspace:*
         version: link:../../packages/observability
-      '@ykh/reporting':
-        specifier: workspace:*
-        version: link:../../packages/reporting
       '@ykh/retrieval':
         specifier: workspace:*
         version: link:../../packages/retrieval
-      '@ykh/scoring':
-        specifier: workspace:*
-        version: link:../../packages/scoring
 
   packages/ai-gateway:
     dependencies:
@@ -137,12 +130,6 @@ importers:
         version: link:../domain
 
   packages/observability: {}
-
-  packages/reporting:
-    dependencies:
-      '@ykh/domain':
-        specifier: workspace:*
-        version: link:../domain
 
   packages/retrieval:
     dependencies:

@@ -1,33 +1,34 @@
 ---
 name: evidence-contract
-description: AI Gateway ve kanıt doğrulama sözleşmesini dayatır. packages/ai-gateway veya packages/evidence-validation altında dosya açılırken, model çağrısı yazılırken, Zod/JSON şeması eklenirken veya bir AI çıktısı kaydedilirken kullan.
+description: AI değerlendirme sözleşmesini dayatır. packages/ai-gateway veya packages/evidence-validation altında dosya açılırken, model çağrısı yazılırken, Zod şeması eklenirken veya bir AI çıktısı kaydedilirken kullan.
 ---
 
-# Kanıt sözleşmesi
+# Değerlendirme sözleşmesi
 
-`packages/ai-gateway` ve `packages/evidence-validation` altındaki her değişiklik
-bu sözleşmeye uyar. Sözleşmeyi ihlal eden kod, testleri geçse bile kabul edilmez.
+`packages/ai-gateway` ve `packages/evidence-validation` altındaki her değişiklik bu
+sözleşmeye uyar. Testleri geçse bile ihlal eden kod kabul edilmez.
 
 ## Zorunlu zincir
 
-Model çağrısı → **şema** → **kanıt doğrulama** → doğrulanmamış bulgu → **uzman onayı** → puan
+model çağrısı → **şema** → **alıntı doğrulama** → **dayanak puanı** → doğrulanmamış
+taslak → **ajans onayı** → sıralama
 
-Her ok bir kapıdır ve her kapı fail-closed'dır. Kapı cevap veremiyorsa sonuç
+Her ok bir kapıdır ve her kapı fail-closed. Kapı cevap veremiyorsa sonuç
 "reddedildi"dir, "belki" değildir.
 
 ## Kontrol listesi
 
-- [ ] Yeni şema `z.object({...}).strict()` — `additionalProperties: false` üretmeli.
-- [ ] Kaynak taşıyan her alan `evidence_ids: z.array(...).min(1)`.
+- [ ] Yeni şema `z.object({...}).strict()`.
 - [ ] Yeni prompt `PROMPTLAR` kaydına **sürümüyle** eklendi (`ad-vN`).
-- [ ] Prompt `ORTAK_SINIRLAR` metnini içeriyor.
-- [ ] Belge içeriği `kaynakBloguKur()` ile, `guvenilir="hayir"` etiketiyle ve
+- [ ] Prompt `ORTAK` sınırlar metnini içeriyor.
+- [ ] Belge içeriği `kaynakBloguKur()` ile, `guvenilir="hayir"` etiketiyle,
       XML kaçışlı geçiyor. Ham metin prompt'a doğrudan gömülmüyor.
-- [ ] Yeni şema kaynak iddiası taşıyorsa `kanitHatalari()` içinde ele alındı.
+- [ ] Alıntı taşıyan çıktı `degerlendirmeyiDogrula()` üzerinden geçiyor.
+- [ ] Model bir listeden seçim yapıyorsa (NACE gibi) liste dışı değer reddediliyor.
 - [ ] `modelSnapshotDogrula()` çağrılıyor; `latest` reddediliyor.
-- [ ] Sonuç `modelSnapshot` + `promptSurum` taşıyor ve `bulgu` tablosuna yazılıyor.
-- [ ] Doğrulamadan geçmeyen çıktı **kaydedilmiyor**; yalnızca denetime yazılıyor.
-- [ ] Eval testi eklendi: en az bir "kaynaksız sayı" ve bir "sahte kaynak" vakası.
+- [ ] Sonuç `modelSnapshot` + `promptSurum` taşıyor ve DB'ye yazılıyor.
+- [ ] Reddedilen çıktı **kaydedilmiyor**; yalnızca denetime yazılıyor.
+- [ ] Eval testi eklendi: kaynaksız sayı, uydurulmuş alıntı, liste dışı değer.
 
 ## Yasak kalıplar
 
@@ -40,27 +41,29 @@ await kaydet(veri);
 const c = SEMA.safeParse(ham);
 await kaydet(c.success ? c.data : varsayilan);
 
-// YASAK — doğrulanmış bulguyu doğrudan puana bağlamak
-if (sonuc.ok) await kriterPuaniYaz(...);   // uzman onayı geçidi atlandı
+// YASAK — AI puanını doğrudan listeye sokmak
+if (s.ok) await sql`update oneri set durum = 'listede' ...`;  // ajans onayı atlandı
+
+// YASAK — ham puanı güncellemek
+await sql`update degerlendirme set puanlar = ... `;  // trigger reddeder, provenance ölür
 ```
 
 ## Doğru kalıp
 
 ```ts
-const sonuc = await analizEt(istemci, MODEL_SNAPSHOT, girdi);
-aiMaliyeti({ ...
-});
-if (!sonuc.ok) {
-  await denetle(sql, b, "ai_cikti_reddedildi", ..., { asama: sonuc.asama, hatalar: sonuc.hatalar });
-  return;
+const s = await degerlendir(istemci, MODEL_SNAPSHOT, girdi);
+aiMaliyeti({ ... });
+if (!s.ok) {
+  await denetle(sql, b, "degerlendirme_reddedildi", "oneri", id, { asama: s.asama, hatalar: s.hatalar });
+  return;  // öneri `degerlendiriliyor` kalır, en çok 3 deneme
 }
-// dogrulama_durumu HER ZAMAN 'ai_bulgusu' — puana girmez
-await sql`insert into bulgu (..., dogrulama_durumu) values (..., 'ai_bulgusu')`;
+await sql`insert into degerlendirme (..., model_snapshot, prompt_surum) values (...)`;
+await sql`update oneri set durum = 'onay_bekliyor' where id = ${id}`;  // ONAY BEKLER
 ```
 
 ## Değiştirirken kırılması gerekenler
 
 `packages/ai-gateway/src/eval.test.ts` ve
 `packages/evidence-validation/src/validation.test.ts` bu sözleşmenin testidir.
-Sözleşmeyi gevşetiyorsan bu testlerden en az biri kırılmalı. Kırılmıyorsa
-test eksiktir — önce testi ekle.
+Sözleşmeyi gevşetiyorsan bu testlerden en az biri kırılmalı. Kırılmıyorsa test
+eksiktir — önce testi ekle.

@@ -1,115 +1,103 @@
-# YKH-KDP
+# YKH
 
-**Yatırım Konusu Hazırlama — Karar Destek Platformu**
+**Yerel Kalkınma Hamlesi — yatırım konusu önerileri**
 
-Yerel Kalkınma Hamlesi kapsamında her il için dört yatırım konusu belirleniyor.
-Bu platform tek bir soruya cevap veriyor: **bu il için hangi konular korunmalı,
-hangileri değişmeli, boşalan slotlara hangi yeni konular girmeli?**
+Her il için dört yatırım konusu belirleniyor. Bu platform tek bir akışı yürütür:
 
-Kullanıcılar öneri veriyor; platform önerileri kanıta bağlıyor, mevcut konularla
-aynı ölçekte puanlıyor ve gerekçeli bir karar destek çıktısı üretiyor. **Nihai
-kararı il değerlendirme kurulu veriyor.**
+```
+Yatırımcı öneri verir  →  AI puanlar  →  Ajans onaylar  →  İl sıralamasına girer
+```
 
-Platform resmî Portal veya E-TUYS'un yerine geçmez; yatırımcı başvuruları
-başlamadan önceki politika hazırlama katmanıdır.
+Yatırımcı yatırım konusu başlığını ve **neden bu ilde/ilçede** yapılması gerektiğini
+yazar. NACE kodunu biliyorsa girer, bilmiyorsa yapay zekâ atar. Yapay zekâ öneriyi
+üst ölçekli belgelere (bölge planı, kalkınma planı, OVP, il raporları) ve sekiz
+kritere göre puanlar. Puan **doğrulanmamış bir taslaktır**; ajans onaylamadan hiçbir
+öneri sıralamaya girmez.
 
 ## Ürünün doğruluk iddiası
 
-Bu ürün, birleştirilmiş bir "genel skor" üretmeyi reddetmesiyle ayrışır:
-
-- **Stratejik puan** (0–100) ile **kanıt yeterliliği** (0–100) asla birleşmez.
-  Puanı yüksek, kanıtı zayıf konu "güçlü öneri" değil, "yüksek potansiyel —
-  ek kanıt gerekli"dir.
-- **Kanıt eşiği sıralamayı ezer.** Yüksek puanlı ama kanıtsız aday slot dolduramaz.
-- **Boş slot bir hata değildir.** "Bu slot için yeterli kanıtlı aday yok"
-  geçerli ve saygın bir sonuçtur.
-- **Sabit koruma tabanı yoktur.** Dört konunun tamamı korunabilir, tamamı değişebilir.
-- **Puanlamaya yalnızca uzman onaylı kanıt girer.** AI bulgusu ekranda görünür,
-  puana katılmaz.
-- **Destek sayısı puan girdisi değildir.** İlgi sinyalidir.
-- **Gizli katsayı yoktur.** Devamlılık payı ekranda ve raporda yazıyla ilan edilir.
-- **En büyük payı "neden burada?" taşır.** Program yerel kalkınmadır: sekiz
-  kriterin yerellik grubu (yerel kaynak ve girdi, mevcut değer zinciri, yerel
-  arazi-enerji-işgücü donanımı) toplam ağırlığın **%44'ü**dür ve hiçbir ajans
-  kalibrasyonu bunu %40'ın altına indiremez. Aynı konu başka bir ilde de aynı
-  şekilde yapılabiliyorsa gerekçesi zayıftır.
+- **En büyük payı "neden burada?" taşır.** Sekiz kriterin yerellik grubu (yerel
+  kaynak, mevcut değer zinciri, yerel arazi-enerji-işgücü donanımı) ağırlığın
+  **%44'ü**dür ve hiçbir kalibrasyon bunu %40'ın altına indiremez. Aynı konu başka
+  bir ilde de aynı şekilde yapılabiliyorsa gerekçesi zayıftır.
+- **AI karar vermez.** Puan üretir, ajans onaylar. Onay geri alınabilir.
+- **Dayanak eşiği sıralamayı ezer.** Üst ölçekli belgelere bağlanamayan aday, puanı
+  yüksek olsa da slot dolduramaz. Kaynağı belirsiz bir sayı dört konuyu seçemez.
+- **Boş slot hata değildir.** "Yeterince gerekçelendirilebilir aday yok" geçerli sonuçtur.
+- **Alıntı uydurulamaz.** Belgede birebir geçmeyen alıntı tüm değerlendirmeyi reddettirir.
+- **AI ham puanı değişmez.** Ajans düzeltmesi ayrı kolona yazılır; "bu sayıyı kim
+  koydu" her zaman cevaplanabilir.
+- **Gizli katsayı yok.** Devamlılık payı ve yerellik payı ekranda yazıyla ilan edilir.
 
 ## Hızlı başlangıç
 
 ```bash
 pnpm install
-docker compose up -d          # Postgres 17 · localhost:5470
-pnpm db:reset                 # şema + RLS + demo verisi
-pnpm dev                      # http://localhost:3000
-pnpm worker                   # ayrı terminal — iş kuyruğu (isteğe bağlı)
+docker compose up -d     # Postgres 17 · localhost:5470
+pnpm db:reset            # şema + RLS + 3190 NACE kodu + demo verisi
+pnpm dev                 # http://localhost:3000
+pnpm worker              # ayrı terminal — AI değerlendirme döngüsü
 ```
 
 Demo hesapları (parola `ykh-demo-2027`):
 
-| E-posta | Rol | Ne yapabilir |
+| E-posta | Rol | Ne yapar |
 |---|---|---|
-| `uzman@ykh.local` | ajans uzmanı | kanıt doğrular, kriter puanı yazar |
-| `sektor@ykh.local` | sektör uzmanı | aynı yetkiler |
-| `kurul@ykh.local` | kurul üyesi | kararı kilitler |
-| `birey@ykh.local` | birey | öneri verir, kanıt ekler, destekler |
-| `denetci@ykh.local` | denetçi | denetim izini ve gizli sınıfı görür |
+| `yatirimci@ykh.local` | yatırımcı | öneri verir |
+| `ajans@ykh.local` | ajans | onaylar, puanı/NACE'yi düzeltir, belge yükler |
+| `yonetici@ykh.local` | yönetici | ajansın her şeyi + kişisel veri |
 
 ## Ekranlar
 
-| Yol | Blok | İçerik |
+| Yol | Kim | Ne |
 |---|---|---|
-| `/iller` | 0 | il ve dönem seçimi |
-| `/il/[il]/donem/[donem]` | 1 | karar ekranı — dört slot, sıralama, kilit |
-| `/il/[il]/donem/[donem]/konu/[id]` | 2 | iddia-kanıt matrisi, kriter kırılımı |
-| `/il/[il]/donem/[donem]/oneri` | 3 | öneri girişi (mobil öncelikli, iki kademe) |
-| `/oneri/[id]` | 3.2 | dosya güçlendirme, kanıt kartı, destek |
-| `/il/[il]/donem/[donem]/inceleme` | 4 | uzman kanıt doğrulama kuyruğu + triyaj |
-| `/kamu/[il]/[donem]` | 7 | kamuya açık yayım (anonim bağlam) |
-| `/kamu/[il]/[donem]/rapor` | — | yazdırılabilir karar raporu |
-| `/panom` | 7 | kişisel pano |
-
-`?pay=0` her karar ekranında senaryo denemesi açar; sunucu yeniden hesaplar ve
-sayfa bunun **kaydedilmediğini** açıkça söyler.
+| `/` | herkes | il listesi |
+| `/oneri` | yatırımcı | beş alanlı öneri formu |
+| `/il/[il]` | herkes | il sıralaması, slotlar, boş slot gerekçesi |
+| `/oneri/[id]` | herkes | AI bu puanı neye dayanarak verdi |
+| `/onay` | ajans | onay kuyruğu |
+| `/belgeler` | ajans | üst ölçekli belge yükleme |
 
 ## Mimari
 
 ```
 apps/web                      Next.js 16 · App Router · sunucu bileşenleri
-apps/worker                   iş kuyruğu — AI analizi, rapor üretimi
-packages/domain               durum makineleri, roller, karar modeli tipleri
-packages/scoring              8 kriter, sürümlü ağırlık, pay, eşik, slot doldurma
-packages/database             SQL şema, RLS, migration, veri erişimi
-packages/evidence-validation  evidence_id / span / yetki doğrulama · fail-closed
-packages/ai-gateway           Zod strict, prompt registry, model istemcisi, eval
-packages/retrieval            tsvector arama, kaynak paketi
-packages/reporting            yazdırmaya hazır karar raporu
+apps/worker                   AI değerlendirme döngüsü (kuyruk tablosu yok)
+packages/domain               roller, öneri durum makinesi, karar modeli tipleri
+packages/scoring              8 kriter, sürümlü ağırlık, pay, dayanak eşiği, slot doldurma
+packages/database             şema, RLS, migration, NACE yükleme, veri erişimi
+packages/evidence-validation  alıntı/sayı doğrulama, dayanak puanı — fail-closed
+packages/ai-gateway           Zod strict, prompt registry, model istemcisi, eval seti
+packages/retrieval            belge paketi, NACE aday listesi
 packages/observability        JSON log, maskeleme, maliyet kaydı
 ```
 
-Sıralama **sunucuda** hesaplanır. İstemcide algoritma kopyası yoktur.
+Sıralama **sunucuda** hesaplanır; istemcide algoritma kopyası yoktur.
+Redis, S3, pgvector, PostGIS yok.
 
 ## Güvenlik
 
 Uygulama `ykh_app` rolüyle bağlanır — superuser değil, tablo sahibi değil,
-`BYPASSRLS` yok. Her tabloda `FORCE ROW LEVEL SECURITY` açıktır ve her istek
-`SET LOCAL app.rol / app.gonderen_ref` ile bağlanır. Ayrıntı:
+`BYPASSRLS` yok. 13 tablonun hepsinde `FORCE ROW LEVEL SECURITY` açık, her istek
+`SET LOCAL app.rol / app.gonderen_ref` ile bağlanıyor. Ayrıntı:
 [docs/ykh-guvenlik.md](docs/ykh-guvenlik.md).
 
-Kişisel veri ayrı `kimlik` tablosundadır; öneriler değişmez `gonderen.ref`
-anahtarına bağlanır. Silme talebinde kimlik pseudonimleştirilir, karar zinciri
-bozulmaz. Denetim tablosu append-only'dir (RLS + trigger, iki katman).
+Kişisel veri ayrı `kimlik` tablosunda; öneriler değişmez `gonderen.ref` anahtarına
+bağlı. Silme talebinde kimlik pseudonimleşir, sıralama zinciri bozulmaz. Denetim
+tablosu append-only (RLS + trigger).
 
 ## Test
 
 ```bash
-pnpm test          # tüm paketler — 82 test
+pnpm -r --workspace-concurrency=1 test   # 91 test
 pnpm typecheck
-pnpm audit --prod  # temiz olmadan sürüm çıkılmaz
+pnpm audit --prod
 ```
 
-Kapsam: karar modeli, slot doldurma uç durumları, RLS'in gerçekten uygulandığı,
-append-only denetim, migration geri alma, AI eval seti (kaynaksız sayı / sahte
-kaynak), ve kayıt→öneri→kanıt→doğrulama→aday→kilit→rapor uçtan uca akışı.
+Kapsam: karar modeli ve slot uç durumları, yerellik tabanı, RLS'in gerçekten
+uygulandığı, append-only denetim, veritabanı iş kuralları, migration geri alma,
+AI eval seti (kaynaksız sayı / uydurulmuş alıntı / listede olmayan NACE), ve
+kayıt→öneri→AI puanı→onay→sıralama uçtan uca akışı.
 
 ## Bağlam dosyaları
 
@@ -117,14 +105,15 @@ kaynak), ve kayıt→öneri→kanıt→doğrulama→aday→kilit→rapor uçtan 
 - [docs/ykh-alan-sozlugu.md](docs/ykh-alan-sozlugu.md) — terim sözlüğü
 - [docs/ykh-guvenlik.md](docs/ykh-guvenlik.md) — RLS, veri sınıfları, maskeleme
 - [docs/ykh-calisma-protokolu.md](docs/ykh-calisma-protokolu.md) — çalışma ve debug protokolü
-- [design_handoff_ykh_kdp/README.md](design_handoff_ykh_kdp/README.md) — tasarım devri
+
+`design_handoff_ykh_kdp/` tarihsel referans: token seti ve epistemik gramer geçerli,
+ama oradaki ekranlar (kanıt bandı, uzman kuyruğu, kurul kilidi) bu üründe yok.
 
 ## Bilinen sınırlar
 
-- **AI**: `OPENAI_API_KEY` yoksa çevrimdışı deterministik istemci çalışır.
-  Doğrulama zinciri her iki modda da aynıdır; çevrimdışı mod hiçbir kontrolü gevşetmez.
-- **E-posta doğrulama**: SMTP bağlı değil. Geliştirmede hesap doğrulanmış açılır.
-- **Dosya yükleme**: kanıt künyesi ve URL destekleniyor; S3/MinIO bağlanmadı.
-- **Rapor**: yazdırmaya hazır HTML. `.docx`/`.xlsx` üretimi yok.
-- **Blok 5** (senaryo/duyarlılık ekranı) ve **Blok 6** (kurul çalışma alanı tam
-  ekranı) arayüz olarak yok; motoru `packages/scoring` içinde hazır ve testli.
+- `OPENAI_API_KEY` yoksa çevrimdışı deterministik istemci çalışır: belgelerden
+  birebir alıntı çıkarır ama puanları ve NACE eşleşmesini kaba üretir. Doğrulama
+  zinciri her iki modda aynıdır.
+- Belge yükleme `.txt`/`.md` veya metin yapıştırma. PDF/docx ayrıştırıcı yok.
+- E-posta doğrulama SMTP'ye bağlı değil.
+- Rapor/Excel çıktısı yok.

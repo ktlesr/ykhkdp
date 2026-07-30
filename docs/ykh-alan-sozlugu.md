@@ -1,41 +1,36 @@
-# Alan sözlüğü — YKH-KDP
+# Alan sözlüğü — YKH
 
-Terim kayması bu projede doğrudan hataya dönüşür. Kod, veritabanı ve arayüz
-aynı kelimeyi kullanır. Türkçe terim kanoniktir; İngilizce karşılık yalnızca
-literatür eşlemesi içindir.
+Terim kayması doğrudan hataya dönüşür. Kod, veritabanı ve arayüz aynı kelimeyi
+kullanır. Türkçe terim kanoniktir.
 
 ## Çekirdek terimler
 
-| Türkçe (kanonik) | İngilizce | Kod / tablo | UI etiketi |
-|---|---|---|---|
-| aday | candidate | `aday` · `Aday` | "Yatırım konusu" (tablo satırı) |
-| iddia | claim | `iddia` · `Iddia` | "İddia" |
-| kanıt | evidence | `kanit` · `KanitKaydi` | "Kanıt" |
-| bulgu | finding | `bulgu` | "AI bulgusu" |
-| değerlendirme | assessment | `kriter_puani` | "Kriter puanı" |
-| slot | slot | `slotSayisi` · `ilkDort` | "Slot" |
-| dönem | cycle | `donem` · `DonemKaydi` | "Dönem" |
-| kriter | criterion | `kriter` enum · `Kriter` | "Kriter" |
-| ağırlık seti | weight set | `agirlik_seti` · `AgirlikSeti` | "Ağırlık seti" |
-| devamlılık payı | continuity bonus | `devamlilik_payi` | "Devamlılık payı" |
-| kanıt eşiği | evidence threshold | `kanit_esigi` | "Kanıt eşiği" |
-| kanıt yeterliliği | evidence sufficiency | `kanit_yeterliligi()` | "Kanıt yeterliliği" |
-| stratejik puan | strategic score | `aday_taban_puani()` | "Stratejik" |
-| sıralama sağlamlığı | ranking robustness | `saglamlik` | "Sağlamlık" |
-| eşik devri | threshold handover | `esikDevri` | "Eşik devri ile girdi" |
-| gönderen | submitter | `gonderen.ref` (`submitter_ref`) | görünmez (takma anahtar) |
-| kimlik | identity | `kimlik` | "Hesap" |
-| denetim | audit | `denetim` | "Kayıt defteri" |
-| erişim sınıfı | access class | `access_class` | "Veri sınıfı" |
-| doğrulama durumu | verification status | `dogrulama_durumu` | bkz. epistemik gramer |
+| Türkçe (kanonik) | Kod / tablo | UI etiketi |
+|---|---|---|
+| öneri | `oneri` · `Oneri` | "Yatırım konusu önerisi" |
+| aday | `Aday` (sıralama girdisi) | tablo satırı |
+| gerekçe | `oneri.gerekce` | "Neden burada?" |
+| değerlendirme | `degerlendirme` | "Yapay zekâ değerlendirmesi" |
+| dayanak | `dayanak` · `dayanakPuani()` | "Belge dayanağı" |
+| dayanak eşiği | `dayanak_esigi` | "Dayanak eşiği" |
+| alıntı | `alintilar` | "Kaynaktan alıntı" |
+| belge | `belge` | "Üst ölçekli belge" |
+| stratejik puan | `oneri_taban_puani()` | "Stratejik puan" |
+| devamlılık payı | `devamlilik_payi` | "Devamlılık payı" |
+| ağırlık seti | `agirlik_seti` | "Ağırlık seti" |
+| slot | `slotSayisi` · `ilkDort` | "Slot" |
+| kriter | `kriter` enum · `Kriter` | "Kriter" |
+| gönderen | `gonderen.ref` | görünmez (takma anahtar) |
+| kimlik | `kimlik` | "Hesap" |
+| denetim | `denetim` | "Kayıt" |
+| erişim sınıfı | `access_class` | "Veri sınıfı" |
 
 ## Kriter grupları — "neden burada?" kuralı
 
-Programın adı **Yerel** Kalkınma Hamlesi'dir. Bir yatırım konusunun asıl
-gerekçesi, o konuyu neden **bu ilde ve ilçede** yaptığımızdır. Sekiz kriter
-dört gruba ayrılır ve `yerellik` grubu en büyük payı taşır.
+Programın adı **Yerel** Kalkınma Hamlesi. Bir yatırım konusunun asıl gerekçesi,
+o konuyu neden **bu ilde ve ilçede** yaptığımızdır.
 
-| Grup | UI etiketi | Kriterler | TR33-2027-v1 payı |
+| Grup | UI etiketi | Kriterler | TR33-2027-v1 |
 |---|---|---|---|
 | `yerellik` | "Neden burada?" | yerel_potansiyel, deger_zinciri, uygulanabilirlik | **%44** |
 | `etki` | "Ne üretir?" | istihdam_katma_deger, surdurulebilirlik | %24 |
@@ -43,46 +38,40 @@ dört gruba ayrılır ve `yerellik` grubu en büyük payı taşır.
 | `uyum` | "Politikayla uyum" | plan_uyumu | %12 |
 
 `YERELLIK_TABANI = 0.40` bir kalibrasyon parametresi değil, **ürün kuralıdır**:
+hiçbir ağırlık seti yerellik payını %40'ın altına indiremez ve yerellik her zaman
+en büyük gruptur. `agirlikSetiGecerli()` reddeder, `donemGetir()` hata fırlatır.
 
-- Hiçbir ajans/dönem ağırlık seti yerellik payını %40'ın altına indiremez.
-- Yerellik her zaman en büyük grup olmak zorundadır.
-- `agirlikSetiGecerli()` ihlali reddeder; `donemGetir()` geçersiz setle
-  sıralama hesaplamak yerine hata fırlatır (fail-closed).
-- Pay, karar raporunda ve öneri formunda yazıyla ilan edilir (§1.4).
+## Öneri durumları
 
-Aynı hizalama öneri dosyası puanında da vardır: "İl, ilçe ve neden burada
-gerekçesi" (24) + "Yerel uygulanabilirlik" (20) = **44 puan**, en büyük pay.
+`degerlendiriliyor` → `onay_bekliyor` → `listede` | `reddedildi`
 
-## Sonuç etiketleri (brief §2 — birebir)
+`degerlendiriliyor` **kuyruğun kendisidir** — ayrı iş kuyruğu tablosu yoktur.
+
+## Sonuç etiketleri
 
 | Etiket | Koşul |
 |---|---|
 | korunuyor | mevcut konu ilk dörtte |
 | ekleniyor | yeni öneri ilk dörtte |
 | çıkıyor | mevcut konu ilk dört dışında |
-| koşullu | kanıt eşiğini geçemeyen aday |
 | yedek | yeni öneri ilk dört dışında |
-| boş slot | yeterli kanıtlı aday yok |
+| dayanaksız | dayanak eşiğini geçemeyen aday |
+| boş slot | yeterince gerekçelendirilebilir aday yok |
 
-## Epistemik gramer (üç durum)
+## NACE kaynağı
 
-| Durum | `dogrulama_durumu` | Kenar | Doku | İşaret | Puana girer mi |
-|---|---|---|---|---|---|
-| Uzman onaylı kanıt | `uzman_onayli` | solid | yok | `■` | **evet** |
-| AI bulgusu · doğrulanmadı | `ai_bulgusu`, `beyan`, `celiskili` | dashed | tarama | `◌` | hayır |
-| Kanıt yok / yetersiz | `reddedildi`, kayıt yok | dotted | çapraz tarama | `—` | hayır |
+| Değer | UI etiketi | Ne demek |
+|---|---|---|
+| `kullanici` | "Yatırımcı girdi" | yatırımcı kodu biliyordu |
+| `ai` | "AI atadı · doğrulanmadı" | kullanıcı boş bıraktı, AI atadı |
+| `ajans` | "Ajans düzeltti" | ajans elle düzeltti |
 
-## Öneri durumları
-
-`taslak` → `kanit_bekliyor` → `triyaj` → `uzman_incelemesinde` →
-`konu_adayi` | `revizyon_istendi` | `reddedildi` | `birlestirildi`
-
-`INSTITUTION_REVIEW` YOKTUR — kurum kaydı, kurum doğrulama ve kurum onayı
-bu üründe bulunmaz (brief §4).
+`nace_kod` varsa `nace_kaynagi` de zorunludur (veritabanı kısıtı) — kodu kimin
+koyduğu asla kaybolmaz.
 
 ## Yasak eşlemeler
 
-- "genel skor", "toplam puan", "başarı skoru" → **yok**. Dört ölçüt ayrıdır.
-- "oy", "beğeni", "puan verme" → **destek**; ve destek puana girmez.
-- "onaylandı" tek başına → hangi onay? `uzman_onayli` mı, `nace_onayli` mı, kurul kilidi mi.
-- "skor" → stratejik puan (0–100) veya kanıt yeterliliği (0–100); hangisi olduğu yazılır.
+- "genel skor", "başarı skoru" → **yok**. Stratejik puan ve dayanak ayrıdır.
+- "onaylandı" tek başına → hangi onay? `nace_kaynagi='ajans'` mı, `durum='listede'` mi.
+- "kanıt" → bu üründe kanıt kartı **yok**. Doğru terim: **belge** ve **alıntı**.
+- "kurul" → bu üründe kurul kilidi **yok**. Onaylayan: **ajans**.

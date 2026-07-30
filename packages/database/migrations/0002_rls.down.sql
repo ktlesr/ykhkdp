@@ -2,9 +2,8 @@ do $$
 declare t text;
 begin
   foreach t in array array[
-    'ajans','il','ilce','agirlik_seti','donem','gonderen','kimlik','oturum',
-    'oneri','aday','kanit','iddia','iddia_kanit','kriter_puani','bulgu',
-    'destek','karar','denetim','is_kuyrugu'
+    'ajans','il','ilce','nace','agirlik_seti','donem','gonderen','kimlik','oturum',
+    'belge','oneri','degerlendirme','denetim'
   ] loop
     execute format('alter table if exists %I disable row level security', t);
     execute format('alter table if exists %I no force row level security', t);
@@ -20,7 +19,6 @@ begin
 end $$;
 
 drop function if exists app_gorebilir(erisim_sinifi);
-drop function if exists app_yazabilir_uzman();
-drop function if exists app_uzman();
+drop function if exists app_onaylayabilir();
 drop function if exists app_ref();
 drop function if exists app_rol();

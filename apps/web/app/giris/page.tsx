@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { EylemFormu, Gonder } from "@/components/eylem-formu.tsx";
-import { UstBar } from "@/components/ust-bar.tsx";
+import { UstBar } from "@/components/ui.tsx";
 import { girisEylemi } from "@/lib/eylem.ts";
 import { kullanici } from "@/lib/oturum.ts";
 
@@ -10,7 +10,7 @@ const GIRDI =
   "min-h-11 w-full border border-hairline bg-[#FDFCFA] px-3 py-[11px] text-[14px] text-ink";
 
 export default async function Giris({ searchParams }: { searchParams: Promise<{ hedef?: string }> }) {
-  if (await kullanici()) redirect("/panom");
+  if (await kullanici()) redirect("/oneri");
   const { hedef } = await searchParams;
 
   return (

@@ -8,23 +8,22 @@ import { adaylariPuanla, kriterDuyarliligi, senaryolariCalistir } from "./duyarl
 
 const AYAR = ayardan(TR33_2027_V1);
 
-const a = (o: Partial<Aday> & { id: string; taban: number; kanit: number }): Aday => ({
+const a = (o: Partial<Aday> & { id: string; taban: number; dayanak: number }): Aday => ({
   ad: o.id,
   koken: "yeni",
-  nace: "NACE 00.00",
-  ep: "onay",
+  nace: "13.10",
   ...o,
 });
 
 const USAK: Aday[] = [
-  a({ id: "teknik-tekstil", ad: "Teknik tekstil", koken: "mevcut", taban: 73, kanit: 82 }),
-  a({ id: "elyaf", ad: "Geri dönüştürülmüş elyaf", taban: 74, kanit: 77 }),
-  a({ id: "deri", ad: "Deri ihtisas", koken: "mevcut", taban: 66, kanit: 71 }),
-  a({ id: "kurutma", ad: "Tarımsal kurutma", taban: 69, kanit: 41, ep: "ai" }),
-  a({ id: "jeotermal", ad: "Jeotermal sera", taban: 58, kanit: 63 }),
-  a({ id: "batarya", ad: "Batarya kalıp", taban: 57, kanit: 29, ep: "yok" }),
-  a({ id: "seramik", ad: "Seramik kaplama", koken: "mevcut", taban: 53, kanit: 64 }),
-  a({ id: "sut", ad: "Süt işleme", koken: "mevcut", taban: 49, kanit: 38, ep: "ai" }),
+  a({ id: "teknik-tekstil", ad: "Teknik tekstil", koken: "mevcut", taban: 73, dayanak: 82 }),
+  a({ id: "elyaf", ad: "Geri dönüştürülmüş elyaf", taban: 74, dayanak: 77 }),
+  a({ id: "deri", ad: "Deri ihtisas", koken: "mevcut", taban: 66, dayanak: 71 }),
+  a({ id: "kurutma", ad: "Tarımsal kurutma", taban: 69, dayanak: 41 }),
+  a({ id: "jeotermal", ad: "Jeotermal sera", taban: 58, dayanak: 63 }),
+  a({ id: "batarya", ad: "Batarya kalıp", taban: 57, dayanak: 29 }),
+  a({ id: "seramik", ad: "Seramik kaplama", koken: "mevcut", taban: 53, dayanak: 64 }),
+  a({ id: "sut", ad: "Süt işleme", koken: "mevcut", taban: 49, dayanak: 38 }),
 ];
 
 // ── ağırlık seti ───────────────────────────────────────────────────────────
@@ -139,7 +138,7 @@ test("destek sayısı puanlama imzasında yok", () => {
 test("eşiği geçemeyen yüksek puanlı aday slot dolduramaz", () => {
   const h = hesapla(USAK, AYAR);
   assert.equal(slotKimlikleri(h).includes("kurutma"), false);
-  assert.equal(h.kalanlar.find((s) => s.id === "kurutma")?.sonuc, "koşullu");
+  assert.equal(h.kalanlar.find((s) => s.id === "kurutma")?.sonuc, "dayanaksız");
 });
 
 test("devir sınırı aşılırsa slot boş kalır", () => {
@@ -169,11 +168,11 @@ test("devamlılık payı 0 iken sıralama değişir ve pay çıktıda ilan edili
 
 test("sabit koruma tabanı yok — dört slot da yeni adayla dolabilir", () => {
   const veri = [
-    a({ id: "y1", taban: 90, kanit: 90 }),
-    a({ id: "y2", taban: 88, kanit: 80 }),
-    a({ id: "y3", taban: 86, kanit: 70 }),
-    a({ id: "y4", taban: 84, kanit: 60 }),
-    a({ id: "m1", koken: "mevcut", taban: 40, kanit: 90 }),
+    a({ id: "y1", taban: 90, dayanak: 90 }),
+    a({ id: "y2", taban: 88, dayanak: 80 }),
+    a({ id: "y3", taban: 86, dayanak: 70 }),
+    a({ id: "y4", taban: 84, dayanak: 60 }),
+    a({ id: "m1", koken: "mevcut", taban: 40, dayanak: 90 }),
   ];
   const h = hesapla(veri, AYAR);
   assert.deepEqual(slotKimlikleri(h), ["y1", "y2", "y3", "y4"]);
@@ -182,7 +181,7 @@ test("sabit koruma tabanı yok — dört slot da yeni adayla dolabilir", () => {
 });
 
 test("dört slotun tamamı boş kalabilir", () => {
-  const veri = [1, 2, 3, 4].map((n) => a({ id: `a${n}`, taban: 100 - n * 20, kanit: 10 }));
+  const veri = [1, 2, 3, 4].map((n) => a({ id: `a${n}`, taban: 100 - n * 20, dayanak: 10 }));
   const h = hesapla(veri, AYAR);
   assert.deepEqual(slotKimlikleri(h), [null, null, null, null]);
   assert.equal(h.ozet.bosSlot, 4);
@@ -190,11 +189,11 @@ test("dört slotun tamamı boş kalabilir", () => {
 
 test("dört konunun tamamı korunabilir", () => {
   const veri = [
-    a({ id: "m1", koken: "mevcut", taban: 80, kanit: 90 }),
-    a({ id: "m2", koken: "mevcut", taban: 78, kanit: 90 }),
-    a({ id: "m3", koken: "mevcut", taban: 76, kanit: 90 }),
-    a({ id: "m4", koken: "mevcut", taban: 74, kanit: 90 }),
-    a({ id: "y1", taban: 60, kanit: 90 }),
+    a({ id: "m1", koken: "mevcut", taban: 80, dayanak: 90 }),
+    a({ id: "m2", koken: "mevcut", taban: 78, dayanak: 90 }),
+    a({ id: "m3", koken: "mevcut", taban: 76, dayanak: 90 }),
+    a({ id: "m4", koken: "mevcut", taban: 74, dayanak: 90 }),
+    a({ id: "y1", taban: 60, dayanak: 90 }),
   ];
   const h = hesapla(veri, AYAR);
   assert.equal(h.ozet.korunuyor, 4);
@@ -202,8 +201,8 @@ test("dört konunun tamamı korunabilir", () => {
 });
 
 test("mevcut konular her dönem yeniden puanlanır — pay dışında ayrıcalık yok", () => {
-  const mevcut = a({ id: "m", koken: "mevcut", taban: 50, kanit: 90 });
-  const yeni = a({ id: "y", koken: "yeni", taban: 56, kanit: 90 });
+  const mevcut = a({ id: "m", koken: "mevcut", taban: 50, dayanak: 90 });
+  const yeni = a({ id: "y", koken: "yeni", taban: 56, dayanak: 90 });
   const h = hesapla([mevcut, yeni], ayardan(TR33_2027_V1, { devamlilikPayi: 5, slotSayisi: 1 }));
   assert.deepEqual(slotKimlikleri(h), ["y"]); // 56 > 50+5
 });
@@ -215,7 +214,7 @@ test("slot sayısı parametredir — kodda 4 sabitlenmemiştir", () => {
 });
 
 test("eşit puanda sıralama deterministik (id'ye göre)", () => {
-  const veri = [a({ id: "b", taban: 70, kanit: 90 }), a({ id: "a", taban: 70, kanit: 90 })];
+  const veri = [a({ id: "b", taban: 70, dayanak: 90 }), a({ id: "a", taban: 70, dayanak: 90 })];
   assert.deepEqual(slotKimlikleri(hesapla(veri, AYAR)).slice(0, 2), ["a", "b"]);
   assert.deepEqual(slotKimlikleri(hesapla([...veri].reverse(), AYAR)).slice(0, 2), ["a", "b"]);
 });

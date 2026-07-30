@@ -1,69 +1,78 @@
 import assert from "node:assert/strict";
 import test, { after, before } from "node:test";
-import { readFile } from "node:fs/promises";
 import { islem, kapat, type Baglam } from "@ykh/database";
 import { sifirla, yukari } from "@ykh/database/migrate";
 import { seed } from "@ykh/database/seed";
 import { ISLER } from "./isler.ts";
-import { birIsAl, isKuyruguna, isiTamamla } from "./index.ts";
+import { birOneriAl, MAKS_DENEME } from "./index.ts";
 
-const SERVIS: Baglam = { gonderenRef: null, rol: "sistem_yoneticisi" };
+const SERVIS: Baglam = { gonderenRef: null, rol: "yonetici" };
 
 let oneriId: number;
 after(async () => { await kapat(); });
 
-// Bu paket kendi durumunu kurar; başka bir test paketinin bıraktığı duruma
-// (ör. kilitlenmiş dönem, dolmuş boş slot) bağımlı kalmaz.
+// Bu paket kendi durumunu kurar; başka bir test paketinin bıraktığı duruma bağlı kalmaz.
 before(async () => {
   await sifirla();
   await yukari();
   await seed();
   const [o] = await islem(SERVIS, (sql) =>
-    sql<{ id: number }[]>`select id from oneri where durum = 'konu_adayi' order by id limit 1`,
+    sql<{ id: number }[]>`select id from oneri where durum = 'degerlendiriliyor' order by id limit 1`,
   );
-  oneriId = o.id;
+  oneriId = Number(o.id);  // postgres.js int8'i string döndürür
 });
 
-test("kuyruk: iş alınır, bir kez alınır, tamamlanır", async () => {
-  const id = await isKuyruguna("rapor_uret", { il: "usak", yil: "2027" });
-  const is = await birIsAl();
-  assert.equal(is?.id, id);
-  assert.equal(await birIsAl(), null, "aynı iş ikinci kez alınamaz");
-  await isiTamamla(id, "test");
+test("kuyruk = degerlendiriliyor durumu; aynı öneri iki kez alınmaz", async () => {
+  const alinan = await birOneriAl();
+  assert.equal(alinan, oneriId);
+
+  // deneme sayacı arttı; MAKS_DENEME'ye kadar tekrar alınabilir, sonra durur.
+  for (let i = 1; i < MAKS_DENEME; i++) assert.equal(await birOneriAl(), oneriId);
+  assert.equal(await birOneriAl(), null, "deneme sınırı aşılınca alınmaz");
+
+  // testin geri kalanı için sayacı sıfırla
+  await islem(SERVIS, (sql) => sql`update oneri set deneme = 0 where id = ${oneriId}`);
 });
 
-test("rapor işi diske yazar ve içerik kuralları taşır", async () => {
-  const yol = await ISLER.rapor_uret(SERVIS, { il: "usak", yil: "2027" });
-  const html = await readFile(yol, "utf8");
-  assert.match(html, /Uşak — 2027 dönemi/);
-  assert.match(html, /Devamlılık payı/);
-  assert.match(html, /Slot boş/);
-  assert.match(html, /TR33-2027-v1/);
-});
+test("değerlendirme: NACE atanır, puan yazılır, durum onay_bekliyor olur", async () => {
+  const [once] = await islem(SERVIS, (sql) =>
+    sql<{ nace_kod: string | null; durum: string }[]>`select nace_kod, durum from oneri where id = ${oneriId}`,
+  );
+  assert.equal(once.nace_kod, null, "seed'de NACE boş olmalı");
+  assert.equal(once.durum, "degerlendiriliyor");
 
-test("iddia çıkarımı doğrulanmamış bulgu olarak kaydeder, puana girmez", async () => {
-  const once = await bulguSayisi(oneriId);
-  const sonuc = await ISLER.iddia_cikarimi(SERVIS, { oneriId });
-  assert.match(sonuc, /kaydedildi|Reddedildi|atlandı/);
+  const sonuc = await ISLER.degerlendir(SERVIS, { oneriId });
+  assert.match(sonuc, /puan hazır|Reddedildi|belge yok/);
 
-  const bulgular = await islem(SERVIS, (sql) =>
-    sql<{ dogrulama_durumu: string; model_snapshot: string; prompt_surum: string }[]>`
-      select dogrulama_durumu, model_snapshot, prompt_surum from bulgu where oneri_id = ${oneriId}
+  const [sonra] = await islem(SERVIS, (sql) =>
+    sql<{ nace_kod: string | null; nace_kaynagi: string | null; durum: string }[]>`
+      select nace_kod, nace_kaynagi, durum from oneri where id = ${oneriId}
     `,
   );
-  if (bulgular.length > once) {
-    assert.ok(bulgular.every((b) => b.dogrulama_durumu === "ai_bulgusu"), "AI bulgusu doğrulanmamış olmalı");
-    assert.ok(bulgular.every((b) => b.model_snapshot !== "latest"), "snapshot pinli olmalı");
-    assert.ok(bulgular.every((b) => b.prompt_surum.length > 0), "prompt sürümü kaydedilmeli");
-  }
+  assert.ok(sonra.nace_kod, "AI NACE atamalı");
+  assert.equal(sonra.nace_kaynagi, "ai", "kaynak 'ai' işaretlenmeli");
+  assert.equal(sonra.durum, "onay_bekliyor", "puan doğrulanmamış → onay bekler");
 });
 
-test("bilinmeyen iş tipi kayıtlıdır ve çalıştırılmaz", () => {
-  assert.equal(ISLER["rastgele_is"], undefined);
-  assert.deepEqual(Object.keys(ISLER).sort(), ["iddia_cikarimi", "rapor_uret"]);
+test("değerlendirme kaydı model künyesi ve dayanak taşır", async () => {
+  const [d] = await islem(SERVIS, (sql) =>
+    sql<{ dayanak: number; model_snapshot: string; prompt_surum: string; alintilar: unknown[] }[]>`
+      select dayanak, model_snapshot, prompt_surum, alintilar from degerlendirme where oneri_id = ${oneriId}
+    `,
+  );
+  assert.ok(d, "değerlendirme kaydı olmalı");
+  assert.notEqual(d.model_snapshot, "latest");
+  assert.equal(d.prompt_surum, "degerlendirme-v1");
+  assert.ok(d.dayanak >= 0 && d.dayanak <= 100);
 });
 
-async function bulguSayisi(id: number): Promise<number> {
-  const [{ n }] = await islem(SERVIS, (sql) => sql<{ n: string }[]>`select count(*) as n from bulgu where oneri_id = ${id}`);
-  return Number(n);
-}
+test("AI ham puanı değiştirilemez — trigger reddeder", async () => {
+  await assert.rejects(
+    () => islem(SERVIS, (sql) => sql`update degerlendirme set puanlar = '{}'::jsonb where oneri_id = ${oneriId}`),
+    /değiştirilemez/i,
+  );
+});
+
+test("bilinmeyen iş tipi kayıtlı değil", () => {
+  assert.deepEqual(Object.keys(ISLER), ["degerlendir"]);
+});

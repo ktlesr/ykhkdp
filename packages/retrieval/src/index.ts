@@ -1,111 +1,89 @@
 import { islem, type Baglam } from "@ykh/database";
-import type { ErisimSinifi } from "@ykh/domain";
-import { kaynakPaketiKur, type KaynakPaketi } from "@ykh/evidence-validation";
+import { paketKur, type Paket } from "@ykh/evidence-validation";
 
 /**
- * Hibrit arama ve kaynak paketi kurma.
+ * Üst ölçekli belge araması ve model paketi.
  *
- * ponytail: pgvector + gömme yerine Postgres tsvector + künye filtresi.
- * Kaynak paketi 20 kayıtla sınırlı bir kurum belgesi kümesinden seçiliyor;
- * anlamsal arama ölçülebilir bir kazanç göstermeden gömme altyapısı taşımak
- * boşuna. Gerekirse `kanit` tablosuna `embedding vector(1536)` eklenir ve
- * bu dosyadaki tek sorgu değişir.
+ * ponytail: pgvector + gömme yerine Postgres tsvector. Belge sayısı onlarla
+ * ölçülüyor ve tam metin araması yeterli. Gerekirse `belge` tablosuna
+ * `embedding vector(1536)` eklenir ve buradaki tek sorgu değişir.
  */
 
-export type AramaSonucu = {
-  kanitId: number;
-  kod: string;
-  kaynakKurum: string;
-  belge: string;
-  sayfaTablo: string | null;
-  alinti: string | null;
-  dogrulamaDurumu: string;
-  skor: number;
-};
+export type BelgeSatiri = { id: number; ad: string; tur: string; yil: string | null; metin: string };
 
-export async function kanitAra(
+/**
+ * Öneriye ilgili belgeleri seçer.
+ *
+ * Kapsam sırası: ile özgü → ajansa özgü → ulusal. Aramada eşleşme olmasa bile
+ * kapsama giren belgeler pakete girer; model boş pakete karşı puanlamaz.
+ */
+export async function belgePaketi(
   b: Baglam,
-  donemId: number,
-  sorgu: string,
-  limit = 10,
-): Promise<AramaSonucu[]> {
-  if (!sorgu.trim()) return [];
-  return islem(b, (sql) =>
-    sql<AramaSonucu[]>`
-      select
-        k.id as "kanitId", k.kod, k.kaynak_kurum as "kaynakKurum", k.belge,
-        k.sayfa_tablo as "sayfaTablo", k.alinti,
-        k.dogrulama_durumu as "dogrulamaDurumu",
-        ts_rank(
-          to_tsvector('simple', coalesce(k.belge,'') || ' ' || coalesce(k.kaynak_kurum,'') || ' ' || coalesce(k.alinti,'')),
-          plainto_tsquery('simple', ${sorgu})
-        ) as skor
-      from kanit_kunye k
-      where k.donem_id = ${donemId}
-        and to_tsvector('simple', coalesce(k.belge,'') || ' ' || coalesce(k.kaynak_kurum,'') || ' ' || coalesce(k.alinti,''))
-            @@ plainto_tsquery('simple', ${sorgu})
-      order by skor desc, k.id
+  girdi: { ilKod: string; ajansKod: string; sorgu: string; limit?: number },
+): Promise<{ paket: Paket; belgeler: BelgeSatiri[] }> {
+  const limit = girdi.limit ?? 5;
+  const q = herhangiBiri(girdi.sorgu) || girdi.sorgu;
+
+  const satirlar = await islem(b, (sql) =>
+    sql<BelgeSatiri[]>`
+      select id, ad, tur::text, yil, metin
+      from belge
+      where il_kod = ${girdi.ilKod}
+         or (il_kod is null and ajans_kod = ${girdi.ajansKod})
+         or (il_kod is null and ajans_kod is null)
+      order by
+        (il_kod = ${girdi.ilKod}) desc,
+        (ajans_kod = ${girdi.ajansKod}) desc,
+        ts_rank(arama, websearch_to_tsquery('simple', ${q})) desc,
+        id
       limit ${limit}
     `,
   );
+
+  // postgres.js int8'i string döndürür; alıntı doğrulaması sayı karşılaştırıyor.
+  const belgeler = satirlar.map((s) => ({ ...s, id: Number(s.id) }));
+
+  return {
+    belgeler,
+    paket: paketKur(
+      `belge-${girdi.ilKod}-${belgeler.length}`,
+      belgeler.map((s) => ({ id: s.id, ad: s.ad, metin: s.metin })),
+    ),
+  };
 }
 
 /**
- * Modele verilecek kaynak paketini kurar.
+ * Serbest metni "herhangi bir kelime" tsquery'sine çevirir.
  *
- * Kapalı kaynak modu (brief §3): model YALNIZCA bu paketi görür. Kullanıcının
- * yetkisi olmayan kayıt pakete hiç girmez — filtreleme `kaynakPaketiKur`
- * içinde ikinci kez de yapılır (katmanlı savunma).
+ * `plainto_tsquery` terimleri AND'ler; uzun bir öneri başlığında hiçbir kayıt
+ * eşleşmez. Bu yüzden kelimeler OR'lanır.
  */
-export async function kaynakPaketi(
+export function herhangiBiri(metin: string, enAzUzunluk = 4): string {
+  const kelimeler = [
+    ...new Set(
+      metin
+        .toLocaleLowerCase("tr-TR")
+        .split(/[^\p{L}\p{N}]+/u)
+        .filter((w) => w.length >= enAzUzunluk),
+    ),
+  ].slice(0, 12);
+  return kelimeler.join(" OR ");
+}
+
+/** NACE önerisi için aday kod listesi — arama, AI'nin seçebileceği kümeyi kısar. */
+export async function naceAdaylari(
   b: Baglam,
-  donemId: number,
   sorgu: string,
-  limit = 8,
-  /** verilirse bu dosyanın kendi kanıtları her hâlükârda pakete girer */
-  oneriId?: number,
-): Promise<{ paket: KaynakPaketi; satirlar: Array<{ evidenceId: string; kaynakKurum: string; belge: string; sayfaTablo: string | null; metin: string }> }> {
-  const kayitlar = await islem(b, (sql) =>
-    sql<
-      { kod: string; kaynak_kurum: string; belge: string; sayfa_tablo: string | null;
-        belge_metni: string | null; alinti: string | null; access_class: ErisimSinifi;
-        span_baslangic: number | null; span_bitis: number | null }[]
-    >`
-      select k.kod, k.kaynak_kurum, k.belge, k.sayfa_tablo, k.belge_metni, k.alinti,
-             k.access_class, k.span_baslangic, k.span_bitis
-      from kanit_kunye k
-      where k.donem_id = ${donemId}
-        and (
-          -- dosyanın kendi kanıtı: aramaya bakmaksızın pakete girer
-          (${oneriId ?? null}::bigint is not null and k.oneri_id = ${oneriId ?? null}::bigint)
-          or ${sorgu} = ''
-          or to_tsvector('simple', coalesce(k.belge,'') || ' ' || coalesce(k.alinti,''))
-             @@ plainto_tsquery('simple', ${sorgu})
-        )
-      order by (k.oneri_id is distinct from ${oneriId ?? null}::bigint), k.id
+  limit = 25,
+): Promise<Array<{ kod: string; tanim: string }>> {
+  const q = herhangiBiri(sorgu);
+  if (!q) return [];
+  return islem(b, (sql) =>
+    sql<{ kod: string; tanim: string }[]>`
+      select kod, tanim from nace
+      where duzey = 'sinif' and arama @@ websearch_to_tsquery('simple', ${q})
+      order by ts_rank(arama, websearch_to_tsquery('simple', ${q})) desc, kod
       limit ${limit}
     `,
   );
-
-  const satirlar = kayitlar.map((k) => ({
-    evidenceId: k.kod,
-    kaynakKurum: k.kaynak_kurum,
-    belge: k.belge,
-    sayfaTablo: k.sayfa_tablo,
-    metin: k.belge_metni ?? k.alinti ?? "",
-  }));
-
-  const paket = kaynakPaketiKur(
-    `paket-${donemId}-${satirlar.length}`,
-    kayitlar.map((k) => ({
-      evidenceId: k.kod,
-      accessClass: k.access_class,
-      belgeMetni: k.belge_metni ?? k.alinti ?? "",
-      spanBaslangic: k.span_baslangic,
-      spanBitis: k.span_bitis,
-    })),
-    b.rol === "anonim" ? "birey" : b.rol,
-  );
-
-  return { paket, satirlar: satirlar.filter((s) => paket.kayitlar.some((k) => k.evidenceId === s.evidenceId)) };
 }

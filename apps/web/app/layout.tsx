@@ -35,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="tr" className={`${newsreader.variable} ${plexSans.variable} ${plexMono.variable}`}>
       <body>
         {children}
-        <KayitSatiriAlani surum="TR33-2027-v1" />
+        <KayitSatiriAlani />
       </body>
     </html>
   );

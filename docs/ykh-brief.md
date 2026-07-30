@@ -1,164 +1,204 @@
-# Claude Code Brief — YKH-KDP
+# YKH — ürün brifi
 
-> Bu dosya projenin **tek doğruluk kaynağı**. Çerçeve planı docx'i ile çeliştiği her yerde bu dosya geçerlidir.
-> `docs/ykh-brief.md` olarak repoya koy ve `CLAUDE.md` içinden `@import` et.
+> Projenin **tek doğruluk kaynağı**. Başka her belgeyle çeliştiği yerde bu dosya geçerlidir.
+> 2026-07-30'da sadeleştirildi: önceki sürüm sekiz rol, uzman doğrulama kuyruğu, kanıt
+> zinciri ve kurul kilidi içeriyordu; fazla karmaşık bulundu ve kaldırıldı.
 
 ---
 
 ## 1. Ürün tanımı
 
-YKH-KDP, Türkiye'de kalkınma ajansları ve yerel paydaşlar için bir karar destek platformudur.
+Yerel Kalkınma Hamlesi kapsamında her il için dört yatırım konusu belirleniyor.
+Bu platform şu akışı yürütür:
 
-Yerel Kalkınma Hamlesi kapsamında her il için dört yatırım konusu belirleniyor ve bu liste yılda bir güncellenebiliyor. Platform tek bir soruya cevap veriyor: **bu il için hangi konular korunmalı, hangileri değişmeli, boşalan slotlara hangi yeni konular girmeli?**
+```
+Yatırımcı öneri verir  →  AI puanlar  →  Ajans onaylar  →  İl sıralamasına girer
+```
 
-Kullanıcılar yatırım konusu önerilerini gerekçeleriyle birlikte giriyor. Platform bu önerileri kanıta bağlıyor, mevcut konularla aynı ölçekte puanlıyor ve gerekçeli bir karar destek çıktısı üretiyor. Nihai kararı il değerlendirme kurulu veriyor.
+Yatırımcı yatırım konusu başlığını ve **neden bu ilde/ilçede** yapılması gerektiğini
+yazar. NACE kodunu biliyorsa girer, bilmiyorsa yapay zekâ atar. Yapay zekâ öneriyi
+üst ölçekli belgelere ve sekiz kritere göre puanlar. Puan **doğrulanmamış bir
+taslaktır**; ajans onaylamadan hiçbir öneri sıralamaya girmez.
 
-Platform resmî Portal veya E-TUYS'un yerine geçmez; yatırımcı başvuruları başlamadan önceki politika hazırlama katmanıdır.
+Platform resmî Portal veya E-TUYS'un yerine geçmez; yatırımcı başvuruları başlamadan
+önceki politika hazırlama katmanıdır.
 
-## 2. Karar modeli (ajanların uydurmaması gereken çekirdek)
+## 2. Beş ekran
+
+| Yol | Kim | Ne |
+|---|---|---|
+| `/` | herkes | il listesi; her ilde kaç öneri listede, kaç tanesi onay bekliyor |
+| `/oneri` | yatırımcı | beş alanlı form: başlık · neden burada · il · ilçe · NACE (boş bırakılabilir) |
+| `/il/[il]` | herkes | o ilin sıralaması, slotlar, boş slot gerekçesi |
+| `/oneri/[id]` | herkes | AI bu puanı neye dayanarak verdi: gerekçe, belge alıntıları, kriter kırılımı |
+| `/onay` | ajans | AI puanladı, onay bekliyor: onayla · puanı düzelt · NACE'yi düzelt · reddet |
+| `/belgeler` | ajans | üst ölçekli belge yükleme — AI'nin dayanağı |
+
+Ayrıca `/giris` ve `/kayit`. Başka ekran yok.
+
+## 3. Üç rol
+
+| Rol | Yapar |
+|---|---|
+| `yatirimci` | öneri verir, kendi önerilerini görür |
+| `ajans` | onaylar, reddeder, puanı ve NACE'yi düzeltir, belge yükler |
+| `yonetici` | ajansın her şeyi + kişisel veriye erişim (denetim) |
+
+Kurumsal kayıt, kurum doğrulama ve kurum onayı **yoktur**. Yatırımcı e-posta
+doğrulamalı bir hesapla girer.
+
+## 4. Dört öneri durumu
+
+```
+degerlendiriliyor  →  onay_bekliyor  →  listede
+                                     ↘  reddedildi
+```
+
+- `degerlendiriliyor` — AI puanlıyor. Bu durum **kuyruğun kendisidir**; ayrı iş
+  kuyruğu tablosu yoktur. Worker `for update skip locked` ile alır, `deneme < 3`.
+- `onay_bekliyor` — puan hazır ama doğrulanmadı. Sıralamada görünmez.
+- `listede` — ajans onayladı. `onaylayan_ref` ve `onay_zamani` zorunlu.
+- `reddedildi` — `ret_gerekcesi` zorunlu.
+
+Onay **geri alınabilir**. Kurul kilidi, sürüm dondurma ve salt okunur dönem yok.
+
+## 5. Karar modeli
 
 ```
 Bir (il, dönem) için:
 
-  adaylar = mevcut_konular ∪ yeni_öneriler
+  adaylar = listede olan öneriler (koken: mevcut | yeni)
 
-  her aday, aynı 8 kriterle ve aynı ağırlık setiyle puanlanır
-  mevcut konulara, tanımlıysa, açık ve sürümlü bir devamlılık payı eklenir
+  her aday aynı 8 kriterle ve aynı ağırlık setiyle puanlanır
+  mevcut konulara açık ve sürümlü bir devamlılık payı eklenir
 
   sıralama = adaylar puan azalan
 
   slot_doldurma:
-    sıralamada yukarıdan aşağı git
-    aday.kanıt_yeterliliği >= eşik ise slotu doldur
-    değilse adayı "koşullu — ek kanıt gerekli" işaretle, slotu atlama sayma
-    dört slot dolana veya aday bitene kadar devam et
+    aday.dayanak >= dayanak_esigi ise slotu doldur
+    değilse "dayanaksız" işaretle; eşiği geçen sonraki aday
+      devir_siniri içindeyse devralır, değilse SLOT BOŞ KALIR
 
   sonuç_etiketi:
-    mevcut konu ilk dörtte  → KORUNUYOR
-    mevcut konu ilk dört dışı → ÇIKIYOR
-    yeni öneri ilk dörtte    → EKLENİYOR
-    eşiği geçemeyen aday     → KOŞULLU
-    doldurulamayan slot      → BOŞ (yeterli kanıtlı aday yok)
+    mevcut + ilk dörtte → korunuyor      yeni + ilk dörtte → ekleniyor
+    mevcut + dışta      → çıkıyor        yeni + dışta      → yedek
+    eşik altı           → dayanaksız     doldurulamayan    → boş slot
 ```
 
 Değişmez kurallar:
 
-- **Sabit koruma tabanı yoktur.** Dört konunun tamamı korunabilir, tamamı değişebilir. Sıralama söyler.
-- **Mevcut konular her dönem yeniden puanlanır.** Aksi hâlde "korunmalı mı" sorusu cevaplanamaz.
-- **Kanıt eşiği sıralamayı ezer.** Yüksek puanlı ama kanıtsız aday slot dolduramaz.
-- **Devamlılık payı gizli katsayı değildir.** Sürümlü parametredir, çıktıda ve raporda açıkça yazar.
-- **Uç durumlar işaretlenir.** "Tamamı değişiyor" ve "hiçbiri değişmiyor" ayrıca vurgulanır ve kuruldan gerekçe ister.
-- **Destek sayısı puana dönüşmez.** Hiçbir kod yolu destek/öneri sayısını skora bağlamaz.
+- **Sabit koruma tabanı yoktur.** Dört konunun tamamı korunabilir veya değişebilir.
+- **Dayanak eşiği sıralamayı ezer.** Üst ölçekli belgelere bağlanamayan aday, puanı
+  yüksek olsa da slot dolduramaz. Kaynağı belirsiz bir sayı dört konuyu seçemez.
+- **Devamlılık payı gizli katsayı değildir.** Sürümlü parametredir, ekranda yazar.
+- **Boş slot hata değildir.** "Yeterince gerekçelendirilebilir aday yok" geçerli sonuçtur.
+- **Uç durumlar işaretlenir.** Tamamı korunuyor / tamamı değişiyor / boş slot.
 
-## 3. AI'nin sınırları
+### Sekiz kriter, dört grup
 
-AI bir **kanıt analiz motorudur**, karar verici değil.
+| Grup | UI | Kriterler | TR33-2027-v1 |
+|---|---|---|---|
+| `yerellik` | "Neden burada?" | yerel_potansiyel %18 · deger_zinciri %14 · uygulanabilirlik %12 | **%44** |
+| `etki` | "Ne üretir?" | istihdam_katma_deger %16 · surdurulebilirlik %8 | %24 |
+| `gerceklesme` | "Gerçekleşir mi?" | pazar_talep %12 · yatirimci_ilgisi %8 | %20 |
+| `uyum` | "Politikayla uyum" | plan_uyumu %12 | %12 |
 
-Yapar: öneriyi yapılandırma, atomik iddia çıkarma, kanıt eşleştirme, plan uyumu önerisi, ekosistem analizi, mükerrerlik önerisi, eksik veri ve çelişki tespiti, doğrulanmış bulgulardan gerekçe metni.
+`YERELLIK_TABANI = %40` **ürün kuralıdır**, kalibrasyon parametresi değil. Hiçbir
+ajans/dönem seti yerellik payını bunun altına indiremez ve yerellik her zaman en
+büyük gruptur. `agirlikSetiGecerli()` ihlali reddeder; `donemGetir()` geçersiz setle
+sıralama hesaplamak yerine hata fırlatır.
 
-Yapmaz: kaynağı olmayan sayı/kapasite/pazar üretmek, kriter puanı veya toplam sıralama hesaplamak, dört konuyu seçmek, belgede olmayan plan hedefi uydurmak, yetkisiz belge kullanmak, belirsizliği gizlemek.
+Ağırlık setleri global sabit değil, `(ajans, dönem)` anahtarıyla sürümlü kayıttır.
+TR33 kalibrasyonu "varsayılan" değil `TR33-2027-v1`.
+
+## 6. AI'nin sınırları
+
+AI **puan üretir** ama karar vermez: her puan ajans onayından geçer.
+
+Yapar: NACE önerisi (kullanıcı girmediyse), sekiz kriter puanı, üst ölçekli
+belgelerden alıntıyla gerekçe, dayanak puanı.
+
+Yapmaz: belgede olmayan sayı üretmek, alıntı uydurmak, aday listesi dışında NACE
+kodu önermek, hangi konunun seçileceğine karar vermek.
 
 Zorunlu kontroller — hepsi **fail-closed**:
 
-- Kapalı kaynak modu: model yalnızca istekte verilen kaynak paketini kullanır. İnternet erişimi yok.
-- Her bulgu geçerli bir `evidence_id` taşır; sunucu tarafında varlık, yetki, bağlama dahil edilmişlik ve sayfa/span eşleşmesi doğrulanır.
-- JSON Schema strict + Zod. Şema dışı çıktı reddedilir.
-- Kaynaksız sayısal token reddedilir.
-- Doğrulanmamış AI bulgusu puanlama girdisine dönüşemez. Uzman onayı zorunlu geçittir.
-- Prompt injection: belge içeriği "güvenilmeyen veri" olarak etiketlenir, asla talimat olarak yürütülmez.
-- Model snapshot ve prompt sürümü her analizle birlikte kaydedilir; `latest` alias üretimde kullanılmaz.
+- **Kapalı kaynak modu.** Model yalnızca `belgePaketi()` çıktısını görür. İnternet yok.
+- **Alıntı birebir doğrulanır.** Belgede geçmeyen alıntı tüm çıktıyı reddettirir.
+- **Kaynaksız sayısal token reddedilir.** Yıllar sayısal iddia sayılmaz.
+- **Şema:** Zod `.strict()` + JSON Schema `additionalProperties: false`.
+- **NACE önerisi aday listesiyle sınırlı.** Listede olmayan kod reddedilir.
+- **Prompt injection:** belge içeriği `<icerik guvenilir="hayir">` içinde XML kaçışlı.
+- **`model_snapshot` pinli;** `latest` hem uygulamada hem `check` kısıtıyla reddedilir.
+- **Reddedilen çıktı KAYDEDİLMEZ.** Öneri `degerlendiriliyor` kalır, neden denetime yazılır.
+- **AI ham puanı değişmez.** Ajans düzeltmesi ayrı kolona yazılır (`duzeltilmis_puanlar`);
+  trigger ham puanın güncellenmesini reddeder. "Bu sayıyı kim koydu" her zaman cevaplanır.
 
-## 4. Kullanıcı modeli
+### Dayanak puanı
 
-- **Kurumsal kayıt, kurum doğrulama ve kurum onayı yoktur.** Kullanıcılar bireydir.
-- Öneri verme herkese açık (e-posta doğrulamalı hesap yeterli).
-- Kurum/sektör/uzmanlık profilde **isteğe bağlı, doğrulanmamış beyan** alanlarıdır; her yerde doğrulanmamış olarak gösterilir ve puana etki etmez.
-- Yetkili roller (ajans uzmanı, sektör uzmanı, kurul üyesi, gözlemci, denetçi, sistem yöneticisi, AI yönetişim sorumlusu) davetle atanır.
-- Süreç durumundan `INSTITUTION_REVIEW` çıkarılmıştır.
+AI'nin öneriyi üst ölçekli belgelere ne kadar bağlayabildiği (0–100): doğrulanmış
+alıntı sayısı ve kaç ayrı belgeye dayandığı. Hiç alıntı yoksa 0. Belge yüklenmemiş
+bir ilde tüm dayanaklar 0 kalır ve slotlar boş görünür — doğru davranış budur.
 
-**KVKK/kimlik ayrımı — ilk migration'da kurulmalı:** `proposals` kişiye değil değişmez bir `submitter_ref` anahtarına bağlanır; kişisel veri ayrı kimlik tablosunda durur. Silme talebinde öneri ve karar zinciri bozulmadan kimlik pseudonimleştirilir. Denetim tablosu append-only kalır.
+## 7. Ölçek ve veri
 
-## 5. Ölçek
+81 il, 26 kalkınma ajansı. Pilot TR33 (Afyonkarahisar, Kütahya, Manisa, Uşak) ama
+**kodda hiçbir il, ajans veya bölge sabitlenmez**.
 
-81 il, 26 kalkınma ajansı, dönem bazlı. Başlangıç pilotu TR33 (Afyonkarahisar, Kütahya, Manisa, Uşak) ama **kodda hiçbir il, ajans veya bölge sabitlenmez**. Kriter setleri ve ağırlıklar global sabit değil, `(ajans, dönem)` anahtarıyla sürümlü kayıttır — TR33 kalibrasyonu "varsayılan" değil `TR33-2027-v1` olarak adlandırılır.
+NACE Rev.2.1 (Altılı, 2026) — 3190 kod, `packages/database/data/nace.json`.
+23 kısım · 87 bölüm · 287 grup · 651 sınıf · 2142 faaliyet. Yatırımcıya yalnızca
+sınıf ve faaliyet düzeyi seçilebilir olarak sunulur.
 
-## 6. Yığın
+## 8. Yığın
 
-Next.js (App Router) • TypeScript strict • PostgreSQL (RLS, JSONB, PostGIS, pgvector) • Redis • S3/MinIO • OpenAI Responses API + Structured Outputs • Dokploy • pnpm monorepo.
-
-Sürümleri scaffold anında resmî release sayfalarından teyit et ve tam sürümle pinle; `latest` hiçbir yerde kalmasın.
-
-```
-apps/web                      Next.js web + sunucu API
-apps/worker                   belge işleme, raporlama, uzun AI görevleri
-packages/domain               iş kuralları, durum makineleri, karar modeli
-packages/database             şema, migration, RLS, veri erişimi
-packages/scoring              deterministik puan, slot doldurma, senaryo, duyarlılık
-packages/evidence-validation  evidence_id / span / yetki doğrulama
-packages/ai-gateway           OpenAI çağrıları, prompt registry, şema, maliyet
-packages/retrieval            hibrit arama, kaynak paketi
-packages/reporting            Word/PDF/Excel çıktıları
-packages/observability        log, metric, trace, audit
-```
-
-## 7. Bağlam dosyaları
+Next.js 16 (App Router) • TypeScript strict • PostgreSQL 17 (RLS) • pnpm monorepo.
 
 ```
-CLAUDE.md                       → sadece @import satırları
-docs/ykh-brief.md               → bu dosya
-docs/ykh-alan-sozlugu.md        → terim sözlüğü (TR/EN), tablo ve UI etiketi karşılıkları
-docs/ykh-guvenlik.md            → RLS politikaları, veri sınıfları, maskeleme
-docs/ykh-calisma-protokolu.md   → tartış→plan→onay→kod→göster→commit, debug protokolü
+apps/web                      Next.js — 5 ekran + auth
+apps/worker                   AI değerlendirme döngüsü (kuyruksuz)
+packages/domain               roller, öneri durum makinesi, karar modeli tipleri
+packages/scoring              8 kriter, sürümlü ağırlık, pay, dayanak eşiği, slot doldurma
+packages/database             şema, RLS, migration, NACE yükleme, veri erişimi
+packages/evidence-validation  alıntı/sayı doğrulama, dayanak puanı — fail-closed
+packages/ai-gateway           Zod strict, prompt registry, model istemcisi, eval
+packages/retrieval            belge paketi, NACE aday listesi
+packages/observability        JSON log, maskeleme, maliyet kaydı
 ```
 
-Alan sözlüğü en yüksek getirili dosya: `claim/iddia`, `evidence/kanıt`, `finding/bulgu`, `assessment/değerlendirme`, `slot`, `cycle/dönem`, `criterion/kriter` — terim kayması bu projede doğrudan hataya dönüşür.
+Redis, S3/MinIO, pgvector, PostGIS **yok**. Gerekene kadar eklenmez.
 
-## 8. Proje skill'leri
+## 9. Veri modeli
 
-Mevcut setine (`/ponytail`, `/impeccable`, `/frontend-design`, `/security-review`, shadcn/ui, tailwind-v4-shadcn) ek iki tane yaz:
+13 tablo: `gonderen` · `kimlik` · `oturum` · `ajans` · `il` · `ilce` · `nace` ·
+`agirlik_seti` · `donem` · `belge` · `oneri` · `degerlendirme` · `denetim`.
 
-- **`evidence-contract`** — `packages/ai-gateway` ve `packages/evidence-validation` altında dosya açıldığında tetiklenir; şema + `evidence_id` doğrulama + fail-closed kalıbını dayatır.
-- **`rls-first`** — yeni tablo/migration eklenirken RLS politikası ve `access_class` sütunu olmadan geçilmemesini dayatır.
+- **KVKK ayrımı:** öneri kişiye değil değişmez `gonderen.ref` anahtarına bağlanır;
+  kişisel veri ayrı `kimlik` tablosunda. `kimlik_pseudonimlestir()` silme talebinde
+  kimliği siler, öneri zincirini bozmaz.
+- **`denetim` append-only:** RLS'te update/delete politikası yok + trigger ikinci katman.
+- **Her tabloda `access_class`:** `kamuya_acik` | `kurum_ici` | `gizli`.
 
-`/security-review`'ü Faz 3'ten itibaren her PR'da çalıştır.
+Ayrıntı: [ykh-guvenlik.md](ykh-guvenlik.md).
 
-## 9. Claude Code ↔ Codex iş bölümü
+## 10. Bağlam dosyaları
 
-| Claude Code (ağırlıklı) | Codex |
-| --- | --- |
-| Alan modeli, durum makineleri, karar modeli | Tekrarlı CRUD/route iskeletleri |
-| Puanlama ve slot doldurma motoru | Test fixture ve seed veri |
-| AI Gateway, retrieval, evidence-validation | Migration boilerplate, tip üretimi |
-| Güvenlik/RLS, denetim izi | Rapor şablonu dönüşümleri |
-| Mimari kararlar, refactor, review | Sınırları net küçük yamalar |
+```
+CLAUDE.md                     → yalnızca @import satırları
+docs/ykh-brief.md             → bu dosya
+docs/ykh-alan-sozlugu.md      → terim sözlüğü
+docs/ykh-guvenlik.md          → RLS, veri sınıfları, maskeleme
+docs/ykh-calisma-protokolu.md → çalışma ve debug protokolü
+```
 
-**İki ajan aynı pakete aynı anda dokunmaz.** Paket bazlı sahiplik, ayrı branch, birleşme noktası yalnızca `packages/domain` tip sözleşmeleri.
+`design_handoff_ykh_kdp/` tarihsel referanstır: §2 token seti ve §4 epistemik
+gramer hâlâ geçerli, ama §5–7'deki ekranlar (kanıt bandı, uzman kuyruğu, kurul
+kilidi, künye çekmecesi) bu üründe **yok**.
 
-## 10. İnşa sırası
+## 11. Bilinen sınırlar
 
-1. `packages/domain` — durum makinesi, slot ve karar modeli tipleri. Saf fonksiyon, DB ve UI'dan önce.
-2. `packages/scoring` — deterministik puan, devamlılık payı, kanıt eşiği, slot doldurma, senaryo. %100 birim testli, AI'sız çalışır.
-3. `packages/database` — şema + RLS. `access_class`, `verification_status`, `submitter_ref` ilk migration'da.
-4. `packages/evidence-validation` — **AI Gateway'den önce.** Doğrulayıcı hazır olmadan model çağrısı yazmak, fail-closed'ı geriye takmak demektir.
-5. `packages/ai-gateway` + eval seti aynı anda. İlk iki test: kaynaksız sayı, sahte kaynak.
-6. `packages/retrieval` → `apps/worker` → `apps/web`.
-
----
-
-## Hazır başlangıç promptları
-
-### Oturum 1 — Alan modeli
-
-> `docs/` altındaki bağlam dosyalarını oku. `packages/domain` için şunları TypeScript tipleri ve saf fonksiyonlar olarak tasarla: öneri durum makinesi ve izinli geçişler (hangi rol hangi geçişi tetikleyebilir), dönem/slot modeli, aday türü (mevcut konu | yeni öneri), karar sonucu türleri (korunuyor | çıkıyor | ekleniyor | koşullu | boş slot).
-> Brief'teki karar modelini birebir uygula, kendi yorumunu ekleme. Önce plan çıkar, onayımı bekle. Migration veya UI yazma.
-
-### Oturum 2 — Puanlama motoru
-
-> `packages/scoring`: sekiz kriterli ağırlıklı puan, sürümlü ağırlık seti, devamlılık payı, kanıt yeterliliği eşiği ve slot doldurma algoritmasını uygula. Brief bölüm 2'deki sözde kod normatiftir.
-> Her kural için birim test yaz — özellikle: eşiği geçemeyen yüksek puanlı aday slot doldurmaz; devamlılık payı 0 iken sıralama değişir; dört slotun tamamı boş kalabilir; dört slotun tamamı yeni adayla dolabilir.
-> Bu paket AI olmadan tek başına çalışmalı ve hiçbir yerde destek sayısını girdi almamalı.
-
-### Oturum 3 — Şema ve RLS
-
-> `packages/database`: brief bölüm 4 ve 5'e uygun şema. `submitter_ref` ile kimlik ayrımı, `access_class`, `verification_status`, `(ajans, dönem)` anahtarlı sürümlü kriter/ağırlık kayıtları, append-only audit.
-> Her tablo için RLS politikası yaz; politikasız tablo bırakma. Migration'ı geri alma testiyle birlikte ver.
+- `OPENAI_API_KEY` yoksa çevrimdışı deterministik istemci çalışır: belgelerden
+  birebir alıntı çıkarır ama puanları ve NACE eşleşmesini kaba üretir. Doğrulama
+  zinciri her iki modda aynıdır.
+- Belge yükleme yalnızca `.txt`/`.md` veya metin yapıştırma. PDF/docx ayrıştırıcı yok.
+- E-posta doğrulama SMTP'ye bağlı değil.
+- Rapor/Excel çıktısı yok.

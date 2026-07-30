@@ -27,10 +27,11 @@ yalnızca kamuya açık satırlar görünür — **fail-closed**.
 
 | Sınıf | İçerik | Kimler görür |
 |---|---|---|
-| `kamuya_acik` | aday, sıralama, kanıt künyesi, karar | herkes |
-| `kurum_ici` | kriter puanları, AI bulguları, gönderen kaydı | gözlemci ve üstü |
-| `kisitli` | denetim izi, iş kuyruğu | uzman, kurul, denetçi, yönetici |
-| `gizli` | kimlik (e-posta, ad, parola özeti), oturum | denetçi, AI yönetişim, yönetici |
+| `kamuya_acik` | il, ilçe, NACE, ağırlık seti, belge, listede olan öneri, değerlendirme | herkes |
+| `kurum_ici` | gönderen kaydı, denetim izi | ajans ve yönetici |
+| `gizli` | kimlik (e-posta, ad, parola özeti), oturum | yönetici |
+
+Üç sınıf var; önceki dört sınıflı model (`kisitli` dahil) kaldırıldı.
 
 `app_gorebilir(sinif)` fonksiyonu ile `@ykh/domain`'deki `gorebilir(rol, sinif)`
 **aynı tabloyu** uygular. İkisi ayrışırsa `packages/domain/src/domain.test.ts`
@@ -38,20 +39,29 @@ ve `packages/database/src/database.test.ts` birlikte kırılır.
 
 ## 4. Politikasız tablo yoktur
 
-Her tabloda en az bir SELECT politikası vardır. Yazma politikası olmayan
-tabloda yazma sessizce 0 satır etkiler (RLS filtresi), hata fırlatmaz — bu
-bilinçlidir ve `denetim` için ikinci katman trigger ile pekiştirilmiştir.
+Her tabloda en az bir SELECT politikası vardır. Yazma politikası olmayan tabloda
+yazma sessizce 0 satır etkiler (RLS filtresi), hata fırlatmaz — bu bilinçlidir ve
+`denetim` için trigger ile pekiştirilmiştir.
 
 Özel durumlar:
 
 - **`denetim`** — INSERT var, UPDATE/DELETE politikası **yok**. Ayrıca
   `denetim_degistirilemez()` trigger'ı RLS baypas edilse bile reddeder.
-- **`karar`** — yalnızca `kurul_uyesi` INSERT edebilir. UPDATE/DELETE
-  politikası yok: kilitli karar değiştirilemez.
-- **`donem`** — `kurul_uyesi` yalnızca kilitlemek için UPDATE edebilir;
-  `donem_kilit_tek_yon` trigger'ı geri açmayı engeller.
-- **`kanit`** — kayıt anında yalnızca `beyan`/`ai_bulgusu` durumları kabul
-  edilir. Doğrulama durumunu yalnızca uzman değiştirebilir (§1.3 tek geçit).
+- **`oneri`** — onaylanmamış öneri yalnızca sahibinde ve ajansta görünür
+  (`durum = 'listede' or gonderen_ref = app_ref() or app_onaylayabilir()`).
+  Yatırımcı kendi önerisini `listede` veya `koken='mevcut'` olarak açamaz.
+  Durum değişimi yalnızca onaylayan rollerde.
+- **`degerlendirme`** — önerisi görünüyorsa görünür; yazma yalnızca ajans.
+  `degerlendirme_ham_puan_sabit` trigger'ı `puanlar`, `model_snapshot` ve
+  `prompt_surum` güncellemesini reddeder — AI provenance'ı korunur.
+- **`belge`** — herkes okur, yalnızca ajans yazar.
+
+Veritabanı düzeyinde iş kuralları (`check` kısıtları):
+
+- `oneri_nace_kaynagi` — `nace_kod` varsa `nace_kaynagi` de zorunlu.
+- `oneri_onay_izi` — `durum='listede'` ise `onaylayan_ref` + `onay_zamani` zorunlu.
+- `oneri_ret_gerekcesi` — `durum='reddedildi'` ise gerekçe zorunlu.
+- `degerlendirme_snapshot_pinli` — `model_snapshot <> 'latest'`.
 
 ## 5. RLS'i aşan üç kapı (`security definer`)
 
@@ -63,19 +73,18 @@ Kimlik doğrulaması bağlam oluşmadan önce çalışır; bu üç fonksiyon RLS
 | `giris_kimlik(eposta)` | `gonderen_ref`, `parola_hash` — başka hiçbir kolon |
 | `eposta_kayitli(eposta)` | boolean |
 | `oturum_coz(token_hash)` | ref, rol, eposta, ad_soyad (yalnızca geçerli oturum) |
-| `hesap_ac(...)` | yeni `gonderen.ref`; yalnızca `birey` rolü açılabilir |
+| `hesap_ac(...)` | yeni `gonderen.ref`; yalnızca `yatirimci` rolü açılabilir |
 
-Ayrıca `aday_taban_puani(aday_id, agirliklar)`: stratejik puanın **toplamı**
-kamuya açıktır, kriter kırılımı ve değerlendirici gerekçesi değildir. Bu
-ayrım olmadan kamu görünümü uzman görünümünden farklı bir sıralama gösterirdi.
+Ayrıca `oneri_taban_puani(oneri_id, agirliklar)`: stratejik puanın **toplamı**
+kamuya açıktır. Bu ayrım olmadan kamu görünümü ajans görünümünden farklı bir
+sıralama hesaplardı.
 
 ## 6. Maskeleme
 
-- `kanit_kunye` görünümü: `belge_metni`, `dosya_yolu`, `span_*` yalnızca
-  `app_uzman()` true iken döner; künye alanları herkese açıktır.
-  Tasarım §6: "Kamuya açık künye · belge içeriği yalnızca uzmanlarda".
-- Log: `@ykh/observability` `eposta`, `ad_soyad`, `parola`, `jeton`,
-  `token_hash`, `authorization` alanlarını iç içe nesnelerde de maskeler.
+Log: `@ykh/observability` `eposta`, `ad_soyad`, `parola`, `jeton`, `token_hash`,
+`authorization` alanlarını iç içe nesnelerde de maskeler.
+
+Belge metni maskelenmez — üst ölçekli belgeler kamuya açık politika belgeleridir.
 
 ## 7. KVKK — silme talebi
 
@@ -83,11 +92,10 @@ ayrım olmadan kamu görünümü uzman görünümünden farklı bir sıralama g�
 
 1. `kimlik` satırında e-posta, ad, parola özeti silinir, `pseudonimlestirildi`
    işaretlenir.
-2. `gonderen` beyan alanları temizlenir.
-3. Oturumlar silinir.
-4. Denetime kayıt düşülür.
+2. Oturumlar silinir.
+3. Denetime kayıt düşülür.
 
-`gonderen.ref` ve ona bağlı öneri/kanıt/karar zinciri **bozulmaz**.
+`gonderen.ref` ve ona bağlı öneri/değerlendirme zinciri **bozulmaz**.
 
 ## 8. Kimlik doğrulama
 
@@ -99,16 +107,17 @@ ayrım olmadan kamu görünümü uzman görünümünden farklı bir sıralama g�
 
 ## 9. AI güvenliği
 
-- Kapalı kaynak modu: model yalnızca `kaynakPaketiKur()` çıktısını görür.
-  Yetkisi olmayan kanıt pakete **hiç girmez**.
-- Belge içeriği `<icerik guvenilir="hayir">` içinde, XML kaçışlı verilir;
-  asla talimat olarak yürütülmez.
+- Kapalı kaynak modu: model yalnızca `belgePaketi()` çıktısını görür.
+- Belge içeriği `<icerik guvenilir="hayir">` içinde, XML kaçışlı; asla talimat
+  olarak yürütülmez.
 - Şema: Zod `.strict()` + JSON Schema `additionalProperties: false`.
+- Alıntı belgede **birebir** aranır; uydurulmuş alıntı tüm çıktıyı reddettirir.
 - Kaynaksız sayısal token reddedilir; yıllar sayısal iddia sayılmaz.
-- `model_snapshot` pinlidir; `latest` alias'ı hem uygulama hem `check` kısıtı
-  ile reddedilir.
-- Doğrulayıcıdan geçen çıktı bile **doğrulanmamış bulgudur**; puanlamaya
-  girmesi için uzman onayı zorunlu geçittir.
+- NACE önerisi aday listesiyle sınırlı; listede olmayan kod reddedilir.
+- `model_snapshot` pinli; `latest` hem uygulama hem `check` kısıtı ile reddedilir.
+- Reddedilen çıktı **kaydedilmez**; yalnızca denetime yazılır ve öneri
+  `degerlendiriliyor` durumunda kalır (en çok 3 deneme).
+- Doğrulayıcıdan geçen çıktı bile **doğrulanmamış taslaktır**; ajans onayı zorunlu geçittir.
 
 ## 10. Bağımlılık güvenliği
 

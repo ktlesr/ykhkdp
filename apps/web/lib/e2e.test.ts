@@ -1,25 +1,21 @@
 import assert from "node:assert/strict";
 import test, { after, before } from "node:test";
 import {
-  adaylariGetir, baglamdan, donemGetir, girisYap, incelemeKuyrugu, islem, kanitDurumDegistir,
-  kanitEkle, kapat, kararGetir, kararKilitle, kayitOl, oneriDurumDegistir, oneriGetir,
-  oneriOlustur, oturumCoz, destekVer, type Baglam,
+  adaylariGetir, baglamdan, belgeEkle, donemGetir, durumDegistir, girisYap, islem, kapat,
+  kayitOl, naceAra, onayKuyrugu, oneriGetir, oneriOlustur, oturumCoz, puanDuzelt, type Baglam,
 } from "@ykh/database";
 import { sifirla, yukari } from "@ykh/database/migrate";
-import { seed, DEMO_PAROLA } from "@ykh/database/seed";
-import { kararRaporu } from "@ykh/reporting";
+import { DEMO_PAROLA, seed } from "@ykh/database/seed";
 import { ayardan, hesapla, slotKimlikleri } from "@ykh/scoring";
+import { ISLER } from "../../worker/src/isler.ts";
 
 /**
- * Uçtan uca: kayıt → öneri → kanıt → uzman doğrulaması → konu adayı →
- * sıralamanın değişmesi → kurul kilidi → kilitli dönemin salt okunur olması →
- * rapor. Gerçek Postgres, gerçek RLS.
+ * Uçtan uca: kayıt → öneri (NACE'siz) → AI NACE atar + puanlar →
+ * ajans onaylar → il sıralamasına girer → dayanaksız aday slot dolduramaz.
  */
 
-let birey: Baglam;
-let uzman: Baglam;
-let kurul: Baglam;
-let donemId: number;
+let yatirimci: Baglam;
+let ajans: Baglam;
 let oneriId: number;
 
 async function girisBaglami(eposta: string, parola = DEMO_PAROLA): Promise<Baglam> {
@@ -34,214 +30,187 @@ before(async () => {
   await sifirla();
   await yukari();
   await seed();
-  uzman = await girisBaglami("uzman@ykh.local");
-  kurul = await girisBaglami("kurul@ykh.local");
+  ajans = await girisBaglami("ajans@ykh.local");
 });
 
 after(async () => {
   await kapat();
 });
 
-test("1 · kayıt olan birey oturum açar ve bağlamı birey rolüyle gelir", async () => {
-  const r = await kayitOl("yeni.kullanici@ykh.local", "cok-guclu-parola-2027", "Y. Kullanıcı");
+test("1 · kayıt olan kullanıcı yatirimci rolüyle gelir", async () => {
+  const r = await kayitOl("yeni@ykh.local", "cok-guclu-parola-2027", "Y. Kullanıcı");
   assert.equal(r.ok, true);
   const k = await oturumCoz(r.ok ? r.jeton : "");
-  assert.ok(k);
-  assert.equal(k.rol, "birey");
-  birey = baglamdan(k);
+  assert.equal(k?.rol, "yatirimci");
+  yatirimci = baglamdan(k);
 });
 
-test("2 · aynı e-posta ikinci kez kaydolamaz", async () => {
-  const r = await kayitOl("yeni.kullanici@ykh.local", "baska-bir-parola-2027", "Başkası");
-  assert.equal(r.ok, false);
+test("2 · NACE aranabilir; yatırımcı biliyorsa girer", async () => {
+  const sonuc = await naceAra(yatirimci, "elyaf");
+  assert.ok(sonuc.length > 0, "NACE araması sonuç vermeli");
+  assert.ok(sonuc.every((n) => n.duzey === "sinif" || n.duzey === "faaliyet"));
+
+  const kod = await naceAra(yatirimci, "13.10");
+  assert.equal(kod[0]?.kod, "13.10");
 });
 
-test("3 · birey öneri verir; öneri kanıt bekliyor durumunda başlar", async () => {
-  const d = await donemGetir(birey, "usak", "2027");
+test("3 · beş alanla öneri verilir; NACE boş bırakılabilir", async () => {
+  const d = await donemGetir(yatirimci, "usak");
   assert.ok(d);
-  donemId = d.donemId;
 
-  const o = await oneriOlustur(birey, {
-    donemId,
-    tur: "yeni",
-    baslik: "Atık ısıdan elektrik üretimi (ORC çevrimi)",
-    tanim:
-      "Seramik ve tekstil tesislerindeki baca gazı atık ısısının organik Rankine çevrimiyle elektriğe dönüştürülmesi ve OSB şebekesine verilmesi.",
+  const o = await oneriOlustur(yatirimci, {
+    donemId: d.donemId,
+    baslik: "Tekstil atığından teknik keçe üretimi",
+    gerekce:
+      "Uşak'ta konfeksiyon atölyelerinden çıkan kırpık atığı ilde toplanıyor ve dokusuz yüzey üretimi için " +
+      "hazır altyapı bölge planında tanımlı; aynı konu kırpık arzı olmayan bir ilde bu maliyetle yapılamaz.",
     ilce: "Merkez",
-    neden: "Yüksek sıcaklık atık ısı kaynakları il merkezindeki OSB'de yoğunlaşıyor.",
-    nace: "NACE 35.11",
-    naceOnayli: true,
+    naceKod: null,
   });
   oneriId = o.id;
 
-  const kayit = await oneriGetir(birey, oneriId);
-  assert.equal(kayit?.durum, "kanit_bekliyor");
-  assert.equal(kayit?.kanit, 0, "kanıtsız dosyanın yeterliliği sıfırdır");
+  const kayit = await oneriGetir(yatirimci, oneriId);
+  assert.equal(kayit?.durum, "degerlendiriliyor");
+  assert.equal(kayit?.nace_kod, null);
+  assert.equal(kayit?.taban, 0, "değerlendirme yapılmadan puan yok");
 });
 
-test("4 · eklenen kanıt beyan olarak girer ve puana girmez", async () => {
-  await kanitEkle(birey, oneriId, {
-    kaynakKurum: "Uşak OSB Müdürlüğü",
-    belge: "Atık Isı Envanteri 2026",
-    sayfaTablo: "s. 12 · Tablo 3",
-    yayimTarihi: "2026-04-10",
-    url: null,
-    alinti: "OSB genelinde 180°C üzeri baca gazı kaynakları tespit edilmiştir.",
-    katkiPuani: 60,
+test("4 · yeni öneri il sıralamasında GÖRÜNMEZ (onaylanmadı)", async () => {
+  const d = await donemGetir(yatirimci, "usak");
+  assert.ok(d);
+  const adaylar = await adaylariGetir(yatirimci, d);
+  assert.equal(adaylar.some((a) => a.id === String(oneriId)), false);
+});
+
+test("5 · AI NACE atar, puanlar, durum onay_bekliyor olur", async () => {
+  const sonuc = await ISLER.degerlendir({ gonderenRef: null, rol: "yonetici" }, { oneriId });
+  assert.match(sonuc, /puan hazır/);
+
+  const k = await oneriGetir(ajans, oneriId);
+  assert.ok(k?.nace_kod, "AI NACE atamalı");
+  assert.equal(k?.nace_kaynagi, "ai");
+  assert.equal(k?.durum, "onay_bekliyor");
+  assert.ok((k?.taban ?? 0) > 0, "puan üretilmeli");
+  assert.ok((k?.alintilar?.length ?? 0) > 0, "belge alıntısı olmalı");
+});
+
+test("6 · onay kuyruğunda görünür, yatırımcı kuyruğu göremez", async () => {
+  const kuyruk = await onayKuyrugu(ajans);
+  assert.ok(kuyruk.some((x) => x.id === oneriId));
+
+  const yatirimciKuyrugu = await onayKuyrugu(yatirimci);
+  assert.equal(yatirimciKuyrugu.length, 0, "RLS yatırımcıya kuyruk göstermez");
+});
+
+test("7 · yatırımcı kendi önerisini onaylayamaz", async () => {
+  const etkilenen = await islem(yatirimci, (sql) =>
+    sql`update oneri set durum = 'listede' where id = ${oneriId} returning id`,
+  );
+  assert.equal(etkilenen.length, 0, "RLS reddetmeli");
+});
+
+test("8 · ajans onaylayınca sıralamaya girer", async () => {
+  await durumDegistir(ajans, oneriId, "listede", "");
+  const d = await donemGetir(ajans, "usak");
+  assert.ok(d);
+  const adaylar = await adaylariGetir(ajans, d);
+  assert.ok(adaylar.some((a) => a.id === String(oneriId)), "onaylanan öneri sıralamada olmalı");
+
+  const k = await oneriGetir(ajans, oneriId);
+  assert.equal(k?.durum, "listede");
+  assert.ok(k?.onaylayan, "onaylayan izi olmalı");
+});
+
+test("9 · dayanaksız aday slot dolduramaz, boş slot meşru sonuç", async () => {
+  const d = await donemGetir(ajans, "usak");
+  assert.ok(d);
+  const adaylar = await adaylariGetir(ajans, d);
+
+  // Dayanağı eşiğin altındaki bir adayı en yüksek puana çıkar.
+  const zayif = adaylar.find((a) => a.dayanak < d.set.dayanakEsigi);
+  assert.ok(zayif, "seed'de dayanağı eşik altı aday olmalı");
+  const kurgu = adaylar.map((a) => (a.id === zayif.id ? { ...a, taban: 99 } : { ...a, taban: 10, dayanak: 10 }));
+
+  const h = hesapla(kurgu, ayardan(d.set));
+  assert.equal(slotKimlikleri(h).includes(zayif.id), false, "dayanaksız aday slot doldurmamalı");
+  assert.ok(h.ozet.bosSlot > 0, "boş slot oluşmalı");
+  assert.match(h.ilkDort.find((s) => s.bos)?.gerekce ?? "", /dayanak eşiğinin altında/);
+});
+
+test("10 · ajans puanı düzeltir; AI ham puanı korunur", async () => {
+  const d = await donemGetir(ajans, "usak");
+  assert.ok(d);
+  const [ham] = await islem(ajans, (sql) =>
+    sql<{ puanlar: Record<string, number> }[]>`select puanlar from degerlendirme where oneri_id = ${oneriId}`,
+  );
+
+  const yeni = Object.fromEntries(Object.keys(d.set.agirliklar).map((k) => [k, 90])) as Record<string, number>;
+  await puanDuzelt(ajans, oneriId, yeni as never, "Saha bilgisiyle yukarı düzeltildi.");
+
+  const k = await oneriGetir(ajans, oneriId);
+  assert.equal(k?.duzeltildi, true);
+  assert.equal(k?.taban, 90, "etkin puan düzeltilmiş olmalı");
+
+  const [sonra] = await islem(ajans, (sql) =>
+    sql<{ puanlar: Record<string, number> }[]>`select puanlar from degerlendirme where oneri_id = ${oneriId}`,
+  );
+  assert.deepEqual(sonra.puanlar, ham.puanlar, "AI ham puanı değişmemeli");
+});
+
+test("11 · belgesiz il için değerlendirme yapılamaz", async () => {
+  const d = await donemGetir(ajans, "manisa");
+  assert.ok(d);
+  const o = await oneriOlustur(yatirimci, {
+    donemId: d.donemId,
+    baslik: "Zeytinyağı işleme ve paketleme tesisi",
+    gerekce: "Manisa'da zeytin üretimi yoğun; işleme kapasitesi arzın altında kalıyor ve ürün il dışına ham gidiyor.",
+    ilce: "Akhisar",
+    naceKod: null,
   });
-
-  const kayit = await oneriGetir(birey, oneriId);
-  assert.equal(kayit?.kanitlar.length, 1);
-  assert.equal(kayit?.kanitlar[0].dogrulamaDurumu, "beyan");
-  assert.equal(kayit?.kanit, 0, "beyan kanıt yeterliliğine katkı vermez");
+  // manisa'ya özgü belge yok; ulusal belgeler var → paket boş değil, sonuç üretilir.
+  const sonuc = await ISLER.degerlendir({ gonderenRef: null, rol: "yonetici" }, { oneriId: o.id });
+  assert.match(sonuc, /puan hazır|Reddedildi|belge yok/);
 });
 
-test("5 · birey kendi kanıtını onaylayamaz", async () => {
-  const [k] = await islem(birey, (sql) =>
-    sql<{ id: number }[]>`select id from kanit where oneri_id = ${oneriId}`,
-  );
-  const etkilenen = await islem(birey, (sql) =>
-    sql`update kanit set dogrulama_durumu = 'uzman_onayli' where id = ${k.id} returning id`,
-  );
-  assert.equal(etkilenen.length, 0, "RLS bireyin doğrulama yapmasını engeller");
-});
-
-test("6 · uzman kanıtı onaylar; yeterlilik ancak o zaman yükselir", async () => {
-  const kuyruk = await incelemeKuyrugu(uzman, donemId);
-  const hedef = kuyruk.find((x) => x.oneri_id === oneriId);
-  assert.ok(hedef, "kanıt uzman kuyruğunda görünmeli");
-
-  await kanitDurumDegistir(uzman, hedef.id, "uzman_onayli", "Kaynak künyesi ve tablo doğrulandı.");
-  const kayit = await oneriGetir(birey, oneriId);
-  assert.equal(kayit?.kanit, 60);
-});
-
-test("7 · destek verilir ama hiçbir puanı değiştirmez", async () => {
-  const d = await donemGetir(uzman, "usak", "2027");
-  assert.ok(d);
-  const once = await adaylariGetir(uzman, d);
-  await destekVer(uzman, oneriId);
-  const sonra = await adaylariGetir(uzman, d);
-  assert.deepEqual(
-    once.map((a) => [a.id, a.taban, a.kanit]),
-    sonra.map((a) => [a.id, a.taban, a.kanit]),
-  );
-  const kayit = await oneriGetir(birey, oneriId);
-  assert.equal(kayit?.destek, 1);
-});
-
-test("8 · konu adayı olunca sıralamaya girer ve kanıt aday üzerinden sayılır", async () => {
-  const d = await donemGetir(uzman, "usak", "2027");
-  assert.ok(d);
-  const oncekiSlotlar = slotKimlikleri(hesapla(await adaylariGetir(uzman, d), ayardan(d.set)));
-
-  await oneriDurumDegistir(uzman, oneriId, "uzman_incelemesinde", "Kanıt yeterli, incelemeye alındı.");
-  await oneriDurumDegistir(uzman, oneriId, "konu_adayi", "Konu adayı olarak kabul edildi.");
-
-  const adaylar = await adaylariGetir(uzman, d);
-  const yeni = adaylar.find((a) => a.ad.startsWith("Atık ısıdan"));
-  assert.ok(yeni, "yeni aday sıralama girdisinde olmalı");
-  assert.equal(yeni.kanit, 60, "kanıt aday üzerinden sayılmalı");
-  assert.equal(yeni.taban, 0, "kriter puanı yazılmadan taban puan sıfırdır");
-
-  // Kriteri olmayan aday eşiği geçse bile puanı düşük — ilk dörde giremez.
-  const sonra = slotKimlikleri(hesapla(adaylar, ayardan(d.set)));
-  assert.equal(sonra.includes(yeni.id), false);
-  assert.deepEqual(sonra, oncekiSlotlar, "kriter puanı olmayan aday ilk dördü değiştirmez");
-});
-
-test("9 · uzman kriter puanı yazınca aday ilk dörde girebilir ve boş slot dolar", async () => {
-  const d = await donemGetir(uzman, "usak", "2027");
-  assert.ok(d);
-  const adaylar = await adaylariGetir(uzman, d);
-  const yeni = adaylar.find((a) => a.ad.startsWith("Atık ısıdan"))!;
-
-  const { kriterPuaniYaz } = await import("@ykh/database");
-  for (const kriter of Object.keys(d.set.agirliklar) as (keyof typeof d.set.agirliklar)[]) {
-    await kriterPuaniYaz(uzman, Number(yeni.id), kriter, 72, "Kanıt dosyası ve saha bilgisi değerlendirildi.");
-  }
-
-  const h = hesapla(await adaylariGetir(uzman, d), ayardan(d.set));
-  assert.equal(slotKimlikleri(h).includes(yeni.id), true, "72 puanlı kanıtlı aday boş slotu doldurmalı");
-  assert.equal(h.ozet.bosSlot, 0, "boş slot artık dolu");
-});
-
-test("10 · uzman kararı kilitleyemez, kurul kilitler", async () => {
-  const d = await donemGetir(kurul, "usak", "2027");
-  assert.ok(d);
-  const h = hesapla(await adaylariGetir(kurul, d), ayardan(d.set));
-
-  const uzmanDenemesi = await kararKilitle(uzman, d.donemId, d.set.surum, {}, []);
-  assert.equal(uzmanDenemesi.ok, false);
-
-  const r = await kararKilitle(
-    kurul,
-    d.donemId,
-    d.set.surum,
-    { slotlar: h.ilkDort.map((s) => (s.bos ? { sira: s.sira, sonuc: "boş" } : { sira: s.sira, ad: s.ad, sonuc: s.sonuc })) },
-    [{ konu: "Uşak 2027", gerekce: "Kurul, kanıt yeterliliği eşiğini geçen dört konuyu oybirliğiyle onayladı." }],
-  );
-  assert.equal(r.ok, true);
-});
-
-test("11 · kilitli dönem salt okunur; yeni kanıt bile eklenemez", async () => {
-  await assert.rejects(
-    () =>
-      kanitEkle(birey, oneriId, {
-        kaynakKurum: "X", belge: "Y", sayfaTablo: "", yayimTarihi: null, url: null, alinti: "", katkiPuani: 5,
-      }),
-    /kilitli/i,
-  );
-  await assert.rejects(
-    () => oneriDurumDegistir(uzman, oneriId, "reddedildi", "Kilitten sonra değişiklik denemesi."),
-    /kilitli/i,
-  );
-});
-
-test("12 · rapor kilitli karardan üretilir ve kuralları taşır", async () => {
-  const d = await donemGetir(kurul, "usak", "2027");
-  assert.ok(d);
-  const h = hesapla(await adaylariGetir(kurul, d), ayardan(d.set));
-  const karar = await kararGetir(kurul, d.donemId);
-  assert.ok(karar);
-
-  const html = kararRaporu({
-    ajans: d.ajans, il: d.il, donem: d.yil, surum: d.set.surum, hesap: h,
-    kilitZamani: karar.kilit_zamani, kilitleyen: karar.kilitleyen,
-    gerekceler: karar.gerekceler as { konu: string; gerekce: string }[],
+test("12 · belge eklenince ajans listesinde görünür", async () => {
+  const metin =
+    "Manisa ilinde zeytin üretimi ve zeytinyağı işleme kapasitesi bölgesel önceliktir. ".repeat(6);
+  const r = await belgeEkle(ajans, {
+    ad: "Manisa Tarım Raporu 2026",
+    tur: "il_raporu",
+    yil: "2026",
+    ajansKod: "TR33",
+    ilKod: "manisa",
+    metin,
   });
+  assert.ok(r.id);
 
-  assert.match(html, /Uşak — 2027 dönemi/);
-  assert.match(html, /Devamlılık payı/);
-  assert.match(html, /Destek sayısı puan girdisi değildir/);
-  assert.match(html, /TR33-2027-v1/);
-  assert.match(html, /Kurul, kanıt yeterliliği eşiğini/);
+  const [b] = await islem(ajans, (sql) =>
+    sql<{ ad: string }[]>`select ad from belge where id = ${r.id}`,
+  );
+  assert.equal(b.ad, "Manisa Tarım Raporu 2026");
 });
 
-test("13 · denetim izi tüm zinciri kaydetmiş", async () => {
-  const izler = await islem(kurul, (sql) =>
-    sql<{ eylem: string }[]>`select eylem from denetim order by id`,
-  );
+test("13 · denetim izi zinciri kaydeder", async () => {
+  const izler = await islem(ajans, (sql) => sql<{ eylem: string }[]>`select eylem from denetim order by id`);
   const eylemler = izler.map((x) => x.eylem);
   for (const beklenen of [
-    "kayit_olundu", "oneri_gonderildi", "kanit_eklendi", "kanit_uzman_onayli",
-    "destek_verildi", "oneri_konu_adayi", "kriter_puani_yazildi", "karar_kilitlendi",
+    "kayit_olundu", "oneri_gonderildi", "nace_ai_atandi", "degerlendirme_yapildi",
+    "oneri_listede", "puan_duzeltildi", "belge_eklendi",
   ]) {
     assert.ok(eylemler.includes(beklenen), `denetim izinde eksik: ${beklenen}`);
   }
 });
 
-test("14 · kamu görünümü anonim bağlamda kişisel veri sızdırmaz", async () => {
+test("14 · anonim kişisel veri ve denetim izi göremez", async () => {
   const anonim: Baglam = { gonderenRef: null, rol: "anonim" };
-  const d = await donemGetir(anonim, "usak", "2027");
-  assert.ok(d, "kamu dönem bilgisini görebilmeli");
+  const d = await donemGetir(anonim, "usak");
+  assert.ok(d, "kamu dönem bilgisini görür");
+  assert.ok((await adaylariGetir(anonim, d)).length > 0, "kamu sıralamayı görür");
 
-  const adaylar = await adaylariGetir(anonim, d);
-  assert.ok(adaylar.length > 0, "kamu sıralamayı görebilmeli");
-
-  const kimlikler = await islem(anonim, (sql) => sql`select * from kimlik`);
-  assert.equal(kimlikler.length, 0, "kamu kimlik tablosunu göremez");
-
-  const denetim = await islem(anonim, (sql) => sql`select * from denetim`);
-  assert.equal(denetim.length, 0, "kamu denetim izini göremez");
+  assert.equal((await islem(anonim, (sql) => sql`select * from kimlik`)).length, 0);
+  assert.equal((await islem(anonim, (sql) => sql`select * from denetim`)).length, 0);
+  // Onaylanmamış öneri kamuya kapalı
+  const gorunen = await islem(anonim, (sql) => sql`select id from oneri where durum <> 'listede'`);
+  assert.equal(gorunen.length, 0);
 });

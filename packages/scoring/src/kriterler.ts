@@ -102,7 +102,8 @@ export type AgirlikSeti = {
   agirliklar: Agirliklar;
   /** §1.4 — gizli katsayı değil; sürümlü ve ilan edilen parametre */
   devamlilikPayi: number;
-  kanitEsigi: number;
+  /** AI'nin öneriyi üst ölçekli belgelere bağlayabilme eşiği (0–100) */
+  dayanakEsigi: number;
   /** eşiği geçen alt aday bu farktan fazla gerideyse slot boş kalır */
   devirSiniri: number;
   slotSayisi: number;
@@ -127,7 +128,7 @@ export const TR33_2027_V1: AgirlikSeti = {
     plan_uyumu: 0.12,
   },
   devamlilikPayi: 5,
-  kanitEsigi: 55,
+  dayanakEsigi: 55,
   devirSiniri: 8,
   slotSayisi: 4,
 };
@@ -143,8 +144,8 @@ export function agirlikSetiGecerli(set: AgirlikSeti): { gecerli: boolean; sebep?
     return { gecerli: false, sebep: `Ağırlık toplamı 1 değil: ${toplam.toFixed(4)}` };
   }
   if (set.slotSayisi < 1) return { gecerli: false, sebep: "Slot sayısı en az 1 olmalı." };
-  if (set.kanitEsigi < 0 || set.kanitEsigi > 100) {
-    return { gecerli: false, sebep: "Kanıt eşiği 0–100 aralığında olmalı." };
+  if (set.dayanakEsigi < 0 || set.dayanakEsigi > 100) {
+    return { gecerli: false, sebep: "Dayanak eşiği 0–100 aralığında olmalı." };
   }
 
   // Ürün kuralı: "neden burada?" en büyük payı taşır.

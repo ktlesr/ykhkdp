@@ -1,89 +1,65 @@
 import { islem, kapat, type Baglam } from "@ykh/database";
 import { log } from "@ykh/observability";
-import { ISLER, type IsKaydi } from "./isler.ts";
+import { ISLER } from "./isler.ts";
 
 /**
- * İş kuyruğu çalıştırıcısı.
+ * Worker.
  *
- * ponytail: BullMQ/Redis yok. Postgres `select ... for update skip locked`
- * tek makinede de, birden çok worker'da da doğru çalışıyor ve zaten elimizde
- * olan bir bağımlılık. Saniyede binlerce iş gerekirse Redis gelir.
+ * ponytail: ayrı iş kuyruğu tablosu YOK. `oneri.durum = 'degerlendiriliyor'`
+ * kuyruğun kendisidir; `for update skip locked` birden çok worker'da da doğru
+ * çalışır. Redis/BullMQ gerekmiyor, bir tablo ve bir RLS politikası eksildi.
  */
 
-const SERVIS: Baglam = { gonderenRef: null, rol: "sistem_yoneticisi" };
+const SERVIS: Baglam = { gonderenRef: null, rol: "yonetici" };
 const ARALIK = Number(process.env.YKH_WORKER_ARALIK ?? 2000);
-const MAKS_DENEME = 3;
+export const MAKS_DENEME = 3;
 
 let calisiyor = true;
 
-export async function birIsAl(): Promise<IsKaydi | null> {
+/** Bekleyen bir öneriyi kilitler ve deneme sayacını artırır. */
+export async function birOneriAl(): Promise<number | null> {
   return islem(SERVIS, async (sql) => {
-    const [is] = await sql<IsKaydi[]>`
-      update is_kuyrugu set durum = 'calisiyor', deneme = deneme + 1, guncellendi = now()
+    const [o] = await sql<{ id: number }[]>`
+      update oneri set deneme = deneme + 1, guncellendi = now()
       where id = (
-        select id from is_kuyrugu where durum = 'bekliyor'
-        order by id for update skip locked limit 1
+        select id from oneri
+        where durum = 'degerlendiriliyor' and deneme < ${MAKS_DENEME}
+        order by olusturuldu
+        for update skip locked
+        limit 1
       )
-      returning id, tip, yuk
+      returning id
     `;
-    return is ?? null;
+    return o ? Number(o.id) : null;
   });
 }
 
-export async function isiTamamla(id: number, sonuc: string): Promise<void> {
-  await islem(SERVIS, (sql) =>
-    sql`update is_kuyrugu set durum = 'tamam', hata = ${sonuc}, guncellendi = now() where id = ${id}`,
-  );
-}
-
-export async function isiBasarisizYap(id: number, hata: string, deneme: number): Promise<void> {
-  await islem(SERVIS, (sql) =>
-    sql`
-      update is_kuyrugu
-      set durum = ${deneme >= MAKS_DENEME ? "hata" : "bekliyor"}::is_durumu, hata = ${hata}, guncellendi = now()
-      where id = ${id}
-    `,
-  );
-}
-
-export async function isKuyruguna(tip: string, yuk: Record<string, unknown>, b: Baglam = SERVIS): Promise<number> {
-  return islem(b, async (sql) => {
-    const [r] = await sql<{ id: number }[]>`
-      insert into is_kuyrugu (tip, yuk) values (${tip}, ${sql.json(yuk as never)}) returning id
-    `;
-    return r.id;
-  });
+export async function hataYaz(oneriId: number, hata: string): Promise<void> {
+  await islem(SERVIS, (sql) => sql`update oneri set son_hata = ${hata} where id = ${oneriId}`);
 }
 
 async function turAt(): Promise<boolean> {
-  const is = await birIsAl();
-  if (!is) return false;
+  const oneriId = await birOneriAl();
+  if (oneriId === null) return false;
 
-  const isFn = ISLER[is.tip];
-  if (!isFn) {
-    await isiBasarisizYap(is.id, `Bilinmeyen iş tipi: ${is.tip}`, MAKS_DENEME);
-    return true;
-  }
   try {
-    const sonuc = await isFn(SERVIS, is.yuk);
-    await isiTamamla(is.id, sonuc);
-    log.info("is_tamam", { id: is.id, tip: is.tip, sonuc });
+    const sonuc = await ISLER.degerlendir(SERVIS, { oneriId });
+    log.info("degerlendirme_turu", { oneriId, sonuc });
+    // Sonuç reddedildiyse öneri `degerlendiriliyor` kalır ve MAKS_DENEME'ye
+    // kadar tekrar denenir; nedeni denetim izinde durur.
+    if (/^Reddedildi|belge yok/.test(sonuc)) await hataYaz(oneriId, sonuc);
   } catch (e) {
     const mesaj = e instanceof Error ? e.message : String(e);
-    const [{ deneme }] = await islem(SERVIS, (sql) =>
-      sql<{ deneme: number }[]>`select deneme from is_kuyrugu where id = ${is.id}`,
-    );
-    await isiBasarisizYap(is.id, mesaj, deneme);
-    log.hata("is_hata", { id: is.id, tip: is.tip, hata: mesaj, deneme });
+    await hataYaz(oneriId, mesaj);
+    log.hata("degerlendirme_hatasi", { oneriId, hata: mesaj });
   }
   return true;
 }
 
 export async function dongu(): Promise<void> {
-  log.info("worker_basladi", { aralik: ARALIK, isTipleri: Object.keys(ISLER) });
+  log.info("worker_basladi", { aralik: ARALIK, maksDeneme: MAKS_DENEME });
   while (calisiyor) {
     try {
-      // Kuyruk doluysa ara vermeden devam et.
       if (await turAt()) continue;
     } catch (e) {
       log.hata("worker_dongu_hatasi", { hata: e instanceof Error ? e.message : String(e) });
@@ -101,5 +77,4 @@ for (const sinyal of ["SIGINT", "SIGTERM"] as const) {
   });
 }
 
-// Doğrudan çalıştırıldıysa döngüyü başlat (test dosyası import ederse başlatmaz).
 if (process.argv[1]?.endsWith("index.ts")) await dongu();

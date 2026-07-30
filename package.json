@@ -2,7 +2,7 @@
   "name": "ykhkdp",
   "version": "0.1.0",
   "private": true,
-  "description": "YKH-KDP — Yatırım Konusu Hazırlama · Karar Destek Platformu",
+  "description": "YKH — Yerel Kalkınma Hamlesi yatırım konusu önerileri",
   "scripts": {
     "db:up": "docker compose up -d",
     "db:migrate": "pnpm --filter @ykh/database migrate",
@@ -11,10 +11,12 @@
     "dev": "pnpm --filter @ykh/web dev",
     "worker": "pnpm --filter @ykh/worker start",
     "build": "pnpm --filter @ykh/web build",
-    "test": "pnpm -r test",
+    "test": "pnpm -r --workspace-concurrency=1 test",
     "typecheck": "pnpm --filter @ykh/web typecheck",
     "audit": "pnpm audit --prod"
   },
   "packageManager": "pnpm@10.19.0",
-  "engines": { "node": ">=22.18" }
+  "engines": {
+    "node": ">=22.18"
+  }
 }

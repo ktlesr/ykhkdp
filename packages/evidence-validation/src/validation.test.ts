@@ -1,91 +1,77 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { bulguyuDogrula, kaynakPaketiKur, puanlamaGiriseHazir, sayisalTokenlar, type KaynakKaydi } from "./index.ts";
+import { dayanakPuani, degerlendirmeyiDogrula, paketKur, sayisalTokenlar } from "./index.ts";
 
 const METIN =
-  "Uşak ilinde tekstil ürünleri imalatı, il imalat sanayi katma değerinin yüzde %41,3 kadarını " +
-  "oluşturmakta; 2019-2024 döneminde reel artış %12,6 düzeyinde gerçekleşmiştir.";
+  "TR33 Bölgesi'nde tekstil ve deri öncelikli imalat sektörleridir. " +
+  "Tekstil geri dönüşümü katma değeri yükseltecek dönüşüm alanı olarak tanımlanmıştır.";
 
-const KAYIT: Omit<KaynakKaydi, "pakete_dahil"> = {
-  evidenceId: "KNT-2026-0431",
-  accessClass: "kamuya_acik",
-  belgeMetni: METIN,
-  spanBaslangic: 0,
-  spanBitis: 60,
-};
+const PAKET = paketKur("p", [
+  { id: 1, ad: "TR33 Bölge Planı", metin: METIN },
+  { id: 2, ad: "OVP 2026", metin: "Enerji verimliliği yatırımları teşvik edilecektir." },
+]);
 
-const paket = kaynakPaketiKur("paket-1", [KAYIT], "ajans_uzmani");
+const puanlar = [{ puan: 60 }];
 
-test("geçerli bulgu doğrulanır", () => {
-  const s = bulguyuDogrula(
-    { metin: "Tekstil, katma değerin %41,3 kadarını oluşturuyor.", evidenceIds: ["KNT-2026-0431"] },
-    paket,
-    "ajans_uzmani",
+test("birebir alıntı geçer", () => {
+  const s = degerlendirmeyiDogrula(
+    { gerekce: "Bölge planı önceliklerine uygundur.", alintilar: [{ belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" }], puanlar },
+    PAKET,
   );
   assert.equal(s.gecerli, true);
+  assert.ok(s.gecerli && s.dayanak > 0);
 });
 
-test("kaynaksız sayı reddedilir", () => {
-  const s = bulguyuDogrula(
-    { metin: "Sektör istihdamı 12.400 kişidir.", evidenceIds: ["KNT-2026-0431"] },
-    paket,
-    "ajans_uzmani",
-  );
-  assert.equal(s.gecerli, false);
-  assert.ok(!s.gecerli && s.hatalar.some((h) => h.kod === "kaynaksiz_sayi"));
-});
-
-test("sahte kaynak reddedilir", () => {
-  const s = bulguyuDogrula({ metin: "Bir iddia.", evidenceIds: ["KNT-9999-0001"] }, paket, "ajans_uzmani");
-  assert.equal(s.gecerli, false);
-  assert.ok(!s.gecerli && s.hatalar.some((h) => h.kod === "evidence_id_yok"));
-});
-
-test("kaynaksız bulgu reddedilir", () => {
-  const s = bulguyuDogrula({ metin: "Kaynaksız iddia.", evidenceIds: [] }, paket, "ajans_uzmani");
-  assert.equal(s.gecerli, false);
-  assert.ok(!s.gecerli && s.hatalar.some((h) => h.kod === "kaynak_gosterilmedi"));
-});
-
-test("yetkisiz kanıt pakete hiç girmez", () => {
-  const gizli = kaynakPaketiKur("p", [{ ...KAYIT, accessClass: "gizli" }], "birey");
-  assert.equal(gizli.kayitlar.length, 0);
-  const s = bulguyuDogrula({ metin: "İddia.", evidenceIds: ["KNT-2026-0431"] }, gizli, "birey");
-  assert.equal(s.gecerli, false);
-});
-
-test("pakete dahil edilmemiş kanıt reddedilir — model onu görmüş olamaz", () => {
-  const sahte = { id: "p", kayitlar: [{ ...KAYIT, pakete_dahil: false }] };
-  const s = bulguyuDogrula({ metin: "İddia.", evidenceIds: ["KNT-2026-0431"] }, sahte, "ajans_uzmani");
-  assert.ok(!s.gecerli && s.hatalar.some((h) => h.kod === "pakette_yok"));
-});
-
-test("geçersiz span reddedilir", () => {
-  const bozuk = kaynakPaketiKur("p", [{ ...KAYIT, spanBaslangic: 10, spanBitis: 99999 }], "ajans_uzmani");
-  const s = bulguyuDogrula({ metin: "İddia.", evidenceIds: ["KNT-2026-0431"] }, bozuk, "ajans_uzmani");
-  assert.ok(!s.gecerli && s.hatalar.some((h) => h.kod === "span_gecersiz"));
-});
-
-test("belgede olmayan alıntı reddedilir", () => {
-  const s = bulguyuDogrula(
-    { metin: "İddia.", evidenceIds: ["KNT-2026-0431"], alinti: "Bu cümle belgede yok." },
-    paket,
-    "ajans_uzmani",
+test("uydurulmuş alıntı reddedilir", () => {
+  const s = degerlendirmeyiDogrula(
+    { gerekce: "Uygundur.", alintilar: [{ belge_id: 1, alinti: "bu cümle belgede yok" }], puanlar },
+    PAKET,
   );
   assert.ok(!s.gecerli && s.hatalar.some((h) => h.kod === "alinti_eslesmiyor"));
 });
 
-test("yıllar sayısal iddia sayılmaz", () => {
-  assert.equal(sayisalTokenlar("2027 döneminde").length, 0);
-  assert.ok(sayisalTokenlar("%41,3 oranında").length > 0);
+test("olmayan belge reddedilir", () => {
+  const s = degerlendirmeyiDogrula(
+    { gerekce: "Uygundur.", alintilar: [{ belge_id: 99, alinti: "tekstil ve deri" }], puanlar },
+    PAKET,
+  );
+  assert.ok(!s.gecerli && s.hatalar.some((h) => h.kod === "belge_yok"));
 });
 
-test("doğrulama tek başına yetmez — uzman onayı zorunlu geçit", () => {
-  const s = bulguyuDogrula(
-    { metin: "Tekstil, katma değerin %41,3 kadarını oluşturuyor.", evidenceIds: ["KNT-2026-0431"] },
-    paket,
-    "ajans_uzmani",
+test("pakete dahil olmayan belge reddedilir — model onu görmüş olamaz", () => {
+  const sahte = { id: "p", belgeler: [{ id: 1, ad: "x", metin: METIN, pakete_dahil: false }] };
+  const s = degerlendirmeyiDogrula(
+    { gerekce: "Uygundur.", alintilar: [{ belge_id: 1, alinti: "tekstil ve deri" }], puanlar },
+    sahte,
   );
-  assert.equal(puanlamaGiriseHazir(s, false), false);
-  assert.equal(puanlamaGiriseHazir(s, true), true);
+  assert.ok(!s.gecerli && s.hatalar.some((h) => h.kod === "pakette_yok"));
+});
+
+test("kaynaksız sayı reddedilir, yıllar sayılmaz", () => {
+  const s = degerlendirmeyiDogrula(
+    { gerekce: "Sektörde 12.400 kişi çalışıyor.", alintilar: [], puanlar },
+    PAKET,
+  );
+  assert.ok(!s.gecerli && s.hatalar.some((h) => h.kod === "kaynaksiz_sayi"));
+  assert.equal(sayisalTokenlar("2027 döneminde").length, 0);
+
+  const y = degerlendirmeyiDogrula({ gerekce: "2027 döneminde uygundur.", alintilar: [], puanlar }, PAKET);
+  assert.equal(y.gecerli, true);
+});
+
+test("puan aralığı dışı reddedilir", () => {
+  const s = degerlendirmeyiDogrula({ gerekce: "Uygundur.", alintilar: [], puanlar: [{ puan: 140 }] }, PAKET);
+  assert.ok(!s.gecerli && s.hatalar.some((h) => h.kod === "puan_araligi"));
+});
+
+test("alıntısız çıktı geçerli ama dayanak 0 — slot dolduramaz", () => {
+  const s = degerlendirmeyiDogrula({ gerekce: "Uygundur.", alintilar: [], puanlar }, PAKET);
+  assert.equal(s.gecerli, true);
+  assert.equal(s.gecerli && s.dayanak, 0);
+});
+
+test("dayanak puanı belge çeşitliliğiyle artar", () => {
+  const tek = dayanakPuani([{ belge_id: 1, alinti: "a" }], PAKET);
+  const cift = dayanakPuani([{ belge_id: 1, alinti: "a" }, { belge_id: 2, alinti: "b" }], PAKET);
+  assert.ok(cift > tek);
 });

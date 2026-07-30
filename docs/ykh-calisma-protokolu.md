@@ -4,73 +4,62 @@
 
 **tartış → plan → onay → kod → göster → commit**
 
-Kod yazmadan önce dosya planı çıkar ve onaylat. Plan onaylanmadan dosya açma.
-"Göster" adımı gerçek çıktıdır: test sonucu, çalışan sayfa, sorgu çıktısı —
-"yaptım" demek yeterli değil.
+"Göster" adımı gerçek çıktıdır: test sonucu, çalışan sayfa, sorgu çıktısı.
+"Yaptım" demek yeterli değil.
 
-## Değişmez kurallar (ihlal edilirse ürün itibar kaybeder)
+## Değişmez kurallar
 
-1. Dört ölçüt asla birleştirilmez. Tek bir "genel skor" üretmek yasak.
-2. Üç epistemik durum her yerde aynı görünür; renk tek başına taşıyıcı olamaz.
-3. Puanlamaya yalnızca uzman onaylı kanıt girer.
-4. Gizli katsayı yok; devamlılık payı ekranda ve raporda yazıyla ilan edilir.
-5. Boş slot bir hata değildir.
-6. Destek sayısı puan girdisi değildir.
-7. Çalışma alanı ile kilitli karar sürümü asla karışmaz.
+1. **AI puanı doğrulanmamıştır.** Ajans onayı olmadan hiçbir öneri sıralamaya girmez.
+2. **AI ham puanı değişmez.** Ajans düzeltmesi ayrı kolona yazılır; provenance korunur.
+3. **Dayanak eşiği sıralamayı ezer.** Belgeye bağlanamayan aday slot dolduramaz.
+4. **Boş slot hata değildir.**
+5. **Gizli katsayı yok;** devamlılık payı ve yerellik payı ekranda yazıyla ilan edilir.
+6. **"Neden burada?" en büyük paydır** — yerellik grubu en az %40 ve her zaman en büyük.
+7. **Reddedilen AI çıktısı kaydedilmez;** yalnızca denetime yazılır.
 8. Gradyan, glow, gölge, cam efekti, emoji, `border-radius > 3px` yasak.
 9. Arayüz dili Türkçe, sade fiil, kısaltma yok.
-10. Hareket yalnızca durum değişimini anlaşılır kılmak için.
-
-11. **"Neden burada?" en büyük paydır.** Yerellik grubu (yerel kaynak, mevcut
-    değer zinciri, yerel uygulanabilirlik) toplam ağırlığın en az %40'ını
-    taşır ve her zaman en büyük gruptur. Program yerel kalkınmadır; bir konu
-    başka bir ilde de aynı şekilde yapılabiliyorsa gerekçesi zayıftır.
+10. **Ekran eklemeden önce sor.** Ürün beş ekran; altıncısı gerekçe ister.
 
 ## Kodda hiçbir zaman
 
 - İl, ajans veya bölge sabitlenmez. `(ajans, dönem)` anahtarlı sürümlü kayıt.
 - Slot sayısı sabitlenmez; `agirlik_seti.slot_sayisi`.
-- Destek sayısı puanlama zincirine bağlanmaz. `stratejikPuan(puanlar, set)`
-  imzası bunu derleyici düzeyinde engeller.
 - `latest` model alias'ı kullanılmaz.
 - RLS politikası olmayan tablo eklenmez.
+- NACE kodu `nace` tablosuna bakılmadan yazılmaz (foreign key zorlar).
 
 ## Debug protokolü
 
 1. **Yeniden üret.** Testle üret; olmuyorsa en küçük tekrar üreten girdiyi bul.
-2. **Katmanı belirle.** Hata SQL'de mi, RLS'te mi, sorguda mı, sayfada mı?
-   `docker exec ykhkdp-postgres psql -U ykh_app` ile aynı sorguyu elle çalıştır:
-   RLS mi engelliyor, sorgu mu yanlış — bu tek adım çoğu vakayı ayırır.
+2. **Katmanı belirle.** SQL'de mi, RLS'te mi, sorguda mı, sayfada mı?
+   `docker exec ykhkdp-postgres psql -U ykh_app -d ykhkdp` ile aynı sorguyu elle çalıştır.
 3. **Önce testi yaz.** Hatayı gösteren assert olmadan düzeltme yapma.
-4. **Kök nedeni düzelt.** Belirtiyi susturma; `try/catch` ile yutma.
+4. **Kök nedeni düzelt.** `try/catch` ile yutma.
 5. **Regresyon testini bırak.**
 
-Sık karşılaşılanlar:
+Bu projede yaşanmış tuzaklar:
 
-- `new row violates row-level security policy` → çoğunlukla `RETURNING`
-  cümlesi SELECT politikasına takılıyor. Satır yazılabiliyor ama okunamıyor.
-- `cached plan must not change result type` → migration sonrası hazırlanmış
-  ifade. `prepare: false` ile kapatıldı; yine görülürse havuzu yenile.
-- Kamu görünümü uzman görünümünden farklı sıralama gösteriyorsa, RLS bir
-  puanlama girdisini gizliyordur. Toplamı `security definer` ile aç, kırılımı kapalı tut.
+- `new row violates row-level security policy` → çoğunlukla `RETURNING` cümlesi
+  SELECT politikasına takılıyor. Satır yazılabiliyor ama okunamıyor. Kayıt gibi
+  akışlarda `security definer` fonksiyon kullan (`hesap_ac()`).
+- `cached plan must not change result type` → migration sonrası hazırlanmış ifade.
+  Her iki havuzda `prepare: false`.
+- **postgres.js `int8`'i string döndürür.** Sayı karşılaştırması yapan yerlerde
+  `Number(...)` ile dönüştür; `belge.id` yüzünden alıntı doğrulaması sessizce
+  başarısız olmuştu.
+- **`plainto_tsquery` terimleri AND'ler.** Uzun bir öneri başlığında hiçbir kayıt
+  eşleşmez; `herhangiBiri()` ile OR'lanmış `websearch_to_tsquery` kullan.
+- Kamu görünümü farklı sıralama gösteriyorsa RLS bir puanlama girdisini gizliyordur.
+  Toplamı `security definer` ile aç, kırılımı kapalı tut (`oneri_taban_puani`).
 
 ## Test komutları
 
 ```bash
 docker compose up -d                    # Postgres 17 · :5470
-pnpm -r --filter '@ykh/*' migrate       # şema
-pnpm --filter @ykh/database reset       # şema + seed sıfırdan
-pnpm -r test                            # tüm paketler
-pnpm --filter @ykh/web dev              # :3000
-pnpm --filter @ykh/worker start         # iş kuyruğu
+pnpm db:reset                           # şema + RLS + NACE + seed
+pnpm -r --workspace-concurrency=1 test  # tüm paketler (paralel çalıştırma DB'yi çakıştırır)
+pnpm dev                                # :3000
+pnpm worker                             # AI değerlendirme döngüsü
 ```
 
-## PR kuralı
-
-Faz 3'ten itibaren her PR'da `/security-review` çalıştır. `pnpm audit --prod`
-temiz olmadan birleştirme yapılmaz.
-
-## İki ajan aynı pakete aynı anda dokunmaz
-
-Paket bazlı sahiplik, ayrı branch, birleşme noktası yalnızca
-`packages/domain` tip sözleşmeleri.
+`pnpm audit --prod` temiz olmadan sürüm çıkılmaz.

@@ -1,79 +1,81 @@
 import { z } from "zod";
 
 /**
- * Yapılandırılmış çıktı şemaları. JSON Schema strict + Zod (brief §3).
- * Şema dışı çıktı reddedilir — `.strict()` her nesnede zorunludur.
+ * Yapılandırılmış çıktı şemaları. JSON Schema strict + Zod.
+ * Şema dışı çıktı reddedilir — `.strict()` her nesnede zorunlu.
  */
 
-export const IddiaCikarimi = z
+const KRITER = z.enum([
+  "plan_uyumu",
+  "yerel_potansiyel",
+  "pazar_talep",
+  "deger_zinciri",
+  "istihdam_katma_deger",
+  "uygulanabilirlik",
+  "yatirimci_ilgisi",
+  "surdurulebilirlik",
+]);
+
+const Alinti = z
   .object({
-    iddialar: z
+    belge_id: z.number().int().positive(),
+    /** belgede birebir geçen kısa alıntı; doğrulayıcı bunu belgede arar */
+    alinti: z.string().min(10).max(400),
+  })
+  .strict();
+
+/** Öneriyi sekiz kriterle puanlar ve her kriteri belgeye bağlar. */
+export const Degerlendirme = z
+  .object({
+    puanlar: z
       .array(
         z
           .object({
-            metin: z.string().min(10).max(400),
-            evidence_ids: z.array(z.string().min(3)).min(1),
-            alinti: z.string().max(600).nullable(),
+            kriter: KRITER,
+            puan: z.number().int().min(0).max(100),
+            not: z.string().min(5).max(300),
+          })
+          .strict(),
+      )
+      .length(8),
+    /** özet gerekçe — yatırımcıya gösterilen metin */
+    gerekce: z.string().min(40).max(1200),
+    /** üst ölçekli belgelerden alıntılar; boşsa dayanak puanı 0 olur */
+    alintilar: z.array(Alinti).max(8),
+    eksik_veri: z.array(z.string().max(200)).max(6),
+  })
+  .strict();
+
+export type Degerlendirme = z.infer<typeof Degerlendirme>;
+
+/** Öneri metninden NACE kodu önerir. Kullanıcı kod girmediyse çalışır. */
+export const NaceOnerisi = z
+  .object({
+    /** aday kodlar, en olasıdan başlayarak */
+    adaylar: z
+      .array(
+        z
+          .object({
+            kod: z.string().regex(/^\d{2}\.\d{2}(\.\d{2})?$/, "NACE biçimi: 13.10 veya 13.10.03"),
+            gerekce: z.string().min(5).max(300),
             guven: z.enum(["dusuk", "orta", "yuksek"]),
           })
           .strict(),
       )
       .min(1)
-      .max(12),
-    eksik_veri: z.array(z.string().max(200)).max(10),
-  })
-  .strict();
-
-export type IddiaCikarimi = z.infer<typeof IddiaCikarimi>;
-
-export const NaceOnerisi = z
-  .object({
-    kod: z.string().regex(/^\d{2}(\.\d{1,2})?$/, "NACE kodu biçimi: 13 veya 13.10"),
-    aciklama: z.string().min(3).max(200),
-    guven: z.enum(["dusuk", "orta", "yuksek"]),
-    gerekce: z.string().max(400),
+      .max(3),
   })
   .strict();
 
 export type NaceOnerisi = z.infer<typeof NaceOnerisi>;
 
-export const MukerrerlikOnerisi = z
-  .object({
-    benzer: z
-      .array(
-        z
-          .object({
-            oneri_id: z.number().int().positive(),
-            benzerlik: z.number().min(0).max(100),
-            gerekce: z.string().max(300),
-          })
-          .strict(),
-      )
-      .max(5),
-  })
-  .strict();
-
-export type MukerrerlikOnerisi = z.infer<typeof MukerrerlikOnerisi>;
-
-export const GerekceMetni = z
-  .object({
-    metin: z.string().min(40).max(2000),
-    evidence_ids: z.array(z.string()).min(1),
-  })
-  .strict();
-
-export type GerekceMetni = z.infer<typeof GerekceMetni>;
-
 export const SEMALAR = {
-  iddia_cikarimi: IddiaCikarimi,
+  degerlendirme: Degerlendirme,
   nace_onerisi: NaceOnerisi,
-  mukerrerlik: MukerrerlikOnerisi,
-  gerekce_metni: GerekceMetni,
 } as const;
 
 export type SemaAdi = keyof typeof SEMALAR;
 
-/** OpenAI Structured Outputs / JSON Schema karşılığı. */
 export function jsonSema(ad: SemaAdi) {
   return z.toJSONSchema(SEMALAR[ad], { io: "output" });
 }

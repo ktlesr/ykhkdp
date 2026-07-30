@@ -1,105 +1,155 @@
-import { analizEt, istemciSec, MODEL_SNAPSHOT } from "@ykh/ai-gateway";
-import { adaylariGetir, denetle, donemGetir, islem, kararGetir, type Baglam } from "@ykh/database";
+import { degerlendir, istemciSec, MODEL_SNAPSHOT, naceOner } from "@ykh/ai-gateway";
+import { denetle, islem, type Baglam } from "@ykh/database";
 import { aiMaliyeti, log } from "@ykh/observability";
-import { kararRaporu } from "@ykh/reporting";
-import { kaynakPaketi } from "@ykh/retrieval";
-import { ayardan, grupAgirligi, hesapla } from "@ykh/scoring";
-import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { belgePaketi, naceAdaylari } from "@ykh/retrieval";
 
 /**
- * İş tipleri. Her iş saf girdiden çalışır ve sonucunu veritabanına yazar.
- * Doğrulamadan geçmeyen AI çıktısı KAYDEDİLMEZ (fail-closed).
+ * İş tipleri. Doğrulamadan geçmeyen AI çıktısı KAYDEDİLMEZ (fail-closed);
+ * yalnızca denetime yazılır ve öneri `degerlendiriliyor` durumunda kalır.
  */
 
 export type IsKaydi = { id: number; tip: string; yuk: Record<string, unknown> };
 
-export const CIKTI_KLASORU = process.env.YKH_CIKTI ?? join(process.cwd(), ".data", "rapor");
-
 export const ISLER: Record<string, (b: Baglam, yuk: Record<string, unknown>) => Promise<string>> = {
-  /** Öneriden atomik iddia çıkarır; sonucu doğrulanmamış bulgu olarak kaydeder. */
-  async iddia_cikarimi(b, yuk) {
+  /**
+   * Bir öneriyi puanlar. Kullanıcı NACE girmediyse önce NACE atar.
+   * Sonuç doğrulanmamış taslaktır → öneri `onay_bekliyor` olur.
+   */
+  async degerlendir(b, yuk) {
     const oneriId = Number(yuk.oneriId);
+
     const [o] = await islem(b, (sql) =>
-      sql<{ id: number; donem_id: number; baslik: string; tanim: string }[]>`
-        select id, donem_id, baslik, tanim from oneri where id = ${oneriId}
+      sql<
+        { id: number; baslik: string; gerekce: string; ilce: string | null; nace_kod: string | null;
+          il: string; il_kod: string; ajans_kod: string }[]
+      >`
+        select o.id, o.baslik, o.gerekce, o.ilce, o.nace_kod,
+               i.ad as il, i.kod as il_kod, i.ajans_kod
+        from oneri o
+        join donem d on d.id = o.donem_id
+        join il i on i.kod = d.il_kod
+        where o.id = ${oneriId}
       `,
     );
     if (!o) throw new Error(`Öneri bulunamadı: ${oneriId}`);
 
-    const { paket, satirlar } = await kaynakPaketi(b, o.donem_id, o.baslik, 6, o.id);
-    if (!satirlar.length) return "Kaynak paketi boş; analiz atlandı.";
+    const istemci = istemciSec();
+    const notlar: string[] = [];
 
-    const sonuc = await analizEt(istemciSec(), MODEL_SNAPSHOT, {
-      semaAdi: "iddia_cikarimi",
-      kullaniciMetni: `Başlık: ${o.baslik}\nTanım: ${o.tanim}`,
-      kaynaklar: satirlar,
-      paket,
-      rol: b.rol === "anonim" ? "ajans_uzmani" : b.rol,
-    });
+    // ── 1. NACE · yalnızca kullanıcı girmediyse ────────────────────────────
+    if (!o.nace_kod) {
+      const adaylar = await naceAdaylari(b, `${o.baslik} ${o.gerekce}`);
+      const n = await naceOner(istemci, MODEL_SNAPSHOT, {
+        baslik: o.baslik,
+        gerekce: o.gerekce,
+        adaylar,
+      });
+      aiMaliyeti({
+        model: MODEL_SNAPSHOT,
+        girdiToken: n.ok ? n.maliyet.girdiToken : 0,
+        ciktiToken: n.ok ? n.maliyet.ciktiToken : 0,
+        promptSurum: n.promptSurum,
+        sonuc: n.ok ? "ok" : "red",
+      });
 
-    aiMaliyeti({
-      model: MODEL_SNAPSHOT,
-      girdiToken: sonuc.ok ? sonuc.maliyet.girdiToken : 0,
-      ciktiToken: sonuc.ok ? sonuc.maliyet.ciktiToken : 0,
-      promptSurum: sonuc.promptSurum,
-      sonuc: sonuc.ok ? "ok" : "red",
-    });
-
-    if (!sonuc.ok) {
-      // Doğrulamadan geçmeyen çıktı KAYDEDİLMEZ; yalnızca denetime yazılır.
-      await islem(b, (sql) =>
-        denetle(sql, b, "ai_cikti_reddedildi", "oneri", oneriId, { asama: sonuc.asama, hatalar: sonuc.hatalar }),
-      );
-      return `Reddedildi (${sonuc.asama}): ${sonuc.hatalar.slice(0, 3).join(" | ")}`;
+      if (n.ok) {
+        const secilen = n.veri.adaylar[0];
+        await islem(b, async (sql) => {
+          await sql`
+            update oneri set nace_kod = ${secilen.kod}, nace_kaynagi = 'ai', guncellendi = now()
+            where id = ${oneriId}
+          `;
+          await denetle(sql, b, "nace_ai_atandi", "oneri", oneriId, {
+            kod: secilen.kod,
+            guven: secilen.guven,
+            gerekce: secilen.gerekce,
+            model: n.modelSnapshot,
+            promptSurum: n.promptSurum,
+            not: "Doğrulanmamış atama — ajans düzeltebilir.",
+          });
+        });
+        o.nace_kod = secilen.kod;
+        notlar.push(`NACE ${secilen.kod} atandı (${secilen.guven} güven)`);
+      } else {
+        await islem(b, (sql) =>
+          denetle(sql, b, "nace_ai_reddedildi", "oneri", oneriId, { asama: n.asama, hatalar: n.hatalar }),
+        );
+        notlar.push("NACE atanamadı");
+      }
     }
 
+    // ── 2. Değerlendirme ───────────────────────────────────────────────────
+    const { paket, belgeler } = await belgePaketi(b, {
+      ilKod: o.il_kod,
+      ajansKod: o.ajans_kod,
+      sorgu: `${o.baslik} ${o.gerekce}`,
+    });
+    if (!belgeler.length) {
+      return "Üst ölçekli belge yok; değerlendirme yapılamadı. /belgeler ekranından belge yükleyin.";
+    }
+
+    const s = await degerlendir(istemci, MODEL_SNAPSHOT, {
+      baslik: o.baslik,
+      gerekce: o.gerekce,
+      il: o.il,
+      ilce: o.ilce,
+      nace: o.nace_kod,
+      belgeler,
+      paket,
+    });
+    aiMaliyeti({
+      model: MODEL_SNAPSHOT,
+      girdiToken: s.ok ? s.maliyet.girdiToken : 0,
+      ciktiToken: s.ok ? s.maliyet.ciktiToken : 0,
+      promptSurum: s.promptSurum,
+      sonuc: s.ok ? "ok" : "red",
+    });
+
+    if (!s.ok) {
+      // Fail-closed: reddedilen çıktı kaydedilmez, öneri değerlendirmede kalır.
+      await islem(b, (sql) =>
+        denetle(sql, b, "degerlendirme_reddedildi", "oneri", oneriId, {
+          asama: s.asama,
+          hatalar: s.hatalar,
+          model: s.modelSnapshot,
+          promptSurum: s.promptSurum,
+        }),
+      );
+      return `Reddedildi (${s.asama}): ${s.hatalar.slice(0, 3).join(" | ")}`;
+    }
+
+    const puanlar = Object.fromEntries(s.veri.puanlar.map((p) => [p.kriter, p.puan]));
+
     await islem(b, async (sql) => {
-      for (const iddia of sonuc.veri.iddialar) {
-        await sql`
-          insert into bulgu (oneri_id, tip, icerik, model_snapshot, prompt_surum, dogrulama_durumu)
-          values (${oneriId}, 'iddia_cikarimi', ${sql.json(iddia as never)},
-                  ${sonuc.modelSnapshot}, ${sonuc.promptSurum}, 'ai_bulgusu')
-        `;
-      }
-      await denetle(sql, b, "ai_bulgusu_kaydedildi", "oneri", oneriId, {
-        adet: sonuc.veri.iddialar.length,
-        model: sonuc.modelSnapshot,
-        promptSurum: sonuc.promptSurum,
-        not: "Doğrulanmamış bulgu — uzman onayı olmadan puana girmez.",
+      await sql`
+        insert into degerlendirme (oneri_id, puanlar, dayanak, gerekce, alintilar, model_snapshot, prompt_surum)
+        values (${oneriId}, ${sql.json(puanlar as never)}, ${s.dayanak}, ${s.veri.gerekce},
+                ${sql.json(
+                  s.veri.alintilar.map((a) => ({
+                    belge_id: a.belge_id,
+                    belge_ad: belgeler.find((b2) => b2.id === a.belge_id)?.ad ?? "",
+                    alinti: a.alinti,
+                  })) as never,
+                )},
+                ${s.modelSnapshot}, ${s.promptSurum})
+        on conflict (oneri_id) do update set
+          dayanak = excluded.dayanak,
+          gerekce = excluded.gerekce,
+          alintilar = excluded.alintilar
+      `;
+      // Puan hazır ama DOĞRULANMADI → ajans onayı bekler.
+      await sql`update oneri set durum = 'onay_bekliyor', guncellendi = now() where id = ${oneriId}`;
+      await denetle(sql, b, "degerlendirme_yapildi", "oneri", oneriId, {
+        dayanak: s.dayanak,
+        alintiSayisi: s.veri.alintilar.length,
+        model: s.modelSnapshot,
+        promptSurum: s.promptSurum,
+        not: "Doğrulanmamış taslak puan — ajans onayı olmadan sıralamaya girmez.",
       });
     });
 
-    return `${sonuc.veri.iddialar.length} iddia kaydedildi (doğrulanmamış).`;
-  },
-
-  /** Dönem karar raporunu üretir ve diske yazar. */
-  async rapor_uret(b, yuk) {
-    const il = String(yuk.il);
-    const yil = String(yuk.yil);
-    const d = await donemGetir(b, il, yil);
-    if (!d) throw new Error(`Dönem bulunamadı: ${il}/${yil}`);
-
-    const adaylar = await adaylariGetir(b, d);
-    const h = hesapla(adaylar, ayardan(d.set));
-    const karar = await kararGetir(b, d.donemId);
-
-    const html = kararRaporu({
-      ajans: d.ajans,
-      il: d.il,
-      donem: d.yil,
-      surum: d.set.surum,
-      hesap: h,
-      kilitZamani: karar?.kilit_zamani ?? null,
-      kilitleyen: karar?.kilitleyen ?? null,
-      gerekceler: (karar?.gerekceler as { konu: string; gerekce: string }[]) ?? [],
-    yerellikPayi: grupAgirligi(d.set.agirliklar, "yerellik"),
-    });
-
-    await mkdir(CIKTI_KLASORU, { recursive: true });
-    const yol = join(CIKTI_KLASORU, `${il}-${yil}-${d.set.surum}.html`);
-    await writeFile(yol, html, "utf8");
-    log.info("rapor_yazildi", { yol, boyut: html.length });
-    return yol;
+    notlar.push(`puan hazır, dayanak ${s.dayanak}/100, ${s.veri.alintilar.length} alıntı`);
+    log.info("degerlendirme_tamam", { oneriId, dayanak: s.dayanak });
+    return notlar.join(" · ");
   },
 };

@@ -2,44 +2,36 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import {
-  cikisYap, destekVer, donemGetir, girisYap, kanitDurumDegistir, kanitEkle,
-  kararKilitle, kayitOl, kriterPuaniYaz, oneriDurumDegistir, oneriOlustur,
-  adaylariGetir, benzerOneriler,
-} from "@ykh/database";
-import { kilitOnayiGecerli, type OneriDurumu } from "@ykh/domain";
-import { log } from "@ykh/observability";
-import { ayardan, hesapla, type Kriter } from "@ykh/scoring";
 import { cookies } from "next/headers";
+import {
+  belgeEkle, belgeSil, cikisYap, donemGetir, girisYap, kayitOl, naceAra, naceDuzelt,
+  oneriOlustur, puanDuzelt, durumDegistir,
+} from "@ykh/database";
+import { gecisIzinli, onaylayabilir, type OneriDurumu } from "@ykh/domain";
+import { log } from "@ykh/observability";
+import { KRITERLER, type Kriter } from "@ykh/scoring";
 import { baglam, cerezSil, COOKIE, kullanici, oturumCerezi } from "./oturum.ts";
-
-/**
- * Sunucu eylemleri. Her mutasyon:
- *   1. oturum bağlamını çözer,
- *   2. yetkiyi hem burada hem RLS'te kontrol eder (katmanlı savunma),
- *   3. denetim kaydını @ykh/database içinde yazar.
- */
 
 export type EylemSonucu = { ok: boolean; mesaj: string };
 
 // ── kimlik ─────────────────────────────────────────────────────────────────
 
-export async function girisEylemi(_önceki: EylemSonucu | null, form: FormData): Promise<EylemSonucu> {
-  const r = await girisYap(String(form.get("eposta") ?? ""), String(form.get("parola") ?? ""));
+export async function girisEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
+  const r = await girisYap(String(f.get("eposta") ?? ""), String(f.get("parola") ?? ""));
   if (!r.ok) return { ok: false, mesaj: r.hata };
   await oturumCerezi(r.jeton);
-  redirect(String(form.get("hedef") ?? "/iller"));
+  redirect(String(f.get("hedef") ?? "/"));
 }
 
-export async function kayitEylemi(_önceki: EylemSonucu | null, form: FormData): Promise<EylemSonucu> {
+export async function kayitEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
   const r = await kayitOl(
-    String(form.get("eposta") ?? ""),
-    String(form.get("parola") ?? ""),
-    String(form.get("adSoyad") ?? ""),
+    String(f.get("eposta") ?? ""),
+    String(f.get("parola") ?? ""),
+    String(f.get("adSoyad") ?? ""),
   );
   if (!r.ok) return { ok: false, mesaj: r.hata };
   await oturumCerezi(r.jeton);
-  redirect("/panom");
+  redirect("/oneri");
 }
 
 export async function cikisEylemi(): Promise<void> {
@@ -48,160 +40,145 @@ export async function cikisEylemi(): Promise<void> {
   redirect("/");
 }
 
-// ── öneri ──────────────────────────────────────────────────────────────────
+// ── NACE arama (yatırımcı biliyorsa girer) ─────────────────────────────────
 
-export async function benzerlikKontrolu(donemId: number, baslik: string, nace: string, ilce: string) {
-  return benzerOneriler(await baglam(), donemId, baslik, nace || null, ilce || null);
+export async function naceAraEylemi(sorgu: string) {
+  return naceAra(await baglam(), sorgu);
 }
 
-export async function oneriEylemi(_önceki: EylemSonucu | null, form: FormData): Promise<EylemSonucu> {
+// ── öneri ──────────────────────────────────────────────────────────────────
+
+export async function oneriEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
   const k = await kullanici();
   if (!k) return { ok: false, mesaj: "Öneri vermek için giriş yapın." };
 
-  const baslik = String(form.get("baslik") ?? "").trim();
-  const tanim = String(form.get("tanim") ?? "").trim();
-  const neden = String(form.get("neden") ?? "").trim();
-  if (baslik.length < 8) return { ok: false, mesaj: "Konu başlığı en az 8 karakter olmalı." };
-  if (tanim.length < 40) return { ok: false, mesaj: "Kısa tanım en az 40 karakter olmalı." };
-  if (tanim.length > 600) return { ok: false, mesaj: "Kısa tanım en çok 600 karakter olabilir." };
+  const baslik = String(f.get("baslik") ?? "").trim();
+  const gerekce = String(f.get("gerekce") ?? "").trim();
+  const il = String(f.get("il") ?? "");
+  const ilce = String(f.get("ilce") ?? "");
 
-  const donemId = Number(form.get("donemId"));
-  const o = await oneriOlustur(await baglam(), {
-    donemId,
-    tur: (String(form.get("tur") ?? "yeni") as "yeni" | "koruma" | "kapsam"),
+  if (baslik.length < 8) return { ok: false, mesaj: "Yatırım konusu başlığı en az 8 karakter olmalı." };
+  if (gerekce.length < 40) {
+    return {
+      ok: false,
+      mesaj: "“Neden burada?” gerekçesi en az 40 karakter olmalı — puanın en büyük payı bu alana ait.",
+    };
+  }
+  if (!il) return { ok: false, mesaj: "İl seçin." };
+
+  const b = await baglam();
+  const d = await donemGetir(b, il);
+  if (!d) return { ok: false, mesaj: "Bu il için açık bir dönem yok." };
+
+  const o = await oneriOlustur(b, {
+    donemId: d.donemId,
     baslik,
-    tanim,
-    ilce: String(form.get("ilce") ?? "Merkez"),
-    neden,
-    nace: String(form.get("nace") ?? "") || null,
-    naceOnayli: form.get("naceOnayli") === "on",
+    gerekce,
+    ilce: ilce || "Merkez",
+    naceKod: String(f.get("naceKod") ?? "") || null,
   });
-  log.info("oneri_olusturuldu", { oneriId: o.id, donemId });
-  revalidatePath("/panom");
+  log.info("oneri_olusturuldu", { oneriId: o.id, il });
   redirect(`/oneri/${o.id}`);
 }
 
-export async function destekEylemi(oneriId: number, yol: string): Promise<EylemSonucu> {
+// ── ajans işlemleri ────────────────────────────────────────────────────────
+
+export async function durumEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
   const k = await kullanici();
-  if (!k) return { ok: false, mesaj: "Destek vermek için giriş yapın." };
-  await destekVer(await baglam(), oneriId);
-  revalidatePath(yol);
+  if (!k || !onaylayabilir(k.rol)) return { ok: false, mesaj: "Bu işlem yalnızca ajans rolünde." };
+
+  const mevcut = String(f.get("mevcut")) as OneriDurumu;
+  const yeni = String(f.get("durum")) as OneriDurumu;
+  const gerekce = String(f.get("gerekce") ?? "").trim();
+
+  const izin = gecisIzinli(mevcut, yeni, k.rol);
+  if (!izin.izinli) return { ok: false, mesaj: izin.sebep };
+  if (izin.gecis.gerekceZorunlu && gerekce.length < 10) {
+    return { ok: false, mesaj: `“${izin.gecis.eylem}” için gerekçe zorunlu (en az 10 karakter).` };
+  }
+
+  await durumDegistir(await baglam(), Number(f.get("oneriId")), yeni, gerekce);
+  revalidatePath("/onay");
+  revalidatePath(String(f.get("yol") ?? "/"));
   return {
     ok: true,
-    mesaj: "Destek kaydedildi. Destek sayısı puan girdisi değildir; ilgi sinyali olarak görünür.",
+    mesaj:
+      yeni === "listede"
+        ? "Onaylandı. Öneri il sıralamasında görünüyor."
+        : yeni === "reddedildi"
+          ? "Reddedildi. Gerekçe önerinin sayfasında görünür."
+          : "Durum güncellendi.",
   };
 }
 
-export async function kanitEkleEylemi(_önceki: EylemSonucu | null, form: FormData): Promise<EylemSonucu> {
+export async function puanEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
   const k = await kullanici();
-  if (!k) return { ok: false, mesaj: "Kanıt eklemek için giriş yapın." };
+  if (!k || !onaylayabilir(k.rol)) return { ok: false, mesaj: "Bu işlem yalnızca ajans rolünde." };
 
-  const oneriId = Number(form.get("oneriId"));
-  const kaynakKurum = String(form.get("kaynakKurum") ?? "").trim();
-  const belge = String(form.get("belge") ?? "").trim();
-  if (kaynakKurum.length < 3) return { ok: false, mesaj: "Kaynak kurum yazılmalı." };
-  if (belge.length < 3) return { ok: false, mesaj: "Belge adı yazılmalı." };
+  const gerekce = String(f.get("gerekce") ?? "").trim();
+  if (gerekce.length < 10) return { ok: false, mesaj: "Puan düzeltmesi gerekçe ister (en az 10 karakter)." };
 
-  const r = await kanitEkle(await baglam(), oneriId, {
-    kaynakKurum,
-    belge,
-    sayfaTablo: String(form.get("sayfaTablo") ?? ""),
-    yayimTarihi: String(form.get("yayimTarihi") ?? "") || null,
-    url: String(form.get("url") ?? "") || null,
-    alinti: String(form.get("alinti") ?? ""),
-    katkiPuani: Number(form.get("katkiPuani") ?? 10),
+  const puanlar = {} as Record<Kriter, number>;
+  for (const kr of KRITERLER) {
+    const v = Number(f.get(kr));
+    if (!Number.isInteger(v) || v < 0 || v > 100) return { ok: false, mesaj: `${kr}: 0–100 arası tam sayı girin.` };
+    puanlar[kr] = v;
+  }
+
+  await puanDuzelt(await baglam(), Number(f.get("oneriId")), puanlar, gerekce);
+  revalidatePath(String(f.get("yol") ?? "/onay"));
+  return { ok: true, mesaj: "Puan düzeltildi. AI'nin ham puanı kayıtta korunuyor." };
+}
+
+export async function naceEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
+  const k = await kullanici();
+  if (!k || !onaylayabilir(k.rol)) return { ok: false, mesaj: "Bu işlem yalnızca ajans rolünde." };
+  const kod = String(f.get("naceKod") ?? "").trim();
+  if (!kod) return { ok: false, mesaj: "NACE kodu seçin." };
+
+  await naceDuzelt(await baglam(), Number(f.get("oneriId")), kod);
+  revalidatePath(String(f.get("yol") ?? "/onay"));
+  return { ok: true, mesaj: `NACE ${kod} olarak düzeltildi.` };
+}
+
+// ── üst ölçekli belgeler ───────────────────────────────────────────────────
+
+export async function belgeEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
+  const k = await kullanici();
+  if (!k || !onaylayabilir(k.rol)) return { ok: false, mesaj: "Belge yüklemek yalnızca ajans rolünde." };
+
+  const ad = String(f.get("ad") ?? "").trim();
+  const dosya = f.get("dosya");
+  let metin = String(f.get("metin") ?? "").trim();
+
+  if (dosya instanceof File && dosya.size > 0) {
+    if (dosya.size > 5_000_000) return { ok: false, mesaj: "Dosya en çok 5 MB olabilir." };
+    // ponytail: metin tabanlı dosya (txt/md). PDF/docx için ayrıştırıcı gerekir;
+    // şimdilik metni panodan yapıştırma yolu açık.
+    metin = (await dosya.text()).trim();
+  }
+
+  if (ad.length < 5) return { ok: false, mesaj: "Belge adı en az 5 karakter olmalı." };
+  if (metin.length < 200) {
+    return { ok: false, mesaj: "Belge metni en az 200 karakter olmalı — AI alıntı çıkaramaz." };
+  }
+
+  const r = await belgeEkle(await baglam(), {
+    ad,
+    tur: String(f.get("tur") ?? "diger"),
+    yil: String(f.get("yil") ?? "") || null,
+    ajansKod: String(f.get("ajansKod") ?? "") || null,
+    ilKod: String(f.get("ilKod") ?? "") || null,
+    metin,
   });
-  revalidatePath(`/oneri/${oneriId}`);
-  return {
-    ok: true,
-    mesaj: `Kanıt ${r.kod} dosyaya eklendi. Uzman doğrulamasına kadar “beyan” işaretiyle görünür ve puana girmez.`,
-  };
+  revalidatePath("/belgeler");
+  return { ok: true, mesaj: `“${ad}” eklendi (${metin.length} karakter). Yeni öneriler bu belgeye dayanabilir.` };
 }
 
-// ── uzman incelemesi ───────────────────────────────────────────────────────
-
-export async function kanitDogrulaEylemi(_önceki: EylemSonucu | null, form: FormData): Promise<EylemSonucu> {
+export async function belgeSilEylemi(id: number): Promise<EylemSonucu> {
   const k = await kullanici();
-  if (!k || !["ajans_uzmani", "sektor_uzmani"].includes(k.rol)) {
-    return { ok: false, mesaj: "Kanıtı yalnızca ajans veya sektör uzmanı doğrulayabilir." };
-  }
-  const durum = String(form.get("durum")) as "uzman_onayli" | "reddedildi" | "celiskili";
-  const gerekce = String(form.get("gerekce") ?? "").trim();
-  if (durum !== "uzman_onayli" && gerekce.length < 10) {
-    return { ok: false, mesaj: "Ret ve çelişki için gerekçe zorunludur (en az 10 karakter)." };
-  }
-  await kanitDurumDegistir(await baglam(), Number(form.get("kanitId")), durum, gerekce);
-  revalidatePath(String(form.get("yol") ?? "/"));
-  return { ok: true, mesaj: `Kanıt “${durum}” olarak kaydedildi. Karar defterine yazıldı.` };
-}
-
-export async function oneriDurumEylemi(_önceki: EylemSonucu | null, form: FormData): Promise<EylemSonucu> {
-  const k = await kullanici();
-  if (!k) return { ok: false, mesaj: "Giriş yapın." };
-  const gerekce = String(form.get("gerekce") ?? "").trim();
-  if (gerekce.length < 10) return { ok: false, mesaj: "Durum değişikliği gerekçe ister (en az 10 karakter)." };
-
-  await oneriDurumDegistir(await baglam(), Number(form.get("oneriId")), String(form.get("durum")) as OneriDurumu, gerekce);
-  revalidatePath(String(form.get("yol") ?? "/"));
-  return { ok: true, mesaj: "Öneri durumu güncellendi ve kayda geçti." };
-}
-
-export async function kriterPuaniEylemi(_önceki: EylemSonucu | null, form: FormData): Promise<EylemSonucu> {
-  const k = await kullanici();
-  if (!k || !["ajans_uzmani", "sektor_uzmani"].includes(k.rol)) {
-    return { ok: false, mesaj: "Kriter puanını yalnızca uzman yazabilir." };
-  }
-  const gerekce = String(form.get("gerekce") ?? "").trim();
-  if (gerekce.length < 10) return { ok: false, mesaj: "Kriter puanı gerekçe ister (en az 10 karakter)." };
-
-  await kriterPuaniYaz(
-    await baglam(),
-    Number(form.get("adayId")),
-    String(form.get("kriter")) as Kriter,
-    Number(form.get("puan")),
-    gerekce,
-  );
-  revalidatePath(String(form.get("yol") ?? "/"));
-  return { ok: true, mesaj: "Kriter puanı kaydedildi ve sıralama yeniden hesaplandı." };
-}
-
-// ── karar kilidi (OV-02) ───────────────────────────────────────────────────
-
-export async function kilitEylemi(_önceki: EylemSonucu | null, form: FormData): Promise<EylemSonucu> {
-  const k = await kullanici();
-  if (!k) return { ok: false, mesaj: "Giriş yapın." };
-  if (!kilitOnayiGecerli(String(form.get("onay") ?? ""))) {
-    return { ok: false, mesaj: "Onay için kutuya KİLİTLE yazmanız gerekiyor." };
-  }
-  const gerekce = String(form.get("gerekce") ?? "").trim();
-  if (gerekce.length < 20) {
-    return { ok: false, mesaj: "Kilit, kurul gerekçesi ister (en az 20 karakter). Boş slot ve çıkan konu ayrıca kayda geçer." };
-  }
-
-  const il = String(form.get("il"));
-  const yil = String(form.get("yil"));
-  const b = await baglam();
-  const d = await donemGetir(b, il, yil);
-  if (!d) return { ok: false, mesaj: "Dönem bulunamadı." };
-
-  const h = hesapla(await adaylariGetir(b, d), ayardan(d.set));
-  const icerik = {
-    surum: d.set.surum,
-    pay: h.pay,
-    esik: h.esik,
-    slotlar: h.ilkDort.map((s) =>
-      s.bos
-        ? { sira: s.sira, adayId: null, ad: "Slot boş — yeterli kanıtlı aday yok", sonuc: "boş", gerekce: s.gerekce }
-        : { sira: s.sira, adayId: s.id, ad: s.ad, sonuc: s.sonuc, puan: s.puan, kanit: s.kanit },
-    ),
-    disarda: h.kalanlar.map((s) => ({ sira: s.sira, ad: s.ad, sonuc: s.sonuc, puan: s.puan, kanit: s.kanit })),
-    ozet: h.ozet,
-  };
-
-  const r = await kararKilitle(b, d.donemId, d.set.surum, icerik, [{ konu: `${d.il} ${d.yil}`, gerekce }]);
-  if (!r.ok) return { ok: false, mesaj: r.hata };
-
-  log.info("karar_kilitlendi", { il, yil, surum: d.set.surum });
-  revalidatePath(`/il/${il}/donem/${yil}`);
-  return { ok: true, mesaj: `${d.yil} dönemi kararı kilitlendi. Sayfa salt okunur; sürüm damgası ${d.set.surum}.` };
+  if (!k || !onaylayabilir(k.rol)) return { ok: false, mesaj: "Bu işlem yalnızca ajans rolünde." };
+  await belgeSil(await baglam(), id);
+  revalidatePath("/belgeler");
+  return { ok: true, mesaj: "Belge silindi." };
 }

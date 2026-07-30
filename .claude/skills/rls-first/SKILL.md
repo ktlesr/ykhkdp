@@ -48,12 +48,12 @@ fonksiyon yaz ve çıktısını daraltarak sınırla — `hesap_ac()` örnektir.
 
 **Değişmezlik politikayla değil, trigger'la da korunur.** UPDATE politikası
 olmaması saldırganı 0 satır etkilemeye düşürür; RLS baypas edilirse trigger
-devreye girer. `denetim` ve `donem` bunun iki örneğidir.
+devreye girer. `denetim` (append-only) ve `degerlendirme` (ham puan sabit) bunun iki örneğidir.
 
 **Toplam ile kırılımın erişimi farklı olabilir.** Yayımlanan bir sayı kamuya
 açık, onu üreten satırlar kurum içi olabilir. Toplamı `security definer` bir
 fonksiyonla aç; aksi hâlde kamu görünümü uzman görünümünden farklı bir sonuç
-hesaplar. `aday_taban_puani()` bunun için vardır.
+hesaplar. `oneri_taban_puani()` bunun için vardır.
 
 ## Uygulama tarafı
 

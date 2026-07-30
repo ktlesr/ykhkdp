@@ -1,15 +1,11 @@
-import type { Rol } from "@ykh/domain";
-import { bulguyuDogrula, type KaynakPaketi } from "@ykh/evidence-validation";
+import { degerlendirmeyiDogrula, type Paket } from "@ykh/evidence-validation";
 import type { z } from "zod";
-import { kaynakBloguKur, PROMPTLAR, type KaynakSatiri } from "./prompt.ts";
+import { kaynakBloguKur, naceBloguKur, PROMPTLAR, type BelgeSatiri } from "./prompt.ts";
 import { jsonSema, SEMALAR, type SemaAdi } from "./sema.ts";
 
 /**
- * AI Gateway. Model çağrısı, şema doğrulama, kanıt doğrulama, maliyet kaydı.
- *
- * Her katman fail-closed: şema tutmazsa reddet, evidence_id tutmazsa reddet,
- * kaynaksız sayı varsa reddet. Geçen çıktı bile "doğrulanmamış bulgu"dur ve
- * uzman onayı olmadan puanlamaya giremez (§1.3).
+ * AI Gateway. Model çağrısı → şema → alıntı doğrulama → dayanak puanı.
+ * Her katman fail-closed.
  */
 
 export type ModelIstegi = {
@@ -20,104 +16,124 @@ export type ModelIstegi = {
   semaAdi: SemaAdi;
 };
 
-export type ModelCevabi = {
-  metin: string;
-  girdiToken: number;
-  ciktiToken: number;
-};
-
-/** Model istemcisi arayüzü — gerçek OpenAI veya çevrimdışı sahte istemci. */
-export type ModelIstemcisi = {
-  ad: string;
-  cagir(istek: ModelIstegi): Promise<ModelCevabi>;
-};
-
+export type ModelCevabi = { metin: string; girdiToken: number; ciktiToken: number };
+export type ModelIstemcisi = { ad: string; cagir(istek: ModelIstegi): Promise<ModelCevabi> };
 export type Maliyet = { girdiToken: number; ciktiToken: number; model: string };
 
-export type AnalizSonucu<T> =
-  | { ok: true; veri: T; modelSnapshot: string; promptSurum: string; maliyet: Maliyet }
-  | { ok: false; asama: "sema" | "kanit" | "model"; hatalar: string[]; modelSnapshot: string; promptSurum: string };
+type Meta = { modelSnapshot: string; promptSurum: string };
 
-export type AnalizGirdisi = {
-  semaAdi: SemaAdi;
-  kullaniciMetni: string;
-  kaynaklar: readonly KaynakSatiri[];
-  paket: KaynakPaketi;
-  rol: Rol;
-};
+export type Sonuc<T> =
+  | ({ ok: true; veri: T; dayanak: number; maliyet: Maliyet } & Meta)
+  | ({ ok: false; asama: "model" | "sema" | "dayanak"; hatalar: string[] } & Meta);
 
-/** `latest` alias üretimde kullanılmaz (brief §3). */
+/** `latest` alias üretimde kullanılmaz. */
 export function modelSnapshotDogrula(snapshot: string): void {
   if (!snapshot || snapshot === "latest" || snapshot.endsWith(":latest")) {
     throw new Error("Model snapshot pinli olmalı; 'latest' üretimde kullanılmaz.");
   }
 }
 
-export async function analizEt<A extends SemaAdi>(
+async function cagir<A extends SemaAdi>(
   istemci: ModelIstemcisi,
   modelSnapshot: string,
-  girdi: AnalizGirdisi & { semaAdi: A },
-): Promise<AnalizSonucu<z.infer<(typeof SEMALAR)[A]>>> {
+  semaAdi: A,
+  kaynakBlogu: string,
+  gorev: string,
+): Promise<{ ok: true; veri: z.infer<(typeof SEMALAR)[A]>; maliyet: Maliyet } | { ok: false; asama: "model" | "sema"; hatalar: string[] }> {
   modelSnapshotDogrula(modelSnapshot);
-  const prompt = PROMPTLAR[girdi.semaAdi];
-  const meta = { modelSnapshot, promptSurum: prompt.surum };
+  const prompt = PROMPTLAR[semaAdi];
 
   let cevap: ModelCevabi;
   try {
     cevap = await istemci.cagir({
       modelSnapshot,
       sistem: prompt.sistem,
-      kullanici: `${kaynakBloguKur(girdi.kaynaklar)}\n\n<gorev>\n${girdi.kullaniciMetni}\n</gorev>`,
-      jsonSema: jsonSema(girdi.semaAdi),
-      semaAdi: girdi.semaAdi,
+      kullanici: `${kaynakBlogu}\n\n<gorev>\n${gorev}\n</gorev>`,
+      jsonSema: jsonSema(semaAdi),
+      semaAdi,
     });
   } catch (e) {
-    return { ok: false, asama: "model", hatalar: [e instanceof Error ? e.message : String(e)], ...meta };
+    return { ok: false, asama: "model", hatalar: [e instanceof Error ? e.message : String(e)] };
   }
 
-  // 1. katman — şema
   let ham: unknown;
   try {
     ham = JSON.parse(cevap.metin);
   } catch {
-    return { ok: false, asama: "sema", hatalar: ["Çıktı geçerli JSON değil."], ...meta };
+    return { ok: false, asama: "sema", hatalar: ["Çıktı geçerli JSON değil."] };
   }
-  const cozum = SEMALAR[girdi.semaAdi].safeParse(ham);
-  if (!cozum.success) {
+  const c = SEMALAR[semaAdi].safeParse(ham);
+  if (!c.success) {
     return {
       ok: false,
       asama: "sema",
-      hatalar: cozum.error.issues.map((i) => `${i.path.join(".") || "(kök)"}: ${i.message}`),
-      ...meta,
+      hatalar: c.error.issues.map((i) => `${i.path.join(".") || "(kök)"}: ${i.message}`),
     };
   }
-
-  // 2. katman — kanıt doğrulama
-  const hatalar = kanitHatalari(girdi.semaAdi, cozum.data, girdi);
-  if (hatalar.length) return { ok: false, asama: "kanit", hatalar, ...meta };
-
   return {
     ok: true,
-    veri: cozum.data as z.infer<(typeof SEMALAR)[A]>,
-    ...meta,
+    veri: c.data as z.infer<(typeof SEMALAR)[A]>,
     maliyet: { girdiToken: cevap.girdiToken, ciktiToken: cevap.ciktiToken, model: modelSnapshot },
   };
 }
 
-function kanitHatalari(ad: SemaAdi, veri: unknown, girdi: AnalizGirdisi): string[] {
-  const hatalar: string[] = [];
-  const dogrula = (metin: string, ids: string[], alinti?: string | null) => {
-    const s = bulguyuDogrula({ metin, evidenceIds: ids, alinti: alinti ?? undefined }, girdi.paket, girdi.rol);
-    if (!s.gecerli) hatalar.push(...s.hatalar.map((h) => h.mesaj));
-  };
+/** Bir öneriyi sekiz kriterle puanlar ve üst ölçekli belgelere bağlar. */
+export async function degerlendir(
+  istemci: ModelIstemcisi,
+  modelSnapshot: string,
+  girdi: { baslik: string; gerekce: string; il: string; ilce: string | null; nace: string | null; belgeler: readonly BelgeSatiri[]; paket: Paket },
+): Promise<Sonuc<z.infer<typeof SEMALAR.degerlendirme>>> {
+  const meta = { modelSnapshot, promptSurum: PROMPTLAR.degerlendirme.surum };
 
-  if (ad === "iddia_cikarimi") {
-    const v = veri as { iddialar: { metin: string; evidence_ids: string[]; alinti: string | null }[] };
-    for (const i of v.iddialar) dogrula(i.metin, i.evidence_ids, i.alinti);
-  } else if (ad === "gerekce_metni") {
-    const v = veri as { metin: string; evidence_ids: string[] };
-    dogrula(v.metin, v.evidence_ids);
+  const gorev =
+    `İl: ${girdi.il}\n` +
+    `İlçe: ${girdi.ilce ?? "belirtilmedi"}\n` +
+    `NACE: ${girdi.nace ?? "belirtilmedi"}\n` +
+    `Yatırım konusu: ${girdi.baslik}\n` +
+    `Neden burada (yatırımcının gerekçesi): ${girdi.gerekce}`;
+
+  const r = await cagir(istemci, modelSnapshot, "degerlendirme", kaynakBloguKur(girdi.belgeler), gorev);
+  if (!r.ok) return { ...r, ...meta };
+
+  const dogrulama = degerlendirmeyiDogrula(r.veri, girdi.paket);
+  if (!dogrulama.gecerli) {
+    return { ok: false, asama: "dayanak", hatalar: dogrulama.hatalar.map((h) => h.mesaj), ...meta };
   }
-  // nace_onerisi ve mukerrerlik kaynak iddiası taşımaz; sayısal token da üretmez.
-  return hatalar;
+
+  return { ok: true, veri: r.veri, dayanak: dogrulama.dayanak, maliyet: r.maliyet, ...meta };
+}
+
+/** Kullanıcı NACE girmediyse aday kodlardan birini önerir. */
+export async function naceOner(
+  istemci: ModelIstemcisi,
+  modelSnapshot: string,
+  girdi: { baslik: string; gerekce: string; adaylar: readonly { kod: string; tanim: string }[] },
+): Promise<Sonuc<z.infer<typeof SEMALAR.nace_onerisi>>> {
+  const meta = { modelSnapshot, promptSurum: PROMPTLAR.nace_onerisi.surum };
+  if (!girdi.adaylar.length) {
+    return { ok: false, asama: "dayanak", hatalar: ["Aday NACE listesi boş."], ...meta };
+  }
+
+  const r = await cagir(
+    istemci,
+    modelSnapshot,
+    "nace_onerisi",
+    naceBloguKur(girdi.adaylar),
+    `Yatırım konusu: ${girdi.baslik}\nGerekçe: ${girdi.gerekce}`,
+  );
+  if (!r.ok) return { ...r, ...meta };
+
+  // Fail-closed: listede olmayan kod önerilirse reddet.
+  const gecerli = new Set(girdi.adaylar.map((a) => a.kod));
+  const uydurma = r.veri.adaylar.filter((a) => !gecerli.has(a.kod));
+  if (uydurma.length) {
+    return {
+      ok: false,
+      asama: "dayanak",
+      hatalar: uydurma.map((a) => `Aday listesinde olmayan NACE kodu önerildi: ${a.kod}`),
+      ...meta,
+    };
+  }
+
+  return { ok: true, veri: r.veri, dayanak: 0, maliyet: r.maliyet, ...meta };
 }

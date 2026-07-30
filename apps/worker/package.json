@@ -13,8 +13,6 @@
     "@ykh/database": "workspace:*",
     "@ykh/domain": "workspace:*",
     "@ykh/observability": "workspace:*",
-    "@ykh/reporting": "workspace:*",
-    "@ykh/retrieval": "workspace:*",
-    "@ykh/scoring": "workspace:*"
+    "@ykh/retrieval": "workspace:*"
   }
 }

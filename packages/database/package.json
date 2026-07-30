@@ -15,7 +15,8 @@
     "migrate:down": "node src/cli.ts down",
     "seed": "node src/cli.ts seed",
     "reset": "node src/cli.ts reset",
-    "test": "node --test src/*.test.ts"
+    "test": "node --test src/*.test.ts",
+    "nace": "node src/cli.ts nace"
   },
   "dependencies": {
     "@ykh/domain": "workspace:*",

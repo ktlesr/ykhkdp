@@ -2,19 +2,19 @@ import type { Aday, BosSatir, DoluSatir, Hesap, Koken, Ozet, Satir, Sonuc, UcDur
 import type { AgirlikSeti } from "./kriterler.ts";
 
 /**
- * Sıralama ve slot doldurma. Brief §2 sözde kodu normatiftir.
+ * Sıralama ve slot doldurma. Saf fonksiyon: DB yok, UI yok, rastgelelik yok.
  *
- * Saf fonksiyon: DB yok, UI yok, IO yok, rastgelelik yok, tarih yok.
- * Bu paket AI olmadan tek başına çalışır ve hiçbir yerde destek sayısını
- * girdi almaz.
+ * Dayanak eşiği sıralamayı ezer: AI'nin üst ölçekli belgelere bağlayamadığı
+ * aday, puanı yüksek olsa da slot dolduramaz. Kaynağı belirsiz bir sayı dört
+ * konuyu seçemez.
  */
 
-export type Ayar = Pick<AgirlikSeti, "devamlilikPayi" | "kanitEsigi" | "devirSiniri" | "slotSayisi" | "surum">;
+export type Ayar = Pick<AgirlikSeti, "devamlilikPayi" | "dayanakEsigi" | "devirSiniri" | "slotSayisi" | "surum">;
 
 export function ayardan(set: AgirlikSeti, ezme?: Partial<Ayar>): Ayar {
   return {
     devamlilikPayi: set.devamlilikPayi,
-    kanitEsigi: set.kanitEsigi,
+    dayanakEsigi: set.dayanakEsigi,
     devirSiniri: set.devirSiniri,
     slotSayisi: set.slotSayisi,
     surum: set.surum,
@@ -23,7 +23,7 @@ export function ayardan(set: AgirlikSeti, ezme?: Partial<Ayar>): Ayar {
 }
 
 export function hesapla(adaylar: readonly Aday[], ayar: Ayar): Hesap {
-  const { devamlilikPayi: pay, kanitEsigi: esik, devirSiniri, slotSayisi } = ayar;
+  const { devamlilikPayi: pay, dayanakEsigi: esik, devirSiniri, slotSayisi } = ayar;
 
   const liste = adaylar
     .map((k) => ({ ...k, puan: k.taban + (k.koken === "mevcut" ? pay : 0) }))
@@ -31,7 +31,7 @@ export function hesapla(adaylar: readonly Aday[], ayar: Ayar): Hesap {
 
   type Sirali = (typeof liste)[number];
   const slots: Satir[] = [];
-  const kalan: Array<Sirali & { esikAlti: boolean }> = [];
+  const kalan: Array<Sirali & { dayanaksiz: boolean }> = [];
 
   let i = 0;
   let sira = 1;
@@ -39,18 +39,17 @@ export function hesapla(adaylar: readonly Aday[], ayar: Ayar): Hesap {
   while (sira <= slotSayisi && i < liste.length) {
     const aday = liste[i];
 
-    if (aday.kanit >= esik) {
+    if (aday.dayanak >= esik) {
       slots.push(satir(aday, sira, true, false, false));
       i++;
       sira++;
       continue;
     }
 
-    // Eşik altı aday: sıralamada önde ama slot dolduramaz (§1 — eşik sıralamayı ezer).
-    kalan.push({ ...aday, esikAlti: true });
+    kalan.push({ ...aday, dayanaksiz: true });
 
     let j = i + 1;
-    while (j < liste.length && liste[j].kanit < esik) j++;
+    while (j < liste.length && liste[j].dayanak < esik) j++;
     const devralan: Sirali | undefined = liste[j];
 
     if (devralan && aday.puan - devralan.puan <= devirSiniri) {
@@ -63,12 +62,12 @@ export function hesapla(adaylar: readonly Aday[], ayar: Ayar): Hesap {
     sira++;
   }
 
-  for (; i < liste.length; i++) kalan.push({ ...liste[i], esikAlti: false });
+  for (; i < liste.length; i++) kalan.push({ ...liste[i], dayanaksiz: false });
 
   let s = slotSayisi + 1;
   const kalanlar = kalan
     .sort((a, b) => b.puan - a.puan || a.id.localeCompare(b.id, "tr"))
-    .map((k) => satir(k, s++, false, false, k.esikAlti));
+    .map((k) => satir(k, s++, false, false, k.dayanaksiz));
 
   const dolular = slots.filter((x): x is DoluSatir => !x.bos);
   const ozet: Ozet = {
@@ -96,15 +95,20 @@ export function hesapla(adaylar: readonly Aday[], ayar: Ayar): Hesap {
   };
 }
 
-function bosSlot(sira: number, aday: Aday & { puan: number }, devralan: (Aday & { puan: number }) | undefined, esik: number): BosSatir {
+function bosSlot(
+  sira: number,
+  aday: Aday & { puan: number },
+  devralan: (Aday & { puan: number }) | undefined,
+  esik: number,
+): BosSatir {
   return {
     bos: true,
     sira,
     gerekce:
-      `Sıradaki aday “${aday.ad}” (${aday.puan} puan) kanıt yeterliliği ${aday.kanit}/100 ile ` +
-      `${esik} eşiğinin altında; slot dolduramaz. Eşiği geçen ilk aday ` +
-      `“${devralan ? devralan.ad : "—"}” ${devralan ? aday.puan - devralan.puan : "—"} puan ` +
-      `geride olduğu için devralmadı. Slot boş bırakıldı.`,
+      `Sıradaki aday “${aday.ad}” (${aday.puan} puan) üst ölçekli belgelere yalnızca ${aday.dayanak}/100 ` +
+      `düzeyinde bağlanabiliyor; ${esik} dayanak eşiğinin altında olduğu için slot dolduramaz. ` +
+      `Eşiği geçen ilk aday “${devralan ? devralan.ad : "—"}” ` +
+      `${devralan ? aday.puan - devralan.puan : "—"} puan geride olduğu için devralmadı. Slot boş bırakıldı.`,
   };
 }
 
@@ -113,19 +117,17 @@ function satir(
   sira: number,
   ilkDortte: boolean,
   esikDevri: boolean,
-  esikAlti: boolean,
+  dayanaksiz: boolean,
 ): DoluSatir {
-  return { ...aday, bos: false, sira, sonuc: sonucEtiketi(aday.koken, ilkDortte, esikAlti), esikDevri, esikAlti };
+  return { ...aday, bos: false, sira, sonuc: sonucEtiketi(aday.koken, ilkDortte, dayanaksiz), esikDevri, dayanaksiz };
 }
 
-/** Brief §2 sonuç_etiketi — birebir. */
-function sonucEtiketi(koken: Koken, ilkDortte: boolean, esikAlti: boolean): Sonuc {
+function sonucEtiketi(koken: Koken, ilkDortte: boolean, dayanaksiz: boolean): Sonuc {
   if (ilkDortte) return koken === "mevcut" ? "korunuyor" : "ekleniyor";
-  if (esikAlti) return "koşullu";
+  if (dayanaksiz) return "dayanaksız";
   return koken === "mevcut" ? "çıkıyor" : "yedek";
 }
 
-/** §1 — uç durumlar işaretlenir ve kuruldan gerekçe ister. */
 function ucDurum(ozet: Ozet, slotSayisi: number): UcDurum {
   if (ozet.bosSlot > 0) {
     return {
@@ -134,26 +136,25 @@ function ucDurum(ozet: Ozet, slotSayisi: number): UcDurum {
           ? `${slotSayisi} slottan biri boş kalıyor`
           : `${slotSayisi} slottan ${ozet.bosSlot} tanesi boş kalıyor`,
       metin:
-        "Boş slot meşru bir sonuçtur, hata değildir. Kurulun yazılı gerekçesi ve bir kanıt talebi " +
-        "açması gerekir; slot bir sonraki dönemde yeniden yarışa açılır.",
+        "Boş slot meşru bir sonuçtur, hata değildir. Yeterince gerekçelendirilebilir aday yok; " +
+        "üst ölçekli belge eklendikçe veya öneriler güçlendikçe slot yeniden yarışa açılır.",
     };
   }
   if (ozet.korunuyor === slotSayisi) {
     return {
       baslik: `${slotSayisi} konunun tamamı korunuyor`,
-      metin: "Yüksek sonuçlu çıktı. Kurulun ayrıca gerekçe yazması ve kamuya açık kayda geçirmesi gerekir.",
+      metin: "Uç durum. Ajansın gerekçesini yazması beklenir.",
     };
   }
   if (ozet.korunuyor === 0 && ozet.cikiyor > 0) {
     return {
       baslik: "mevcut konuların tamamı değişiyor",
-      metin: "Yüksek sonuçlu çıktı. Kurulun ayrıca gerekçe yazması ve kamuya açık kayda geçirmesi gerekir.",
+      metin: "Uç durum. Ajansın gerekçesini yazması beklenir.",
     };
   }
   return null;
 }
 
-/** İlk dörde giren adayların kimliği — senaryo karşılaştırması için. */
 export function slotKimlikleri(h: Hesap): Array<string | null> {
   return h.ilkDort.map((s) => (s.bos ? null : s.id));
 }

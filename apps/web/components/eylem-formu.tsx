@@ -6,43 +6,29 @@ import { cn } from "@/lib/utils.ts";
 import { kayitSatiri } from "./kayit-satiri.tsx";
 import type { EylemSonucu } from "@/lib/eylem.ts";
 
-/**
- * Sunucu eylemi + hata gösterimi + kayıt satırı. Tek yerde.
- *
- * §10 — hata "ne olduğunu VE nasıl düzeltileceğini" söyler; ayrı tonlama
- * yapılmaz, conflict rengi + düz kenar kullanılır.
- */
-
+/** Sunucu eylemi + hata gösterimi + bildirim. §10: hata ne olduğunu ve nasıl düzeltileceğini söyler. */
 export function EylemFormu({
   eylem,
   children,
   className,
-  surum,
-  id,
   onSonuc,
 }: {
-  eylem: (onceki: EylemSonucu | null, form: FormData) => Promise<EylemSonucu>;
+  eylem: (o: EylemSonucu | null, f: FormData) => Promise<EylemSonucu>;
   children: ReactNode;
   className?: string;
-  surum?: string;
-  /** Portal'a taşınan butonlar `form="<id>"` ile bu forma bağlanır. */
-  id?: string;
-  /** Her sonuçta çağrılır — üstteki katmanı kapatmak için. Hata mesajı
-   *  formun içinde gösterilir; katman açık kalırsa kullanıcı onu göremez. */
-  onSonuc?: (sonuc: EylemSonucu) => void;
+  onSonuc?: (s: EylemSonucu) => void;
 }) {
   const [durum, gonder] = useActionState(eylem, null);
 
   useEffect(() => {
     if (!durum) return;
-    if (durum.ok) kayitSatiri(durum.mesaj, surum);
+    if (durum.ok) kayitSatiri(durum.mesaj);
     onSonuc?.(durum);
-    // onSonuc kasten bağımlılık değil: her render'da yeni kapanış üretilebiliyor.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [durum, surum]);
+  }, [durum]);
 
   return (
-    <form id={id} action={gonder} className={className}>
+    <form action={gonder} className={className}>
       {durum && !durum.ok && (
         <div
           role="alert"
@@ -60,25 +46,28 @@ export function Gonder({
   children,
   varyant = "dolu",
   className,
-  form,
+  name,
+  value,
 }: {
   children: ReactNode;
-  varyant?: "dolu" | "cizgi" | "amber";
+  varyant?: "dolu" | "cizgi" | "amber" | "kirmizi";
   className?: string;
-  /** Buton portal içindeyse formun id'si — DOM'da form dışında kalır. */
-  form?: string;
+  name?: string;
+  value?: string;
 }) {
   const { pending } = useFormStatus();
   const stil = {
     dolu: "border-ink bg-ink text-paper",
     cizgi: "border-hairline bg-transparent text-ink",
-    amber: "border-unverif-line bg-transparent text-[#5F4A15]",
+    amber: "border-unverif-line bg-unverif-tint text-[#5F4A15]",
+    kirmizi: "border-conflict-line bg-conflict-tint text-conflict",
   }[varyant];
 
   return (
     <button
       type="submit"
-      form={form}
+      name={name}
+      value={value}
       disabled={pending}
       className={cn(
         "min-h-11 cursor-pointer border px-[13px] py-[9px] font-mono text-[10.5px] uppercase tracking-[.1em]",
@@ -88,26 +77,6 @@ export function Gonder({
       )}
     >
       {pending ? "Kaydediliyor…" : children}
-    </button>
-  );
-}
-
-/** Yazılı doğrulama olmadan pasif kalan onay butonu (§7 OV-02). */
-export function OnayliGonder({ hazir, children }: { hazir: boolean; children: ReactNode }) {
-  const { pending } = useFormStatus();
-  const pasif = !hazir || pending;
-  return (
-    <button
-      type="submit"
-      disabled={pasif}
-      className={cn(
-        "ml-auto min-h-11 border px-[18px] py-[11px] font-mono text-[11px] uppercase tracking-[.1em]",
-        pasif
-          ? "cursor-not-allowed border-[#D5D1C7] bg-hairline-soft text-[#8E959F]"
-          : "cursor-pointer border-ink bg-ink text-paper",
-      )}
-    >
-      {children}
     </button>
   );
 }

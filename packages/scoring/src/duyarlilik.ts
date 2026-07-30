@@ -59,7 +59,7 @@ function agirligiOynat(set: AgirlikSeti, kriter: Kriter, d: number): AgirlikSeti
 
 export type Senaryo = {
   ad: string;
-  ezme: Partial<Pick<AgirlikSeti, "devamlilikPayi" | "kanitEsigi" | "devirSiniri">>;
+  ezme: Partial<Pick<AgirlikSeti, "devamlilikPayi" | "dayanakEsigi" | "devirSiniri">>;
 };
 
 export type SenaryoSonucu = {
