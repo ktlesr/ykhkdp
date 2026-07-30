@@ -12,12 +12,20 @@
  * yakalanmak istenen şey gürültü değil regresyon. `YKH_EVAL_TEKRAR` ile artar.
  */
 
-import { degerlendir, istemciSec, modelSnapshot } from "@ykh/ai-gateway";
+import { degerlendir, istemciSec, karsiGorus, modelSnapshot } from "@ykh/ai-gateway";
 import { islem } from "@ykh/database";
+import { paketteGeciyor } from "@ykh/evidence-validation";
 import { belgePaketi } from "@ykh/retrieval";
 import { KRITER_GRUBU, KRITERLER, type Kriter } from "@ykh/scoring";
 import { SERVIS } from "./index.ts";
-import { KARSILASTIRMALAR, ORNEKLER, type Bant, type Ornek } from "./ornekler.ts";
+import {
+  FILO_DUSEN_ESIGI,
+  KARSILASTIRMALAR,
+  ORNEKLER,
+  VARSAYILAN_RET_ORANI,
+  type Bant,
+  type Ornek,
+} from "./ornekler.ts";
 
 type Olcum = {
   ad: string;
@@ -26,7 +34,10 @@ type Olcum = {
   dayanakliKriter: number;
   dusenOrani: number;
   alinti: number;
+  karsiGorus: number;
   token: number;
+  /** düşen alıntı gerekçeleri — neden düştüğü gizlenmez */
+  dusenNeden: string[];
   /** şema sekiz kriter zorluyor; yine de kontrol edilir */
   eksikKriter?: boolean;
 };
@@ -85,14 +96,33 @@ async function birKosu(o: Ornek): Promise<{ olcum: Olcum; ret: string | null }> 
   if (!s.ok) {
     // Ret bir eval sonucu değil, kırılmadır: örnekler geçerli çıktı üretmeli.
     return {
-      olcum: { ad: o.ad, yerellik: 0, dayanak: 0, dayanakliKriter: 0, dusenOrani: 1, alinti: 0, token: 0 },
+      olcum: { ad: o.ad, yerellik: 0, dayanak: 0, dayanakliKriter: 0, dusenOrani: 1, alinti: 0, karsiGorus: 0, token: 0, dusenNeden: [] },
       ret: `çıktı reddedildi (${s.asama}): ${s.hatalar.slice(0, 2).join(" | ")}`,
     };
   }
 
+  // Karşı görüş ayrı bir çağrı; puanı etkilemediği için reddi kırılma sayılır
+  // ama değerlendirmeyi geçersiz kılmaz.
+  const kg = await karsiGorus(istemciSec(), modelSnapshot(), {
+    baslik: o.baslik,
+    gerekce: o.gerekce,
+    il: o.ilKod,
+    ilce: o.ilce,
+    belgeler,
+    paket,
+  });
+
+  /**
+   * ÜRÜN KURALI — pazarlıksız: kaydedilecek her alıntı pakette birebir geçmeli.
+   * Doğrulayıcıya güvenmeden burada tekrar ölçüyoruz; ayrışırlarsa eval kırılır.
+   */
+  const kaynaksiz = s.dogrulanan.filter((a) => !paketteGeciyor(paket, a.alinti));
+
   const toplamAlinti = s.dogrulanan.length + s.dusenler.length;
   return {
-    ret: null,
+    ret: kaynaksiz.length
+      ? `KAYNAKSIZ ALINTI KAYDEDİLECEKTİ (${kaynaksiz.length}): “${kaynaksiz[0].alinti.slice(0, 70)}…”`
+      : null,
     olcum: {
       ad: o.ad,
       yerellik: yerellikOrtalamasi(s.veri.puanlar),
@@ -100,7 +130,11 @@ async function birKosu(o: Ornek): Promise<{ olcum: Olcum; ret: string | null }> 
       dayanakliKriter: Object.values(s.kriterDayanagi).filter((v) => v.length).length,
       dusenOrani: toplamAlinti ? s.dusenler.length / toplamAlinti : 0,
       alinti: s.dogrulanan.length,
-      token: s.maliyet.girdiToken + s.maliyet.ciktiToken,
+      karsiGorus: kg.ok ? kg.gorusler.length : 0,
+      dusenNeden: s.dusenler,
+      token:
+        s.maliyet.girdiToken + s.maliyet.ciktiToken +
+        (kg.ok ? kg.maliyet.girdiToken + kg.maliyet.ciktiToken : 0),
       // Şema katmanı sekiz kriteri zorluyor; yine de kontrol edilir.
       ...(s.veri.puanlar.length === KRITERLER.length ? {} : { eksikKriter: true }),
     },
@@ -113,15 +147,41 @@ function medyan(sayilar: readonly number[]): number {
 }
 
 /** Örneği `tekrar` kez çalıştırır, medyanı bantlara vurur. */
-async function ornegiCalistir(o: Ornek, tekrar: number): Promise<{ olcum: Olcum; kosular: Olcum[]; hatalar: string[] }> {
+async function ornegiCalistir(
+  o: Ornek,
+  tekrar: number,
+): Promise<{ olcum: Olcum; kosular: Olcum[]; retler: string[]; hatalar: string[] }> {
   const hatalar: string[] = [];
   const kosular: Olcum[] = [];
+  const retler: string[] = [];
 
   for (let i = 0; i < tekrar; i++) {
     const { olcum, ret } = await birKosu(o);
-    kosular.push(olcum);
-    if (ret) hatalar.push(`koşu ${i + 1}: ${ret}`);
+    if (ret) retler.push(`koşu ${i + 1}: ${ret}`);
+    else kosular.push(olcum);
     if (olcum.eksikKriter) hatalar.push(`koşu ${i + 1}: sekiz kriter dönmedi`);
+  }
+
+  const b = o.bekle;
+  // Kaynaksız alıntı toleranssızdır: ret oranına girmez, doğrudan kırar.
+  const kaynaksiz = retler.filter((r) => r.includes("KAYNAKSIZ ALINTI"));
+  if (kaynaksiz.length) hatalar.push(...kaynaksiz);
+
+  const retOrani = (retler.length - kaynaksiz.length) / tekrar;
+  const esik = b.enFazlaRetOrani ?? VARSAYILAN_RET_ORANI;
+  if (retOrani > esik) {
+    hatalar.push(
+      `${retler.length}/${tekrar} koşu reddedildi (eşik %${Math.round(esik * 100)}): ${retler[0]}`,
+    );
+  }
+  // Reddedilen koşu medyanı zehirlemez: hiç geçerli koşu yoksa kırılma.
+  if (!kosular.length) {
+    return {
+      olcum: { ad: o.ad, yerellik: 0, dayanak: 0, dayanakliKriter: 0, dusenOrani: 1, alinti: 0, karsiGorus: 0, token: 0, dusenNeden: [] },
+      kosular,
+      retler,
+      hatalar: [...hatalar, "hiçbir koşu geçerli çıktı üretmedi"],
+    };
   }
 
   const olcum: Olcum = {
@@ -131,10 +191,11 @@ async function ornegiCalistir(o: Ornek, tekrar: number): Promise<{ olcum: Olcum;
     dayanakliKriter: medyan(kosular.map((k) => k.dayanakliKriter)),
     dusenOrani: medyan(kosular.map((k) => k.dusenOrani)),
     alinti: medyan(kosular.map((k) => k.alinti)),
+    karsiGorus: medyan(kosular.map((k) => k.karsiGorus)),
     token: kosular.reduce((t, k) => t + k.token, 0),
+    dusenNeden: kosular.flatMap((k) => k.dusenNeden),
   };
 
-  const b = o.bekle;
   if (b.yerellik && !bantta(olcum.yerellik, b.yerellik)) {
     hatalar.push(`yerellik medyanı ${olcum.yerellik}, beklenen ${b.yerellik[0]}–${b.yerellik[1]}`);
   }
@@ -144,14 +205,10 @@ async function ornegiCalistir(o: Ornek, tekrar: number): Promise<{ olcum: Olcum;
   if (b.enAzDayanakliKriter !== undefined && olcum.dayanakliKriter < b.enAzDayanakliKriter) {
     hatalar.push(`${olcum.dayanakliKriter} kriter belgeye bağlandı, en az ${b.enAzDayanakliKriter} olmalı`);
   }
-  if (b.enFazlaDusenOrani !== undefined && olcum.dusenOrani > b.enFazlaDusenOrani) {
-    hatalar.push(
-      `alıntıların %${Math.round(olcum.dusenOrani * 100)}'i düştü, ` +
-        `en fazla %${Math.round(b.enFazlaDusenOrani * 100)} olmalı`,
-    );
+  if (b.enAzKarsiGorus !== undefined && olcum.karsiGorus < b.enAzKarsiGorus) {
+    hatalar.push(`${olcum.karsiGorus} karşı görüş üretildi, en az ${b.enAzKarsiGorus} olmalı`);
   }
-
-  return { olcum, kosular, hatalar };
+  return { olcum, kosular, retler, hatalar };
 }
 
 async function main(): Promise<void> {
@@ -166,7 +223,7 @@ async function main(): Promise<void> {
 
   for (const [i, o] of ORNEKLER.entries()) {
     console.log(`${i + 1}) ${o.ad}`);
-    const { olcum, kosular, hatalar } = await ornegiCalistir(o, tekrar);
+    const { olcum, kosular, retler, hatalar } = await ornegiCalistir(o, tekrar);
     olcumler.set(o.ad, olcum);
 
     // Koşular arası yayılım gizlenmez: sallantı görünür olmalı.
@@ -179,7 +236,11 @@ async function main(): Promise<void> {
       `   dayanak ${String(olcum.dayanak).padStart(3)}${aralik((k) => k.dayanak)}` +
       `   dayanaklı kriter ${olcum.dayanakliKriter}/8${aralik((k) => k.dayanakliKriter)}` +
       `   alıntı ${olcum.alinti}` +
-      `   düşen %${Math.round(olcum.dusenOrani * 100)}`);
+      `   karşı görüş ${olcum.karsiGorus}${aralik((k) => k.karsiGorus)}` +
+      `   düşen %${Math.round(olcum.dusenOrani * 100)}` +
+      (retler.length ? `   ret ${retler.length}/${tekrar}` : ""));
+    for (const r of retler) console.log(`   ret: ${r.slice(0, 150)}`);
+    for (const d of olcum.dusenNeden.slice(0, 3)) console.log(`   düşen: ${d.slice(0, 150)}`);
 
     if (hatalar.length) {
       kirilan++;
@@ -189,6 +250,16 @@ async function main(): Promise<void> {
     }
     console.log();
   }
+
+  // ── filo düzeyi düşen alıntı oranı ──────────────────────────────────────
+  const filoDusen = medyan([...olcumler.values()].map((o) => o.dusenOrani));
+  const filoGecti = filoDusen <= FILO_DUSEN_ESIGI;
+  if (!filoGecti) kirilan++;
+  console.log(
+    `${filoGecti ? YESIL : KIRMIZI}  filo düşen alıntı medyanı %${Math.round(filoDusen * 100)}, ` +
+      `eşik %${Math.round(FILO_DUSEN_ESIGI * 100)}
+`,
+  );
 
   // ── ayırt etme: ürün kuralı, modelden bağımsız ──────────────────────────
   console.log("Ayırt etme karşılaştırmaları");

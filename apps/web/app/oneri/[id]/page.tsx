@@ -1,6 +1,13 @@
 import { notFound } from "next/navigation";
 import { oneriGetir, donemGetir } from "@ykh/database";
-import { NACE_KAYNAK_ETIKET, ONERI_DURUM_ACIKLAMA, ONERI_DURUM_ETIKET, onaylayabilir } from "@ykh/domain";
+import {
+  KARSI_GORUS_ETIKET,
+  NACE_KAYNAK_ETIKET,
+  ONERI_DURUM_ACIKLAMA,
+  ONERI_DURUM_ETIKET,
+  onaylayabilir,
+  type KarsiGorusTuru,
+} from "@ykh/domain";
 import { GRUP_ACIKLAMA, GRUP_ETIKET, gruplaraGore, KRITER_ETIKET, type Kriter } from "@ykh/scoring";
 import { Bag, Baslik, Rozet, Sayfa, UstBar, Uyari } from "@/components/ui.tsx";
 import { OnayKutusu } from "@/components/onay-kutusu.tsx";
@@ -24,6 +31,7 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
   const durumTuru = { listede: "yesil", onay_bekliyor: "amber", degerlendiriliyor: "notr", reddedildi: "kirmizi" } as const;
   const alintilar = o.alintilar ?? [];
   const kriterDayanagi = o.kriter_dayanagi ?? null;
+  const karsiGorus = o.karsi_gorus ?? [];
 
   return (
     <>
@@ -145,6 +153,46 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
                     <blockquote className="mt-1.5 border-l-2 border-l-ink pl-3 font-display text-[14.5px] leading-[1.55] text-ink text-pretty">
                       “{a.alinti}”
                     </blockquote>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Karşı görüş — aynı belgelerle önerinin aleyhine en güçlü itiraz */}
+            <div className="mt-5 border border-hairline bg-surface">
+              <div className="border-b-2 border-b-ink bg-paper px-4 py-2.5 font-mono text-[10px] uppercase tracking-[.13em] text-ink">
+                Karşı görüş ({karsiGorus.length})
+              </div>
+              <p className="border-b border-b-[#E9E5DB] px-4 py-2.5 text-[12px] leading-[1.45] text-ink-soft">
+                Yapay zekâ aynı belgelerle bu önerinin <strong className="font-medium">aleyhine</strong> en güçlü
+                itirazı da üretir. Puanı değiştirmez; ajans onayında tartılır.
+              </p>
+              {karsiGorus.length === 0 ? (
+                <div className="px-4 py-3.5">
+                  <div className="text-[13.5px] font-medium text-ink">
+                    Belgelerde bu öneriye karşı dayanak bulunamadı.
+                  </div>
+                  <p className="mt-1.5 text-[12.5px] leading-[1.45] text-ink-soft">
+                    Bu, itiraz olmadığı anlamına gelmez — yalnızca üst ölçekli belgelere dayandırılabilecek bir itiraz
+                    çıkmadığı anlamına gelir.
+                  </p>
+                </div>
+              ) : (
+                karsiGorus.map((g, i) => (
+                  <div key={i} className="border-b border-b-[#E9E5DB] px-4 py-3.5 last:border-b-0">
+                    <Rozet tur="amber">{KARSI_GORUS_ETIKET[g.tur as KarsiGorusTuru] ?? g.tur}</Rozet>
+                    <p className="mt-2 text-[13.5px] leading-[1.5] text-ink text-pretty">{g.iddia}</p>
+                    {g.alintilar.map((a, j) => (
+                      <div key={j} className="mt-2">
+                        <div className="font-mono text-[10px] uppercase tracking-[.09em] text-ink-mute">
+                          {a.belge_ad}
+                          {a.bolum && <span className="num"> · {a.bolum}</span>}
+                        </div>
+                        <blockquote className="mt-1 border-l-2 border-l-ink-mute pl-3 text-[13px] leading-[1.5] text-ink-soft text-pretty">
+                          “{a.alinti}”
+                        </blockquote>
+                      </div>
+                    ))}
                   </div>
                 ))
               )}

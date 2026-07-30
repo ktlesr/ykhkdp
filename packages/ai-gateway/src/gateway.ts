@@ -1,4 +1,9 @@
-import { degerlendirmeyiDogrula, type Paket } from "@ykh/evidence-validation";
+import {
+  degerlendirmeyiDogrula,
+  karsiGorusuDogrula,
+  type DogrulanmisKarsiGorus,
+  type Paket,
+} from "@ykh/evidence-validation";
 import type { z } from "zod";
 import { kaynakBloguKur, naceBloguKur, PROMPTLAR, type BelgeSatiri } from "./prompt.ts";
 import { jsonSema, SEMALAR, type SemaAdi } from "./sema.ts";
@@ -29,7 +34,9 @@ export type Sonuc<T> =
       /** hangi kriter hangi doğrulanmış alıntıya dayanıyor */
       kriterDayanagi: Record<string, number[]>;
       /** düşürülen alıntı gerekçeleri — denetime yazılır */
-      dusenler: string[] } & Meta)
+      dusenler: string[];
+      /** atfı düzeltilen alıntılar — denetime yazılır */
+      duzeltilenler: string[] } & Meta)
   | ({ ok: false; asama: "model" | "sema" | "dayanak"; hatalar: string[] } & Meta);
 
 /** `latest` alias üretimde kullanılmaz. */
@@ -115,6 +122,7 @@ export async function degerlendir(
     dogrulanan: dogrulama.dogrulanan,
     kriterDayanagi: dogrulama.kriterDayanagi,
     dusenler: dogrulama.dusenler.map((h) => h.mesaj),
+    duzeltilenler: dogrulama.duzeltilenler.map((h) => h.mesaj),
     maliyet: r.maliyet,
     ...meta,
   };
@@ -152,5 +160,49 @@ export async function naceOner(
     };
   }
 
-  return { ok: true, veri: r.veri, dayanak: 0, dogrulanan: [], kriterDayanagi: {}, dusenler: [], maliyet: r.maliyet, ...meta };
+  return { ok: true, veri: r.veri, dayanak: 0, dogrulanan: [], kriterDayanagi: {}, dusenler: [], duzeltilenler: [], maliyet: r.maliyet, ...meta };
+}
+
+/**
+ * Karşı görüş: aynı belgelerle önerinin aleyhine en güçlü itiraz.
+ *
+ * `Sonuc<T>` kullanmıyor: dayanak puanı üretmiyor ve `dogrulanan` taşımıyor —
+ * itirazlar alıntılarını kendi içinde taşır. Puanı DEĞİŞTİRMEZ.
+ */
+export type KarsiGorusCiktisi =
+  | ({ ok: true; gorusler: DogrulanmisKarsiGorus[]; dusenler: string[]; duzeltilenler: string[];
+      maliyet: Maliyet } & Meta)
+  | ({ ok: false; asama: "model" | "sema" | "dayanak"; hatalar: string[] } & Meta);
+
+export async function karsiGorus(
+  istemci: ModelIstemcisi,
+  modelSnapshot: string,
+  girdi: {
+    baslik: string; gerekce: string; il: string; ilce: string | null;
+    belgeler: readonly BelgeSatiri[]; paket: Paket;
+  },
+): Promise<KarsiGorusCiktisi> {
+  const meta = { modelSnapshot, promptSurum: PROMPTLAR.karsi_gorus.surum };
+
+  const gorev =
+    `İl: ${girdi.il}\n` +
+    `İlçe: ${girdi.ilce ?? "belirtilmedi"}\n` +
+    `Yatırım konusu: ${girdi.baslik}\n` +
+    `Yatırımcının gerekçesi: ${girdi.gerekce}`;
+
+  const r = await cagir(istemci, modelSnapshot, "karsi_gorus", kaynakBloguKur(girdi.belgeler), gorev);
+  if (!r.ok) return { ...r, ...meta };
+
+  const d = karsiGorusuDogrula(r.veri, girdi.paket);
+  if (!d.gecerli) {
+    return { ok: false, asama: "dayanak", hatalar: d.hatalar.map((h) => h.mesaj), ...meta };
+  }
+  return {
+    ok: true,
+    gorusler: d.gorusler,
+    dusenler: d.dusenler.map((h) => h.mesaj),
+    duzeltilenler: d.duzeltilenler.map((h) => h.mesaj),
+    maliyet: r.maliyet,
+    ...meta,
+  };
 }

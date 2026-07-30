@@ -19,6 +19,7 @@ const KRITERLER = [
   "istihdam_katma_deger", "uygulanabilirlik", "yatirimci_ilgisi", "surdurulebilirlik",
 ] as const;
 
+/** `id` pakete yerel numaradır — prompt bloğunda yazan değer. */
 function belgeleriCoz(kullanici: string): Array<{ id: number; ad: string; metin: string }> {
   const out: Array<{ id: number; ad: string; metin: string }> = [];
   for (const m of kullanici.matchAll(
@@ -70,6 +71,27 @@ function uret(istek: ModelIstegi): unknown {
         gerekce: `Öneri metni “${a.tanim.slice(0, 80)}” tanımıyla örtüşüyor.`,
         guven: i === 0 && skor(a.tanim) > 1 ? "orta" : "dusuk",
       })),
+    };
+  }
+
+  if (istek.semaAdi === "karsi_gorus") {
+    // ponytail: çevrimdışı karşı görüş tek tipli ve tek alıntılı. Amaç zinciri
+    // çalıştırmak; gerçek itiraz OPENAI_API_KEY ile üretilir.
+    const bl = belgeleriCoz(istek.kullanici);
+    const ilk = bl[0];
+    const c = ilk ? cumleBul(ilk.metin, []) : null;
+    if (!ilk || !c) return { gorusler: [], alintilar: [] };
+    return {
+      gorusler: [
+        {
+          tur: "farkli_oncelik",
+          iddia:
+            "Çevrimdışı istemci: belge bu alanda farklı bir öncelik tanımlıyor olabilir; " +
+            "gerçek itiraz için OPENAI_API_KEY tanımlanmalıdır.",
+          alinti_no: [1],
+        },
+      ],
+      alintilar: [{ no: 1, belge_id: ilk.id, alinti: c }],
     };
   }
 

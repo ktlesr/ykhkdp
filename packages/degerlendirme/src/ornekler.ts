@@ -30,13 +30,34 @@ export type Ornek = {
     dayanak?: Bant;
     /** en az kaç kriter doğrulanmış bir alıntıya bağlanmalı */
     enAzDayanakliKriter?: number;
-    /** düşen alıntı / toplam alıntı oranı bu değeri geçmemeli */
-    enFazlaDusenOrani?: number;
+    /** en az kaç karşı görüş üretilmeli — hepsi doğrulanmış alıntı taşır */
+    enAzKarsiGorus?: number;
+    /**
+     * Reddedilen koşu oranı bu değeri geçmemeli. Ret bir KUSUR DEĞİL: model
+     * ezberinden alıntı yaptığında doğrulayıcı reddediyor ve öneri yeniden
+     * denenmek üzere `degerlendiriliyor` kalıyor — zincir tam da bunun için var.
+     * Ölçtüğümüz şey retin OLMAMASI değil, olağan olmaması.
+     */
+    enFazlaRetOrani?: number;
   };
 };
 
 /** A örneğinin yerellik ortalaması B'yi en az `enAzFark` puan geçmeli. */
 export type Karsilastirma = { yuksek: string; dusuk: string; enAzFark: number; neden: string };
+
+/** Her örnekte geçerli olan varsayılan ret toleransı. */
+export const VARSAYILAN_RET_ORANI = 0.34;
+
+/**
+ * Düşen alıntı oranı için FİLO eşiği — örnek başına değil, örneklerin medyanı.
+ *
+ * Örnek başına bant kurdum, sallandı: aynı örnek %0 ve %50 verdi. Sebep, modelin
+ * ezberindeki plan metninden alıntı yapma alışkanlığı; prompt ve paket boyu
+ * bunu azalttı ama bitirmedi. Tek örnekteki sıçrama tolere edilir, SİSTEMATİK
+ * bozulma yakalanır. Düşen alıntı zaten kaydedilmez; bu ölçü kalite sinyali,
+ * güvenlik sınırı değil — güvenlik sınırı `paketteGeciyor` değişmezidir.
+ */
+export const FILO_DUSEN_ESIGI = 0.34;
 
 export const ORNEKLER: Ornek[] = [
   {
@@ -55,7 +76,7 @@ export const ORNEKLER: Ornek[] = [
       yerellik: [60, 100],
       dayanak: [40, 100],
       enAzDayanakliKriter: 4,
-      enFazlaDusenOrani: 0.34,
+      enAzKarsiGorus: 1,
     },
   },
   {
@@ -70,7 +91,7 @@ export const ORNEKLER: Ornek[] = [
       "Sektörde büyüme potansiyeli yüksektir ve yatırımcılar için cazip bir alandır.",
     ilce: null,
     nace: null,
-    bekle: { yerellik: [0, 65], enFazlaDusenOrani: 0.34 },
+    bekle: { yerellik: [0, 65] },
   },
   {
     ad: "kutahya-teknik-seramik",
@@ -84,7 +105,7 @@ export const ORNEKLER: Ornek[] = [
       "yüksek katma değere geçiş imkânı sunuyor.",
     ilce: "Merkez",
     nace: null,
-    bekle: { yerellik: [55, 100], dayanak: [40, 100], enAzDayanakliKriter: 4, enFazlaDusenOrani: 0.34 },
+    bekle: { yerellik: [55, 100], dayanak: [40, 100], enAzDayanakliKriter: 4 },
   },
   {
     ad: "manisa-belgesiz-konu",
@@ -104,7 +125,11 @@ export const ORNEKLER: Ornek[] = [
      * mu" sorusunu ölçer, "konu iyi mi" sorusunu ölçmez — düşük yerellik puanı da
      * belgeye dayanıyor olabilir. Konunun yersizliğini ölçen şey YERELLİKTİR.
      */
-    bekle: { yerellik: [0, 45], enFazlaDusenOrani: 0.34 },
+    /**
+     * Karşı görüş burada ZORUNLU: konu belgelerde yoksa model bunu itiraz
+     * olarak söyleyebilmeli. Söyleyemiyorsa karşı görüş geçişi işe yaramıyor.
+     */
+    bekle: { yerellik: [0, 45], enAzKarsiGorus: 1 },
   },
 ];
 

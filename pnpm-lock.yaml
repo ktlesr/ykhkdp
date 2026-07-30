@@ -126,6 +126,9 @@ importers:
       '@ykh/database':
         specifier: workspace:*
         version: link:../database
+      '@ykh/evidence-validation':
+        specifier: workspace:*
+        version: link:../evidence-validation
       '@ykh/observability':
         specifier: workspace:*
         version: link:../observability

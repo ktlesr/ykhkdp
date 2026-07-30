@@ -21,6 +21,9 @@ kullanır. Türkçe terim kanoniktir.
 | kriter dayanağı | `kriter_dayanagi` | kriter satırında belge · çıpa |
 | dayanaksız kriter | boş `alinti_no` | "Dayanaksız kriter · belgeye bağlanamadı" |
 | örtüşme | `belge.sira` (`ts_rank`) | görünmez (dayanak girdisi) |
+| karşı görüş | `karsi_gorus` | "Karşı görüş" |
+| atıf düzeltmesi | `duzeltilenler` | denetimde; ekranda gösterilmez |
+| paket numarası | `belge.yerel` (1…n) | görünmez (modelin gördüğü adres) |
 | stratejik puan | `oneri_taban_puani()` | "Stratejik puan" |
 | devamlılık payı | `devamlilik_payi` | "Devamlılık payı" |
 | ağırlık seti | `agirlik_seti` | "Ağırlık seti" |
@@ -81,3 +84,5 @@ koyduğu asla kaybolmaz.
 - "onaylandı" tek başına → hangi onay? `nace_kaynagi='ajans'` mı, `durum='listede'` mi.
 - "kanıt" → bu üründe kanıt kartı **yok**. Doğru terim: **belge** ve **alıntı**.
 - "kurul" → bu üründe kurul kilidi **yok**. Onaylayan: **ajans**.
+- "belge kimliği" → iki ayrı şey. `belge.id` veritabanı kimliği (kalıcı kayıt),
+  `belge.yerel` modelin gördüğü paket numarası. Model asla `belge.id` görmez.

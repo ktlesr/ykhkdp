@@ -279,6 +279,12 @@ export async function oneriGetir(b: Baglam, id: number) {
         alintilar: Array<{ belge_ad: string; bolum: string | null; alinti: string }> | null;
         /** kriter → alintilar dizisindeki sıralar; boş dizi = dayanaksız kriter */
         kriter_dayanagi: Partial<Record<Kriter, number[]>> | null;
+        /** AI'nin aynı belgelerle ürettiği itirazlar; puana etki etmez */
+        karsi_gorus: Array<{
+          tur: string;
+          iddia: string;
+          alintilar: Array<{ belge_ad: string; bolum: string | null; alinti: string }>;
+        }> | null;
         model_snapshot: string | null; prompt_surum: string | null;
       })[]
     >`
@@ -291,7 +297,7 @@ export async function oneriGetir(b: Baglam, id: number) {
              g.gerekce as ai_gerekce,
              coalesce(g.duzeltilmis_puanlar, g.puanlar) as puanlar,
              (g.duzeltilmis_puanlar is not null) as duzeltildi,
-             g.alintilar, g.kriter_dayanagi, g.model_snapshot, g.prompt_surum,
+             g.alintilar, g.kriter_dayanagi, g.karsi_gorus, g.model_snapshot, g.prompt_surum,
              oneri_taban_puani(o.id, s.agirliklar) as taban
       from oneri o
       join donem d on d.id = o.donem_id

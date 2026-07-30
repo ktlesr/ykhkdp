@@ -74,18 +74,34 @@ test("EVAL 2 — belgede geçmeyen alıntı reddedilir", async () => {
   assert.ok(!s.ok && s.hatalar.some((h) => /bulunamadı/.test(h)));
 });
 
-test("EVAL 3 — var olmayan belgeye atıf reddedilir", async () => {
+test("EVAL 3 — paket dışı numara adres hatasıdır, metin bulunursa atıf düzeltilir", async () => {
   const s = await degerlendir(
     sahte({
-      puanlar: puanlar(),
+      puanlar: puanlar(60, { yerel_potansiyel: [1] }),
       gerekce: "Öneri bölge planındaki önceliklerle uyumludur ve yerel girdiye dayanmaktadır.",
-      alintilar: [{ no: 1, belge_id: 999, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek" }],
+      alintilar: [{ no: 1, belge_id: 9, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek" }],
       eksik_veri: [],
     }),
     "claude-opus-5-20260101",
     GIRDI,
   );
-  assert.ok(!s.ok && s.hatalar.some((h) => /Belge bulunamadı/.test(h)));
+  assert.equal(s.ok, true, s.ok ? "" : JSON.stringify(s.hatalar));
+  assert.equal(s.ok && s.dogrulanan[0].belge_id, 1, "atıf metnin bulunduğu belgeye çevrildi");
+  assert.ok(s.ok && s.duzeltilenler.length > 0);
+});
+
+test("EVAL 3b — adresi ve metni birlikte uydurulmuş alıntı reddedilir", async () => {
+  const s = await degerlendir(
+    sahte({
+      puanlar: puanlar(),
+      gerekce: "Öneri bölge planındaki önceliklerle uyumludur ve yerel girdiye dayanmaktadır.",
+      alintilar: [{ no: 1, belge_id: 9, alinti: "Bu cümle hiçbir belgede geçmiyor ve uydurulmuştur." }],
+      eksik_veri: [],
+    }),
+    "claude-opus-5-20260101",
+    GIRDI,
+  );
+  assert.equal(!s.ok && s.asama, "dayanak");
 });
 
 test("birebir alıntı kabul edilir ve dayanak puanı üretir", async () => {
@@ -171,7 +187,7 @@ test("'latest' alias reddedilir", () => {
 test("model snapshot ve prompt sürümü her sonuçta taşınır", async () => {
   const s = await degerlendir(cevrimdisiIstemci(), "claude-opus-5-20260101", GIRDI);
   assert.equal(s.modelSnapshot, "claude-opus-5-20260101");
-  assert.equal(s.promptSurum, "degerlendirme-v2");
+  assert.equal(s.promptSurum, "degerlendirme-v5");
 });
 
 // ── prompt injection ───────────────────────────────────────────────────────

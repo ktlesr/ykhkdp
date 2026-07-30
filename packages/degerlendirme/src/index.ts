@@ -1,4 +1,4 @@
-import { degerlendir, istemciSec, modelSnapshot, naceOner } from "@ykh/ai-gateway";
+import { degerlendir, istemciSec, karsiGorus, modelSnapshot, naceOner } from "@ykh/ai-gateway";
 import { denetle, islem, type Baglam } from "@ykh/database";
 import { aiMaliyeti, log } from "@ykh/observability";
 import { belgePaketi, naceAdaylari } from "@ykh/retrieval";
@@ -140,12 +140,51 @@ export async function degerlendirmeYap(b: Baglam, oneriId: number): Promise<Sonu
   // ── 4. Kayıt ─────────────────────────────────────────────────────────────
   const puanlar = Object.fromEntries(s.veri.puanlar.map((p) => [p.kriter, p.puan]));
 
+  const kunye = (belgeId: number) => {
+    const b2 = belgeler.find((x) => x.id === belgeId);
+    return { belge_ad: b2?.ad ?? "", bolum: b2?.bolum ?? null };
+  };
+
   const alintiKaydi = s.dogrulanan.map((a) => ({
     belge_id: a.belge_id,
-    belge_ad: belgeler.find((b2) => b2.id === a.belge_id)?.ad ?? "",
-    bolum: belgeler.find((b2) => b2.id === a.belge_id)?.bolum ?? null,
+    ...kunye(a.belge_id),
     alinti: a.alinti,
   }));
+
+  // ── 3b. Karşı görüş · EN İYİ ÇABA ────────────────────────────────────────
+  //
+  // Puanlama fail-closed: doğrulanmayan çıktı kaydedilmez, çünkü sıralamaya
+  // giren bir sayı üretiyor. Karşı görüş insanın okuyacağı bir metin ve puana
+  // etki etmiyor; üretilemezse değerlendirmeyi ENGELLEMEZ, denetime yazılır.
+  // İÇERİĞİ yine fail-closed: doğrulanmamış alıntı kaydedilmez.
+  const k = await karsiGorus(istemci, model, {
+    baslik: o.baslik,
+    gerekce: o.gerekce,
+    il: o.il,
+    ilce: o.ilce,
+    belgeler,
+    paket,
+  });
+  aiMaliyeti({
+    model,
+    girdiToken: k.ok ? k.maliyet.girdiToken : 0,
+    ciktiToken: k.ok ? k.maliyet.ciktiToken : 0,
+    promptSurum: k.promptSurum,
+    sonuc: k.ok ? "ok" : "red",
+  });
+
+  const karsiGorusKaydi = k.ok
+    ? k.gorusler.map((g) => ({
+        tur: g.tur,
+        iddia: g.iddia,
+        alintilar: g.alintilar.map((a) => ({ ...kunye(a.belge_id), alinti: a.alinti })),
+      }))
+    : [];
+  if (k.ok) {
+    notlar.push(k.gorusler.length ? `${k.gorusler.length} karşı görüş` : "karşı görüş bulunamadı");
+  } else {
+    notlar.push(`karşı görüş üretilemedi (${k.asama})`);
+  }
 
   await islem(b, async (sql) => {
     /**
@@ -169,9 +208,11 @@ export async function degerlendirmeYap(b: Baglam, oneriId: number): Promise<Sonu
 
     await sql`
       insert into degerlendirme
-        (oneri_id, puanlar, kriter_dayanagi, dayanak, gerekce, alintilar, model_snapshot, prompt_surum)
+        (oneri_id, puanlar, kriter_dayanagi, dayanak, gerekce, alintilar,
+         karsi_gorus, karsi_gorus_surum, model_snapshot, prompt_surum)
       values (${oneriId}, ${sql.json(puanlar as never)}, ${sql.json(s.kriterDayanagi as never)},
               ${s.dayanak}, ${s.veri.gerekce}, ${sql.json(alintiKaydi as never)},
+              ${sql.json(karsiGorusKaydi as never)}, ${k.ok ? k.promptSurum : null},
               ${s.modelSnapshot}, ${s.promptSurum})
     `;
     // Puan hazır ama DOĞRULANMADI → ajans onayı bekler.
@@ -187,6 +228,10 @@ export async function degerlendirmeYap(b: Baglam, oneriId: number): Promise<Sonu
         .filter(([, v]) => !v.length)
         .map(([k]) => k),
       dusenAlinti: s.dusenler,
+      duzeltilenAtif: s.duzeltilenler,
+      karsiGorus: k.ok
+        ? { adet: k.gorusler.length, turler: k.gorusler.map((g) => g.tur), dusenler: k.dusenler }
+        : { hata: k.asama, hatalar: k.hatalar },
       model: s.modelSnapshot,
       promptSurum: s.promptSurum,
       not: "Doğrulanmamış taslak puan — ajans onayı olmadan sıralamaya girmez.",

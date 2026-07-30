@@ -154,3 +154,25 @@ export type Hesap = {
   esik: number;
   agirlikSurumu: string;
 };
+
+/**
+ * Karşı görüş türleri — AI'nin aynı belgelerle ürettiği itirazın sınıfı.
+ *
+ * Serbest metin yerine tipli itiraz: ajans "hangi tür itiraz" sorusunu bir
+ * paragrafı okumadan görür. Liste ürün kararıdır, model dışına çıkamaz.
+ */
+export const KARSI_GORUS_TURLERI = [
+  "baska_yerde_tanimli",
+  "farkli_oncelik",
+  "belgede_risk",
+  "belgede_yok",
+] as const;
+
+export type KarsiGorusTuru = (typeof KARSI_GORUS_TURLERI)[number];
+
+export const KARSI_GORUS_ETIKET: Record<KarsiGorusTuru, string> = {
+  baska_yerde_tanimli: "Belge bunu başka yer için tanımlıyor",
+  farkli_oncelik: "Belge farklı bir önceliği öne çıkarıyor",
+  belgede_risk: "Belge bu konuda risk sayıyor",
+  belgede_yok: "Belge bu konuya değinmiyor",
+};

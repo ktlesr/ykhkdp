@@ -25,7 +25,12 @@ export async function belgePaketi(
   b: Baglam,
   girdi: { ilKod: string; ajansKod: string; sorgu: string; limit?: number },
 ): Promise<{ paket: Paket; belgeler: BelgeSatiri[] }> {
-  const limit = girdi.limit ?? 8;
+  /**
+   * Paket boyu 12. Sekizde kalırken model paketin dışındaki (ama gerçek) plan
+   * metnini ezberinden alıntılıyordu ve alıntı düşüyordu — daha çok gerçek metin
+   * vermek bu dürtüyü azaltıyor. Üst sınır prompt boyutu ve maliyet.
+   */
+  const limit = girdi.limit ?? 12;
   const q = herhangiBiri(girdi.sorgu) || girdi.sorgu;
 
   const satirlar = await islem(b, (sql) =>

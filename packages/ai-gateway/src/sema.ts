@@ -1,3 +1,4 @@
+import { KARSI_GORUS_TURLERI } from "@ykh/domain";
 import { z } from "zod";
 
 /**
@@ -26,7 +27,8 @@ const Alinti = z
      * kendi kendisiyle tutarlı olması — bunu yapabiliyor.
      */
     no: z.number().int().min(0).max(99),
-    belge_id: z.number().int().positive(),
+    /** `<belge id="…">` bloğundaki PAKETE YEREL numara (1…n), veritabanı kimliği değil */
+    belge_id: z.number().int().min(1).max(64),
     /** belgede birebir geçen kısa alıntı; doğrulayıcı bunu belgede arar */
     alinti: z.string().min(10).max(400),
   })
@@ -83,9 +85,37 @@ export const NaceOnerisi = z
 
 export type NaceOnerisi = z.infer<typeof NaceOnerisi>;
 
+/**
+ * Karşı görüş: aynı belgelerle önerinin ALEYHİNE en güçlü itiraz.
+ *
+ * Ajans tek taraflı bir savunma değil, karşı tezi de görür. Puanı DEĞİŞTİRMEZ —
+ * insanın tartacağı bir girdidir. Boş liste meşrudur.
+ */
+export const KarsiGorus = z
+  .object({
+    gorusler: z
+      .array(
+        z
+          .object({
+            // Tür listesi @ykh/domain'de; şema ile UI etiketi ayrışamaz.
+            tur: z.enum(KARSI_GORUS_TURLERI),
+            iddia: z.string().min(20).max(400),
+            /** itirazı dayandıran alıntıların `alintilar[].no` değerleri */
+            alinti_no: z.array(z.number().int().min(0).max(99)).max(4),
+          })
+          .strict(),
+      )
+      .max(4),
+    alintilar: z.array(Alinti).max(6),
+  })
+  .strict();
+
+export type KarsiGorus = z.infer<typeof KarsiGorus>;
+
 export const SEMALAR = {
   degerlendirme: Degerlendirme,
   nace_onerisi: NaceOnerisi,
+  karsi_gorus: KarsiGorus,
 } as const;
 
 export type SemaAdi = keyof typeof SEMALAR;

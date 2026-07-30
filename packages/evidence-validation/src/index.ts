@@ -1,3 +1,5 @@
+import type { KarsiGorusTuru } from "@ykh/domain";
+
 /**
  * Değerlendirme doğrulayıcı — AI Gateway'den ÖNCE gelir.
  *
@@ -7,7 +9,14 @@
  */
 
 export type BelgeKaydi = {
+  /** veritabanı kimliği — doğrulanmış alıntıya bu yazılır */
   id: number;
+  /**
+   * Pakete yerel numara, 1…n. Model YALNIZCA bunu görür ve alıntıda bunu yazar.
+   * Veritabanı kimliği verilmiyor çünkü model aralığı tahmin edip pakette
+   * olmayan bir kimlik uyduruyor (ölçüldü: 8 belgelik pakette `belge_id: 291`).
+   */
+  yerel: number;
   ad: string;
   /** belge içindeki yer — düşen alıntı mesajında gösterilir */
   bolum?: string | null;
@@ -30,6 +39,11 @@ export type Paket = { id: string; belgeler: BelgeKaydi[] };
  * Dizi indeksi kullanmıyoruz: model 0 tabanlı indekste yanılıyor. Numarayı
  * kendisi verdiğinde tek şart kendi kendisiyle tutarlı olması.
  */
+/**
+ * `belge_id` GİRDİDE pakete yerel numaradır (modelin gördüğü), ÇIKTIDA
+ * veritabanı kimliğidir — doğrulayıcı geçerken çevirir. Böylece modelin
+ * uyduramayacağı bir adres alanı ile kalıcı kayıt aynı tipte taşınır.
+ */
 export type Alinti = { no: number; belge_id: number; alinti: string };
 
 export type HataKodu =
@@ -39,7 +53,8 @@ export type HataKodu =
   | "kaynaksiz_sayi"
   | "puan_araligi"
   | "alinti_no_gecersiz"
-  | "alinti_no_tekrar";
+  | "alinti_no_tekrar"
+  | "alinti_atif_duzeltildi";
 
 export type Hata = { kod: HataKodu; mesaj: string };
 
@@ -56,6 +71,8 @@ export type Sonuc =
       kriterDayanagi: KriterDayanagi;
       /** doğrulanamayıp DÜŞÜRÜLEN alıntılar; kaydedilmez, denetime yazılır */
       dusenler: Hata[];
+      /** atfı düzeltilen alıntılar; kaydedilir, denetime yazılır */
+      duzeltilenler: Hata[];
     }
   | { gecerli: false; hatalar: Hata[] };
 
@@ -103,7 +120,9 @@ function normalize(s: string): string {
  */
 function alintiGeciyor(belgeMetni: string, alinti: string): boolean {
   const metin = normalize(belgeMetni);
-  const parcalar = normalize(alinti)
+  // Model alıntıyı kendi tırnağına alıyor: ""Aktif sanayi politikaları…"".
+  // Sarmalayan tırnak alıntının parçası değil, biçimlendirmedir.
+  const parcalar = normalize(alinti.replace(/^[\s"'“”«»]+|[\s"'“”«»]+$/g, ""))
     .split(/…+|\.{3,}/)
     .map((p) => p.trim())
     .filter((p) => p.length >= 12);
@@ -120,10 +139,172 @@ function alintiGeciyor(belgeMetni: string, alinti: string): boolean {
 }
 
 /**
+ * Alıntı listesini paket metnine karşı doğrular ve `no` → konum haritası kurar.
+ *
+ * Değerlendirme ve karşı görüş aynı zincirden geçer: ikisi de belgeye alıntıyla
+ * bağlanır, ikisinde de uydurulmuş belge kimliği sert ret, eşleşmeyen alıntı
+ * düşürme. Tek fark ne için kullanıldıkları.
+ */
+export function alintilariDogrula(
+  alintilar: readonly Alinti[],
+  paket: Paket,
+): {
+  dogrulanan: Alinti[];
+  konum: Map<number, number>;
+  dusenler: Hata[];
+  duzeltilenler: Hata[];
+  hatalar: Hata[];
+} {
+  const dogrulanan: Alinti[] = [];
+  const dusenler: Hata[] = [];
+  const duzeltilenler: Hata[] = [];
+  const hatalar: Hata[] = [];
+
+  /**
+   * Tekrar eden numara referansı belirsizleştirir: iki adaydan hangisi
+   * kastedildiği bilinemez, o yüzden ikisi de kullanılamaz sayılır.
+   */
+  const sayim = new Map<number, number>();
+  for (const a of alintilar) sayim.set(a.no, (sayim.get(a.no) ?? 0) + 1);
+  const belirsiz = new Set([...sayim].filter(([, n]) => n > 1).map(([no]) => no));
+  for (const no of belirsiz) {
+    dusenler.push({
+      kod: "alinti_no_tekrar",
+      mesaj: `${no} numarası birden çok alıntıya verilmiş; hangisi kastedildiği belirsiz, eşleme düşürüldü.`,
+    });
+  }
+
+  /**
+   * Metni pakette arar. Güvenceyi veren şey KİMLİK DEĞİL METİNDİR: kayda giren
+   * her alıntı, modele gerçekten verilmiş bir belgede birebir geçer.
+   */
+  const metniBul = (alinti: string) =>
+    paket.belgeler.find((b) => b.pakete_dahil && alintiGeciyor(b.metin, alinti));
+
+  const konum = new Map<number, number>();
+  for (const a of alintilar) {
+    let belge = paket.belgeler.find((b) => b.yerel === a.belge_id);
+
+    // Paket dışı belge GÜVENLİK ihlalidir: model onu görmüş olamaz → sert ret.
+    if (belge && !belge.pakete_dahil) {
+      hatalar.push({
+        kod: "pakette_yok",
+        mesaj: `Belge pakete dahil değil; model bunu görmüş olamaz: ${belge.ad}`,
+      });
+      continue;
+    }
+
+    /**
+     * Aralık dışı numara sert ret DEĞİL.
+     *
+     * Numara bir adres, kanıt değil. Model paket dışı bir numara yazıyor
+     * (ölçüldü: 8 belgelik pakette `belge_id: 48`) ama alıntı metni pakette
+     * gerçekten geçebiliyor. Metin bulunuyorsa adresi düzeltiyoruz; bulunmuyorsa
+     * alıntı düşüyor. Güvence bozulmuyor: arama YALNIZCA `pakete_dahil`
+     * belgelerde yapılıyor, yani kayda giren metin modele verilmiş metindir.
+     */
+    if (!belge) {
+      const dogruParca = metniBul(a.alinti);
+      if (!dogruParca) {
+        dusenler.push({
+          kod: "alinti_eslesmiyor",
+          mesaj:
+            `Alıntı “${a.alinti.slice(0, 60)}…” pakette olmayan ${a.belge_id} numaralı belgeye ` +
+            `atfedildi (paket 1–${paket.belgeler.length}) ve metni de pakette bulunamadı; düşürüldü.`,
+        });
+        continue;
+      }
+      duzeltilenler.push({
+        kod: "alinti_atif_duzeltildi",
+        mesaj:
+          `Alıntı pakette olmayan ${a.belge_id} numaralı belgeye atfedildi; metin ` +
+          `${dogruParca.ad}${dogruParca.bolum ? ` · ${dogruParca.bolum}` : ""} içinde bulundu, atıf düzeltildi.`,
+      });
+      belge = dogruParca;
+    }
+    /**
+     * Yanlış parçaya atfedilmiş DOĞRU alıntı düşürülmez, atfı DÜZELTİLİR.
+     *
+     * Aynı belgenin parçaları birbirine benziyor ve model sık sık doğru cümleyi
+     * komşu parçaya atfediyor (ölçüldü: "Kütahya'da teknik seramik ve seramik
+     * filtre üretimi;" pakette var, modelin gösterdiği parçada yok). Metin
+     * pakette birebir varsa uydurma değildir — atıf çıpasını metnin gerçekten
+     * bulunduğu parçaya çeviriyoruz ve düzeltmeyi denetime yazıyoruz.
+     *
+     * Güvenlik aynı kalıyor: metin paketin HİÇBİR yerinde yoksa düşer, paket
+     * dışı belge kimliği hâlâ sert rettir.
+     */
+    if (!alintiGeciyor(belge.metin, a.alinti)) {
+      const dogruParca = metniBul(a.alinti);
+      if (!dogruParca) {
+        dusenler.push({
+          kod: "alinti_eslesmiyor",
+          mesaj: `Alıntı “${a.alinti.slice(0, 60)}…” pakette hiçbir belgede birebir bulunamadı; düşürüldü.`,
+        });
+        continue;
+      }
+      duzeltilenler.push({
+        kod: "alinti_atif_duzeltildi",
+        mesaj:
+          `Alıntı “${a.alinti.slice(0, 60)}…” ${belge.ad}${belge.bolum ? ` · ${belge.bolum}` : ""} ` +
+          `olarak gösterildi; metin ${dogruParca.ad}${dogruParca.bolum ? ` · ${dogruParca.bolum}` : ""} ` +
+          "içinde bulundu, atıf düzeltildi.",
+      });
+      belge = dogruParca;
+    }
+    if (!belirsiz.has(a.no)) konum.set(a.no, dogrulanan.length);
+    // Yerel numara → veritabanı kimliği: kayıt kalıcı kimliği taşır.
+    dogrulanan.push({ ...a, belge_id: belge.id });
+  }
+
+  return { dogrulanan, konum, dusenler, duzeltilenler, hatalar };
+}
+
+/**
+ * Bir numara listesini doğrulanmış alıntı konumlarına çevirir.
+ *
+ * Çözülemeyen referans (düşen alıntı, belirsiz numara, hiç verilmemiş numara)
+ * listeden çıkar ve `dusenler`'e yazılır. Bu SERT RET DEĞİL: alıntı listesinin
+ * kendisi doğrulanmış durumda, kusur muhasebede. Cezası kredi kaybıdır ve doğru
+ * yönde fail-closed'dır — doğrulanamayan destek sayılmaz.
+ */
+function referanslariCoz(
+  nereye: string,
+  numaralar: readonly number[],
+  konum: Map<number, number>,
+  dusenler: Hata[],
+): number[] {
+  const cozulen: number[] = [];
+  for (const no of numaralar) {
+    const k = konum.get(no);
+    if (k === undefined) {
+      dusenler.push({
+        kod: "alinti_no_gecersiz",
+        mesaj: `${nereye} ${no} numaralı alıntıya dayandırıldı; bu numara çözülemedi, eşleme düşürüldü.`,
+      });
+      continue;
+    }
+    cozulen.push(k);
+  }
+  return cozulen;
+}
+
+/**
+ * Bir metnin pakette birebir geçip geçmediği — doğrulayıcıdan BAĞIMSIZ kontrol.
+ *
+ * Ürün kuralı: kaydedilen her alıntı, modele gerçekten verilmiş bir belgede
+ * birebir geçer. Doğrulayıcı bunu sağlıyor; bu fonksiyon eval'in aynı şeyi
+ * doğrulayıcıya güvenmeden ölçmesi için var. İkisi ayrışırsa eval kırılır.
+ */
+export function paketteGeciyor(paket: Paket, alinti: string): boolean {
+  return paket.belgeler.some((b) => b.pakete_dahil && alintiGeciyor(b.metin, alinti));
+}
+
+/**
  * AI değerlendirmesini belge paketine karşı doğrular ve dayanak puanı üretir.
  *
- * Dayanak = doğrulanmış alıntıların kapsadığı belge çeşitliliği ve sayısı.
- * Hiç alıntı yoksa 0 — puanı yüksek olsa da slot dolduramaz.
+ * Dayanak = puanın hangi kısmı belgeye bağlandı. Hiç alıntı yoksa 0 — puanı
+ * yüksek olsa da slot dolduramaz.
  */
 export function degerlendirmeyiDogrula(
   cikti: {
@@ -135,80 +316,23 @@ export function degerlendirmeyiDogrula(
   /** kriter → puandaki pay; dayanak kapsamasını ağırlıklandırır */
   agirliklar: Readonly<Record<string, number>> = {},
 ): Sonuc {
-  const hatalar: Hata[] = [];
+  const { dogrulanan, konum, dusenler, duzeltilenler, hatalar } = alintilariDogrula(
+    cikti.alintilar,
+    paket,
+  );
 
   if (cikti.puanlar.some((p) => p.puan < 0 || p.puan > 100 || !Number.isInteger(p.puan))) {
     hatalar.push({ kod: "puan_araligi", mesaj: "Kriter puanı 0–100 aralığında tam sayı olmalı." });
   }
 
-  const dogrulanan: Alinti[] = [];
-  const dusenler: Hata[] = [];
-
-  /**
-   * Tekrar eden numara referansı belirsizleştirir: iki adaydan hangisi
-   * kastedildiği bilinemez, o yüzden ikisi de kullanılamaz sayılır.
-   */
-  const sayim = new Map<number, number>();
-  for (const a of cikti.alintilar) sayim.set(a.no, (sayim.get(a.no) ?? 0) + 1);
-  const belirsiz = new Set([...sayim].filter(([, n]) => n > 1).map(([no]) => no));
-  for (const no of belirsiz) {
-    dusenler.push({
-      kod: "alinti_no_tekrar",
-      mesaj: `${no} numarası birden çok alıntıya verilmiş; hangisi kastedildiği belirsiz, eşleme düşürüldü.`,
-    });
-  }
-  /** alıntı no → doğrulanan listesindeki konum; düşen alıntı haritada yok */
-  const yeniSira = new Map<number, number>();
-
-  for (const a of cikti.alintilar) {
-    const belge = paket.belgeler.find((b) => b.id === a.belge_id);
-    // Uydurulmuş belge kimliği ve paket dışı belge GÜVENLİK ihlalidir → sert ret.
-    if (!belge) {
-      hatalar.push({ kod: "belge_yok", mesaj: `Belge bulunamadı: ${a.belge_id}` });
-      continue;
-    }
-    if (!belge.pakete_dahil) {
-      hatalar.push({
-        kod: "pakette_yok",
-        mesaj: `Belge pakete dahil değil; model bunu görmüş olamaz: ${belge.ad}`,
-      });
-      continue;
-    }
-    // Eşleşmeyen alıntı DÜŞÜRÜLÜR: kaydedilmez, dayanağa katkı vermez, denetime yazılır.
-    if (!alintiGeciyor(belge.metin, a.alinti)) {
-      dusenler.push({
-        kod: "alinti_eslesmiyor",
-        mesaj: `Alıntı “${a.alinti.slice(0, 60)}…” ${belge.ad}${belge.bolum ? ` · ${belge.bolum}` : ""} içinde birebir bulunamadı; düşürüldü.`,
-      });
-      continue;
-    }
-    if (!belirsiz.has(a.no)) yeniSira.set(a.no, dogrulanan.length);
-    dogrulanan.push(a);
-  }
-
-  /**
-   * Kriter → doğrulanmış alıntı eşlemesi.
-   *
-   * Çözülemeyen referans (düşen alıntı, belirsiz numara, hiç verilmemiş numara)
-   * eşlemeden çıkar ve denetime yazılır. Bu SERT RET DEĞİL: alıntı listesinin
-   * kendisi doğrulanmış durumda, kusur muhasebede. Cezası kredi kaybıdır ve
-   * doğru yönde fail-closed'dır — doğrulanamayan destek sayılmaz.
-   */
   const kriterDayanagi: KriterDayanagi = {};
   for (const p of cikti.puanlar) {
-    const cozulen: number[] = [];
-    for (const no of p.alinti_no ?? []) {
-      const konum = yeniSira.get(no);
-      if (konum === undefined) {
-        dusenler.push({
-          kod: "alinti_no_gecersiz",
-          mesaj: `${p.kriter} kriteri ${no} numaralı alıntıya dayandırıldı; bu numara çözülemedi, eşleme düşürüldü.`,
-        });
-        continue;
-      }
-      cozulen.push(konum);
-    }
-    kriterDayanagi[p.kriter] = cozulen;
+    kriterDayanagi[p.kriter] = referanslariCoz(
+      `${p.kriter} kriteri`,
+      p.alinti_no ?? [],
+      konum,
+      dusenler,
+    );
   }
 
   // Uydurma eşiği YALNIZCA belgede bulunamayan alıntıları sayar; numaralandırma
@@ -244,6 +368,7 @@ export function degerlendirmeyiDogrula(
     dogrulanan,
     kriterDayanagi,
     dusenler,
+    duzeltilenler,
   };
 }
 
@@ -302,7 +427,69 @@ export function dayanakPuani(
   return Math.max(0, Math.min(100, Math.round(100 * (0.7 * kapsama + 0.3 * cesitlilik))));
 }
 
-/** Modele verilecek paketi kurar. Model YALNIZCA bu paketi görür. */
-export function paketKur(id: string, belgeler: readonly Omit<BelgeKaydi, "pakete_dahil">[]): Paket {
-  return { id, belgeler: belgeler.map((b) => ({ ...b, pakete_dahil: true })) };
+/**
+ * Modele verilecek paketi kurar. Model YALNIZCA bu paketi görür.
+ *
+ * Yerel numara burada atanır ve `kaynakBloguKur` aynı sırayı kullanır — ikisi
+ * ayrışırsa alıntılar yanlış belgede aranır ve testler kırılır.
+ */
+export function paketKur(
+  id: string,
+  belgeler: readonly Omit<BelgeKaydi, "pakete_dahil" | "yerel">[],
+): Paket {
+  return { id, belgeler: belgeler.map((b, i) => ({ ...b, yerel: i + 1, pakete_dahil: true })) };
+}
+
+export type KarsiGorus = { tur: KarsiGorusTuru; iddia: string; alinti_no?: readonly number[] };
+
+/** Doğrulanmış karşı görüş: alıntıları birebir eşleşmiş, kendi içinde tam. */
+export type DogrulanmisKarsiGorus = {
+  tur: KarsiGorusTuru;
+  iddia: string;
+  alintilar: Array<{ belge_id: number; alinti: string }>;
+};
+
+export type KarsiGorusSonucu =
+  | { gecerli: true; gorusler: DogrulanmisKarsiGorus[]; dusenler: Hata[]; duzeltilenler: Hata[] }
+  | { gecerli: false; hatalar: Hata[] };
+
+/**
+ * Karşı görüşü doğrular.
+ *
+ * Aynı fail-closed zinciri: uydurulmuş belge kimliği sert ret, eşleşmeyen alıntı
+ * düşürme. Ek kural: alıntısı kalmayan itiraz DÜŞER. Kaynaksız bir itiraz, tam
+ * da bu ürünün reddettiği şeydir — "belgede yazıyor" diyip belgeyi
+ * gösteremeyen bir cümle ajansın kararına giremez.
+ *
+ * Boş sonuç meşrudur: "belgelerde bu öneriye karşı dayanak bulunamadı" bilgi
+ * taşıyan bir cevaptır, hata değil.
+ */
+export function karsiGorusuDogrula(
+  cikti: { gorusler: readonly KarsiGorus[]; alintilar: readonly Alinti[] },
+  paket: Paket,
+): KarsiGorusSonucu {
+  const { dogrulanan, konum, dusenler, duzeltilenler, hatalar } = alintilariDogrula(
+    cikti.alintilar,
+    paket,
+  );
+  if (hatalar.length) return { gecerli: false, hatalar };
+
+  const gorusler: DogrulanmisKarsiGorus[] = [];
+  for (const g of cikti.gorusler) {
+    const cozulen = referanslariCoz(`“${g.iddia.slice(0, 40)}…” itirazı`, g.alinti_no ?? [], konum, dusenler);
+    if (!cozulen.length) {
+      dusenler.push({
+        kod: "alinti_no_gecersiz",
+        mesaj: `Alıntısız itiraz düşürüldü: “${g.iddia.slice(0, 80)}”`,
+      });
+      continue;
+    }
+    gorusler.push({
+      tur: g.tur,
+      iddia: g.iddia,
+      alintilar: cozulen.map((i) => ({ belge_id: dogrulanan[i].belge_id, alinti: dogrulanan[i].alinti })),
+    });
+  }
+
+  return { gecerli: true, gorusler, dusenler, duzeltilenler };
 }

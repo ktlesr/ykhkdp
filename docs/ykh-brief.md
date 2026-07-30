@@ -116,21 +116,34 @@ TR33 kalibrasyonu "varsayılan" değil `TR33-2027-v1`.
 AI **puan üretir** ama karar vermez: her puan ajans onayından geçer.
 
 Yapar: NACE önerisi (kullanıcı girmediyse), sekiz kriter puanı, üst ölçekli
-belgelerden alıntıyla gerekçe, dayanak puanı.
+belgelerden alıntıyla gerekçe, dayanak puanı, **karşı görüş**.
 
 Yapmaz: belgede olmayan sayı üretmek, alıntı uydurmak, aday listesi dışında NACE
 kodu önermek, hangi konunun seçileceğine karar vermek.
 
 Zorunlu kontroller — hepsi **fail-closed**:
 
+- **Kaydedilen her alıntı pakette birebir geçer.** Bu ürünün tek pazarlıksız
+  kuralı. Geçmeyen hiçbir metin kaydedilmez — puana, dayanağa, karşı görüşe,
+  ekrana girmez. `paketteGeciyor()` bunu doğrulayıcıdan bağımsız ölçer ve
+  `pnpm ai:eval` her koşuda kontrol eder; ihlal toleranssız kırılmadır.
 - **Kapalı kaynak modu.** Model yalnızca `belgePaketi()` çıktısını görür. İnternet yok.
+- **Ezber yasağı.** Model bu plan belgelerini eğitim verisinden tanıyor ve
+  pakette OLMAYAN bölümlerinden alıntı yapmaya çalışıyor (ölçüldü: gerçek 12KP
+  cümleleri, paket dışı). Metin gerçek olsa da pakette yoksa düşer. Paket boyu
+  8'den 12'ye çıkarıldı: elinde daha çok gerçek metin olunca dışarı uzanmıyor.
+- **Belge numarası pakete yereldir (1…n), veritabanı kimliği değil.** Model
+  veritabanı kimlik aralığını tahmin edip uyduruyordu. Numara bir ADRES, kanıt
+  değil: aralık dışı numara sert ret değildir — metin pakette bulunursa atıf
+  metnin gerçekten geçtiği parçaya **düzeltilir**, bulunmazsa alıntı düşer.
+  Güvenceyi veren şey kimlik değil metindir.
 - **Her kriter dayanağını göstermek zorunda.** `alinti_no` eşlemesi; var olmayan
   sıraya dayandırmak sert rettir. Boş eşleme meşru, "dayanaksız kriter" görünür.
 - **Alıntı birebir doğrulanır.** Kısmi kredi: eşleşmeyen alıntı *düşürülür* —
   kaydedilmez, dayanağa katkı vermez, denetime yazılır. Alıntıların **yarısından
   fazlası** düşerse model uyduruyor sayılır ve çıktının tamamı reddedilir.
-  Uydurulmuş belge kimliği veya paket dışı belge azınlıkta olsa da sert rettir:
-  o bir doğruluk hatası değil, güvenlik ihlalidir.
+  Modele VERİLMEMİŞ bir belgeden (`pakete_dahil = false`) alıntı azınlıkta olsa
+  da sert rettir: o bir doğruluk hatası değil, güvenlik ihlalidir.
 - **Kaynaksız sayısal token reddedilir.** Yıllar sayısal iddia sayılmaz.
 - **Şema:** Zod `.strict()` + JSON Schema `additionalProperties: false`.
 - **NACE önerisi aday listesiyle sınırlı.** Listede olmayan kod reddedilir.
@@ -139,6 +152,29 @@ Zorunlu kontroller — hepsi **fail-closed**:
 - **Reddedilen çıktı KAYDEDİLMEZ.** Öneri `degerlendiriliyor` kalır, neden denetime yazılır.
 - **AI ham puanı değişmez.** Ajans düzeltmesi ayrı kolona yazılır (`duzeltilmis_puanlar`);
   trigger ham puanın güncellenmesini reddeder. "Bu sayıyı kim koydu" her zaman cevaplanır.
+
+### Karşı görüş
+
+AI aynı belgelerle önerinin **aleyhine** en güçlü itirazı da üretir. Ajans tek
+taraflı bir savunma değil, karşı tezi de görür. `/oneri/[id]` içinde bölüm —
+yeni ekran yok.
+
+| Tür | Ne demek |
+|---|---|
+| `baska_yerde_tanimli` | belge bu konuyu başka il/bölge/tipoloji için tanımlıyor |
+| `farkli_oncelik` | belge bu alanda farklı bir önceliği öne çıkarıyor |
+| `belgede_risk` | belge bu konuda darboğaz, risk veya kısıt sayıyor |
+| `belgede_yok` | belge bu konuya değinmiyor; iddia belgeye dayanmıyor |
+
+- **Alıntısız itiraz düşer.** Kaynaksız bir itiraz, tam da bu ürünün reddettiği
+  şeydir; ajansın kararına giremez.
+- **Boş sonuç meşrudur** ve bilgi taşır: "belgelerde bu öneriye karşı dayanak
+  bulunamadı."
+- **Puana ETKİ ETMEZ.** Sıralamaya da dayanağa da girmez; insanın tartacağı
+  girdidir. Etki etmesi istenirse bu bilinçli bir ürün kararı olur.
+- **En iyi çaba, içeriği fail-closed.** Karşı görüş üretilemezse değerlendirmeyi
+  engellemez (puan zaten geçerli); ama doğrulanmamış alıntı taşıyan bir itiraz
+  kaydedilmez.
 
 ### Dayanak puanı
 

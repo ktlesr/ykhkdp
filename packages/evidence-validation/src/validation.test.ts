@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { dayanakPuani, degerlendirmeyiDogrula, paketKur, sayisalTokenlar } from "./index.ts";
+import { dayanakPuani, degerlendirmeyiDogrula, karsiGorusuDogrula, paketKur, sayisalTokenlar } from "./index.ts";
 
 const METIN =
   "TR33 Bölgesi'nde tekstil ve deri öncelikli imalat sektörleridir. " +
@@ -109,16 +109,22 @@ test("uydurulmuş alıntı reddedilir", () => {
   assert.ok(!s.gecerli && s.hatalar.some((h) => h.kod === "alinti_eslesmiyor"));
 });
 
-test("olmayan belge reddedilir", () => {
+test("paket dışı numara adres hatasıdır: metin bulunursa atıf düzeltilir", () => {
   const s = degerlendirmeyiDogrula(
-    { gerekce: "Uygundur.", alintilar: [{ no: 99, belge_id: 99, alinti: "tekstil ve deri" }], puanlar },
+    {
+      gerekce: "Uygundur.",
+      alintilar: [{ no: 1, belge_id: 99, alinti: "tekstil ve deri öncelikli imalat" }],
+      puanlar: puanSeti({ yerel_potansiyel: [1] }),
+    },
     PAKET,
   );
-  assert.ok(!s.gecerli && s.hatalar.some((h) => h.kod === "belge_yok"));
+  assert.equal(s.gecerli, true, "numara kanıt değil adres; metin pakette geçiyor");
+  assert.equal(s.gecerli && s.dogrulanan[0].belge_id, 1);
+  assert.ok(s.gecerli && s.duzeltilenler.some((h) => h.kod === "alinti_atif_duzeltildi"));
 });
 
 test("pakete dahil olmayan belge reddedilir — model onu görmüş olamaz", () => {
-  const sahte = { id: "p", belgeler: [{ id: 1, ad: "x", metin: METIN, pakete_dahil: false }] };
+  const sahte = { id: "p", belgeler: [{ id: 1, yerel: 1, ad: "x", metin: METIN, pakete_dahil: false }] };
   const s = degerlendirmeyiDogrula(
     { gerekce: "Uygundur.", alintilar: [{ no: 1, belge_id: 1, alinti: "tekstil ve deri" }], puanlar },
     sahte,
@@ -192,7 +198,7 @@ test("çoğunluk eşleşmiyorsa çıktının tamamı reddedilir", () => {
   assert.ok(!s.gecerli && s.hatalar.some((h) => h.kod === "alinti_eslesmiyor"));
 });
 
-test("paket dışı belge tek başına bile sert reddedilir — güvenlik ihlali", () => {
+test("adresi ve metni birlikte yanlış olan alıntı düşer", () => {
   const s = degerlendirmeyiDogrula(
     {
       gerekce: "Uygundur.",
@@ -200,13 +206,18 @@ test("paket dışı belge tek başına bile sert reddedilir — güvenlik ihlali
         { no: 1, belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" },
         { no: 2, belge_id: 1, alinti: "katma değeri yükseltecek dönüşüm alanı" },
         { no: 3, belge_id: 2, alinti: "Enerji verimliliği yatırımları" },
-        { no: 4, belge_id: 99, alinti: "tekstil ve deri" },
+        { no: 4, belge_id: 99, alinti: "bu cümle hiçbir belgede yok" },
       ],
       puanlar,
     },
     PAKET,
   );
-  assert.ok(!s.gecerli && s.hatalar.some((h) => h.kod === "belge_yok"), "azınlıkta olsa da düşürülmez");
+  assert.equal(s.gecerli, true, "azınlık düşme çıktıyı öldürmez");
+  assert.equal(s.gecerli && s.dogrulanan.length, 3);
+  assert.ok(
+    s.gecerli && s.dusenler.some((h) => /pakette olmayan 99 numaralı/.test(h.mesaj)),
+    "hem adres hem metin yanlışsa düşer",
+  );
 });
 
 test("dayanak puanı belge çeşitliliğiyle artar", () => {
@@ -284,4 +295,101 @@ test("ağırlıklı kapsama: büyük paylı kriterin dayanaksız kalması pahal�
 
   assert.ok(yerellikYok < surdurulebilirlikYok, "%18'lik boşluk %8'likten daha çok düşürür");
   assert.ok(surdurulebilirlikYok < hepsi);
+});
+
+// ── karşı görüş ────────────────────────────────────────────────────────────
+
+test("karşı görüş: alıntısı doğrulanan itiraz kalır", () => {
+  const s = karsiGorusuDogrula(
+    {
+      gorusler: [{ tur: "farkli_oncelik", iddia: "Belge farklı bir önceliği öne çıkarıyor.", alinti_no: [1] }],
+      alintilar: [{ no: 1, belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" }],
+    },
+    PAKET,
+  );
+  assert.equal(s.gecerli, true);
+  assert.equal(s.gecerli && s.gorusler.length, 1);
+  assert.equal(s.gecerli && s.gorusler[0].alintilar[0].alinti, "tekstil ve deri öncelikli imalat");
+});
+
+test("karşı görüş: alıntısı kalmayan itiraz DÜŞER — kaynaksız itiraz karara girmez", () => {
+  const s = karsiGorusuDogrula(
+    {
+      gorusler: [
+        { tur: "belgede_yok", iddia: "Belge bu konuya hiç değinmiyor, bence yapılmamalı.", alinti_no: [] },
+        { tur: "farkli_oncelik", iddia: "Belge farklı bir önceliği öne çıkarıyor.", alinti_no: [1] },
+      ],
+      alintilar: [{ no: 1, belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" }],
+    },
+    PAKET,
+  );
+  assert.equal(s.gecerli, true);
+  assert.equal(s.gecerli && s.gorusler.length, 1, "yalnızca alıntılı itiraz kalır");
+  assert.equal(s.gecerli && s.gorusler[0].tur, "farkli_oncelik");
+  assert.ok(s.gecerli && s.dusenler.some((h) => /Alıntısız itiraz/.test(h.mesaj)));
+});
+
+test("karşı görüş: eşleşmeyen alıntı itirazı düşürür, çıktıyı reddetmez", () => {
+  const s = karsiGorusuDogrula(
+    {
+      gorusler: [{ tur: "belgede_risk", iddia: "Belge bu konuda bir risk sayıyor.", alinti_no: [1] }],
+      alintilar: [{ no: 1, belge_id: 1, alinti: "bu cümle belgede hiç yok" }],
+    },
+    PAKET,
+  );
+  assert.equal(s.gecerli, true);
+  assert.deepEqual(s.gecerli && s.gorusler, []);
+});
+
+test("karşı görüş: modele verilmemiş belge sert reddedilir — güvenlik ihlali", () => {
+  const gizli = {
+    id: "p",
+    belgeler: [
+      { id: 1, yerel: 1, ad: "gizli", metin: METIN, pakete_dahil: false },
+      { id: 2, yerel: 2, ad: "OVP 2026", metin: "Enerji verimliliği yatırımları teşvik edilecektir.", pakete_dahil: true },
+    ],
+  };
+  const s = karsiGorusuDogrula(
+    {
+      gorusler: [{ tur: "belgede_risk", iddia: "Belge bu konuda bir risk sayıyor.", alinti_no: [1] }],
+      alintilar: [{ no: 1, belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" }],
+    },
+    gizli,
+  );
+  assert.ok(!s.gecerli && s.hatalar.some((h) => h.kod === "pakette_yok"));
+});
+
+test("karşı görüş: boş sonuç meşrudur", () => {
+  const s = karsiGorusuDogrula({ gorusler: [], alintilar: [] }, PAKET);
+  assert.equal(s.gecerli, true);
+  assert.deepEqual(s.gecerli && s.gorusler, []);
+});
+
+test("yanlış parçaya atfedilen doğru alıntı düşmez, atfı düzeltilir", () => {
+  const s = degerlendirmeyiDogrula(
+    {
+      gerekce: "Uygundur.",
+      // 2 numaralı belgeyi gösteriyor ama metin 1 numaralı belgede.
+      alintilar: [{ no: 1, belge_id: 2, alinti: "tekstil ve deri öncelikli imalat" }],
+      puanlar: puanSeti({ yerel_potansiyel: [1] }),
+    },
+    PAKET,
+  );
+  assert.equal(s.gecerli, true);
+  assert.equal(s.gecerli && s.dogrulanan.length, 1);
+  assert.equal(s.gecerli && s.dogrulanan[0].belge_id, 1, "atıf metnin bulunduğu belgeye çevrildi");
+  assert.equal(s.gecerli && s.dusenler.length, 0, "düşme değil düzeltme");
+  assert.ok(s.gecerli && s.duzeltilenler.some((h) => h.kod === "alinti_atif_duzeltildi"));
+});
+
+test("pakette hiç geçmeyen alıntı düzeltilemez, düşer", () => {
+  const s = degerlendirmeyiDogrula(
+    {
+      gerekce: "Uygundur.",
+      alintilar: [{ no: 1, belge_id: 1, alinti: "bu cümle hiçbir belgede yok" }],
+      puanlar: puanSeti({ yerel_potansiyel: [1] }),
+    },
+    PAKET,
+  );
+  assert.ok(!s.gecerli, "tek alıntının tamamı düştü → uydurma eşiği aşıldı");
 });
