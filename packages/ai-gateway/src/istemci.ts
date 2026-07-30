@@ -96,6 +96,8 @@ function uret(istek: ModelIstegi): unknown {
       kriter: k,
       puan: Math.max(0, Math.min(100, taban + ((i * 7) % 13) - 6)),
       not: "Çevrimdışı istemci: belgelerdeki eşleşmeye göre taban puan.",
+      // Bulunan alıntılar kriterlere sırayla dağıtılır; kalanlar dayanaksız kalır.
+      alinti_no: i < alintilar.length ? [i] : [],
     })),
     // Gerekçede SAYI YOK: doğrulayıcı belgede geçmeyen her sayısal ifadeyi
     // reddeder ve kendi çıktımızı kendimiz reddettirmiş oluruz.

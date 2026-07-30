@@ -124,6 +124,8 @@ kodu önermek, hangi konunun seçileceğine karar vermek.
 Zorunlu kontroller — hepsi **fail-closed**:
 
 - **Kapalı kaynak modu.** Model yalnızca `belgePaketi()` çıktısını görür. İnternet yok.
+- **Her kriter dayanağını göstermek zorunda.** `alinti_no` eşlemesi; var olmayan
+  sıraya dayandırmak sert rettir. Boş eşleme meşru, "dayanaksız kriter" görünür.
 - **Alıntı birebir doğrulanır.** Kısmi kredi: eşleşmeyen alıntı *düşürülür* —
   kaydedilmez, dayanağa katkı vermez, denetime yazılır. Alıntıların **yarısından
   fazlası** düşerse model uyduruyor sayılır ve çıktının tamamı reddedilir.
@@ -140,14 +142,33 @@ Zorunlu kontroller — hepsi **fail-closed**:
 
 ### Dayanak puanı
 
-AI'nin öneriyi üst ölçekli belgelere ne kadar bağlayabildiği (0–100): doğrulanmış
-alıntı sayısı ve kaç ayrı belgeye dayandığı. Hiç alıntı yoksa 0. Belge yüklenmemiş
-bir ilde tüm dayanaklar 0 kalır ve slotlar boş görünür — doğru davranış budur.
+**Puanın hangi kısmı belgeye dayanıyor** (0–100). Alıntı sayısı değil kapsama
+ölçülür: model her kriter puanını hangi alıntılara dayandırdığını söylemek
+zorundadır (`kriter_dayanagi`).
 
-Bilinen sınır: dayanak **alıntılanabilirliği** ölçer, **ilgililiği** ölçmez. Model
-gerçek ama konuyla zayıf ilgili beş pasaj alıntılayıp yüksek dayanak alabilir.
-Kriter başına alıntı eşlemesi bunu kapatır; formül tek yerde
-(`dayanakPuani`) değişir.
+```
+kapsama    %70  Σ kriter payı × o kriteri destekleyen alıntının en iyi örtüşmesi
+çeşitlilik %30  kaç ayrı belgeye dayanıyor
+```
+
+- **Eşlenmemiş alıntı dayanak üretmez.** "Sırf sayı artsın diye alıntı eklemek"
+  işe yaramaz.
+- **Örtüşme** `ts_rank`'in paket içinde normalize edilmiş hâli. Öneriyle zayıf
+  örtüşen parçadan gelen destek zayıf sayılır — gerçek ama konuyla ilgisiz
+  alıntının yüksek dayanak alması buradan kapanır.
+- **Kriter payıyla çarpılır.** `yerel_potansiyel` (%18) dayanaksız kalmak
+  `surdurulebilirlik` (%8) dayanaksız kalmaktan pahalıdır: "neden burada?"
+  cevaplanmadıysa dayanak düşer.
+- **Boş eşleme meşrudur.** O kriter ekranda "dayanaksız kriter" yazar.
+- **Var olmayan alıntı sırasına dayandırmak sert rettir.**
+- Hiç alıntı yoksa 0. Belge yüklenmemiş bir ilde tüm dayanaklar 0 kalır ve
+  slotlar boş görünür — doğru davranış budur.
+
+Kalan sınır: bir alıntının o kriteri **gerçekten** destekleyip desteklemediği
+mekanik olarak doğrulanamaz — model aynı alıntıyı yedi kritere eşleyebilir.
+Ölçülebilen: alıntı gerçek mi, öneriyle örtüşüyor mu, hangi kritere eşlendi.
+Kalan yargı boşluğu ajans onayına bırakılır ve kriter başına ekranda görünür;
+gizlenmiş bir sayı değildir.
 
 ## 7. Ölçek ve veri
 

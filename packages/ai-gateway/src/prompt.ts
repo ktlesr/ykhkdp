@@ -52,7 +52,16 @@ ALINTI KURALI — en sık hata burada:
 - Yazım ve noktalama belgedeki gibi kalsın.
 - 15-30 kelimelik tek bir cümle parçası en güvenlisidir.
 - Alıntı bulamıyorsan alintilar listesini BOŞ bırak — bu meşru bir sonuçtur,
-  dayanak puanı düşük olur. Uydurmak tüm çıktıyı reddettirir.`,
+  dayanak puanı düşük olur. Uydurmak tüm çıktıyı reddettirir.
+
+EŞLEME KURALI — her kriter kendi dayanağını göstermek zorunda:
+- Her puanın "alinti_no" alanına, o puanı dayandırdığın alıntıların
+  "alintilar" listesindeki sıra numaralarını yaz (ilk alıntı = 0).
+- Alıntı O KRİTERİ desteklemiyorsa numarasını yazma. Sırf sayı artsın diye
+  ilgisiz alıntı eşlemek dayanağı yükseltmez; ilgisiz eşleme sahte dayanaktır.
+- Bir kriteri belgeye bağlayamıyorsan "alinti_no" BOŞ kalsın. Bu meşrudur:
+  o kriter "dayanaksız" görünür ve puanı yine sayılır.
+- Var olmayan bir sıra numarası yazmak tüm çıktıyı reddettirir.`,
   },
   nace_onerisi: {
     ad: "nace_onerisi",

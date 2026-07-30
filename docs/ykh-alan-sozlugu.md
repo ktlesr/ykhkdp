@@ -18,6 +18,9 @@ kullanır. Türkçe terim kanoniktir.
 | parça | `belge` satırı · `parcala()` | görünmez (arama ve doğrulama birimi) |
 | atıf çıpası | `belge.bolum` | "s. 92–93" · "madde 613.1" · başlık |
 | düşen alıntı | `dusenler` | denetimde; ekranda gösterilmez |
+| kriter dayanağı | `kriter_dayanagi` | kriter satırında belge · çıpa |
+| dayanaksız kriter | boş `alinti_no` | "Dayanaksız kriter · belgeye bağlanamadı" |
+| örtüşme | `belge.sira` (`ts_rank`) | görünmez (dayanak girdisi) |
 | stratejik puan | `oneri_taban_puani()` | "Stratejik puan" |
 | devamlılık payı | `devamlilik_payi` | "Devamlılık payı" |
 | ağırlık seti | `agirlik_seti` | "Ağırlık seti" |

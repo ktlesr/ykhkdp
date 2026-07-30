@@ -34,6 +34,12 @@ export const Degerlendirme = z
             kriter: KRITER,
             puan: z.number().int().min(0).max(100),
             not: z.string().min(5).max(300),
+            /**
+             * Bu puanı dayandırdığı alıntıların `alintilar` içindeki sırası
+             * (0'dan başlar). Boş liste meşrudur: o kriter "dayanaksız kriter"
+             * olarak görünür ve dayanak puanını düşürür.
+             */
+            alinti_no: z.array(z.number().int().min(0).max(7)).max(8),
           })
           .strict(),
       )

@@ -13,6 +13,11 @@ export type BelgeKaydi = {
   bolum?: string | null;
   /** modele verilen metin — alıntılar bunun içinde aranır */
   metin: string;
+  /**
+   * Öneriyle örtüşme, 0–1. Paket içinde en iyi eşleşen parça 1'dir
+   * (`belgePaketi` normalize eder). Verilmezse 1 sayılır.
+   */
+  sira?: number;
   /** modele gerçekten verildi mi */
   pakete_dahil: boolean;
 };
@@ -26,9 +31,13 @@ export type HataKodu =
   | "pakette_yok"
   | "alinti_eslesmiyor"
   | "kaynaksiz_sayi"
-  | "puan_araligi";
+  | "puan_araligi"
+  | "alinti_no_gecersiz";
 
 export type Hata = { kod: HataKodu; mesaj: string };
+
+/** Kriter adı → `dogrulanan` içindeki alıntı sıraları. Boş dizi = dayanaksız kriter. */
+export type KriterDayanagi = Record<string, number[]>;
 
 export type Sonuc =
   | {
@@ -36,6 +45,8 @@ export type Sonuc =
       dayanak: number;
       /** birebir doğrulanmış alıntılar — YALNIZCA bunlar kaydedilir */
       dogrulanan: Alinti[];
+      /** hangi kriter hangi doğrulanmış alıntıya dayanıyor */
+      kriterDayanagi: KriterDayanagi;
       /** doğrulanamayıp DÜŞÜRÜLEN alıntılar; kaydedilmez, denetime yazılır */
       dusenler: Hata[];
     }
@@ -108,8 +119,14 @@ function alintiGeciyor(belgeMetni: string, alinti: string): boolean {
  * Hiç alıntı yoksa 0 — puanı yüksek olsa da slot dolduramaz.
  */
 export function degerlendirmeyiDogrula(
-  cikti: { gerekce: string; alintilar: readonly Alinti[]; puanlar: readonly { puan: number }[] },
+  cikti: {
+    gerekce: string;
+    alintilar: readonly Alinti[];
+    puanlar: readonly { kriter: string; puan: number; alinti_no?: readonly number[] }[];
+  },
   paket: Paket,
+  /** kriter → puandaki pay; dayanak kapsamasını ağırlıklandırır */
+  agirliklar: Readonly<Record<string, number>> = {},
 ): Sonuc {
   const hatalar: Hata[] = [];
 
@@ -117,10 +134,24 @@ export function degerlendirmeyiDogrula(
     hatalar.push({ kod: "puan_araligi", mesaj: "Kriter puanı 0–100 aralığında tam sayı olmalı." });
   }
 
+  // Var olmayan alıntıya işaret eden eşleme sahte dayanaktır → sert ret.
+  for (const p of cikti.puanlar) {
+    for (const no of p.alinti_no ?? []) {
+      if (!Number.isInteger(no) || no < 0 || no >= cikti.alintilar.length) {
+        hatalar.push({
+          kod: "alinti_no_gecersiz",
+          mesaj: `${p.kriter} kriteri var olmayan ${no}. alıntıya dayandırıldı (${cikti.alintilar.length} alıntı var).`,
+        });
+      }
+    }
+  }
+
   const dogrulanan: Alinti[] = [];
   const dusenler: Hata[] = [];
+  /** eski sıra → doğrulanan listesindeki yeni sıra; düşen alıntı listede yok */
+  const yeniSira = new Map<number, number>();
 
-  for (const a of cikti.alintilar) {
+  for (const [eski, a] of cikti.alintilar.entries()) {
     const belge = paket.belgeler.find((b) => b.id === a.belge_id);
     // Uydurulmuş belge kimliği ve paket dışı belge GÜVENLİK ihlalidir → sert ret.
     if (!belge) {
@@ -142,7 +173,16 @@ export function degerlendirmeyiDogrula(
       });
       continue;
     }
+    yeniSira.set(eski, dogrulanan.length);
     dogrulanan.push(a);
+  }
+
+  // Kriter → doğrulanmış alıntı eşlemesi. Düşen alıntılar eşlemeden de düşer.
+  const kriterDayanagi: KriterDayanagi = {};
+  for (const p of cikti.puanlar) {
+    kriterDayanagi[p.kriter] = (p.alinti_no ?? [])
+      .map((no) => yeniSira.get(no))
+      .filter((no): no is number => no !== undefined);
   }
 
   if (cikti.alintilar.length && dusenler.length / cikti.alintilar.length > UYDURMA_ESIGI) {
@@ -169,22 +209,68 @@ export function degerlendirmeyiDogrula(
   }
 
   if (hatalar.length) return { gecerli: false, hatalar };
-  return { gecerli: true, dayanak: dayanakPuani(dogrulanan, paket), dogrulanan, dusenler };
+  return {
+    gecerli: true,
+    dayanak: dayanakPuani(dogrulanan, paket, kriterDayanagi, agirliklar),
+    dogrulanan,
+    kriterDayanagi,
+    dusenler,
+  };
 }
 
 /**
- * Dayanak puanı: doğrulanmış alıntı sayısı ve kaç ayrı belgeye dayandığı.
+ * Dayanak puanı: puanın hangi kısmı belgeye bağlandı, ne kadar ilgili parçayla,
+ * kaç ayrı belgeye dayanarak.
  *
- * ponytail: doğrusal formül. Anlamsal kapsam ölçmüyor; alıntı sayısı ve belge
- * çeşitliliği yakınsak bir vekil. Gerçek kapsam ölçümü gerekirse kriter başına
- * alıntı eşlemesi eklenir ve formül tek yerde değişir.
+ * - **kapsama (%70)** — her kriter için onu destekleyen alıntıların en iyi
+ *   örtüşme ağırlığı, **kriterin puandaki payıyla çarpılmış**. İki şeyi birden
+ *   kapatır: (1) öneriyle zayıf örtüşen parçadan gelen destek zayıf sayılır,
+ *   (2) `yerel_potansiyel` (%18) dayanaksız kalmak `surdurulebilirlik` (%8)
+ *   dayanaksız kalmaktan pahalıdır. "Neden burada?" cevaplanmadıysa dayanak
+ *   düşer — ölçülen şey puanın kendisinin ne kadar dayandığıdır.
+ * - **çeşitlilik (%30)** — kaç ayrı belgeye dayanıyor. Tek belgeden beş alıntı,
+ *   üç belgeden üç alıntı kadar güçlü değildir.
+ *
+ * Alıntı yoksa 0; eşlenmemiş alıntı dayanağa katkı vermez. Sayı değil kapsama
+ * ölçüldüğü için "sırf sayı artsın diye alıntı eklemek" işe yaramaz.
+ *
+ * ponytail: bir alıntının o kriteri GERÇEKTEN destekleyip desteklemediği
+ * mekanik olarak doğrulanamaz — model aynı alıntıyı yedi kritere eşleyebilir.
+ * Ölçebildiğimiz: alıntı gerçek mi, öneriyle örtüşüyor mu, hangi kritere
+ * eşlendi. Kalan yargı boşluğu ajans onayına bırakılır ve ekranda kriter
+ * başına gösterilir; gizlenmiş bir sayı değildir.
  */
-export function dayanakPuani(dogrulanan: readonly Alinti[], paket: Paket): number {
+export function dayanakPuani(
+  dogrulanan: readonly Alinti[],
+  paket: Paket,
+  kriterDayanagi: KriterDayanagi = {},
+  /** kriter → puandaki pay; verilmezse kriterler eşit sayılır */
+  agirliklar: Readonly<Record<string, number>> = {},
+): number {
   if (!dogrulanan.length || !paket.belgeler.length) return 0;
-  const ayriBelge = new Set(dogrulanan.map((a) => a.belge_id)).size;
+
+  const ortusme = (a: Alinti): number => {
+    const b = paket.belgeler.find((x) => x.id === a.belge_id);
+    return Math.max(0, Math.min(1, b?.sira ?? 1));
+  };
+
+  const kriterler = Object.keys(kriterDayanagi);
+  if (!kriterler.length) return 0;
+  const toplamPay = kriterler.reduce((t, k) => t + (agirliklar[k] ?? 0), 0);
+  // Ağırlık verilmediyse (veya eksikse) eşit pay: eski davranışa düşer.
+  const pay = (k: string) => (toplamPay > 0 ? (agirliklar[k] ?? 0) / toplamPay : 1 / kriterler.length);
+
+  const kapsama = kriterler.reduce(
+    (t, k) =>
+      t + pay(k) * Math.max(0, ...kriterDayanagi[k].map((i) => (dogrulanan[i] ? ortusme(dogrulanan[i]) : 0))),
+    0,
+  );
+
+  const eslenen = new Set(Object.values(kriterDayanagi).flat());
+  const ayriBelge = new Set([...eslenen].map((i) => dogrulanan[i]?.belge_id).filter(Boolean)).size;
   const cesitlilik = ayriBelge / Math.min(paket.belgeler.length, 4);
-  const yogunluk = Math.min(dogrulanan.length, 6) / 6;
-  return Math.max(0, Math.min(100, Math.round(100 * (0.6 * cesitlilik + 0.4 * yogunluk))));
+
+  return Math.max(0, Math.min(100, Math.round(100 * (0.7 * kapsama + 0.3 * cesitlilik))));
 }
 
 /** Modele verilecek paketi kurar. Model YALNIZCA bu paketi görür. */

@@ -29,7 +29,9 @@ const KRITERLER = [
   "istihdam_katma_deger", "uygulanabilirlik", "yatirimci_ilgisi", "surdurulebilirlik",
 ] as const;
 
-const puanlar = (n = 60) => KRITERLER.map((k) => ({ kriter: k, puan: n, not: "gerekçe notu" }));
+/** `esle` verilen kriterleri alıntı sırasına bağlar; kalanlar dayanaksız kalır. */
+const puanlar = (n = 60, esle: Partial<Record<(typeof KRITERLER)[number], number[]>> = {}) =>
+  KRITERLER.map((k) => ({ kriter: k, puan: n, not: "gerekçe notu", alinti_no: esle[k] ?? [] }));
 const sahte = (cikti: unknown): ModelIstemcisi => ({
   ad: "sahte",
   async cagir() {
@@ -89,7 +91,7 @@ test("EVAL 3 — var olmayan belgeye atıf reddedilir", async () => {
 test("birebir alıntı kabul edilir ve dayanak puanı üretir", async () => {
   const s = await degerlendir(
     sahte({
-      puanlar: puanlar(),
+      puanlar: puanlar(60, { yerel_potansiyel: [0] }),
       gerekce: "Öneri bölge planındaki önceliklerle uyumludur ve yerel girdiye dayanmaktadır.",
       alintilar: [{ belge_id: 1, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek dönüşüm alanı" }],
       eksik_veri: [],
@@ -99,6 +101,7 @@ test("birebir alıntı kabul edilir ve dayanak puanı üretir", async () => {
   );
   assert.equal(s.ok, true, s.ok ? "" : JSON.stringify(s.hatalar));
   assert.ok(s.ok && s.dayanak > 0);
+  assert.deepEqual(s.ok && s.kriterDayanagi.yerel_potansiyel, [0]);
 });
 
 test("alıntısız çıktı geçerli ama dayanak 0 — slot dolduramaz", async () => {
@@ -220,4 +223,39 @@ test("JSON Schema strict üretilir", () => {
   const j = jsonSema("degerlendirme") as { additionalProperties?: boolean; required?: string[] };
   assert.equal(j.additionalProperties, false);
   assert.ok(j.required?.includes("puanlar"));
+});
+
+test("EVAL 4 — var olmayan alıntı sırasına dayandırmak reddedilir", async () => {
+  const s = await degerlendir(
+    sahte({
+      puanlar: puanlar(60, { yerel_potansiyel: [0, 5] }),
+      gerekce: "Öneri bölge planındaki önceliklerle uyumludur ve yerel girdiye dayanmaktadır.",
+      alintilar: [{ belge_id: 1, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek dönüşüm alanı" }],
+      eksik_veri: [],
+    }),
+    "claude-opus-5-20260101",
+    GIRDI,
+  );
+  assert.equal(!s.ok && s.asama, "dayanak");
+  assert.ok(!s.ok && s.hatalar.some((h) => /var olmayan/.test(h)));
+});
+
+test("kriter payı dayanağa yansır — yerellik boşluğu daha pahalı", async () => {
+  const AGIRLIKLAR = {
+    yerel_potansiyel: 0.18, deger_zinciri: 0.14, uygulanabilirlik: 0.12,
+    istihdam_katma_deger: 0.16, surdurulebilirlik: 0.08,
+    pazar_talep: 0.12, yatirimci_ilgisi: 0.08, plan_uyumu: 0.12,
+  };
+  const cikti = (esle: Partial<Record<(typeof KRITERLER)[number], number[]>>) =>
+    sahte({
+      puanlar: puanlar(60, esle),
+      gerekce: "Öneri bölge planındaki önceliklerle uyumludur ve yerel girdiye dayanmaktadır.",
+      alintilar: [{ belge_id: 1, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek dönüşüm alanı" }],
+      eksik_veri: [],
+    });
+  const girdi = { ...GIRDI, agirliklar: AGIRLIKLAR };
+
+  const yerellik = await degerlendir(cikti({ yerel_potansiyel: [0] }), "claude-opus-5-20260101", girdi);
+  const kucuk = await degerlendir(cikti({ surdurulebilirlik: [0] }), "claude-opus-5-20260101", girdi);
+  assert.ok(yerellik.ok && kucuk.ok && yerellik.dayanak > kucuk.dayanak);
 });

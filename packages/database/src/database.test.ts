@@ -224,13 +224,13 @@ test("KVKK: kimlik pseudonimleşir, öneri zinciri korunur", async () => {
 // ── migration geri alma ────────────────────────────────────────────────────
 
 test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
-  const geri = await asagi(3);
-  assert.deepEqual(geri, ["0003_kurallar", "0002_rls", "0001_sema"]);
+  const geri = await asagi(4);
+  assert.deepEqual(geri, ["0004_kriter_dayanagi", "0003_kurallar", "0002_rls", "0001_sema"]);
   const [{ n }] = await sahip()<{ n: string }[]>`
     select count(*) as n from information_schema.tables where table_schema = 'public' and table_name = 'oneri'
   `;
   assert.equal(Number(n), 0);
 
-  assert.deepEqual(await yukari(), ["0001_sema", "0002_rls", "0003_kurallar"]);
+  assert.deepEqual(await yukari(), ["0001_sema", "0002_rls", "0003_kurallar", "0004_kriter_dayanagi"]);
   await seed();
 });

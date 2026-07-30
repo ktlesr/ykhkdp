@@ -21,13 +21,18 @@ export async function degerlendirmeYap(b: Baglam, oneriId: number): Promise<Sonu
   const [o] = await islem(b, (sql) =>
     sql<
       { id: number; baslik: string; gerekce: string; ilce: string | null; nace_kod: string | null;
-        il: string; il_kod: string; ajans_kod: string }[]
+        il: string; il_kod: string; ajans_kod: string; agirliklar: Record<string, number> }[]
     >`
       select o.id, o.baslik, o.gerekce, o.ilce, o.nace_kod,
-             i.ad as il, i.kod as il_kod, i.ajans_kod
+             i.ad as il, i.kod as il_kod, i.ajans_kod,
+             -- Dayanak kapsaması kriter payıyla çarpılır: "neden burada?"
+             -- dayanaksız kalmak, küçük paylı bir kriterin dayanaksız
+             -- kalmasından pahalıdır.
+             s.agirliklar
       from oneri o
       join donem d on d.id = o.donem_id
       join il i on i.kod = d.il_kod
+      join agirlik_seti s on s.surum = d.agirlik_seti_surum
       where o.id = ${oneriId}
     `,
   );
@@ -105,6 +110,7 @@ export async function degerlendirmeYap(b: Baglam, oneriId: number): Promise<Sonu
     nace: naceKod ?? null,
     belgeler,
     paket,
+    agirliklar: o.agirliklar,
   });
   aiMaliyeti({
     model,
@@ -134,23 +140,39 @@ export async function degerlendirmeYap(b: Baglam, oneriId: number): Promise<Sonu
   // ── 4. Kayıt ─────────────────────────────────────────────────────────────
   const puanlar = Object.fromEntries(s.veri.puanlar.map((p) => [p.kriter, p.puan]));
 
+  const alintiKaydi = s.dogrulanan.map((a) => ({
+    belge_id: a.belge_id,
+    belge_ad: belgeler.find((b2) => b2.id === a.belge_id)?.ad ?? "",
+    bolum: belgeler.find((b2) => b2.id === a.belge_id)?.bolum ?? null,
+    alinti: a.alinti,
+  }));
+
   await islem(b, async (sql) => {
+    /**
+     * Yeniden değerlendirme kısmi güncelleme DEĞİL, yeni bir değerlendirmedir.
+     *
+     * `puanlar` ve `kriter_dayanagi` trigger ile donuk; `on conflict do update`
+     * yalnızca dayanak ve alıntıları yenileyebiliyordu. O yol eski puanı yeni
+     * alıntı listesiyle eşleştiriyor ve kriter eşlemesi yanlış alıntıyı
+     * gösteriyordu. Bunun yerine eski satır denetime yazılıp silinir.
+     */
+    const [onceki] = await sql<{ puanlar: unknown; dayanak: number; model_snapshot: string; prompt_surum: string }[]>`
+      delete from degerlendirme where oneri_id = ${oneriId}
+      returning puanlar, dayanak, model_snapshot, prompt_surum
+    `;
+    if (onceki) {
+      await denetle(sql, b, "degerlendirme_degistirildi", "oneri", oneriId, {
+        onceki,
+        not: "Yeniden değerlendirildi; önceki AI çıktısı bu kayıtla korunur.",
+      });
+    }
+
     await sql`
-      insert into degerlendirme (oneri_id, puanlar, dayanak, gerekce, alintilar, model_snapshot, prompt_surum)
-      values (${oneriId}, ${sql.json(puanlar as never)}, ${s.dayanak}, ${s.veri.gerekce},
-              ${sql.json(
-                s.dogrulanan.map((a) => ({
-                  belge_id: a.belge_id,
-                  belge_ad: belgeler.find((b2) => b2.id === a.belge_id)?.ad ?? "",
-                  bolum: belgeler.find((b2) => b2.id === a.belge_id)?.bolum ?? null,
-                  alinti: a.alinti,
-                })) as never,
-              )},
+      insert into degerlendirme
+        (oneri_id, puanlar, kriter_dayanagi, dayanak, gerekce, alintilar, model_snapshot, prompt_surum)
+      values (${oneriId}, ${sql.json(puanlar as never)}, ${sql.json(s.kriterDayanagi as never)},
+              ${s.dayanak}, ${s.veri.gerekce}, ${sql.json(alintiKaydi as never)},
               ${s.modelSnapshot}, ${s.promptSurum})
-      on conflict (oneri_id) do update set
-        dayanak = excluded.dayanak,
-        gerekce = excluded.gerekce,
-        alintilar = excluded.alintilar
     `;
     // Puan hazır ama DOĞRULANMADI → ajans onayı bekler.
     await sql`
@@ -160,6 +182,10 @@ export async function degerlendirmeYap(b: Baglam, oneriId: number): Promise<Sonu
     await denetle(sql, b, "degerlendirme_yapildi", "oneri", oneriId, {
       dayanak: s.dayanak,
       alintiSayisi: s.dogrulanan.length,
+      kriterDayanagi: s.kriterDayanagi,
+      dayanaksizKriter: Object.entries(s.kriterDayanagi)
+        .filter(([, v]) => !v.length)
+        .map(([k]) => k),
       dusenAlinti: s.dusenler,
       model: s.modelSnapshot,
       promptSurum: s.promptSurum,
@@ -167,8 +193,10 @@ export async function degerlendirmeYap(b: Baglam, oneriId: number): Promise<Sonu
     });
   });
 
+  const dayanaksiz = Object.values(s.kriterDayanagi).filter((v) => !v.length).length;
   notlar.push(
     `puan hazır, dayanak ${s.dayanak}/100, ${s.dogrulanan.length} doğrulanmış alıntı` +
+      (dayanaksiz ? `, ${dayanaksiz} kriter dayanaksız` : "") +
       (s.dusenler.length ? ` (${s.dusenler.length} alıntı düşürüldü)` : ""),
   );
   log.info("degerlendirme_tamam", { oneriId, dayanak: s.dayanak });

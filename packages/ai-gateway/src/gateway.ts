@@ -26,6 +26,8 @@ export type Sonuc<T> =
   | ({ ok: true; veri: T; dayanak: number; maliyet: Maliyet;
       /** birebir doğrulanmış alıntılar; yalnızca bunlar kaydedilir */
       dogrulanan: Array<{ belge_id: number; alinti: string }>;
+      /** hangi kriter hangi doğrulanmış alıntıya dayanıyor */
+      kriterDayanagi: Record<string, number[]>;
       /** düşürülen alıntı gerekçeleri — denetime yazılır */
       dusenler: string[] } & Meta)
   | ({ ok: false; asama: "model" | "sema" | "dayanak"; hatalar: string[] } & Meta);
@@ -85,7 +87,9 @@ async function cagir<A extends SemaAdi>(
 export async function degerlendir(
   istemci: ModelIstemcisi,
   modelSnapshot: string,
-  girdi: { baslik: string; gerekce: string; il: string; ilce: string | null; nace: string | null; belgeler: readonly BelgeSatiri[]; paket: Paket },
+  girdi: { baslik: string; gerekce: string; il: string; ilce: string | null; nace: string | null; belgeler: readonly BelgeSatiri[]; paket: Paket;
+    /** kriter → puandaki pay; dayanak kapsamasını ağırlıklandırır */
+    agirliklar?: Readonly<Record<string, number>> },
 ): Promise<Sonuc<z.infer<typeof SEMALAR.degerlendirme>>> {
   const meta = { modelSnapshot, promptSurum: PROMPTLAR.degerlendirme.surum };
 
@@ -99,7 +103,7 @@ export async function degerlendir(
   const r = await cagir(istemci, modelSnapshot, "degerlendirme", kaynakBloguKur(girdi.belgeler), gorev);
   if (!r.ok) return { ...r, ...meta };
 
-  const dogrulama = degerlendirmeyiDogrula(r.veri, girdi.paket);
+  const dogrulama = degerlendirmeyiDogrula(r.veri, girdi.paket, girdi.agirliklar ?? {});
   if (!dogrulama.gecerli) {
     return { ok: false, asama: "dayanak", hatalar: dogrulama.hatalar.map((h) => h.mesaj), ...meta };
   }
@@ -109,6 +113,7 @@ export async function degerlendir(
     veri: r.veri,
     dayanak: dogrulama.dayanak,
     dogrulanan: dogrulama.dogrulanan,
+    kriterDayanagi: dogrulama.kriterDayanagi,
     dusenler: dogrulama.dusenler.map((h) => h.mesaj),
     maliyet: r.maliyet,
     ...meta,
@@ -147,5 +152,5 @@ export async function naceOner(
     };
   }
 
-  return { ok: true, veri: r.veri, dayanak: 0, dogrulanan: [], dusenler: [], maliyet: r.maliyet, ...meta };
+  return { ok: true, veri: r.veri, dayanak: 0, dogrulanan: [], kriterDayanagi: {}, dusenler: [], maliyet: r.maliyet, ...meta };
 }

@@ -23,6 +23,7 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
   const ajans = Boolean(k && onaylayabilir(k.rol));
   const durumTuru = { listede: "yesil", onay_bekliyor: "amber", degerlendiriliyor: "notr", reddedildi: "kirmizi" } as const;
   const alintilar = o.alintilar ?? [];
+  const kriterDayanagi = o.kriter_dayanagi ?? null;
 
   return (
     <>
@@ -179,22 +180,44 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
                       {GRUP_ACIKLAMA.yerellik}
                     </p>
                   )}
-                  {kriterler.map((kr: Kriter) => (
-                    <div key={kr} className="border-b border-b-[#E9E5DB] px-4 py-2.5 last:border-b-0">
-                      <div className="flex items-baseline justify-between gap-3">
-                        <span className="text-[12.5px] leading-[1.35] text-ink-soft">{KRITER_ETIKET[kr]}</span>
-                        <span className="num text-[14px]">{puanlar[kr] ?? "—"}</span>
-                      </div>
-                      <div className="mt-1.5 flex items-center gap-2">
-                        <div className="h-[7px] flex-1 border border-hairline bg-surface">
-                          <div className="h-full bg-ink" style={{ width: `${puanlar[kr] ?? 0}%` }} />
+                  {kriterler.map((kr: Kriter) => {
+                    const dayanak = kriterDayanagi?.[kr];
+                    return (
+                      <div key={kr} className="border-b border-b-[#E9E5DB] px-4 py-2.5 last:border-b-0">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <span className="text-[12.5px] leading-[1.35] text-ink-soft">{KRITER_ETIKET[kr]}</span>
+                          <span className="num text-[14px]">{puanlar[kr] ?? "—"}</span>
                         </div>
-                        <span className="num text-[10px] text-ink-mute">
-                          ağırlık {Math.round(d.set.agirliklar[kr] * 100)}%
-                        </span>
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <div className="h-[7px] flex-1 border border-hairline bg-surface">
+                            <div className="h-full bg-ink" style={{ width: `${puanlar[kr] ?? 0}%` }} />
+                          </div>
+                          <span className="num text-[10px] text-ink-mute">
+                            ağırlık {Math.round(d.set.agirliklar[kr] * 100)}%
+                          </span>
+                        </div>
+                        {/* Bu puanı hangi alıntı taşıyor — dayanaksız kriter açıkça yazar. */}
+                        {dayanak && dayanak.length > 0 ? (
+                          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-[.07em] text-ink-mute">
+                            {dayanak.map((no) => {
+                              const a = alintilar[no];
+                              if (!a) return null;
+                              return (
+                                <span key={no}>
+                                  {a.belge_ad}
+                                  {a.bolum && <span className="num"> · {a.bolum}</span>}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="mt-1.5 font-mono text-[10px] uppercase tracking-[.07em] text-absent">
+                            Dayanaksız kriter · belgeye bağlanamadı
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ))}
             </div>

@@ -9,7 +9,11 @@ import { paketKur, type Paket } from "@ykh/evidence-validation";
  * `embedding vector(1536)` eklenir ve buradaki tek sorgu değişir.
  */
 
-export type BelgeSatiri = { id: number; ad: string; bolum: string | null; tur: string; yil: string | null; metin: string };
+export type BelgeSatiri = {
+  id: number; ad: string; bolum: string | null; tur: string; yil: string | null; metin: string;
+  /** öneriyle örtüşme — pakette en iyi eşleşen parça 1, örtüşmeyen 0'a yakın */
+  sira: number;
+};
 
 /**
  * Öneriye ilgili belgeleri seçer.
@@ -26,7 +30,8 @@ export async function belgePaketi(
 
   const satirlar = await islem(b, (sql) =>
     sql<BelgeSatiri[]>`
-      select id, ad, bolum, tur::text, yil, metin
+      select id, ad, bolum, tur::text, yil, metin,
+             ts_rank(arama, websearch_to_tsquery('simple', ${q})) as sira
       from belge
       where (il_kod = ${girdi.ilKod}
              or (il_kod is null and ajans_kod = ${girdi.ajansKod})
@@ -42,14 +47,25 @@ export async function belgePaketi(
     `,
   );
 
+  /**
+   * `ts_rank` mutlak değeri anlamsız (0.0x aralığında) ve sorgudan sorguya
+   * değişiyor. Paket içinde en iyi eşleşmeye göre normalize ediyoruz: dayanak
+   * puanı "eldeki en iyi parçaya göre ne kadar ilgili" sorusunu soruyor.
+   * Hiçbir satırın sırası yoksa hepsi 1 sayılır (ağırlıksız eski davranış).
+   */
+  const enIyi = Math.max(0, ...satirlar.map((s) => Number(s.sira) || 0));
   // postgres.js int8'i string döndürür; alıntı doğrulaması sayı karşılaştırıyor.
-  const belgeler = satirlar.map((s) => ({ ...s, id: Number(s.id) }));
+  const belgeler = satirlar.map((s) => ({
+    ...s,
+    id: Number(s.id),
+    sira: enIyi > 0 ? (Number(s.sira) || 0) / enIyi : 1,
+  }));
 
   return {
     belgeler,
     paket: paketKur(
       `belge-${girdi.ilKod}-${belgeler.length}`,
-      belgeler.map((s) => ({ id: s.id, ad: s.ad, bolum: s.bolum, metin: s.metin })),
+      belgeler.map((s) => ({ id: s.id, ad: s.ad, bolum: s.bolum, metin: s.metin, sira: s.sira })),
     ),
   };
 }
