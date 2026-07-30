@@ -26,7 +26,9 @@ export async function birOneriAl(): Promise<number | null> {
       where id = (
         select id from oneri
         where durum = 'degerlendiriliyor' and deneme < ${MAKS_DENEME}
-        order by olusturuldu
+        -- id ile eşitlik kırılıyor: aynı transaction icinde eklenen öneriler
+        -- aynı olusturuldu damgasını taşıyor ve sıra belirsiz kalıyordu.
+        order by olusturuldu, id
         for update skip locked
         limit 1
       )

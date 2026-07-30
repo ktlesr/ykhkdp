@@ -74,6 +74,11 @@ pnpm db:belgeler                        # docs/ altındaki plan belgelerini yük
 pnpm belge:dogrula [dosya…]             # YÜKLEMEDEN ÖNCE metin kalitesini ölçer
 ```
 
+Testlerde **ret bir kusur değil**: model ezberinden alıntı yaparsa doğrulayıcı
+reddeder, öneri `degerlendiriliyor` kalır, üretim üç kez dener. Reddi imkânsız
+sayan bir assert modele bağlı olarak rastgele kırılır — üretimle aynı yeniden
+deneme mantığını kur.
+
 **Prompt veya şema değiştirdiysen `pnpm ai:eval` çalıştır.** Birim testler şema ve
 doğrulama katmanını tutar, çıktı kalitesini tutmaz. `prompt_surum` her değişiklikte
 artar — provenance sürümle taşınır, testler de sürümü kontrol eder.

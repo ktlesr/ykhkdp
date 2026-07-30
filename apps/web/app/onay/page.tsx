@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { onayKuyrugu } from "@ykh/database";
+import { kuyrukKopyalari, onayKuyrugu } from "@ykh/database";
 import { NACE_KAYNAK_ETIKET, ONERI_DURUM_ETIKET, onaylayabilir } from "@ykh/domain";
 import { Bag, Baslik, Bos, Rozet, Sayfa, UstBar } from "@/components/ui.tsx";
 import { baglam, kullanici } from "@/lib/oturum.ts";
@@ -11,7 +11,8 @@ export default async function Onay() {
   if (!k) redirect("/giris?hedef=%2Fonay");
   if (!onaylayabilir(k.rol)) redirect("/");
 
-  const kuyruk = await onayKuyrugu(await baglam());
+  const b = await baglam();
+  const [kuyruk, kopyalar] = await Promise.all([onayKuyrugu(b), kuyrukKopyalari(b)]);
 
   return (
     <>
@@ -66,6 +67,25 @@ export default async function Onay() {
                     <Rozet tur={o.dayanak >= 55 ? "yesil" : "amber"}>dayanak {o.dayanak}/100</Rozet>
                   </div>
                 </div>
+
+                {/* Yakın kopya — AI yok, trigram benzerliği. Karar değil işaret. */}
+                {(kopyalar.get(Number(o.id)) ?? []).length > 0 && (
+                  <div className="mt-2.5 border-l-[3px] [border-left-style:dashed] border-l-absent pl-3">
+                    <div className="font-mono text-[9.5px] uppercase tracking-[.11em] text-ink-mute">
+                      Aynı dönemde benzer başlık
+                    </div>
+                    {(kopyalar.get(Number(o.id)) ?? []).map((y) => (
+                      <div key={y.id} className="mt-1 text-[12.5px] leading-[1.45]">
+                        <Link href={`/oneri/${y.id}`} className="text-ink underline decoration-hairline">
+                          {y.baslik}
+                        </Link>
+                        <span className="num ml-2 text-[11px] text-ink-mute">
+                          #{y.id} · benzerlik {Math.round(y.benzerlik * 100)}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 <p className="mt-2.5 max-w-[85ch] text-[13px] leading-[1.5] text-ink-soft text-pretty">{o.gerekce}</p>
 

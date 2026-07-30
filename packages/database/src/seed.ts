@@ -192,7 +192,7 @@ export async function seed(): Promise<{ ozet: string }> {
                 ${t.dayanak},
                 ${`${t.gerekce} Üst ölçekli belgelerde bu yönde öncelik tanımlanmıştır.`},
                 ${sql.json([{ belge_ad: "TR33 Bölge Planı 2024-2028", alinti: "öncelikli imalat sektörleridir" }] as never)},
-                'claude-opus-5-20260101', 'degerlendirme-v1')
+                'claude-opus-5-20260101', 'degerlendirme-v5')
       `;
     }
   }
@@ -217,7 +217,7 @@ export async function seed(): Promise<{ ozet: string }> {
               { belge_ad: "Orta Vadeli Program 2026-2028", alinti: "atık ısı geri kazanımı teşvik edilecektir" },
               { belge_ad: "Uşak İl Sanayi Durum Raporu 2026", alinti: "seramik hammaddesi rezervleri il sınırları içindedir" },
             ] as never)},
-            'claude-opus-5-20260101', 'degerlendirme-v1')
+            'claude-opus-5-20260101', 'degerlendirme-v5')
   `;
 
   // Değerlendirilmeyi bekleyen öneri — worker kuyruğu göstermek için
@@ -227,6 +227,21 @@ export async function seed(): Promise<{ ozet: string }> {
             'İkincil hammaddeden teknik iplik üretimi',
             'Geri dönüştürülmüş elyaf arzı il içinde oluşuyor; iplik aşaması ilde yok, ürün il dışına gidiyor.',
             'Banaz', 'degerlendiriliyor')
+  `;
+
+  /**
+   * Yakın kopya — /onay ekranındaki benzerlik işaretini gösterir.
+   *
+   * Uşak'ta "Tekstil kırpıklarından geri dönüştürülmüş elyaf" zaten listede;
+   * bu öneri aynı konuyu farklı sözcüklerle veriyor (benzerlik ~0.50). Seed her
+   * ekran durumunu bir kez üretsin ki özellik gözle de doğrulanabilsin.
+   */
+  await sql`
+    insert into oneri (donem_id, gonderen_ref, koken, baslik, gerekce, ilce, durum)
+    values (${donemler["usak"]}, ${ref["yatirimci@ykh.local"]}, 'yeni',
+            'Tekstil kırpığından geri dönüşüm elyafı üretimi',
+            'Konfeksiyon atölyelerinden çıkan kırpık ilde toplanıyor; elyafa çevrilmeden il dışına satılıyor.',
+            'Merkez', 'degerlendiriliyor')
   `;
 
   const [{ count: oneriSayisi }] = await sql<{ count: string }[]>`select count(*) from oneri`;

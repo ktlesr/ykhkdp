@@ -24,6 +24,8 @@ kullanır. Türkçe terim kanoniktir.
 | karşı görüş | `karsi_gorus` | "Karşı görüş" |
 | atıf düzeltmesi | `duzeltilenler` | denetimde; ekranda gösterilmez |
 | paket numarası | `belge.yerel` (1…n) | görünmez (modelin gördüğü adres) |
+| yakın kopya | `yakinKopyalar()` · `pg_trgm` | "Aynı dönemde benzer başlık" |
+| belge kapsaması | `belgeKapsami()` | "Belge kapsaması" |
 | stratejik puan | `oneri_taban_puani()` | "Stratejik puan" |
 | devamlılık payı | `devamlilik_payi` | "Devamlılık payı" |
 | ağırlık seti | `agirlik_seti` | "Ağırlık seti" |

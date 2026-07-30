@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { belgeleriListele, illeriListele } from "@ykh/database";
+import { belgeKapsami, belgeleriListele, illeriListele } from "@ykh/database";
 import { onaylayabilir } from "@ykh/domain";
 import { BelgeFormu } from "@/components/belge-formu.tsx";
 import { BelgeSil } from "@/components/belge-sil.tsx";
@@ -22,7 +22,11 @@ export default async function Belgeler() {
   if (!onaylayabilir(k.rol)) redirect("/");
 
   const b = await baglam();
-  const [belgeler, iller] = await Promise.all([belgeleriListele(b), illeriListele(b)]);
+  const [belgeler, iller, kapsam] = await Promise.all([
+    belgeleriListele(b),
+    illeriListele(b),
+    belgeKapsami(b),
+  ]);
 
   return (
     <>
@@ -43,6 +47,38 @@ export default async function Belgeler() {
         </Baslik>
 
         <BelgeFormu iller={iller.map((x) => ({ kod: x.il_kod, ad: x.il }))} />
+
+        {/* Kapsama — hangi ilde yerellik gerekçelendirilebiliyor */}
+        <div className="mt-6 border border-hairline bg-surface">
+          <div className="border-b-2 border-b-ink bg-paper px-4 py-2.5 font-mono text-[10px] uppercase tracking-[.13em] text-ink">
+            Belge kapsaması
+          </div>
+          <p className="border-b border-b-[#E9E5DB] px-4 py-2.5 text-[12px] leading-[1.45] text-ink-soft">
+            Ulusal belgeler her ilde geçerli. İle veya ajansa özgü belge yoksa “neden burada?” grubu ulusal metinden
+            gerekçelendirilemez ve dayanak düşük kalır.
+          </p>
+          {kapsam.map((x) => {
+            const yerel = x.il_belgesi + x.ajans_belgesi;
+            return (
+              <div
+                key={x.il_kod}
+                className="flex flex-wrap items-center gap-3 border-b border-b-[#E9E5DB] px-4 py-2.5 last:border-b-0"
+              >
+                <span className="min-w-0 flex-1 text-[13.5px]">{x.il}</span>
+                <span className="num font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
+                  il {x.il_belgesi} · ajans {x.ajans_belgesi} · ulusal {x.ulusal}
+                </span>
+                {yerel === 0 ? (
+                  <Rozet tur="amber" isaret="◌">
+                    Yerel belge yok
+                  </Rozet>
+                ) : (
+                  <Rozet tur="notr">{yerel} yerel belge</Rozet>
+                )}
+              </div>
+            );
+          })}
+        </div>
 
         <div className="mt-6 border border-hairline bg-surface">
           <div className="border-b-2 border-b-ink bg-paper px-4 py-2.5 font-mono text-[10px] uppercase tracking-[.13em] text-ink">

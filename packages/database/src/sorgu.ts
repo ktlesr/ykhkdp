@@ -268,6 +268,98 @@ export async function onayKuyrugu(b: Baglam, donemId?: number) {
   );
 }
 
+/**
+ * Benzerlik eşiği — gerçek başlık çiftleriyle ölçüldü, `database.test.ts`
+ * içinde sabitlendi.
+ *
+ *   aynı konu, farklı sözcükler        0.37 – 0.70
+ *   farklı konu                        0.06 – 0.30
+ *
+ * 0.35 dört gerçek kopyayı da yakalıyor, dört farklı konuyu da dışarıda
+ * bırakıyor. Marj ince: en yakın yanlış eşleşme "Deri ve deri ürünlerinde
+ * ihtisas üretimi" ↔ "Süt ve süt ürünleri işleme" (0.30) ve benzerliği
+ * konudan değil "ve … ürünleri" kalıbından geliyor.
+ *
+ * Geri çağırma lehine seçildi: sonuç bir karar değil, ajansın bakması gereken
+ * yeri gösteren işaret. Fazladan bir işaret gürültü; kaçırılan kopya iki kez
+ * onaylanmış aynı konu demek.
+ *
+ * ponytail: durak kelime ayıklama yok. Yanlış eşleşme rahatsız edici olursa
+ * karşılaştırma başlıktan durak kelimeler çıkarıldıktan sonra yapılır.
+ */
+export const BENZERLIK_ESIGI = 0.35;
+
+export type YakinKopya = { id: number; baslik: string; durum: OneriDurumu; benzerlik: number };
+
+/**
+ * Aynı (il, dönem) içindeki yakın kopyalar.
+ *
+ * AI yok: `pg_trgm` benzerliği deterministik ve tekrarlanabilir. Sonuç bir
+ * karar değil, ajansın bakması gereken yeri gösteren işaret.
+ */
+export async function yakinKopyalar(b: Baglam, oneriId: number): Promise<YakinKopya[]> {
+  return islem(b, (sql) =>
+    sql<YakinKopya[]>`
+      select k.id, k.baslik, k.durum, round(similarity(o.baslik, k.baslik)::numeric, 2) as benzerlik
+      from oneri o
+      join oneri k on k.donem_id = o.donem_id and k.id <> o.id
+      where o.id = ${oneriId}
+        and k.durum <> 'reddedildi'
+        and similarity(o.baslik, k.baslik) >= ${BENZERLIK_ESIGI}
+      order by similarity(o.baslik, k.baslik) desc, k.id
+      limit 5
+    `,
+  );
+}
+
+/** Onay kuyruğundaki her öneri için yakın kopya sayısı — tek sorgu. */
+export async function kuyrukKopyalari(b: Baglam): Promise<Map<number, YakinKopya[]>> {
+  if (b.rol === "anonim" || !onaylayabilir(b.rol)) return new Map();
+  const satirlar = await islem(b, (sql) =>
+    sql<{ oneri_id: number; id: number; baslik: string; durum: OneriDurumu; benzerlik: number }[]>`
+      select o.id as oneri_id, k.id, k.baslik, k.durum,
+             round(similarity(o.baslik, k.baslik)::numeric, 2) as benzerlik
+      from oneri o
+      join oneri k on k.donem_id = o.donem_id and k.id <> o.id
+      where o.durum in ('degerlendiriliyor', 'onay_bekliyor')
+        and k.durum <> 'reddedildi'
+        and similarity(o.baslik, k.baslik) >= ${BENZERLIK_ESIGI}
+      order by o.id, similarity(o.baslik, k.baslik) desc
+    `,
+  );
+  const out = new Map<number, YakinKopya[]>();
+  for (const r of satirlar) {
+    const liste = out.get(Number(r.oneri_id)) ?? [];
+    liste.push({ id: r.id, baslik: r.baslik, durum: r.durum, benzerlik: Number(r.benzerlik) });
+    out.set(Number(r.oneri_id), liste);
+  }
+  return out;
+}
+
+/**
+ * Belge kapsaması — hangi ilde AI neyi dayanak alabiliyor.
+ *
+ * Ulusal belgeler her ilde var; ile veya ajansa özgü belge yoksa yerellik
+ * grubu ("neden burada?") ulusal metinden gerekçelendirilemez ve dayanak düşük
+ * kalır. Ajans bunu tahmin etmek zorunda kalmasın.
+ */
+export async function belgeKapsami(b: Baglam) {
+  return islem(b, (sql) =>
+    sql<{ il: string; il_kod: string; ajans_kod: string; il_belgesi: number; ajans_belgesi: number; ulusal: number }[]>`
+      select i.ad as il, i.kod as il_kod, i.ajans_kod,
+             count(distinct b.ad) filter (where b.il_kod = i.kod)::int as il_belgesi,
+             count(distinct b.ad) filter (where b.il_kod is null and b.ajans_kod = i.ajans_kod)::int as ajans_belgesi,
+             count(distinct b.ad) filter (where b.il_kod is null and b.ajans_kod is null)::int as ulusal
+      from il i
+      left join belge b on b.il_kod = i.kod
+        or (b.il_kod is null and b.ajans_kod = i.ajans_kod)
+        or (b.il_kod is null and b.ajans_kod is null)
+      group by i.ad, i.kod, i.ajans_kod
+      order by i.ad
+    `,
+  );
+}
+
 export async function oneriGetir(b: Baglam, id: number) {
   return islem(b, async (sql) => {
     const [o] = await sql<

@@ -22,16 +22,22 @@ before(async () => {
   oneriId = Number(o.id);  // postgres.js int8'i string döndürür
 });
 
-test("kuyruk = degerlendiriliyor durumu; aynı öneri iki kez alınmaz", async () => {
+test("kuyruk = degerlendiriliyor durumu; öneri MAKS_DENEME'den fazla alınmaz", async () => {
+  // Kuyrukta birden çok öneri olabilir; ilk alınan FIFO sırasının başıdır.
   const alinan = await birOneriAl();
-  assert.equal(alinan, oneriId);
+  assert.equal(alinan, oneriId, "FIFO: en eski öneri alınır");
 
-  // deneme sayacı arttı; MAKS_DENEME'ye kadar tekrar alınabilir, sonra durur.
-  for (let i = 1; i < MAKS_DENEME; i++) assert.equal(await birOneriAl(), oneriId);
-  assert.equal(await birOneriAl(), null, "deneme sınırı aşılınca alınmaz");
+  let kacKez = 1;
+  // Sayaç dolana kadar aynı öneri tekrar alınabilir, sonra sıra diğerine geçer.
+  while (kacKez < MAKS_DENEME) {
+    assert.equal(await birOneriAl(), oneriId, "sayaç dolmadan sıra değişmez");
+    kacKez++;
+  }
+  assert.equal(kacKez, MAKS_DENEME);
+  assert.notEqual(await birOneriAl(), oneriId, "deneme sınırı aşılınca bu öneri alınmaz");
 
-  // testin geri kalanı için sayacı sıfırla
-  await islem(SERVIS, (sql) => sql`update oneri set deneme = 0 where id = ${oneriId}`);
+  // testin geri kalanı için kuyruğu temizle
+  await islem(SERVIS, (sql) => sql`update oneri set deneme = 0 where durum = 'degerlendiriliyor'`);
 });
 
 test("değerlendirme: NACE atanır, puan yazılır, durum onay_bekliyor olur", async () => {
@@ -41,8 +47,22 @@ test("değerlendirme: NACE atanır, puan yazılır, durum onay_bekliyor olur", a
   assert.equal(once.nace_kod, null, "seed'de NACE boş olmalı");
   assert.equal(once.durum, "degerlendiriliyor");
 
-  const sonuc = (await degerlendirmeYap(SERVIS, oneriId)).mesaj;
-  assert.match(sonuc, /puan hazır|Reddedildi|belge yok/);
+  /**
+   * Ret tasarlanmış bir sonuç: model ezberinden alıntı yaparsa doğrulayıcı
+   * reddeder ve öneri `degerlendiriliyor` kalır. Üretim bunu MAKS_DENEME kez
+   * yeniden dener; test de aynısını yapıyor. Önceki hâli "Reddedildi"yi kabul
+   * ediyor ama sonra `onay_bekliyor` şart koşuyordu — kendi içinde çelişikti ve
+   * modele bağlı olarak rastgele kırılıyordu.
+   */
+  const mesajlar: string[] = [];
+  let basarili = false;
+  for (let i = 0; i < MAKS_DENEME && !basarili; i++) {
+    const s = await degerlendirmeYap(SERVIS, oneriId);
+    mesajlar.push(s.mesaj);
+    basarili = s.ok;
+  }
+  assert.ok(basarili, `${MAKS_DENEME} denemede puan üretilemedi: ${mesajlar.join(" || ")}`);
+  assert.match(mesajlar.at(-1) ?? "", /puan hazır/);
 
   const [sonra] = await islem(SERVIS, (sql) =>
     sql<{ nace_kod: string | null; nace_kaynagi: string | null; durum: string }[]>`
@@ -52,6 +72,40 @@ test("değerlendirme: NACE atanır, puan yazılır, durum onay_bekliyor olur", a
   assert.ok(sonra.nace_kod, "AI NACE atamalı");
   assert.equal(sonra.nace_kaynagi, "ai", "kaynak 'ai' işaretlenmeli");
   assert.equal(sonra.durum, "onay_bekliyor", "puan doğrulanmamış → onay bekler");
+});
+
+test("reddedilen çıktı kaydedilmez, öneri degerlendiriliyor kalır", async () => {
+  // Belgesiz ile öneri: model çağrısı yapılmaz, kayıt oluşmaz.
+  const [o] = await islem(SERVIS, (sql) =>
+    sql<{ id: number }[]>`
+      insert into oneri (donem_id, gonderen_ref, baslik, gerekce, durum)
+      select d.id, (select ref from gonderen where rol = 'yatirimci' limit 1),
+             'Belgesiz il denemesi', 'Bu ilin hiç belgesi yok.', 'degerlendiriliyor'
+      from donem d
+      where d.il_kod = (
+        select i.kod from il i
+        where not exists (
+          select 1 from belge b
+          where b.il_kod = i.kod
+             or (b.il_kod is null and b.ajans_kod = i.ajans_kod)
+             or (b.il_kod is null and b.ajans_kod is null)
+        )
+        limit 1
+      )
+      limit 1
+      returning id
+    `,
+  );
+  // Seed'de ulusal belge var; her ilin paketi dolu. Bu senaryo yalnızca belge
+  // silindiğinde oluşur — o yüzden satır üretilmezse test anlamsızdır, atlanır.
+  if (!o) return;
+
+  const s = await degerlendirmeYap(SERVIS, Number(o.id));
+  assert.equal(s.ok, false);
+  const [d] = await islem(SERVIS, (sql) =>
+    sql<{ n: string }[]>`select count(*) as n from degerlendirme where oneri_id = ${o.id}`,
+  );
+  assert.equal(Number(d.n), 0, "reddedilen çıktı kaydedilmez");
 });
 
 test("değerlendirme kaydı model künyesi ve dayanak taşır", async () => {

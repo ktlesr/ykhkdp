@@ -3,7 +3,16 @@ import test, { after, before } from "node:test";
 import { ANONIM, islem, kapat, sahip, type Baglam } from "./baglanti.ts";
 import { asagi, sifirla, yukari } from "./migrate.ts";
 import { DEMO_PAROLA, seed } from "./seed.ts";
-import { baglamdan, girisYap, naceAra, naceGetir, oturumCoz } from "./sorgu.ts";
+import {
+  baglamdan,
+  belgeKapsami,
+  BENZERLIK_ESIGI,
+  girisYap,
+  naceAra,
+  naceGetir,
+  oturumCoz,
+  yakinKopyalar,
+} from "./sorgu.ts";
 
 /** Gerçek Postgres'e bağlanır; RLS'in gerçekten uygulandığını kanıtlar. */
 
@@ -224,13 +233,83 @@ test("KVKK: kimlik pseudonimleşir, öneri zinciri korunur", async () => {
 // ── migration geri alma ────────────────────────────────────────────────────
 
 test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
-  const geri = await asagi(5);
-  assert.deepEqual(geri, ["0005_karsi_gorus", "0004_kriter_dayanagi", "0003_kurallar", "0002_rls", "0001_sema"]);
+  const geri = await asagi(6);
+  assert.deepEqual(geri, ["0006_yakin_kopya", "0005_karsi_gorus", "0004_kriter_dayanagi", "0003_kurallar", "0002_rls", "0001_sema"]);
   const [{ n }] = await sahip()<{ n: string }[]>`
     select count(*) as n from information_schema.tables where table_schema = 'public' and table_name = 'oneri'
   `;
   assert.equal(Number(n), 0);
 
-  assert.deepEqual(await yukari(), ["0001_sema", "0002_rls", "0003_kurallar", "0004_kriter_dayanagi", "0005_karsi_gorus"]);
+  assert.deepEqual(await yukari(), [
+    "0001_sema", "0002_rls", "0003_kurallar", "0004_kriter_dayanagi",
+    "0005_karsi_gorus", "0006_yakin_kopya",
+  ]);
   await seed();
+});
+
+// ── yakın kopya · pg_trgm, AI yok ──────────────────────────────────────────
+
+test("benzerlik eşiği gerçek başlık çiftlerini ayırıyor", async () => {
+  const KOPYA: Array<[string, string]> = [
+    ["Tekstil kırpıklarından geri dönüştürülmüş elyaf", "Tekstil kırpığından geri dönüşüm elyafı üretimi"],
+    ["Teknik seramik ve seramik filtre üretimi", "Seramik filtre ve teknik seramik imalatı"],
+    ["Jeotermal destekli sera ve ısı geri kazanımı", "Jeotermal sera ısıtması yatırımı"],
+    ["Tarımsal kurutma ve soğuk zincir tesisi", "Soğuk zincir ve tarımsal kurutma yatırımı"],
+  ];
+  const FARKLI: Array<[string, string]> = [
+    ["Deri ve deri ürünlerinde ihtisas üretimi", "Süt ve süt ürünleri işleme"],
+    ["Bor türevleri ve ileri malzeme", "Manyezit bazlı refrakter üretimi"],
+    ["Teknik tekstil ve dokusuz yüzey üretimi", "Termal turizm destekli sağlık hizmetleri"],
+  ];
+
+  const benzerlik = async (a: string, b: string) => {
+    const [r] = await sahip()<{ s: number }[]>`select similarity(${a}, ${b}) as s`;
+    return Number(r.s);
+  };
+
+  for (const [a, b] of KOPYA) {
+    const s = await benzerlik(a, b);
+    assert.ok(s >= BENZERLIK_ESIGI, `kopya sayılmalı (${s.toFixed(2)}): ${a} ↔ ${b}`);
+  }
+  for (const [a, b] of FARKLI) {
+    const s = await benzerlik(a, b);
+    assert.ok(s < BENZERLIK_ESIGI, `kopya sayılmamalı (${s.toFixed(2)}): ${a} ↔ ${b}`);
+  }
+});
+
+test("yakın kopya aynı dönemde bulunur, reddedilen sayılmaz", async () => {
+  const [o] = await sahip()<{ id: number; donem_id: number; gonderen_ref: string; baslik: string }[]>`
+    select id, donem_id, gonderen_ref, baslik from oneri where baslik like 'Tekstil kırpık%' limit 1
+  `;
+  assert.ok(o, "tohum öneri bulunmalı");
+
+  const kopya = async (baslik: string, durum: string, gerekce = "Benzerlik testi.") => {
+    const [x] = await sahip()<{ id: number }[]>`
+      insert into oneri (donem_id, gonderen_ref, baslik, gerekce, durum, ret_gerekcesi)
+      values (${o.donem_id}, ${o.gonderen_ref}, ${baslik}, ${gerekce}, ${durum}::oneri_durumu,
+              ${durum === "reddedildi" ? "test" : null})
+      returning id
+    `;
+    return x.id;
+  };
+
+  const yakin = await kopya("Tekstil kırpığından geri dönüşüm elyafı üretimi", "onay_bekliyor");
+  const reddedilen = await kopya("Tekstil kırpıklarından geri dönüşümlü elyaf tesisi", "reddedildi");
+
+  const bulunan = await yakinKopyalar(ajans, o.id);
+  const idler = bulunan.map((y) => Number(y.id));
+  assert.ok(idler.includes(Number(yakin)), "yakın kopya bulunmalı");
+  assert.ok(!idler.includes(Number(reddedilen)), "reddedilmiş öneri kopya sayılmaz");
+  assert.ok(bulunan.every((y) => y.benzerlik >= BENZERLIK_ESIGI));
+});
+
+test("belge kapsaması yerel belgesi olmayan ili gösterir", async () => {
+  const kapsam = await belgeKapsami(ANONIM);
+  assert.equal(kapsam.length, 4);
+  const usak = kapsam.find((x) => x.il_kod === "usak");
+  const manisa = kapsam.find((x) => x.il_kod === "manisa");
+  assert.ok(usak && usak.il_belgesi > 0, "Uşak'ın il raporu var");
+  assert.ok(manisa && manisa.il_belgesi === 0, "Manisa'nın ile özgü belgesi yok");
+  assert.ok(manisa && manisa.ajans_belgesi > 0, "ajans belgesi (bölge planı) her ilde geçerli");
+  assert.ok(kapsam.every((x) => x.ulusal > 0), "ulusal belgeler her ilde geçerli");
 });

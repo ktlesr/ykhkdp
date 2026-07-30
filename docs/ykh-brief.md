@@ -31,8 +31,8 @@ Platform resmî Portal veya E-TUYS'un yerine geçmez; yatırımcı başvuruları
 | `/oneri` | yatırımcı | beş alanlı form: başlık · neden burada · il · ilçe · NACE (boş bırakılabilir) |
 | `/il/[il]` | herkes | o ilin sıralaması, slotlar, boş slot gerekçesi |
 | `/oneri/[id]` | herkes | AI bu puanı neye dayanarak verdi: gerekçe, belge alıntıları, kriter kırılımı |
-| `/onay` | ajans | AI puanladı, onay bekliyor: onayla · puanı düzelt · NACE'yi düzelt · reddet |
-| `/belgeler` | ajans | üst ölçekli belge yükleme — AI'nin dayanağı |
+| `/onay` | ajans | AI puanladı, onay bekliyor: onayla · puanı düzelt · NACE'yi düzelt · reddet · yakın kopya işareti |
+| `/belgeler` | ajans | üst ölçekli belge yükleme + il bazlı kapsama — AI'nin dayanağı |
 
 Ayrıca `/giris` ve `/kayit`. Başka ekran yok.
 
@@ -175,6 +175,24 @@ yeni ekran yok.
 - **En iyi çaba, içeriği fail-closed.** Karşı görüş üretilemezse değerlendirmeyi
   engellemez (puan zaten geçerli); ama doğrulanmamış alıntı taşıyan bir itiraz
   kaydedilmez.
+
+### Yakın kopya · AI yok
+
+Aynı (il, dönem) içinde başlıkları benzeşen öneriler `/onay` ekranında
+işaretlenir. `pg_trgm` benzerliği — deterministik, tekrarlanabilir, model yok.
+Sonuç bir karar değil, ajansın bakması gereken yeri gösteren işaret.
+
+Eşik `BENZERLIK_ESIGI = 0.35`, gerçek başlık çiftleriyle ölçüldü ve
+`database.test.ts` içinde sabitlendi: aynı konu 0.37–0.70, farklı konu
+0.06–0.30. Geri çağırma lehine seçildi — fazladan işaret gürültü, kaçırılan
+kopya iki kez onaylanmış aynı konu.
+
+### Belge kapsaması
+
+`/belgeler` her il için kaç ile özgü, kaç ajansa özgü, kaç ulusal belge
+olduğunu gösterir. Ulusal belge her ilde geçerli; **yerel belge yoksa
+"neden burada?" grubu ulusal metinden gerekçelendirilemez** ve dayanak düşük
+kalır. Ajans bunu tahmin etmek zorunda kalmasın.
 
 ### Dayanak puanı
 
