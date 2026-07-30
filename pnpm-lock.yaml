@@ -26,6 +26,9 @@ importers:
       '@ykh/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@ykh/degerlendirme':
+        specifier: workspace:*
+        version: link:../../packages/degerlendirme
       '@ykh/domain':
         specifier: workspace:*
         version: link:../../packages/domain
@@ -81,21 +84,15 @@ importers:
 
   apps/worker:
     dependencies:
-      '@ykh/ai-gateway':
-        specifier: workspace:*
-        version: link:../../packages/ai-gateway
       '@ykh/database':
         specifier: workspace:*
         version: link:../../packages/database
-      '@ykh/domain':
+      '@ykh/degerlendirme':
         specifier: workspace:*
-        version: link:../../packages/domain
+        version: link:../../packages/degerlendirme
       '@ykh/observability':
         specifier: workspace:*
         version: link:../../packages/observability
-      '@ykh/retrieval':
-        specifier: workspace:*
-        version: link:../../packages/retrieval
 
   packages/ai-gateway:
     dependencies:
@@ -120,6 +117,21 @@ importers:
       postgres:
         specifier: 3.4.9
         version: 3.4.9
+
+  packages/degerlendirme:
+    dependencies:
+      '@ykh/ai-gateway':
+        specifier: workspace:*
+        version: link:../ai-gateway
+      '@ykh/database':
+        specifier: workspace:*
+        version: link:../database
+      '@ykh/observability':
+        specifier: workspace:*
+        version: link:../observability
+      '@ykh/retrieval':
+        specifier: workspace:*
+        version: link:../retrieval
 
   packages/domain: {}
 

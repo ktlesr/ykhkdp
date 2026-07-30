@@ -4,6 +4,7 @@ import { NACE_KAYNAK_ETIKET, ONERI_DURUM_ACIKLAMA, ONERI_DURUM_ETIKET, onaylayab
 import { GRUP_ACIKLAMA, GRUP_ETIKET, gruplaraGore, KRITER_ETIKET, type Kriter } from "@ykh/scoring";
 import { Bag, Baslik, Rozet, Sayfa, UstBar, Uyari } from "@/components/ui.tsx";
 import { OnayKutusu } from "@/components/onay-kutusu.tsx";
+import { DegerlendirmeDurumu } from "@/components/degerlendirme-durumu.tsx";
 import { baglam, kullanici } from "@/lib/oturum.ts";
 import { cn } from "@/lib/utils.ts";
 
@@ -196,12 +197,12 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
             </div>
           </>
         ) : (
-          <div className="tex-unverified mt-6 border border-unverif-line border-l-[3px] border-l-unverif px-4 py-4">
-            <div className="text-[14px] font-medium text-ink">Değerlendirme henüz yapılmadı.</div>
-            <p className="mt-1.5 text-[12.5px] leading-[1.45] text-ink-soft">
-              Yapay zekâ öneriyi kısa süre içinde puanlayacak. Sayfayı yenileyerek durumu görebilirsiniz.
-            </p>
-          </div>
+          <DegerlendirmeDurumu
+            oneriId={Number(id)}
+            deneme={o.deneme}
+            maksDeneme={3}
+            sonHata={o.son_hata}
+          />
         )}
 
         {ajans && <OnayKutusu oneriId={Number(id)} durum={o.durum} yol={`/oneri/${id}`} puanlar={puanlar} />}

@@ -9,7 +9,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "test": "node --test src/*.test.ts",
+    "test": "node --env-file-if-exists=../../.env --env-file-if-exists=../../.env.test --test src/*.test.ts",
     "sinama": "node --env-file-if-exists=../../.env src/sinama.ts"
   },
   "dependencies": {

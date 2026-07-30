@@ -1,6 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import postgres from "postgres";
 import { sahip } from "./baglanti.ts";
 
 /**
@@ -31,6 +32,29 @@ export async function adimlar(): Promise<Adim[]> {
   );
 }
 
+/**
+ * Hedef veritabanı yoksa oluşturur (bakım veritabanına bağlanarak).
+ * Testler ayrı bir veritabanı kullanıyor; ilk çalıştırmada elle kurmak gerekmesin.
+ */
+async function veritabaniHazirla(): Promise<void> {
+  const url = process.env.DATABASE_URL_OWNER;
+  if (!url) return;
+  const ad = new URL(url).pathname.slice(1);
+  if (!ad || ad === "postgres") return;
+  try {
+    await sahip()`select 1`;
+    return; // bağlanıyor, var
+  } catch (e) {
+    if ((e as { code?: string }).code !== "3D000") throw e; // 3D000 = invalid_catalog_name
+  }
+  const bakim = postgres(url.replace(/\/[^/]+$/, "/postgres"), { onnotice: () => {}, prepare: false });
+  try {
+    await bakim.unsafe(`create database ${JSON.stringify(ad).replace(/"/g, '"')}`);
+  } finally {
+    await bakim.end();
+  }
+}
+
 async function tabloyuHazirla() {
   await sahip()`
     create table if not exists migration (
@@ -41,6 +65,7 @@ async function tabloyuHazirla() {
 }
 
 export async function yukari(): Promise<string[]> {
+  await veritabaniHazirla();
   await tabloyuHazirla();
   const sql = sahip();
   const uygulanan = new Set((await sql<{ ad: string }[]>`select ad from migration`).map((r) => r.ad));
@@ -73,6 +98,7 @@ export async function asagi(kaçAdim = 1): Promise<string[]> {
 }
 
 export async function sifirla(): Promise<void> {
+  await veritabaniHazirla();
   const sql = sahip();
   await sql.unsafe(`
     drop schema public cascade;

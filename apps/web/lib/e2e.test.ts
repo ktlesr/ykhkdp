@@ -7,7 +7,7 @@ import {
 import { sifirla, yukari } from "@ykh/database/migrate";
 import { DEMO_PAROLA, seed } from "@ykh/database/seed";
 import { ayardan, hesapla, slotKimlikleri } from "@ykh/scoring";
-import { ISLER } from "../../worker/src/isler.ts";
+import { degerlendirmeYap } from "@ykh/degerlendirme";
 
 /**
  * Uçtan uca: kayıt → öneri (NACE'siz) → AI NACE atar + puanlar →
@@ -83,7 +83,7 @@ test("4 · yeni öneri il sıralamasında GÖRÜNMEZ (onaylanmadı)", async () =
 });
 
 test("5 · AI NACE atar, puanlar, durum onay_bekliyor olur", async () => {
-  const sonuc = await ISLER.degerlendir({ gonderenRef: null, rol: "yonetici" }, { oneriId });
+  const sonuc = (await degerlendirmeYap({ gonderenRef: null, rol: "yonetici" }, oneriId)).mesaj;
   assert.match(sonuc, /puan hazır/);
 
   const k = await oneriGetir(ajans, oneriId);
@@ -168,7 +168,7 @@ test("11 · belgesiz il için değerlendirme yapılamaz", async () => {
     naceKod: null,
   });
   // manisa'ya özgü belge yok; ulusal belgeler var → paket boş değil, sonuç üretilir.
-  const sonuc = await ISLER.degerlendir({ gonderenRef: null, rol: "yonetici" }, { oneriId: o.id });
+  const sonuc = (await degerlendirmeYap({ gonderenRef: null, rol: "yonetici" }, o.id)).mesaj;
   assert.match(sonuc, /puan hazır|Reddedildi|belge yok/);
 });
 

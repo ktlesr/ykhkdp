@@ -3,7 +3,7 @@ import test, { after, before } from "node:test";
 import { islem, kapat, type Baglam } from "@ykh/database";
 import { sifirla, yukari } from "@ykh/database/migrate";
 import { seed } from "@ykh/database/seed";
-import { ISLER } from "./isler.ts";
+import { degerlendirmeYap } from "@ykh/degerlendirme";
 import { birOneriAl, MAKS_DENEME } from "./index.ts";
 
 const SERVIS: Baglam = { gonderenRef: null, rol: "yonetici" };
@@ -41,7 +41,7 @@ test("değerlendirme: NACE atanır, puan yazılır, durum onay_bekliyor olur", a
   assert.equal(once.nace_kod, null, "seed'de NACE boş olmalı");
   assert.equal(once.durum, "degerlendiriliyor");
 
-  const sonuc = await ISLER.degerlendir(SERVIS, { oneriId });
+  const sonuc = (await degerlendirmeYap(SERVIS, oneriId)).mesaj;
   assert.match(sonuc, /puan hazır|Reddedildi|belge yok/);
 
   const [sonra] = await islem(SERVIS, (sql) =>
@@ -73,6 +73,8 @@ test("AI ham puanı değiştirilemez — trigger reddeder", async () => {
   );
 });
 
-test("bilinmeyen iş tipi kayıtlı değil", () => {
-  assert.deepEqual(Object.keys(ISLER), ["degerlendir"]);
+test("değerlendirme sonucu aşama bilgisi taşır", async () => {
+  const s = await degerlendirmeYap(SERVIS, oneriId);
+  assert.ok(["tamam", "model", "belge", "nace"].includes(s.asama));
+  assert.equal(typeof s.mesaj, "string");
 });

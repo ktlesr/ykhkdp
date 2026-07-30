@@ -6,13 +6,11 @@
   "scripts": {
     "dev": "node --env-file-if-exists=../../.env --watch src/index.ts",
     "start": "node --env-file-if-exists=../../.env src/index.ts",
-    "test": "node --env-file-if-exists=../../.env --test src/*.test.ts"
+    "test": "node --env-file-if-exists=../../.env --env-file-if-exists=../../.env.test --test src/*.test.ts"
   },
   "dependencies": {
-    "@ykh/ai-gateway": "workspace:*",
     "@ykh/database": "workspace:*",
-    "@ykh/domain": "workspace:*",
-    "@ykh/observability": "workspace:*",
-    "@ykh/retrieval": "workspace:*"
+    "@ykh/degerlendirme": "workspace:*",
+    "@ykh/observability": "workspace:*"
   }
 }

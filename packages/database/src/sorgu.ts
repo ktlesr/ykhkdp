@@ -274,12 +274,14 @@ export async function oneriGetir(b: Baglam, id: number) {
       (ListeSatiri & {
         donem_id: number; gonderen_ref: string; il: string; il_kod: string; yil: string;
         ret_gerekcesi: string | null; onaylayan: string | null; onay_zamani: string | null;
+        deneme: number; son_hata: string | null;
         puanlar: Record<Kriter, number> | null; alintilar: Array<{ belge_ad: string; alinti: string }> | null;
         model_snapshot: string | null; prompt_surum: string | null;
       })[]
     >`
       select o.id, o.donem_id, o.gonderen_ref, o.baslik, o.koken, o.gerekce, o.ilce,
              o.nace_kod, n.tanim as nace_tanim, o.nace_kaynagi, o.durum, o.ret_gerekcesi,
+             o.deneme, o.son_hata,
              o.olusturuldu::text, o.onay_zamani::text, ki.ad_soyad as onaylayan,
              i.ad as il, i.kod as il_kod, d.yil,
              coalesce(g.dayanak, 0) as dayanak,

@@ -4,12 +4,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import {
-  belgeEkle, belgeSil, cikisYap, donemGetir, girisYap, kayitOl, naceAra, naceDuzelt,
+  belgeEkle, belgeSil, cikisYap, donemGetir, girisYap, islem, kayitOl, naceAra, naceDuzelt,
   oneriOlustur, puanDuzelt, durumDegistir,
 } from "@ykh/database";
 import { gecisIzinli, onaylayabilir, type OneriDurumu } from "@ykh/domain";
 import { log } from "@ykh/observability";
 import { KRITERLER, type Kriter } from "@ykh/scoring";
+import { degerlendirmeYap, SERVIS } from "@ykh/degerlendirme";
 import { baglam, cerezSil, COOKIE, kullanici, oturumCerezi } from "./oturum.ts";
 
 export type EylemSonucu = { ok: boolean; mesaj: string };
@@ -80,6 +81,43 @@ export async function oneriEylemi(_o: EylemSonucu | null, f: FormData): Promise<
   log.info("oneri_olusturuldu", { oneriId: o.id, il });
   redirect(`/oneri/${o.id}`);
 }
+
+/**
+ * Değerlendirmeyi şimdi çalıştır.
+ *
+ * Worker'ın çalışmasını beklemeden aynı `degerlendirmeYap()` yolunu tetikler —
+ * worker açık olsa da olmasa da öneri tıkanıp kalmaz. Servis bağlamıyla çalışır
+ * çünkü AI puanı bir sistem çıktısıdır, kullanıcının yetkisiyle yazılmaz.
+ */
+export async function degerlendirEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
+  const k = await kullanici();
+  if (!k) return { ok: false, mesaj: "Giriş yapın." };
+
+  const oneriId = Number(f.get("oneriId"));
+  const b = await baglam();
+  const [sahip] = await islem(b, (sql) =>
+    sql<{ gonderen_ref: string; durum: string }[]>`select gonderen_ref, durum from oneri where id = ${oneriId}`,
+  );
+  if (!sahip) return { ok: false, mesaj: "Öneri bulunamadı." };
+  if (sahip.gonderen_ref !== k.ref && !onaylayabilir(k.rol)) {
+    return { ok: false, mesaj: "Bu öneriyi yalnızca sahibi veya ajans değerlendirebilir." };
+  }
+
+  const s = await degerlendirmeYap(SERVIS, oneriId);
+  revalidatePath(`/oneri/${oneriId}`);
+  revalidatePath("/onay");
+  if (!s.ok) return { ok: false, mesaj: `${ASAMA_ETIKET[s.asama]}: ${s.mesaj}` };
+  return { ok: true, mesaj: `Değerlendirme tamam — ${s.mesaj}` };
+}
+
+const ASAMA_ETIKET: Record<string, string> = {
+  oneri: "Öneri okunamadı",
+  nace: "NACE adımı",
+  belge: "Belge adımı",
+  model: "Model adımı",
+  kayit: "Kayıt adımı",
+  tamam: "Tamam",
+};
 
 // ── ajans işlemleri ────────────────────────────────────────────────────────
 

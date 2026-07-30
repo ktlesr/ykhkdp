@@ -20,6 +20,7 @@ const nextConfig: NextConfig = {
   transpilePackages: [
     "@ykh/ai-gateway",
     "@ykh/database",
+    "@ykh/degerlendirme",
     "@ykh/domain",
     "@ykh/evidence-validation",
     "@ykh/observability",

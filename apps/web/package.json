@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --env-file-if-exists=../../.env --test lib/*.test.ts",
+    "test": "node --env-file-if-exists=../../.env --env-file-if-exists=../../.env.test --test lib/*.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -14,6 +14,7 @@
     "@radix-ui/react-slot": "1.3.3",
     "@ykh/ai-gateway": "workspace:*",
     "@ykh/database": "workspace:*",
+    "@ykh/degerlendirme": "workspace:*",
     "@ykh/domain": "workspace:*",
     "@ykh/observability": "workspace:*",
     "@ykh/retrieval": "workspace:*",

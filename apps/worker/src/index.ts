@@ -1,13 +1,16 @@
 import { islem, kapat, type Baglam } from "@ykh/database";
+import { degerlendirmeYap } from "@ykh/degerlendirme";
 import { log } from "@ykh/observability";
-import { ISLER } from "./isler.ts";
 
 /**
- * Worker.
+ * Worker: `degerlendiriliyor` durumundaki önerileri sırayla değerlendirir.
  *
  * ponytail: ayrı iş kuyruğu tablosu YOK. `oneri.durum = 'degerlendiriliyor'`
  * kuyruğun kendisidir; `for update skip locked` birden çok worker'da da doğru
- * çalışır. Redis/BullMQ gerekmiyor, bir tablo ve bir RLS politikası eksildi.
+ * çalışır.
+ *
+ * Worker olmasa da sistem tıkanmaz: web'deki "şimdi değerlendir" butonu aynı
+ * `degerlendirmeYap()` fonksiyonunu çağırır.
  */
 
 const SERVIS: Baglam = { gonderenRef: null, rol: "yonetici" };
@@ -16,7 +19,6 @@ export const MAKS_DENEME = 3;
 
 let calisiyor = true;
 
-/** Bekleyen bir öneriyi kilitler ve deneme sayacını artırır. */
 export async function birOneriAl(): Promise<number | null> {
   return islem(SERVIS, async (sql) => {
     const [o] = await sql<{ id: number }[]>`
@@ -43,11 +45,11 @@ async function turAt(): Promise<boolean> {
   if (oneriId === null) return false;
 
   try {
-    const sonuc = await ISLER.degerlendir(SERVIS, { oneriId });
-    log.info("degerlendirme_turu", { oneriId, sonuc });
-    // Sonuç reddedildiyse öneri `degerlendiriliyor` kalır ve MAKS_DENEME'ye
-    // kadar tekrar denenir; nedeni denetim izinde durur.
-    if (/^Reddedildi|belge yok/.test(sonuc)) await hataYaz(oneriId, sonuc);
+    const s = await degerlendirmeYap(SERVIS, oneriId);
+    log.info("degerlendirme_turu", { oneriId, asama: s.asama, ok: s.ok, mesaj: s.mesaj });
+    // Başarısızsa öneri `degerlendiriliyor` kalır ve MAKS_DENEME'ye kadar
+    // tekrar denenir; nedeni hem son_hata'da hem denetim izinde durur.
+    if (!s.ok) await hataYaz(oneriId, `${s.asama}: ${s.mesaj}`);
   } catch (e) {
     const mesaj = e instanceof Error ? e.message : String(e);
     await hataYaz(oneriId, mesaj);
