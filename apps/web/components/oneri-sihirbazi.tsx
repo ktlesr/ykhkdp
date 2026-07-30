@@ -37,14 +37,20 @@ export function OneriSihirbazi({
 }) {
   // Tek bölge varsa o adımı sormanın anlamı yok; seçimi baştan yapıyoruz.
   const tekBolge = bolgeler.length === 1 ? bolgeler[0].ajans_kod : null;
+  /** Açık dönemi olan il = öneri verilebilir il. */
+  const acik = (i: { yil: string | null }) => Boolean(i.yil);
   const baslangic = baslangicIl
     ? bolgeler.find((x) => x.iller.some((i) => i.kod === baslangicIl))
     : undefined;
 
   const [bolgeKod, setBolgeKod] = useState<string | null>(baslangic?.ajans_kod ?? tekBolge);
   const [ilKod, setIlKod] = useState<string | null>(baslangicIl ?? null);
+  // Öneri adımına yalnızca açık dönemi olan bir il seçilmişse başlanır.
+  const baslangicSecilebilir = Boolean(
+    ilKod && bolgeler.some((x) => x.iller.some((i) => i.kod === ilKod && i.yil)),
+  );
   const [adim, setAdim] = useState<Adim>(
-    !girisliMi ? "kimlik" : ilKod ? "oneri" : bolgeKod ? "il" : "bolge",
+    !girisliMi ? "kimlik" : baslangicSecilebilir ? "oneri" : bolgeKod ? "il" : "bolge",
   );
   const [misafirHatasi, setMisafirHatasi] = useState<string | null>(null);
   // Misafir oturumu bu turda açıldıysa sunucudan gelen prop bunu bilmiyor.
@@ -171,9 +177,7 @@ export function OneriSihirbazi({
             Hangi ajans bölgesi?
           </h2>
           {bolgeler.length === 0 ? (
-            <p className="px-5 py-5 text-[13.5px] text-ink-soft">
-              Açık dönemi olan bir bölge yok. Ajans bir dönem açtığında öneri kabulü başlar.
-            </p>
+            <p className="px-5 py-5 text-[13.5px] text-ink-soft">Henüz ajans kaydı yok.</p>
           ) : (
             <ul>
               {bolgeler.map((x) => (
@@ -186,11 +190,19 @@ export function OneriSihirbazi({
                     }}
                     className="flex min-h-11 w-full cursor-pointer items-baseline gap-3 px-5 py-4 text-left hover:bg-paper"
                   >
-                    <span className="min-w-0 flex-1 text-[15px] font-medium">{x.ajans}</span>
-                    <span className="num font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
-                      {x.ajans_kod} · {x.iller.length} il
+                    <span className="min-w-0 flex-1">
+                      <span className="text-[15px] font-medium">{x.ajans}</span>
+                      {x.kisa_ad && (
+                        <span className="ml-2 font-mono text-[10px] uppercase tracking-[.1em] text-ink-mute">
+                          {x.kisa_ad}
+                        </span>
+                      )}
                     </span>
-                    <span aria-hidden className="text-[13px] text-ink-mute">
+                    <span className="num shrink-0 font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
+                      {x.ajans_kod} · {x.iller.length} il
+                      {x.iller.some(acik) ? ` · ${x.iller.filter(acik).length} açık dönem` : " · dönem yok"}
+                    </span>
+                    <span aria-hidden className="shrink-0 text-[13px] text-ink-mute">
                       →
                     </span>
                   </button>
@@ -207,27 +219,55 @@ export function OneriSihirbazi({
           <h2 className="border-b border-b-hairline-soft bg-paper px-5 py-3 text-[15px] font-medium">
             {bolge.ajans} · hangi il?
           </h2>
+          {!bolge.iller.some(acik) && (
+            <p className="border-b border-b-hairline-soft px-5 py-3.5 text-[13px] leading-[1.5] text-ink-soft">
+              Bu bölgede henüz açık dönem yok. İller aşağıda görünüyor ama öneri kabulü ajans bir dönem
+              açtığında başlar.
+            </p>
+          )}
           <ul>
-            {bolge.iller.map((x) => (
-              <li key={x.kod} className="border-b border-b-hairline-soft last:border-b-0">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIlKod(x.kod);
-                    setAdim("oneri");
-                  }}
-                  className="flex min-h-11 w-full cursor-pointer items-baseline gap-3 px-5 py-4 text-left hover:bg-paper"
-                >
-                  <span className="min-w-0 flex-1 text-[15px] font-medium">{x.ad}</span>
-                  <span className="num font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
-                    {x.yil} dönemi
-                  </span>
-                  <span aria-hidden className="text-[13px] text-ink-mute">
-                    →
-                  </span>
-                </button>
-              </li>
-            ))}
+            {bolge.iller.map((x) => {
+              const secilebilir = acik(x);
+              return (
+                <li key={x.kod} className="border-b border-b-hairline-soft last:border-b-0">
+                  <button
+                    type="button"
+                    disabled={!secilebilir}
+                    onClick={() => {
+                      setIlKod(x.kod);
+                      setAdim("oneri");
+                    }}
+                    className={[
+                      "flex min-h-11 w-full items-baseline gap-3 px-5 py-4 text-left",
+                      secilebilir ? "cursor-pointer hover:bg-paper" : "cursor-default",
+                    ].join(" ")}
+                  >
+                    <span
+                      className={[
+                        "min-w-0 flex-1 text-[15px]",
+                        secilebilir ? "font-medium" : "text-ink-mute",
+                      ].join(" ")}
+                    >
+                      {x.ad}
+                    </span>
+                    {secilebilir ? (
+                      <>
+                        <span className="num shrink-0 font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
+                          {x.yil} dönemi
+                        </span>
+                        <span aria-hidden className="shrink-0 text-[13px] text-ink-mute">
+                          →
+                        </span>
+                      </>
+                    ) : (
+                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
+                        Açık dönem yok
+                      </span>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </section>
       )}

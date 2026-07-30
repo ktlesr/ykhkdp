@@ -37,6 +37,9 @@ kullanır. Türkçe terim kanoniktir.
 | sihirbaz adımı | `Adim` (`kimlik`·`bolge`·`il`·`oneri`) | adım şeridi |
 | denetim | `denetim` | "Kayıt" |
 | erişim sınıfı | `access_class` | "Veri sınıfı" |
+| ajans kodu | `ajans.kod` (NUTS-2) | "TR33" |
+| ajans kısaltması | `ajans.kisa_ad` | "ZAFER" |
+| açık dönem | `donem` satırı · `Bolge.iller[].yil` | "2027 dönemi" / "Açık dönem yok" |
 
 ## Kriter grupları — "neden burada?" kuralı
 
@@ -88,5 +91,7 @@ koyduğu asla kaybolmaz.
 - "onaylandı" tek başına → hangi onay? `nace_kaynagi='ajans'` mı, `durum='listede'` mi.
 - "kanıt" → bu üründe kanıt kartı **yok**. Doğru terim: **belge** ve **alıntı**.
 - "kurul" → bu üründe kurul kilidi **yok**. Onaylayan: **ajans**.
+- "ajans kodu" → `ajans.kod` NUTS-2 bölge kodudur (TR33), kısaltma değil.
+  Kısaltma `ajans.kisa_ad` (ZAFER) ve anahtar olarak kullanılmaz.
 - "belge kimliği" → iki ayrı şey. `belge.id` veritabanı kimliği (kalıcı kayıt),
   `belge.yerel` modelin gördüğü paket numarası. Model asla `belge.id` görmez.

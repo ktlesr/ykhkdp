@@ -232,15 +232,27 @@ export async function ornekDegerlendirme(b: Baglam) {
 export type Bolge = {
   ajans_kod: string;
   ajans: string;
-  iller: Array<{ kod: string; ad: string; yil: string; ilceler: string[] }>;
+  /** ajansın günlük kısaltması — ZAFER, AHİKA, DOĞAKA */
+  kisa_ad: string | null;
+  iller: Array<{
+    kod: string;
+    ad: string;
+    /** açık dönem yılı; null ise o ile öneri verilemez */
+    yil: string | null;
+    /** ilçe verisi yüklenmemiş illerde boş — uydurulmaz */
+    ilceler: string[];
+  }>;
 };
 
 /**
  * Öneri sihirbazının tüm coğrafyası — tek sorgu.
  *
  * Sihirbaz ajans bölgesi → il → ilçe adımlarını istemcide yürütüyor; her adımda
- * sunucuya dönmek gereksiz gecikme. Yalnızca AÇIK DÖNEMİ olan iller döner:
- * dönemi olmayan bir ile öneri verilemez, o yüzden seçenek olarak da sunulmaz.
+ * sunucuya dönmek gereksiz gecikme.
+ *
+ * TÜM ajanslar ve iller döner, açık dönemi olmayanlar da. Dönemi olmayan ile
+ * öneri verilemez ama listeden GİZLENMEZ: yatırımcı ilini bulur ve "açık dönem
+ * yok" cevabını alır. Gizlemek, ilin hiç olmadığı izlenimi verirdi.
  *
  * ponytail: tüm ilçeler tek seferde geliyor. 81 il × ~15 ilçe ≈ 1200 satır,
  * JSON olarak önemsiz. Ölçü rahatsız edici olursa ilçeler adım 3'te ayrı bir
@@ -248,17 +260,20 @@ export type Bolge = {
  */
 export async function bolgeler(b: Baglam): Promise<Bolge[]> {
   const satirlar = await islem(b, (sql) =>
-    sql<{ ajans_kod: string; ajans: string; kod: string; ad: string; yil: string; ilceler: string[] }[]>`
-      select a.kod as ajans_kod, a.ad as ajans, i.kod, i.ad, d.yil,
+    sql<
+      { ajans_kod: string; ajans: string; kisa_ad: string | null; kod: string; ad: string;
+        yil: string | null; ilceler: string[] }[]
+    >`
+      select a.kod as ajans_kod, a.ad as ajans, a.kisa_ad, i.kod, i.ad, max(d.yil) as yil,
              coalesce(
-               array_agg(c.ad order by (c.ad <> 'Merkez'), c.ad) filter (where c.ad is not null),
+               array_agg(distinct c.ad) filter (where c.ad is not null),
                '{}'
              ) as ilceler
-      from donem d
-      join il i on i.kod = d.il_kod
-      join ajans a on a.kod = i.ajans_kod
+      from ajans a
+      join il i on i.ajans_kod = a.kod
+      left join donem d on d.il_kod = i.kod
       left join ilce c on c.il_kod = i.kod
-      group by a.kod, a.ad, i.kod, i.ad, d.yil
+      group by a.kod, a.ad, a.kisa_ad, i.kod, i.ad
       order by a.ad, i.ad
     `,
   );
@@ -267,10 +282,14 @@ export async function bolgeler(b: Baglam): Promise<Bolge[]> {
   for (const r of satirlar) {
     let bolge = out.find((x) => x.ajans_kod === r.ajans_kod);
     if (!bolge) {
-      bolge = { ajans_kod: r.ajans_kod, ajans: r.ajans, iller: [] };
+      bolge = { ajans_kod: r.ajans_kod, ajans: r.ajans, kisa_ad: r.kisa_ad, iller: [] };
       out.push(bolge);
     }
-    bolge.iller.push({ kod: r.kod, ad: r.ad, yil: r.yil, ilceler: r.ilceler });
+    // `array_agg(distinct)` sıralamayı taşımıyor; Merkez'i başa almak burada.
+    const ilceler = [...r.ilceler].sort((x, y) =>
+      x === "Merkez" ? -1 : y === "Merkez" ? 1 : x.localeCompare(y, "tr"),
+    );
+    bolge.iller.push({ kod: r.kod, ad: r.ad, yil: r.yil, ilceler });
   }
   return out;
 }
@@ -483,6 +502,7 @@ export async function belgeKapsami(b: Baglam) {
              count(distinct b.ad) filter (where b.il_kod is null and b.ajans_kod = i.ajans_kod)::int as ajans_belgesi,
              count(distinct b.ad) filter (where b.il_kod is null and b.ajans_kod is null)::int as ulusal
       from il i
+      join donem d on d.il_kod = i.kod
       left join belge b on b.il_kod = i.kod
         or (b.il_kod is null and b.ajans_kod = i.ajans_kod)
         or (b.il_kod is null and b.ajans_kod is null)

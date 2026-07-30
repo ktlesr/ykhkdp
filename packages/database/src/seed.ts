@@ -63,6 +63,32 @@ export function kriterPuanlariUret(hedef: number, agirliklar: Record<Kriter, num
   return out;
 }
 
+type AjansKaydi = { kod: string; ad: string; kisaAd: string; iller: Array<{ kod: string; ad: string }> };
+
+/**
+ * 26 kalkınma ajansı ve 81 il — `data/ajans.json`.
+ *
+ * `ajans.kod` NUTS-2 bölge kodudur (ağırlık seti sürümü buna bağlı), `kisa_ad`
+ * günlük kısaltma (ZAFER, AHİKA). `il.kod` ASCII katlanmış slug.
+ */
+export async function ajanslariYukle(): Promise<number> {
+  const sql = sahip();
+  const kayitlar = JSON.parse(await readFile(join(VERI, "ajans.json"), "utf8")) as AjansKaydi[];
+
+  await sql`
+    insert into ajans ${sql(
+      kayitlar.map((a) => ({ kod: a.kod, ad: a.ad, kisa_ad: a.kisaAd })),
+      "kod",
+      "ad",
+      "kisa_ad",
+    )}
+    on conflict (kod) do nothing
+  `;
+  const iller = kayitlar.flatMap((a) => a.iller.map((i) => ({ kod: i.kod, ad: i.ad, ajans_kod: a.kod })));
+  await sql`insert into il ${sql(iller, "kod", "ad", "ajans_kod")} on conflict (kod) do nothing`;
+  return kayitlar.length;
+}
+
 export async function naceYukle(): Promise<number> {
   const sql = sahip();
   const kayitlar = JSON.parse(await readFile(join(VERI, "nace.json"), "utf8")) as Array<{
@@ -118,10 +144,16 @@ export async function seed(): Promise<{ ozet: string }> {
   }
 
   // ── coğrafya ────────────────────────────────────────────────────────────
-  await sql`insert into ajans (kod, ad) values ('TR33', 'Zafer Kalkınma Ajansı')`;
-  await sql`insert into il (kod, ad, ajans_kod) values
-    ('usak','Uşak','TR33'), ('kutahya','Kütahya','TR33'),
-    ('manisa','Manisa','TR33'), ('afyonkarahisar','Afyonkarahisar','TR33')`;
+  //
+  // 26 kalkınma ajansı ve 81 il `data/ajans.json` dosyasından yüklenir; resmî
+  // veri kodda sabitlenmez (bkz. brief §7). Dönem ve ağırlık seti YÜKLENMEZ:
+  // ikisi de ajans politika kararıdır, 25 ajans için uydurulamaz. Pilot TR33
+  // dışındaki iller veritabanında var ama açık dönemi yok — sihirbaz bunu
+  // "açık dönem yok" olarak gösterir, gizlemez.
+  const ajansSayisi = await ajanslariYukle();
+
+  // İlçeler yalnızca elimizde gerçek liste olan dört pilot il için. Kalan 77 il
+  // için ilçe verisi YOK ve uydurulmaz; öneri formu ilçeyi o illerde sormaz.
   for (const [il, ilceler] of [
     ["usak", ["Merkez", "Banaz", "Eşme", "Karahallı", "Sivaslı", "Ulubey"]],
     ["kutahya", ["Merkez", "Tavşanlı", "Simav", "Gediz", "Emet"]],
@@ -244,10 +276,13 @@ export async function seed(): Promise<{ ozet: string }> {
             'Merkez', 'degerlendiriliyor')
   `;
 
+  const [{ count: ilSayisi }] = await sql<{ count: string }[]>`select count(*) from il`;
   const [{ count: oneriSayisi }] = await sql<{ count: string }[]>`select count(*) from oneri`;
   const [{ count: belgeSayisi }] = await sql<{ count: string }[]>`select count(*) from belge`;
 
   return {
-    ozet: `${naceSayisi} NACE kodu · 4 il · ${belgeSayisi} üst ölçekli belge · ${oneriSayisi} öneri · 3 kullanıcı`,
+    ozet:
+      `${naceSayisi} NACE kodu · ${ajansSayisi} ajans · ${ilSayisi} il · ` +
+      `${belgeSayisi} üst ölçekli belge · ${oneriSayisi} öneri · 3 kullanıcı`,
   };
 }

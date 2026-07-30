@@ -1,0 +1,508 @@
+[
+  {
+    "kod": "TR10",
+    "ad": "İstanbul Kalkınma Ajansı",
+    "kisaAd": "İSTKA",
+    "iller": [
+      {
+        "kod": "istanbul",
+        "ad": "İstanbul"
+      }
+    ]
+  },
+  {
+    "kod": "TR21",
+    "ad": "Trakya Kalkınma Ajansı",
+    "kisaAd": "TRAKYAKA",
+    "iller": [
+      {
+        "kod": "tekirdag",
+        "ad": "Tekirdağ"
+      },
+      {
+        "kod": "edirne",
+        "ad": "Edirne"
+      },
+      {
+        "kod": "kirklareli",
+        "ad": "Kırklareli"
+      }
+    ]
+  },
+  {
+    "kod": "TR22",
+    "ad": "Güney Marmara Kalkınma Ajansı",
+    "kisaAd": "GMKA",
+    "iller": [
+      {
+        "kod": "balikesir",
+        "ad": "Balıkesir"
+      },
+      {
+        "kod": "canakkale",
+        "ad": "Çanakkale"
+      }
+    ]
+  },
+  {
+    "kod": "TR31",
+    "ad": "İzmir Kalkınma Ajansı",
+    "kisaAd": "İZKA",
+    "iller": [
+      {
+        "kod": "izmir",
+        "ad": "İzmir"
+      }
+    ]
+  },
+  {
+    "kod": "TR32",
+    "ad": "Güney Ege Kalkınma Ajansı",
+    "kisaAd": "GEKA",
+    "iller": [
+      {
+        "kod": "aydin",
+        "ad": "Aydın"
+      },
+      {
+        "kod": "denizli",
+        "ad": "Denizli"
+      },
+      {
+        "kod": "mugla",
+        "ad": "Muğla"
+      }
+    ]
+  },
+  {
+    "kod": "TR33",
+    "ad": "Zafer Kalkınma Ajansı",
+    "kisaAd": "ZAFER",
+    "iller": [
+      {
+        "kod": "afyonkarahisar",
+        "ad": "Afyonkarahisar"
+      },
+      {
+        "kod": "kutahya",
+        "ad": "Kütahya"
+      },
+      {
+        "kod": "manisa",
+        "ad": "Manisa"
+      },
+      {
+        "kod": "usak",
+        "ad": "Uşak"
+      }
+    ]
+  },
+  {
+    "kod": "TR41",
+    "ad": "Bursa Eskişehir Bilecik Kalkınma Ajansı",
+    "kisaAd": "BEBKA",
+    "iller": [
+      {
+        "kod": "bilecik",
+        "ad": "Bilecik"
+      },
+      {
+        "kod": "bursa",
+        "ad": "Bursa"
+      },
+      {
+        "kod": "eskisehir",
+        "ad": "Eskişehir"
+      }
+    ]
+  },
+  {
+    "kod": "TR42",
+    "ad": "Doğu Marmara Kalkınma Ajansı",
+    "kisaAd": "MARKA",
+    "iller": [
+      {
+        "kod": "bolu",
+        "ad": "Bolu"
+      },
+      {
+        "kod": "duzce",
+        "ad": "Düzce"
+      },
+      {
+        "kod": "kocaeli",
+        "ad": "Kocaeli"
+      },
+      {
+        "kod": "sakarya",
+        "ad": "Sakarya"
+      },
+      {
+        "kod": "yalova",
+        "ad": "Yalova"
+      }
+    ]
+  },
+  {
+    "kod": "TR51",
+    "ad": "Ankara Kalkınma Ajansı",
+    "kisaAd": "ANKARAKA",
+    "iller": [
+      {
+        "kod": "ankara",
+        "ad": "Ankara"
+      }
+    ]
+  },
+  {
+    "kod": "TR52",
+    "ad": "Mevlana Kalkınma Ajansı",
+    "kisaAd": "MEVKA",
+    "iller": [
+      {
+        "kod": "karaman",
+        "ad": "Karaman"
+      },
+      {
+        "kod": "konya",
+        "ad": "Konya"
+      }
+    ]
+  },
+  {
+    "kod": "TR61",
+    "ad": "Batı Akdeniz Kalkınma Ajansı",
+    "kisaAd": "BAKA",
+    "iller": [
+      {
+        "kod": "antalya",
+        "ad": "Antalya"
+      },
+      {
+        "kod": "burdur",
+        "ad": "Burdur"
+      },
+      {
+        "kod": "isparta",
+        "ad": "Isparta"
+      }
+    ]
+  },
+  {
+    "kod": "TR62",
+    "ad": "Çukurova Kalkınma Ajansı",
+    "kisaAd": "ÇKA",
+    "iller": [
+      {
+        "kod": "adana",
+        "ad": "Adana"
+      },
+      {
+        "kod": "mersin",
+        "ad": "Mersin"
+      }
+    ]
+  },
+  {
+    "kod": "TR63",
+    "ad": "Doğu Akdeniz Kalkınma Ajansı",
+    "kisaAd": "DOĞAKA",
+    "iller": [
+      {
+        "kod": "hatay",
+        "ad": "Hatay"
+      },
+      {
+        "kod": "kahramanmaras",
+        "ad": "Kahramanmaraş"
+      },
+      {
+        "kod": "osmaniye",
+        "ad": "Osmaniye"
+      }
+    ]
+  },
+  {
+    "kod": "TR71",
+    "ad": "Ahiler Kalkınma Ajansı",
+    "kisaAd": "AHİKA",
+    "iller": [
+      {
+        "kod": "aksaray",
+        "ad": "Aksaray"
+      },
+      {
+        "kod": "kirikkale",
+        "ad": "Kırıkkale"
+      },
+      {
+        "kod": "kirsehir",
+        "ad": "Kırşehir"
+      },
+      {
+        "kod": "nevsehir",
+        "ad": "Nevşehir"
+      },
+      {
+        "kod": "nigde",
+        "ad": "Niğde"
+      }
+    ]
+  },
+  {
+    "kod": "TR72",
+    "ad": "Orta Anadolu Kalkınma Ajansı",
+    "kisaAd": "ORAN",
+    "iller": [
+      {
+        "kod": "kayseri",
+        "ad": "Kayseri"
+      },
+      {
+        "kod": "sivas",
+        "ad": "Sivas"
+      },
+      {
+        "kod": "yozgat",
+        "ad": "Yozgat"
+      }
+    ]
+  },
+  {
+    "kod": "TR81",
+    "ad": "Batı Karadeniz Kalkınma Ajansı",
+    "kisaAd": "BAKKA",
+    "iller": [
+      {
+        "kod": "bartin",
+        "ad": "Bartın"
+      },
+      {
+        "kod": "karabuk",
+        "ad": "Karabük"
+      },
+      {
+        "kod": "zonguldak",
+        "ad": "Zonguldak"
+      }
+    ]
+  },
+  {
+    "kod": "TR82",
+    "ad": "Kuzey Anadolu Kalkınma Ajansı",
+    "kisaAd": "KUZKA",
+    "iller": [
+      {
+        "kod": "cankiri",
+        "ad": "Çankırı"
+      },
+      {
+        "kod": "kastamonu",
+        "ad": "Kastamonu"
+      },
+      {
+        "kod": "sinop",
+        "ad": "Sinop"
+      }
+    ]
+  },
+  {
+    "kod": "TR83",
+    "ad": "Orta Karadeniz Kalkınma Ajansı",
+    "kisaAd": "OKA",
+    "iller": [
+      {
+        "kod": "amasya",
+        "ad": "Amasya"
+      },
+      {
+        "kod": "corum",
+        "ad": "Çorum"
+      },
+      {
+        "kod": "samsun",
+        "ad": "Samsun"
+      },
+      {
+        "kod": "tokat",
+        "ad": "Tokat"
+      }
+    ]
+  },
+  {
+    "kod": "TR90",
+    "ad": "Doğu Karadeniz Kalkınma Ajansı",
+    "kisaAd": "DOKA",
+    "iller": [
+      {
+        "kod": "artvin",
+        "ad": "Artvin"
+      },
+      {
+        "kod": "giresun",
+        "ad": "Giresun"
+      },
+      {
+        "kod": "gumushane",
+        "ad": "Gümüşhane"
+      },
+      {
+        "kod": "ordu",
+        "ad": "Ordu"
+      },
+      {
+        "kod": "rize",
+        "ad": "Rize"
+      },
+      {
+        "kod": "trabzon",
+        "ad": "Trabzon"
+      }
+    ]
+  },
+  {
+    "kod": "TRA1",
+    "ad": "Kuzeydoğu Anadolu Kalkınma Ajansı",
+    "kisaAd": "KUDAKA",
+    "iller": [
+      {
+        "kod": "bayburt",
+        "ad": "Bayburt"
+      },
+      {
+        "kod": "erzincan",
+        "ad": "Erzincan"
+      },
+      {
+        "kod": "erzurum",
+        "ad": "Erzurum"
+      }
+    ]
+  },
+  {
+    "kod": "TRA2",
+    "ad": "Serhat Kalkınma Ajansı",
+    "kisaAd": "SERKA",
+    "iller": [
+      {
+        "kod": "agri",
+        "ad": "Ağrı"
+      },
+      {
+        "kod": "ardahan",
+        "ad": "Ardahan"
+      },
+      {
+        "kod": "igdir",
+        "ad": "Iğdır"
+      },
+      {
+        "kod": "kars",
+        "ad": "Kars"
+      }
+    ]
+  },
+  {
+    "kod": "TRB1",
+    "ad": "Fırat Kalkınma Ajansı",
+    "kisaAd": "FKA",
+    "iller": [
+      {
+        "kod": "bingol",
+        "ad": "Bingöl"
+      },
+      {
+        "kod": "elazig",
+        "ad": "Elâzığ"
+      },
+      {
+        "kod": "malatya",
+        "ad": "Malatya"
+      },
+      {
+        "kod": "tunceli",
+        "ad": "Tunceli"
+      }
+    ]
+  },
+  {
+    "kod": "TRB2",
+    "ad": "Doğu Anadolu Kalkınma Ajansı",
+    "kisaAd": "DAKA",
+    "iller": [
+      {
+        "kod": "bitlis",
+        "ad": "Bitlis"
+      },
+      {
+        "kod": "hakkari",
+        "ad": "Hakkâri"
+      },
+      {
+        "kod": "mus",
+        "ad": "Muş"
+      },
+      {
+        "kod": "van",
+        "ad": "Van"
+      }
+    ]
+  },
+  {
+    "kod": "TRC1",
+    "ad": "İpekyolu Kalkınma Ajansı",
+    "kisaAd": "İKA",
+    "iller": [
+      {
+        "kod": "adiyaman",
+        "ad": "Adıyaman"
+      },
+      {
+        "kod": "gaziantep",
+        "ad": "Gaziantep"
+      },
+      {
+        "kod": "kilis",
+        "ad": "Kilis"
+      }
+    ]
+  },
+  {
+    "kod": "TRC2",
+    "ad": "Karacadağ Kalkınma Ajansı",
+    "kisaAd": "KARACADAĞ",
+    "iller": [
+      {
+        "kod": "diyarbakir",
+        "ad": "Diyarbakır"
+      },
+      {
+        "kod": "sanliurfa",
+        "ad": "Şanlıurfa"
+      }
+    ]
+  },
+  {
+    "kod": "TRC3",
+    "ad": "Dicle Kalkınma Ajansı",
+    "kisaAd": "DİKA",
+    "iller": [
+      {
+        "kod": "batman",
+        "ad": "Batman"
+      },
+      {
+        "kod": "mardin",
+        "ad": "Mardin"
+      },
+      {
+        "kod": "siirt",
+        "ad": "Siirt"
+      },
+      {
+        "kod": "sirnak",
+        "ad": "Şırnak"
+      }
+    ]
+  }
+]

@@ -16,7 +16,12 @@ export default async function OneriVer({ searchParams }: { searchParams: Promise
   const k = await kullanici();
 
   const bolgeListesi = await bolgeler(b);
-  const gecerliIl = bolgeListesi.some((x) => x.iller.some((i) => i.kod === il)) ? il : undefined;
+  /**
+   * URL'den gelen il yalnızca AÇIK DÖNEMİ varsa başlangıç seçimi olur.
+   * Dönemi olmayan il de listede duruyor (yatırımcı ilini bulabilsin) ama
+   * doğrudan öneri adımına atlarsa gönderim anında duvara çarpardı.
+   */
+  const gecerliIl = bolgeListesi.some((x) => x.iller.some((i) => i.kod === il && i.yil)) ? il : undefined;
   const yerellik = Math.round(grupAgirligi(TR33_2027_V1.agirliklar, "yerellik") * 100);
 
   return (

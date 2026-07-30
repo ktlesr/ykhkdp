@@ -249,8 +249,25 @@ gizlenmiş bir sayı değildir.
 
 ## 7. Ölçek ve veri
 
-81 il, 26 kalkınma ajansı. Pilot TR33 (Afyonkarahisar, Kütahya, Manisa, Uşak) ama
-**kodda hiçbir il, ajans veya bölge sabitlenmez**.
+81 il, 26 kalkınma ajansı — `packages/database/data/ajans.json`. Resmî veri
+kodda sabitlenmez, NACE gibi veri dosyasından yüklenir.
+
+`ajans.kod` **NUTS-2 (İBBS-2) bölge kodudur**, ajans kısaltması değil: 26 ajans
+26 NUTS-2 bölgesine birebir denk düşer ve ağırlık seti sürümü buna bağlıdır
+(`TR33-2027-v1`). Günlük kısaltma ayrı kolonda (`ajans.kisa_ad`: ZAFER, AHİKA,
+DOĞAKA) ve ekranda kodun yanında görünür; Türkçe harf taşıdığı için anahtar
+olarak kullanılmaz. `il.kod` ASCII katlanmış slug (`afyonkarahisar`, `usak`).
+
+**Dönem ve ağırlık seti yüklenmez.** İkisi de ajans politika kararıdır ve 25
+ajans için uydurulamaz. Pilot TR33 dışındaki 77 il veritabanında vardır ama
+açık dönemi yoktur: sihirbaz onları **listede gösterir ve "açık dönem yok"
+der** — gizlemek ilin hiç olmadığı izlenimi verirdi. `/iller` ve `/belgeler`
+yalnızca açık dönemi olanları listeler.
+
+**İlçe verisi yalnızca dört pilot il için var** (21 ilçe). Kalan 77 il için ilçe
+listesi yüklenmemiştir ve uydurulmaz: öneri formu o illerde ilçeyi hiç sormaz,
+öneri il düzeyinde kaydedilir (`oneri.ilce` null). Bilinen boşluk — ilçe verisi
+eklenince form kendiliğinden sorar.
 
 NACE Rev.2.1 (Altılı, 2026) — 3190 kod, `packages/database/data/nace.json`.
 23 kısım · 87 bölüm · 287 grup · 651 sınıf · 2142 faaliyet. Yatırımcıya yalnızca

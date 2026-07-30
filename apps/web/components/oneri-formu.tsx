@@ -71,18 +71,27 @@ export function OneriFormu({
 
         <input type="hidden" name="il" value={il.kod} />
 
-        <div className="mt-5 max-w-[320px]">
-          <label className={ALAN_ETIKET} htmlFor="ilce">
-            İlçe · {il.ad}
-          </label>
-          <select id="ilce" name="ilce" className={GIRDI} defaultValue={il.ilceler[0] ?? ""}>
-            {il.ilceler.map((i) => (
-              <option key={i} value={i}>
-                {i}
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* İlçe verisi yüklenmemiş illerde alan HİÇ sorulmaz: uydurma ilçe adı
+            yazdırmak yerine öneri il düzeyinde kaydedilir. */}
+        {il.ilceler.length > 0 ? (
+          <div className="mt-5 max-w-[320px]">
+            <label className={ALAN_ETIKET} htmlFor="ilce">
+              İlçe · {il.ad}
+            </label>
+            <select id="ilce" name="ilce" className={GIRDI} defaultValue={il.ilceler[0] ?? ""}>
+              {il.ilceler.map((i) => (
+                <option key={i} value={i}>
+                  {i}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <p className="mt-5 border border-hairline-soft bg-paper px-3.5 py-3 text-[12.5px] leading-[1.45] text-ink-soft">
+            {il.ad} için ilçe listesi henüz yüklenmemiş. Öneriniz il düzeyinde kaydedilir; ilçe ayrıntısını
+            &ldquo;neden burada?&rdquo; gerekçesinde yazabilirsiniz.
+          </p>
+        )}
 
         <div className="mt-5">
           <NaceSecici />

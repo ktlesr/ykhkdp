@@ -237,20 +237,61 @@ test("15b · tanıtım örneği yalnızca ONAYLANMIŞ ve alıntılı kayıttan s
   assert.ok(o.model_snapshot && o.model_snapshot !== "latest", "model künyesi taşınır");
 });
 
-test("16 · sihirbaz coğrafyası: yalnızca açık dönemi olan iller, ajansa göre gruplu", async () => {
+test("16 · sihirbaz coğrafyası: 26 ajans, 81 il, hepsi ajansa göre gruplu", async () => {
   const b = await bolgeler(ANONIM);
-  assert.ok(b.length > 0);
+  assert.equal(b.length, 26, "26 kalkınma ajansı");
+  assert.equal(
+    b.reduce((t, x) => t + x.iller.length, 0),
+    81,
+    "81 il",
+  );
+
+  const kodlar = new Set<string>();
   for (const x of b) {
     assert.ok(x.ajans_kod && x.ajans, "ajans künyesi dolu");
+    assert.ok(x.kisa_ad, "kısa ad dolu — ekranda kodun yanında görünür");
+    assert.match(x.ajans_kod, /^TR[0-9ABC][0-9]$/, "kod NUTS-2 biçiminde");
     assert.ok(x.iller.length > 0, "bölge en az bir il taşır");
     for (const i of x.iller) {
-      assert.ok(i.yil, "il açık dönem yılı taşır — dönemi olmayan il seçenek olarak sunulmaz");
-      assert.ok(i.ilceler.length > 0, "ilçeler adım 4 için hazır gelir");
+      assert.ok(!kodlar.has(i.kod), `il kodu tekil olmalı: ${i.kod}`);
+      kodlar.add(i.kod);
+      assert.match(i.kod, /^[a-z]+$/, "il kodu ASCII slug");
       // Her ilin "Merkez" ilçesi yok (Manisa: Şehzadeler / Yunusemre). Varsa
-      // ilk sırada olmalı; yoksa alfabetik.
+      // ilk sırada olmalı.
       if (i.ilceler.includes("Merkez")) assert.equal(i.ilceler[0], "Merkez");
     }
   }
+  assert.equal(kodlar.size, 81);
+});
+
+test("16b · açık dönemi olmayan il GİZLENMEZ, dönemi null gelir", async () => {
+  const b = await bolgeler(ANONIM);
+  const acik = b.flatMap((x) => x.iller).filter((i) => i.yil);
+  const kapali = b.flatMap((x) => x.iller).filter((i) => !i.yil);
+
+  assert.ok(acik.length > 0, "pilot bölgede açık dönem var");
+  assert.ok(kapali.length > 0, "dönemi olmayan iller de listede — yatırımcı ilini bulur");
+  assert.equal(acik.length + kapali.length, 81);
+
+  // Dönemi olan iller pilot ajansa ait; kodda hiçbir ajans sabitlenmiyor,
+  // ilişkiyi veriden okuyoruz.
+  const acikBolge = b.filter((x) => x.iller.some((i) => i.yil));
+  assert.equal(acikBolge.length, 1, "şu an tek pilot bölge açık");
+  for (const i of acikBolge[0].iller) {
+    assert.ok(i.ilceler.length > 0, "pilot illerde ilçe verisi var");
+  }
+});
+
+test("16c · ilçe verisi olmayan ilde ilçe UYDURULMAZ", async () => {
+  const b = await bolgeler(ANONIM);
+  const ilcesiz = b.flatMap((x) => x.iller).filter((i) => i.ilceler.length === 0);
+  assert.ok(ilcesiz.length > 0, "77 il için ilçe listesi henüz yüklenmedi");
+
+  // Öneri o illerde ilçesiz kaydedilebilmeli: form alanı hiç sorulmuyor.
+  const [bolge] = b.filter((x) => x.iller.some((i) => i.yil));
+  const il = bolge.iller.find((i) => i.yil)!;
+  const d = await donemGetir(ANONIM, il.kod);
+  assert.ok(d);
 });
 
 test("17 · misafir sihirbazdan öneri verebilir, adı hiçbir yerde tutulmaz", async () => {
@@ -259,8 +300,9 @@ test("17 · misafir sihirbazdan öneri verebilir, adı hiçbir yerde tutulmaz", 
   assert.ok(m?.misafir);
 
   const misafir = baglamdan(m);
-  const [bolge] = await bolgeler(misafir);
-  const il = bolge.iller[0];
+  // Sihirbaz gibi seçiyoruz: yalnızca açık dönemi olan il seçilebilir.
+  const il = (await bolgeler(misafir)).flatMap((x) => x.iller).find((i) => i.yil);
+  assert.ok(il, "açık dönemi olan en az bir il olmalı");
   const d = await donemGetir(misafir, il.kod);
   assert.ok(d, "seçilen ilin açık dönemi olmalı");
 
@@ -269,7 +311,7 @@ test("17 · misafir sihirbazdan öneri verebilir, adı hiçbir yerde tutulmaz", 
     baslik: "Sihirbazdan misafir gönderimi",
     gerekce:
       "Kayıt olmadan devam eden yatırımcı sihirbazın son adımında öneriyi gönderebilmeli ve sonra görebilmeli.",
-    ilce: il.ilceler[0],
+    ilce: il.ilceler[0] ?? null,
     naceKod: null,
   });
 
@@ -277,4 +319,21 @@ test("17 · misafir sihirbazdan öneri verebilir, adı hiçbir yerde tutulmaz", 
   assert.equal(kendi.length, 1, "misafir kendi önerisini görür");
   const anonim = await islem(ANONIM, (sql) => sql`select id from oneri where id = ${o.id}`);
   assert.equal(anonim.length, 0, "onaylanmamış öneri anonime kapalı");
+});
+
+test("16d · dönemi olmayan il URL'den gelse de öneri adımına atlanmaz", async () => {
+  const b = await bolgeler(ANONIM);
+  const kapali = b.flatMap((x) => x.iller).find((i) => !i.yil);
+  assert.ok(kapali, "dönemi olmayan bir il olmalı");
+
+  // /oneri sayfasının başlangıç seçimi kuralı: açık dönem şart.
+  const gecerli = (kod: string | undefined) =>
+    b.some((x) => x.iller.some((i) => i.kod === kod && i.yil));
+  assert.equal(gecerli(kapali.kod), false, "kapalı il başlangıç seçimi olamaz");
+
+  const acik = b.flatMap((x) => x.iller).find((i) => i.yil);
+  assert.ok(acik && gecerli(acik.kod), "açık il başlangıç seçimi olabilir");
+
+  // Kapalı ile öneri gönderilemez: dönem yok, eylem katmanı reddeder.
+  assert.equal(await donemGetir(ANONIM, kapali.kod), null);
 });
