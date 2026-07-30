@@ -23,23 +23,34 @@ export const ANONIM: Baglam = { gonderenRef: null, rol: "anonim" };
 const varsayilanSahip = "postgres://ykh_owner:ykh_dev_parola@localhost:5470/ykhkdp";
 const varsayilanUygulama = "postgres://ykh_app:ykh_app_parola@localhost:5470/ykhkdp";
 
-let _sahip: postgres.Sql | undefined;
-let _uygulama: postgres.Sql | undefined;
+/**
+ * Havuzlar `globalThis` üzerinde tutulur.
+ *
+ * Modül düzeyi değişken yetmiyor: dev sunucusu her sıcak yenilemede modülü
+ * yeniden değerlendiriyor, eski havuz kapanmadan yenisi açılıyor ve Postgres
+ * `remaining connection slots are reserved` ile reddedene kadar birikiyor
+ * (ölçüldü: 97 boşta bağlantı). Global anahtar yenilemeler arasında yaşar.
+ */
+const HAVUZ = Symbol.for("ykh.havuz");
+type Havuz = { sahip?: postgres.Sql; uygulama?: postgres.Sql };
+const havuz: Havuz = ((globalThis as Record<symbol, unknown>)[HAVUZ] ??= {}) as Havuz;
 
 export function sahip(): postgres.Sql {
   // ponytail: prepare:false — migration/seed sık çalışmaz, ama şema değişince
   // hazırlanmış ifadeler eski tip OID'lerine takılıyor ("cache lookup failed").
-  _sahip ??= postgres(process.env.DATABASE_URL_OWNER ?? varsayilanSahip, {
+  havuz.sahip ??= postgres(process.env.DATABASE_URL_OWNER ?? varsayilanSahip, {
     onnotice: () => {},
+    max: 5,
     prepare: false,
   });
-  return _sahip;
+  return havuz.sahip;
 }
 
 export function uygulama(): postgres.Sql {
-  _uygulama ??= postgres(process.env.DATABASE_URL ?? varsayilanUygulama, {
+  havuz.uygulama ??= postgres(process.env.DATABASE_URL ?? varsayilanUygulama, {
     onnotice: () => {},
     max: 10,
+    idle_timeout: 30,
     transform: { undefined: null },
     // ponytail: hazırlanmış ifade önbelleği kapalı. Migration sonrası
     // "cached plan must not change result type" hatasını tamamen kaldırıyor;
@@ -47,13 +58,13 @@ export function uygulama(): postgres.Sql {
     // prepare:true + migration'da havuz yenileme yoluna geçilir.
     prepare: false,
   });
-  return _uygulama;
+  return havuz.uygulama;
 }
 
 export async function kapat(): Promise<void> {
-  await Promise.all([_sahip?.end(), _uygulama?.end()]);
-  _sahip = undefined;
-  _uygulama = undefined;
+  await Promise.all([havuz.sahip?.end(), havuz.uygulama?.end()]);
+  havuz.sahip = undefined;
+  havuz.uygulama = undefined;
 }
 
 /**

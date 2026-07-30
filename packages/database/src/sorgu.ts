@@ -275,7 +275,8 @@ export async function oneriGetir(b: Baglam, id: number) {
         donem_id: number; gonderen_ref: string; il: string; il_kod: string; yil: string;
         ret_gerekcesi: string | null; onaylayan: string | null; onay_zamani: string | null;
         deneme: number; son_hata: string | null;
-        puanlar: Record<Kriter, number> | null; alintilar: Array<{ belge_ad: string; alinti: string }> | null;
+        puanlar: Record<Kriter, number> | null;
+        alintilar: Array<{ belge_ad: string; bolum: string | null; alinti: string }> | null;
         model_snapshot: string | null; prompt_surum: string | null;
       })[]
     >`
@@ -370,16 +371,30 @@ export async function naceDuzelt(b: Baglam, oneriId: number, naceKod: string): P
 // ── üst ölçekli belgeler ───────────────────────────────────────────────────
 
 export type BelgeKaydi = {
-  id: number; ad: string; tur: string; yil: string | null;
-  ajans_kod: string | null; il_kod: string | null; uzunluk: number; olusturuldu: string;
+  ad: string; tur: string; yil: string | null;
+  ajans_kod: string | null; il_kod: string | null;
+  /** kaç parçaya bölündü */
+  parca: number;
+  uzunluk: number; olusturuldu: string;
 };
 
+/**
+ * Belgeleri BELGE bazında listeler, parça bazında değil.
+ *
+ * Bir plan belgesi 200'ü aşkın `belge` satırına bölünüyor (bkz. `belge-yukle`);
+ * ekranda 502 satır göstermek yerine ada göre toplanır.
+ */
 export async function belgeleriListele(b: Baglam) {
   return islem(b, (sql) =>
     sql<BelgeKaydi[]>`
-      select id, ad, tur::text, yil, ajans_kod, il_kod,
-             char_length(metin) as uzunluk, olusturuldu::text
-      from belge order by olusturuldu desc
+      select ad, min(tur::text) as tur, min(yil) as yil,
+             min(ajans_kod) as ajans_kod, min(il_kod) as il_kod,
+             count(*)::int as parca,
+             sum(char_length(metin))::int as uzunluk,
+             max(olusturuldu)::text as olusturuldu
+      from belge
+      group by ad
+      order by max(olusturuldu) desc
     `,
   );
 }
@@ -399,10 +414,12 @@ export async function belgeEkle(
   });
 }
 
-export async function belgeSil(b: Baglam, id: number): Promise<void> {
-  await islem(b, async (sql) => {
-    await sql`delete from belge where id = ${id}`;
-    await denetle(sql, b, "belge_silindi", "belge", id, {});
+/** Belgeyi TÜM parçalarıyla siler — parça tek başına anlamsız. */
+export async function belgeSil(b: Baglam, ad: string): Promise<number> {
+  return islem(b, async (sql) => {
+    const silinen = await sql`delete from belge where ad = ${ad} returning id`;
+    await denetle(sql, b, "belge_silindi", "belge", null, { ad, parca: silinen.length });
+    return silinen.length;
   });
 }
 

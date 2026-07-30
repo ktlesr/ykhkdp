@@ -124,7 +124,11 @@ kodu önermek, hangi konunun seçileceğine karar vermek.
 Zorunlu kontroller — hepsi **fail-closed**:
 
 - **Kapalı kaynak modu.** Model yalnızca `belgePaketi()` çıktısını görür. İnternet yok.
-- **Alıntı birebir doğrulanır.** Belgede geçmeyen alıntı tüm çıktıyı reddettirir.
+- **Alıntı birebir doğrulanır.** Kısmi kredi: eşleşmeyen alıntı *düşürülür* —
+  kaydedilmez, dayanağa katkı vermez, denetime yazılır. Alıntıların **yarısından
+  fazlası** düşerse model uyduruyor sayılır ve çıktının tamamı reddedilir.
+  Uydurulmuş belge kimliği veya paket dışı belge azınlıkta olsa da sert rettir:
+  o bir doğruluk hatası değil, güvenlik ihlalidir.
 - **Kaynaksız sayısal token reddedilir.** Yıllar sayısal iddia sayılmaz.
 - **Şema:** Zod `.strict()` + JSON Schema `additionalProperties: false`.
 - **NACE önerisi aday listesiyle sınırlı.** Listede olmayan kod reddedilir.
@@ -140,6 +144,11 @@ AI'nin öneriyi üst ölçekli belgelere ne kadar bağlayabildiği (0–100): do
 alıntı sayısı ve kaç ayrı belgeye dayandığı. Hiç alıntı yoksa 0. Belge yüklenmemiş
 bir ilde tüm dayanaklar 0 kalır ve slotlar boş görünür — doğru davranış budur.
 
+Bilinen sınır: dayanak **alıntılanabilirliği** ölçer, **ilgililiği** ölçmez. Model
+gerçek ama konuyla zayıf ilgili beş pasaj alıntılayıp yüksek dayanak alabilir.
+Kriter başına alıntı eşlemesi bunu kapatır; formül tek yerde
+(`dayanakPuani`) değişir.
+
 ## 7. Ölçek ve veri
 
 81 il, 26 kalkınma ajansı. Pilot TR33 (Afyonkarahisar, Kütahya, Manisa, Uşak) ama
@@ -148,6 +157,29 @@ bir ilde tüm dayanaklar 0 kalır ve slotlar boş görünür — doğru davranı
 NACE Rev.2.1 (Altılı, 2026) — 3190 kod, `packages/database/data/nace.json`.
 23 kısım · 87 bölüm · 287 grup · 651 sınıf · 2142 faaliyet. Yatırımcıya yalnızca
 sınıf ve faaliyet düzeyi seçilebilir olarak sunulur.
+
+### Üst ölçekli belge kümesi
+
+`docs/` altındaki üç gerçek plan belgesi `pnpm db:belgeler` ile yüklenir. Tek
+parça verilemez (400 KB – 1 MB); paragraf sınırında **parçalara** bölünür ve her
+parça ayrı `belge` satırı olur — tam metin araması ilgili parçayı bulur, alıntı
+o parçanın metninde birebir aranır.
+
+| Belge | Parça | Atıf çıpası (`belge.bolum`) |
+|---|---|---|
+| TR33 Bölge Planı 2024-2028 | 91 | `s. 92–93` — sayfa işareti |
+| On İkinci Kalkınma Planı 2024-2028 | 252 | `madde 613.1–614.4` — numaralı madde |
+| Bölgesel Gelişme Ulusal Stratejisi 2024-2028 | 276 | `8.4. TURİZM` — en yakın başlık |
+
+Çıpa sırası: sayfa → madde → başlık → `parça n/m`. Kimsenin bulamayacağı bir
+adres atıf değildir; sıralı numara yalnızca son çare.
+
+**Kaynak kalitesi doğrudan alıntı doğrulamasını belirler.** İki kolonlu PDF'ten
+kolon-farkındalıksız çıkarılan metinde iki kolon aynı satırda birleşiyor ve
+belgede birebir hiçbir cümle kalmıyor — bu hâldeki 12KP ile yapılan
+değerlendirmeler bütünüyle reddedildi. Yapı farkındalıklı (başlık, tablo,
+paragraf) çıkarımla üç belge de doğrulanabilir hâle geldi. Yeni belge eklenirken
+ölçüt basit: **paragraf tek satırda bütün mü.**
 
 ## 8. Yığın
 

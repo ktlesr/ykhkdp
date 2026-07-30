@@ -139,9 +139,10 @@ export async function degerlendirmeYap(b: Baglam, oneriId: number): Promise<Sonu
       insert into degerlendirme (oneri_id, puanlar, dayanak, gerekce, alintilar, model_snapshot, prompt_surum)
       values (${oneriId}, ${sql.json(puanlar as never)}, ${s.dayanak}, ${s.veri.gerekce},
               ${sql.json(
-                s.veri.alintilar.map((a) => ({
+                s.dogrulanan.map((a) => ({
                   belge_id: a.belge_id,
                   belge_ad: belgeler.find((b2) => b2.id === a.belge_id)?.ad ?? "",
+                  bolum: belgeler.find((b2) => b2.id === a.belge_id)?.bolum ?? null,
                   alinti: a.alinti,
                 })) as never,
               )},
@@ -158,14 +159,18 @@ export async function degerlendirmeYap(b: Baglam, oneriId: number): Promise<Sonu
     `;
     await denetle(sql, b, "degerlendirme_yapildi", "oneri", oneriId, {
       dayanak: s.dayanak,
-      alintiSayisi: s.veri.alintilar.length,
+      alintiSayisi: s.dogrulanan.length,
+      dusenAlinti: s.dusenler,
       model: s.modelSnapshot,
       promptSurum: s.promptSurum,
       not: "Doğrulanmamış taslak puan — ajans onayı olmadan sıralamaya girmez.",
     });
   });
 
-  notlar.push(`puan hazır, dayanak ${s.dayanak}/100, ${s.veri.alintilar.length} alıntı`);
+  notlar.push(
+    `puan hazır, dayanak ${s.dayanak}/100, ${s.dogrulanan.length} doğrulanmış alıntı` +
+      (s.dusenler.length ? ` (${s.dusenler.length} alıntı düşürüldü)` : ""),
+  );
   log.info("degerlendirme_tamam", { oneriId, dayanak: s.dayanak });
   return { asama: "tamam", ok: true, mesaj: notlar.join(" · "), dayanak: s.dayanak, naceKod };
 }

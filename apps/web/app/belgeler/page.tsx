@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { belgeleriListele, illeriListele } from "@ykh/database";
 import { onaylayabilir } from "@ykh/domain";
 import { BelgeFormu } from "@/components/belge-formu.tsx";
+import { BelgeSil } from "@/components/belge-sil.tsx";
 import { Baslik, Bos, Rozet, Sayfa, UstBar } from "@/components/ui.tsx";
 import { baglam, kullanici } from "@/lib/oturum.ts";
 
@@ -54,18 +55,20 @@ export default async function Belgeler() {
             </Bos>
           ) : (
             belgeler.map((x) => (
-              <div key={x.id} className="flex flex-wrap items-center gap-3 border-b border-b-[#E9E5DB] px-4 py-3.5 last:border-b-0">
+              <div key={x.ad} className="flex flex-wrap items-center gap-3 border-b border-b-[#E9E5DB] px-4 py-3.5 last:border-b-0">
                 <div className="min-w-0 flex-1">
                   <div className="text-[14px] font-medium">{x.ad}</div>
                   <div className="mt-1 flex flex-wrap gap-2.5 font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
                     <span>{TUR_ETIKET[x.tur] ?? x.tur}</span>
                     {x.yil && <span className="num">{x.yil}</span>}
+                    <span className="num">{x.parca.toLocaleString("tr-TR")} parça</span>
                     <span className="num">{x.uzunluk.toLocaleString("tr-TR")} karakter</span>
                   </div>
                 </div>
                 <Rozet tur="notr">
                   {x.il_kod ? `İl · ${x.il_kod}` : x.ajans_kod ? `Ajans · ${x.ajans_kod}` : "Ulusal"}
                 </Rozet>
+                <BelgeSil ad={x.ad} parca={x.parca} />
               </div>
             ))
           )}

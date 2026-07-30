@@ -45,9 +45,14 @@ Aynı konu başka bir ilde de aynı şekilde yapılabiliyorsa bu üç kriter DÜ
 Diğerleri: istihdam_katma_deger, surdurulebilirlik (ne üretir),
 pazar_talep, yatirimci_ilgisi (gerçekleşir mi), plan_uyumu (politikayla uyum).
 
-ALINTI KURALI: her alıntı ilgili belgede BİREBİR geçmelidir. Uydurulmuş veya
-yeniden yazılmış alıntı tüm çıktıyı reddettirir. Alıntı bulamıyorsan alintilar
-listesini boş bırak — bu meşru bir sonuçtur, dayanak puanı düşük olur.`,
+ALINTI KURALI — en sık hata burada:
+- Alıntı, belgede BİREBİR geçen KESİNTİSİZ bir metin parçası olmalı.
+- Kelime değiştirme, özetleme, yeniden yazma YASAK. Kopyala-yapıştır gibi düşün.
+- Kısaltmak zorundaysan yalnızca "…" kullan; kalan her parça da birebir olmalı.
+- Yazım ve noktalama belgedeki gibi kalsın.
+- 15-30 kelimelik tek bir cümle parçası en güvenlisidir.
+- Alıntı bulamıyorsan alintilar listesini BOŞ bırak — bu meşru bir sonuçtur,
+  dayanak puanı düşük olur. Uydurmak tüm çıktıyı reddettirir.`,
   },
   nace_onerisi: {
     ad: "nace_onerisi",
@@ -63,15 +68,15 @@ doğrulanmadı" olarak işaretlenir; ajans düzeltebilir.`,
   },
 };
 
-export type BelgeSatiri = { id: number; ad: string; tur: string; yil: string | null; metin: string };
+export type BelgeSatiri = { id: number; ad: string; bolum?: string | null; tur: string; yil: string | null; metin: string };
 
 /** Belgeleri prompt'a gömer; içerik "güvenilmeyen veri" etiketiyle yalıtılır. */
-export function kaynakBloguKur(belgeler: readonly BelgeSatiri[], maksKarakter = 6000): string {
+export function kaynakBloguKur(belgeler: readonly BelgeSatiri[], maksKarakter = 4000): string {
   const govde = belgeler
     .map(
       (b) =>
         `<belge id="${b.id}">\n` +
-        `  <kunye>${kacisla(b.ad)}${b.yil ? ` · ${b.yil}` : ""} · ${b.tur}</kunye>\n` +
+        `  <kunye>${kacisla(b.ad)}${b.bolum ? ` · ${kacisla(b.bolum)}` : ""}${b.yil ? ` · ${b.yil}` : ""}</kunye>\n` +
         `  <icerik guvenilir="hayir">${kacisla(b.metin.slice(0, maksKarakter))}</icerik>\n` +
         `</belge>`,
     )

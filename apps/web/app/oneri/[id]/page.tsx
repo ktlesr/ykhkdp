@@ -137,7 +137,10 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
               ) : (
                 alintilar.map((a, i) => (
                   <div key={i} className="border-b border-b-[#E9E5DB] px-4 py-3.5 last:border-b-0">
-                    <div className="font-mono text-[10px] uppercase tracking-[.09em] text-ink-mute">{a.belge_ad}</div>
+                    <div className="font-mono text-[10px] uppercase tracking-[.09em] text-ink-mute">
+                      {a.belge_ad}
+                      {a.bolum && <span className="num"> · {a.bolum}</span>}
+                    </div>
                     <blockquote className="mt-1.5 border-l-2 border-l-ink pl-3 font-display text-[14.5px] leading-[1.55] text-ink text-pretty">
                       “{a.alinti}”
                     </blockquote>

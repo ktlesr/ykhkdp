@@ -14,7 +14,10 @@ kullanır. Türkçe terim kanoniktir.
 | dayanak | `dayanak` · `dayanakPuani()` | "Belge dayanağı" |
 | dayanak eşiği | `dayanak_esigi` | "Dayanak eşiği" |
 | alıntı | `alintilar` | "Kaynaktan alıntı" |
-| belge | `belge` | "Üst ölçekli belge" |
+| belge | `belge` (ad'a göre gruplanır) | "Üst ölçekli belge" |
+| parça | `belge` satırı · `parcala()` | görünmez (arama ve doğrulama birimi) |
+| atıf çıpası | `belge.bolum` | "s. 92–93" · "madde 613.1" · başlık |
+| düşen alıntı | `dusenler` | denetimde; ekranda gösterilmez |
 | stratejik puan | `oneri_taban_puani()` | "Stratejik puan" |
 | devamlılık payı | `devamlilik_payi` | "Devamlılık payı" |
 | ağırlık seti | `agirlik_seti` | "Ağırlık seti" |

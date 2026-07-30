@@ -9,7 +9,7 @@ import { paketKur, type Paket } from "@ykh/evidence-validation";
  * `embedding vector(1536)` eklenir ve buradaki tek sorgu değişir.
  */
 
-export type BelgeSatiri = { id: number; ad: string; tur: string; yil: string | null; metin: string };
+export type BelgeSatiri = { id: number; ad: string; bolum: string | null; tur: string; yil: string | null; metin: string };
 
 /**
  * Öneriye ilgili belgeleri seçer.
@@ -21,16 +21,18 @@ export async function belgePaketi(
   b: Baglam,
   girdi: { ilKod: string; ajansKod: string; sorgu: string; limit?: number },
 ): Promise<{ paket: Paket; belgeler: BelgeSatiri[] }> {
-  const limit = girdi.limit ?? 5;
+  const limit = girdi.limit ?? 8;
   const q = herhangiBiri(girdi.sorgu) || girdi.sorgu;
 
   const satirlar = await islem(b, (sql) =>
     sql<BelgeSatiri[]>`
-      select id, ad, tur::text, yil, metin
+      select id, ad, bolum, tur::text, yil, metin
       from belge
-      where il_kod = ${girdi.ilKod}
-         or (il_kod is null and ajans_kod = ${girdi.ajansKod})
-         or (il_kod is null and ajans_kod is null)
+      where (il_kod = ${girdi.ilKod}
+             or (il_kod is null and ajans_kod = ${girdi.ajansKod})
+             or (il_kod is null and ajans_kod is null))
+        -- Parça bazlı arama: alakasız parçayı pakete koymanın maliyeti var.
+        and arama @@ websearch_to_tsquery('simple', ${q})
       order by
         (il_kod = ${girdi.ilKod}) desc,
         (ajans_kod = ${girdi.ajansKod}) desc,
@@ -47,7 +49,7 @@ export async function belgePaketi(
     belgeler,
     paket: paketKur(
       `belge-${girdi.ilKod}-${belgeler.length}`,
-      belgeler.map((s) => ({ id: s.id, ad: s.ad, metin: s.metin })),
+      belgeler.map((s) => ({ id: s.id, ad: s.ad, bolum: s.bolum, metin: s.metin })),
     ),
   };
 }

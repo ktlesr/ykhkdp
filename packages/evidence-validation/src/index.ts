@@ -9,6 +9,8 @@
 export type BelgeKaydi = {
   id: number;
   ad: string;
+  /** belge içindeki yer — düşen alıntı mesajında gösterilir */
+  bolum?: string | null;
   /** modele verilen metin — alıntılar bunun içinde aranır */
   metin: string;
   /** modele gerçekten verildi mi */
@@ -27,7 +29,25 @@ export type HataKodu =
   | "puan_araligi";
 
 export type Hata = { kod: HataKodu; mesaj: string };
-export type Sonuc = { gecerli: true; dayanak: number } | { gecerli: false; hatalar: Hata[] };
+
+export type Sonuc =
+  | {
+      gecerli: true;
+      dayanak: number;
+      /** birebir doğrulanmış alıntılar — YALNIZCA bunlar kaydedilir */
+      dogrulanan: Alinti[];
+      /** doğrulanamayıp DÜŞÜRÜLEN alıntılar; kaydedilmez, denetime yazılır */
+      dusenler: Hata[];
+    }
+  | { gecerli: false; hatalar: Hata[] };
+
+/**
+ * Doğrulanamayan alıntının yarısı aşılırsa çıktının tamamı reddedilir.
+ *
+ * Tek tek düşen alıntı olağandır (belge metni bozuk çıkmış olabilir); çoğunluğu
+ * düşüyorsa model uyduruyor demektir ve hiçbir parçasına güvenilmez.
+ */
+const UYDURMA_ESIGI = 0.5;
 
 /** Sayısal token: 12, 12,5, %41,3, 1.234 ton gibi. Yıllar sayılmaz. */
 const SAYI = /(?<![\p{L}])[%₺$]?\d[\d.,]*(?:\s?(?:%|puan|kişi|ton|MW|km|m²|milyon|milyar|bin))?/gu;
@@ -39,8 +59,46 @@ export function sayisalTokenlar(metin: string): string[] {
     .filter((t) => !YIL.test(t.replace(/\D/g, "")) || t.includes("%"));
 }
 
+/**
+ * Karşılaştırma normalizasyonu.
+ *
+ * Modelin ürettiği kesme işareti ve tire karakterleri belgedekilerden farklı
+ * olabiliyor (’ vs ' , – vs -). Bunlar anlamı değiştirmediği için eşitlenir;
+ * aksi hâlde birebir doğru alıntılar sırf tipografi yüzünden reddedilir.
+ */
 function normalize(s: string): string {
-  return s.toLocaleLowerCase("tr-TR").replace(/[\s ]+/g, " ").trim();
+  return s
+    .toLocaleLowerCase("tr-TR")
+    .replace(/[’‘`´ʼ]/g, "'")
+    .replace(/[–—−]/g, "-")
+    .replace(/["“”«»]/g, '"')
+    .replace(/[\s ]+/g, " ")
+    .trim();
+}
+
+/**
+ * Alıntı belgede geçiyor mu.
+ *
+ * Model uzun alıntıları `…` veya `...` ile kısaltıyor. Bunu reddetmek yerine
+ * parçalara ayırıp HER PARÇANIN belgede ve DOĞRU SIRADA geçmesini şart koşuyoruz:
+ * uydurma yine geçemez, ama tipik model davranışı sistemi kilitlemez.
+ */
+function alintiGeciyor(belgeMetni: string, alinti: string): boolean {
+  const metin = normalize(belgeMetni);
+  const parcalar = normalize(alinti)
+    .split(/…+|\.{3,}/)
+    .map((p) => p.trim())
+    .filter((p) => p.length >= 12);
+
+  if (!parcalar.length) return false;
+
+  let konum = 0;
+  for (const p of parcalar) {
+    const i = metin.indexOf(p, konum);
+    if (i === -1) return false;
+    konum = i + p.length;
+  }
+  return true;
 }
 
 /**
@@ -60,8 +118,11 @@ export function degerlendirmeyiDogrula(
   }
 
   const dogrulanan: Alinti[] = [];
+  const dusenler: Hata[] = [];
+
   for (const a of cikti.alintilar) {
     const belge = paket.belgeler.find((b) => b.id === a.belge_id);
+    // Uydurulmuş belge kimliği ve paket dışı belge GÜVENLİK ihlalidir → sert ret.
     if (!belge) {
       hatalar.push({ kod: "belge_yok", mesaj: `Belge bulunamadı: ${a.belge_id}` });
       continue;
@@ -73,14 +134,25 @@ export function degerlendirmeyiDogrula(
       });
       continue;
     }
-    if (!normalize(belge.metin).includes(normalize(a.alinti))) {
-      hatalar.push({
+    // Eşleşmeyen alıntı DÜŞÜRÜLÜR: kaydedilmez, dayanağa katkı vermez, denetime yazılır.
+    if (!alintiGeciyor(belge.metin, a.alinti)) {
+      dusenler.push({
         kod: "alinti_eslesmiyor",
-        mesaj: `Alıntı “${a.alinti.slice(0, 60)}…” ${belge.ad} içinde bulunamadı.`,
+        mesaj: `Alıntı “${a.alinti.slice(0, 60)}…” ${belge.ad}${belge.bolum ? ` · ${belge.bolum}` : ""} içinde birebir bulunamadı; düşürüldü.`,
       });
       continue;
     }
     dogrulanan.push(a);
+  }
+
+  if (cikti.alintilar.length && dusenler.length / cikti.alintilar.length > UYDURMA_ESIGI) {
+    hatalar.push({
+      kod: "alinti_eslesmiyor",
+      mesaj:
+        `Alıntıların ${dusenler.length}/${cikti.alintilar.length}'i belgede bulunamadı — ` +
+        "çoğunluk uydurma sayılır ve çıktının tamamı reddedilir.",
+    });
+    hatalar.push(...dusenler);
   }
 
   // Kaynaksız sayısal token reddedilir: gerekçedeki her sayı belgede geçmeli.
@@ -97,7 +169,7 @@ export function degerlendirmeyiDogrula(
   }
 
   if (hatalar.length) return { gecerli: false, hatalar };
-  return { gecerli: true, dayanak: dayanakPuani(dogrulanan, paket) };
+  return { gecerli: true, dayanak: dayanakPuani(dogrulanan, paket), dogrulanan, dusenler };
 }
 
 /**

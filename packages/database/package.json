@@ -16,7 +16,8 @@
     "seed": "node --env-file-if-exists=../../.env src/cli.ts seed",
     "reset": "node --env-file-if-exists=../../.env src/cli.ts reset",
     "test": "node --env-file-if-exists=../../.env --env-file-if-exists=../../.env.test --test src/*.test.ts",
-    "nace": "node --env-file-if-exists=../../.env src/cli.ts nace"
+    "nace": "node --env-file-if-exists=../../.env src/cli.ts nace",
+    "belgeler": "node --env-file-if-exists=../../.env src/cli.ts belgeler"
   },
   "dependencies": {
     "@ykh/domain": "workspace:*",

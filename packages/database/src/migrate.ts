@@ -64,20 +64,35 @@ async function tabloyuHazirla() {
   `;
 }
 
+/**
+ * Migration kilidi. `pnpm -r test` paketleri paralel çalıştırıyor ve iki süreç
+ * aynı veritabanını aynı anda migrate edince `create table` çakışıyor
+ * (`duplicate key ... pg_type`). Danışma kilidi ikinciyi bekletir.
+ */
+const KILIT = 5470_2027;
+
 export async function yukari(): Promise<string[]> {
   await veritabaniHazirla();
-  await tabloyuHazirla();
   const sql = sahip();
-  const uygulanan = new Set((await sql<{ ad: string }[]>`select ad from migration`).map((r) => r.ad));
-  const yeni: string[] = [];
+  return sql.begin(async (tx) => {
+    await tx`select pg_advisory_xact_lock(${KILIT})`;
+    await tx`
+      create table if not exists migration (
+        ad text primary key,
+        uygulandi timestamptz not null default now()
+      )
+    `;
+    const uygulanan = new Set((await tx<{ ad: string }[]>`select ad from migration`).map((r) => r.ad));
+    const yeni: string[] = [];
 
-  for (const adim of await adimlar()) {
-    if (uygulanan.has(adim.ad)) continue;
-    await sql.unsafe(adim.up);
-    await sql`insert into migration (ad) values (${adim.ad})`;
-    yeni.push(adim.ad);
-  }
-  return yeni;
+    for (const adim of await adimlar()) {
+      if (uygulanan.has(adim.ad)) continue;
+      await tx.unsafe(adim.up);
+      await tx`insert into migration (ad) values (${adim.ad})`;
+      yeni.push(adim.ad);
+    }
+    return yeni;
+  }) as Promise<string[]>;
 }
 
 export async function asagi(kaçAdim = 1): Promise<string[]> {

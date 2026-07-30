@@ -124,6 +124,9 @@ create table donem (
 create table belge (
   id           bigserial primary key,
   ad           text not null,
+  /** belge içindeki yer: "s. 47" veya "parça 12/240". Büyük belgeler parçalara
+   *  bölünerek yüklenir; her parça ayrı satırdır, `ad` ile gruplanır. */
+  bolum        text,
   tur          belge_turu not null default 'diger',
   yil          text,
   /** kapsam: null = ulusal; ajans veya il verilmişse o kapsama özgü */
@@ -133,11 +136,14 @@ create table belge (
   yukleyen_ref uuid references gonderen(ref),
   access_class erisim_sinifi not null default 'kamuya_acik',
   olusturuldu  timestamptz not null default now(),
-  arama        tsvector generated always as (to_tsvector('simple', ad || ' ' || metin)) stored
+  arama        tsvector generated always as (
+    to_tsvector('simple', ad || ' ' || coalesce(bolum, '') || ' ' || metin)
+  ) stored
 );
 
 create index belge_arama on belge using gin (arama);
 create index belge_kapsam on belge (ajans_kod, il_kod);
+create index belge_ad on belge (ad);
 
 -- ── öneri ──────────────────────────────────────────────────────────────────
 

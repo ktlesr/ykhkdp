@@ -70,8 +70,94 @@ test("alıntısız çıktı geçerli ama dayanak 0 — slot dolduramaz", () => {
   assert.equal(s.gecerli && s.dayanak, 0);
 });
 
+test("azınlıkta kalan eşleşmeyen alıntı düşürülür, çıktı ayakta kalır", () => {
+  const s = degerlendirmeyiDogrula(
+    {
+      gerekce: "Bölge planı önceliklerine uygundur.",
+      alintilar: [
+        { belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" },
+        { belge_id: 1, alinti: "katma değeri yükseltecek dönüşüm alanı" },
+        { belge_id: 2, alinti: "Enerji verimliliği yatırımları" },
+        { belge_id: 1, alinti: "bu cümle belgede hiç yok" },
+      ],
+      puanlar,
+    },
+    PAKET,
+  );
+  assert.equal(s.gecerli, true, "1/4 düşen alıntı tüm değerlendirmeyi çöpe atmaz");
+  assert.equal(s.gecerli && s.dogrulanan.length, 3);
+  assert.equal(s.gecerli && s.dusenler.length, 1);
+  // Dayanak yalnızca doğrulanan üç alıntıdan hesaplanır.
+  assert.equal(s.gecerli && s.dayanak, dayanakPuani(s.gecerli ? s.dogrulanan : [], PAKET));
+});
+
+test("çoğunluk eşleşmiyorsa çıktının tamamı reddedilir", () => {
+  const s = degerlendirmeyiDogrula(
+    {
+      gerekce: "Uygundur.",
+      alintilar: [
+        { belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" },
+        { belge_id: 1, alinti: "bu cümle belgede hiç yok" },
+        { belge_id: 1, alinti: "bu cümle de belgede hiç yok" },
+      ],
+      puanlar,
+    },
+    PAKET,
+  );
+  assert.ok(!s.gecerli && s.hatalar.some((h) => h.kod === "alinti_eslesmiyor"));
+});
+
+test("paket dışı belge tek başına bile sert reddedilir — güvenlik ihlali", () => {
+  const s = degerlendirmeyiDogrula(
+    {
+      gerekce: "Uygundur.",
+      alintilar: [
+        { belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" },
+        { belge_id: 1, alinti: "katma değeri yükseltecek dönüşüm alanı" },
+        { belge_id: 2, alinti: "Enerji verimliliği yatırımları" },
+        { belge_id: 99, alinti: "tekstil ve deri" },
+      ],
+      puanlar,
+    },
+    PAKET,
+  );
+  assert.ok(!s.gecerli && s.hatalar.some((h) => h.kod === "belge_yok"), "azınlıkta olsa da düşürülmez");
+});
+
 test("dayanak puanı belge çeşitliliğiyle artar", () => {
   const tek = dayanakPuani([{ belge_id: 1, alinti: "a" }], PAKET);
   const cift = dayanakPuani([{ belge_id: 1, alinti: "a" }, { belge_id: 2, alinti: "b" }], PAKET);
   assert.ok(cift > tek);
+});
+
+test("kıvrık kesme işareti ve tire farkı alıntıyı reddetmez", () => {
+  const paket = paketKur("p", [{ id: 1, ad: "X", metin: "Kayseri'de savunma sanayi 2024-2028 döneminde gelişti." }]);
+  const s = degerlendirmeyiDogrula(
+    { gerekce: "Uygundur.", alintilar: [{ belge_id: 1, alinti: "Kayseri’de savunma sanayi 2024–2028 döneminde" }], puanlar },
+    paket,
+  );
+  assert.equal(s.gecerli, true);
+});
+
+test("… ile kısaltılmış alıntı parçaları sırayla doğrulanır", () => {
+  const paket = paketKur("p", [
+    { id: 1, ad: "X", metin: "Başta Ankara olmak üzere Konya ve Kayseri'de savunma ve havacılık sektörü öne çıkmaktadır." },
+  ]);
+  const dogru = degerlendirmeyiDogrula(
+    { gerekce: "Uygundur.", alintilar: [{ belge_id: 1, alinti: "Başta Ankara olmak üzere … savunma ve havacılık sektörü" }], puanlar },
+    paket,
+  );
+  assert.equal(dogru.gecerli, true, "her parça sırayla geçiyorsa kabul");
+
+  const tersSira = degerlendirmeyiDogrula(
+    { gerekce: "Uygundur.", alintilar: [{ belge_id: 1, alinti: "savunma ve havacılık sektörü … Başta Ankara olmak üzere" }], puanlar },
+    paket,
+  );
+  assert.equal(tersSira.gecerli, false, "sıra bozuksa reddedilir — kompozit uydurma engellenir");
+
+  const uydurma = degerlendirmeyiDogrula(
+    { gerekce: "Uygundur.", alintilar: [{ belge_id: 1, alinti: "Başta Ankara olmak üzere … deniz ticareti filosu" }], puanlar },
+    paket,
+  );
+  assert.equal(uydurma.gecerli, false, "parçalardan biri uydurmaysa reddedilir");
 });

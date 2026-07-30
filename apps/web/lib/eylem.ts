@@ -213,10 +213,11 @@ export async function belgeEylemi(_o: EylemSonucu | null, f: FormData): Promise<
   return { ok: true, mesaj: `“${ad}” eklendi (${metin.length} karakter). Yeni öneriler bu belgeye dayanabilir.` };
 }
 
-export async function belgeSilEylemi(id: number): Promise<EylemSonucu> {
+export async function belgeSilEylemi(ad: string): Promise<EylemSonucu> {
   const k = await kullanici();
   if (!k || !onaylayabilir(k.rol)) return { ok: false, mesaj: "Bu işlem yalnızca ajans rolünde." };
-  await belgeSil(await baglam(), id);
+  const parca = await belgeSil(await baglam(), ad);
+  if (!parca) return { ok: false, mesaj: `“${ad}” bulunamadı.` };
   revalidatePath("/belgeler");
-  return { ok: true, mesaj: "Belge silindi." };
+  return { ok: true, mesaj: `“${ad}” silindi (${parca} parça). Yeni değerlendirmeler buna dayanamaz.` };
 }

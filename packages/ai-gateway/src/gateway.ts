@@ -23,7 +23,11 @@ export type Maliyet = { girdiToken: number; ciktiToken: number; model: string };
 type Meta = { modelSnapshot: string; promptSurum: string };
 
 export type Sonuc<T> =
-  | ({ ok: true; veri: T; dayanak: number; maliyet: Maliyet } & Meta)
+  | ({ ok: true; veri: T; dayanak: number; maliyet: Maliyet;
+      /** birebir doğrulanmış alıntılar; yalnızca bunlar kaydedilir */
+      dogrulanan: Array<{ belge_id: number; alinti: string }>;
+      /** düşürülen alıntı gerekçeleri — denetime yazılır */
+      dusenler: string[] } & Meta)
   | ({ ok: false; asama: "model" | "sema" | "dayanak"; hatalar: string[] } & Meta);
 
 /** `latest` alias üretimde kullanılmaz. */
@@ -100,7 +104,15 @@ export async function degerlendir(
     return { ok: false, asama: "dayanak", hatalar: dogrulama.hatalar.map((h) => h.mesaj), ...meta };
   }
 
-  return { ok: true, veri: r.veri, dayanak: dogrulama.dayanak, maliyet: r.maliyet, ...meta };
+  return {
+    ok: true,
+    veri: r.veri,
+    dayanak: dogrulama.dayanak,
+    dogrulanan: dogrulama.dogrulanan,
+    dusenler: dogrulama.dusenler.map((h) => h.mesaj),
+    maliyet: r.maliyet,
+    ...meta,
+  };
 }
 
 /** Kullanıcı NACE girmediyse aday kodlardan birini önerir. */
@@ -135,5 +147,5 @@ export async function naceOner(
     };
   }
 
-  return { ok: true, veri: r.veri, dayanak: 0, maliyet: r.maliyet, ...meta };
+  return { ok: true, veri: r.veri, dayanak: 0, dogrulanan: [], dusenler: [], maliyet: r.maliyet, ...meta };
 }
