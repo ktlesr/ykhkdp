@@ -97,9 +97,13 @@ function uret(istek: ModelIstegi): unknown {
       puan: Math.max(0, Math.min(100, taban + ((i * 7) % 13) - 6)),
       not: "Çevrimdışı istemci: belgelerdeki eşleşmeye göre taban puan.",
     })),
-    gerekce:
-      "Çevrimdışı değerlendirme. Öneri, üst ölçekli belgelerde tanımlı önceliklerle " +
-      `${alintilar.length} noktada eşleşiyor. Gerçek puanlama için OPENAI_API_KEY tanımlanmalıdır.`,
+    // Gerekçede SAYI YOK: doğrulayıcı belgede geçmeyen her sayısal ifadeyi
+    // reddeder ve kendi çıktımızı kendimiz reddettirmiş oluruz.
+    gerekce: alintilar.length
+      ? "Çevrimdışı değerlendirme. Öneri, üst ölçekli belgelerde tanımlı önceliklerle " +
+        "eşleşen ifadeler içeriyor. Gerçek puanlama için OPENAI_API_KEY tanımlanmalıdır."
+      : "Çevrimdışı değerlendirme. Belgelerde öneriyle eşleşen ifade bulunamadı; " +
+        "dayanak puanı sıfır kalıyor. Gerçek puanlama için OPENAI_API_KEY tanımlanmalıdır.",
     alintilar,
     eksik_veri: alintilar.length ? [] : ["Belgelerde öneriyle eşleşen ifade bulunamadı."],
   };

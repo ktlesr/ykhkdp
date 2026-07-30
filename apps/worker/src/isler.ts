@@ -1,4 +1,4 @@
-import { degerlendir, istemciSec, MODEL_SNAPSHOT, naceOner } from "@ykh/ai-gateway";
+import { degerlendir, istemciSec, modelSnapshot, naceOner } from "@ykh/ai-gateway";
 import { denetle, islem, type Baglam } from "@ykh/database";
 import { aiMaliyeti, log } from "@ykh/observability";
 import { belgePaketi, naceAdaylari } from "@ykh/retrieval";
@@ -34,18 +34,19 @@ export const ISLER: Record<string, (b: Baglam, yuk: Record<string, unknown>) => 
     if (!o) throw new Error(`Öneri bulunamadı: ${oneriId}`);
 
     const istemci = istemciSec();
+    const model = modelSnapshot();
     const notlar: string[] = [];
 
     // ── 1. NACE · yalnızca kullanıcı girmediyse ────────────────────────────
     if (!o.nace_kod) {
       const adaylar = await naceAdaylari(b, `${o.baslik} ${o.gerekce}`);
-      const n = await naceOner(istemci, MODEL_SNAPSHOT, {
+      const n = await naceOner(istemci, model, {
         baslik: o.baslik,
         gerekce: o.gerekce,
         adaylar,
       });
       aiMaliyeti({
-        model: MODEL_SNAPSHOT,
+        model: model,
         girdiToken: n.ok ? n.maliyet.girdiToken : 0,
         ciktiToken: n.ok ? n.maliyet.ciktiToken : 0,
         promptSurum: n.promptSurum,
@@ -88,7 +89,7 @@ export const ISLER: Record<string, (b: Baglam, yuk: Record<string, unknown>) => 
       return "Üst ölçekli belge yok; değerlendirme yapılamadı. /belgeler ekranından belge yükleyin.";
     }
 
-    const s = await degerlendir(istemci, MODEL_SNAPSHOT, {
+    const s = await degerlendir(istemci, model, {
       baslik: o.baslik,
       gerekce: o.gerekce,
       il: o.il,
@@ -98,7 +99,7 @@ export const ISLER: Record<string, (b: Baglam, yuk: Record<string, unknown>) => 
       paket,
     });
     aiMaliyeti({
-      model: MODEL_SNAPSHOT,
+      model: model,
       girdiToken: s.ok ? s.maliyet.girdiToken : 0,
       ciktiToken: s.ok ? s.maliyet.ciktiToken : 0,
       promptSurum: s.promptSurum,

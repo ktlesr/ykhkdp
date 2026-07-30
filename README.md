@@ -33,11 +33,17 @@ kritere göre puanlar. Puan **doğrulanmamış bir taslaktır**; ajans onaylamad
 
 ```bash
 pnpm install
+cp .env.example .env     # OPENAI_API_KEY satırını doldurun (boş da çalışır)
 docker compose up -d     # Postgres 17 · localhost:5470
 pnpm db:reset            # şema + RLS + 3190 NACE kodu + demo verisi
+pnpm ai:test             # AI bağlantısını sına — hiçbir şey yazmaz
 pnpm dev                 # http://localhost:3000
 pnpm worker              # ayrı terminal — AI değerlendirme döngüsü
 ```
+
+Kök dizindeki tek `.env` dosyasını hem web hem worker okur (`--env-file-if-exists`).
+`pnpm ai:test` gerçek bir çağrı yapıp zincirin her katmanını ayrı ayrı raporlar:
+model erişimi → şema → alıntı doğrulama → dayanak puanı.
 
 Demo hesapları (parola `ykh-demo-2027`):
 

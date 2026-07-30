@@ -11,12 +11,12 @@
     "./seed": "./src/seed.ts"
   },
   "scripts": {
-    "migrate": "node src/cli.ts up",
-    "migrate:down": "node src/cli.ts down",
-    "seed": "node src/cli.ts seed",
-    "reset": "node src/cli.ts reset",
-    "test": "node --test src/*.test.ts",
-    "nace": "node src/cli.ts nace"
+    "migrate": "node --env-file-if-exists=../../.env src/cli.ts up",
+    "migrate:down": "node --env-file-if-exists=../../.env src/cli.ts down",
+    "seed": "node --env-file-if-exists=../../.env src/cli.ts seed",
+    "reset": "node --env-file-if-exists=../../.env src/cli.ts reset",
+    "test": "node --env-file-if-exists=../../.env --test src/*.test.ts",
+    "nace": "node --env-file-if-exists=../../.env src/cli.ts nace"
   },
   "dependencies": {
     "@ykh/domain": "workspace:*",

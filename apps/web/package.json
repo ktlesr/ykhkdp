@@ -3,10 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "test": "node --test lib/*.test.ts",
+    "dev": "node --env-file-if-exists=../../.env node_modules/next/dist/bin/next dev",
+    "build": "node --env-file-if-exists=../../.env node_modules/next/dist/bin/next build",
+    "start": "node --env-file-if-exists=../../.env node_modules/next/dist/bin/next start",
+    "test": "node --env-file-if-exists=../../.env --test lib/*.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

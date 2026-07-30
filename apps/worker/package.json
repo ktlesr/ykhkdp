@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --watch src/index.ts",
-    "start": "node src/index.ts",
-    "test": "node --test src/*.test.ts"
+    "dev": "node --env-file-if-exists=../../.env --watch src/index.ts",
+    "start": "node --env-file-if-exists=../../.env src/index.ts",
+    "test": "node --env-file-if-exists=../../.env --test src/*.test.ts"
   },
   "dependencies": {
     "@ykh/ai-gateway": "workspace:*",

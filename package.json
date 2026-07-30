@@ -13,7 +13,8 @@
     "build": "pnpm --filter @ykh/web build",
     "test": "pnpm -r --workspace-concurrency=1 test",
     "typecheck": "pnpm --filter @ykh/web typecheck",
-    "audit": "pnpm audit --prod"
+    "audit": "pnpm audit --prod",
+    "ai:test": "pnpm --filter @ykh/ai-gateway sinama"
   },
   "packageManager": "pnpm@10.19.0",
   "engines": {
