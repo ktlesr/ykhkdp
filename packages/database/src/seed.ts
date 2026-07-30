@@ -9,6 +9,16 @@ import { parolaOzetle } from "./parola.ts";
 
 export const DEMO_PAROLA = "ykh-demo-2027";
 
+/**
+ * Demo hesapları — tek kaynak. Giriş ekranı bu listeyi gösterir, seed bunu
+ * yazar. Rol adı değişirse iki yer birden değişir, ayrışamazlar.
+ */
+export const DEMO_HESAPLAR = [
+  { eposta: "yatirimci@ykh.local", ad: "A. Kaya", rol: "yatirimci", etiket: "yatırımcı — öneri verir" },
+  { eposta: "ajans@ykh.local", ad: "S. Aydın", rol: "ajans", etiket: "ajans — onaylar, belge yükler" },
+  { eposta: "yonetici@ykh.local", ad: "T. Arslan", rol: "yonetici", etiket: "yönetici — hepsi + kişisel veri" },
+] as const;
+
 const VERI = join(dirname(fileURLToPath(import.meta.url)), "..", "data");
 
 type Tohum = {
@@ -100,11 +110,7 @@ export async function seed(): Promise<{ ozet: string }> {
   // ── kullanıcılar ────────────────────────────────────────────────────────
   const ozet = await parolaOzetle(DEMO_PAROLA);
   const ref: Record<string, string> = {};
-  for (const k of [
-    { eposta: "ajans@ykh.local", ad: "S. Aydın", rol: "ajans" },
-    { eposta: "yatirimci@ykh.local", ad: "A. Kaya", rol: "yatirimci" },
-    { eposta: "yonetici@ykh.local", ad: "T. Arslan", rol: "yonetici" },
-  ] as const) {
+  for (const k of DEMO_HESAPLAR) {
     const [g] = await sql<{ ref: string }[]>`insert into gonderen (rol) values (${k.rol}::rol) returning ref`;
     ref[k.eposta] = g.ref;
     await sql`insert into kimlik (gonderen_ref, eposta, ad_soyad, parola_hash)

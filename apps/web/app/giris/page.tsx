@@ -4,6 +4,7 @@ import { EylemFormu, Gonder } from "@/components/eylem-formu.tsx";
 import { UstBar } from "@/components/ui.tsx";
 import { girisEylemi } from "@/lib/eylem.ts";
 import { kullanici } from "@/lib/oturum.ts";
+import { DEMO_HESAPLAR, DEMO_PAROLA } from "@ykh/database/seed";
 
 const ETIKET = "mb-1.5 block font-mono text-[9.5px] uppercase tracking-[.13em] text-ink-mute";
 const GIRDI =
@@ -23,7 +24,7 @@ export default async function Giris({ searchParams }: { searchParams: Promise<{ 
         </div>
 
         <EylemFormu eylem={girisEylemi} className="mt-6 border border-hairline bg-surface p-5">
-          <input type="hidden" name="hedef" value={hedef ?? "/iller"} />
+          <input type="hidden" name="hedef" value={hedef ?? "/"} />
           <label className={ETIKET} htmlFor="eposta">
             E-posta
           </label>
@@ -59,12 +60,13 @@ export default async function Giris({ searchParams }: { searchParams: Promise<{ 
             Geliştirme ortamı demo hesapları
           </div>
           <ul className="mt-2 space-y-1 font-mono text-[11.5px] text-ink-soft">
-            <li>uzman@ykh.local · ajans uzmanı</li>
-            <li>kurul@ykh.local · kurul üyesi</li>
-            <li>birey@ykh.local · birey</li>
-            <li>denetci@ykh.local · denetçi</li>
+            {DEMO_HESAPLAR.map((h) => (
+              <li key={h.eposta}>
+                {h.eposta} · {h.etiket}
+              </li>
+            ))}
           </ul>
-          <div className="mt-2 font-mono text-[11.5px] text-ink-soft">Parola: ykh-demo-2027</div>
+          <div className="mt-2 font-mono text-[11.5px] text-ink-soft">Parola: {DEMO_PAROLA}</div>
         </div>
       </section>
     </>
