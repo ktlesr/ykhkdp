@@ -26,7 +26,7 @@ export default async function Iller() {
       <Sayfa genis>
         <Baslik
           ustEtiket="Yerel Kalkınma Hamlesi"
-          alt="Her il için dört yatırım konusu. Öneriler yapay zekâ tarafından üst ölçekli belgelere ve sekiz kritere göre puanlanır, ajans onayından sonra listeye girer. Sıralama karar değildir."
+          alt="Her il için dört yatırım konusu. Öneriler yapay zekâ tarafından üst ölçekli belgelere ve sekiz kritere göre puanlanır, ajans onayından sonra listeye girer. Sıralama karar değildir. Açık dönemi olmayan illerde yürürlükteki resmî liste görülebilir."
         >
           İl bazında yatırım konusu önerileri
         </Baslik>
@@ -42,26 +42,42 @@ export default async function Iller() {
               >
                 <div className="min-w-[200px]">
                   <div className="text-[15px] font-medium">
-                    {x.il} · {x.yil}
+                    {x.il}
+                    {x.yil && <span className="num text-ink-mute"> · {x.yil}</span>}
                   </div>
-                  <div className="mt-1 font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">{x.ajans}</div>
+                  <div className="mt-1 font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
+                    {x.ajans}
+                    {x.kisa_ad && <span> · {x.kisa_ad}</span>}
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2.5">
-                  <Rozet tur={x.listede > 0 ? "yesil" : "gri"} isaret={x.listede > 0 ? "■" : "—"}>
-                    {x.listede} listede
-                  </Rozet>
-                  {x.bekleyen > 0 && (
-                    <Rozet tur="amber" isaret="◌">
-                      {x.bekleyen} onay bekliyor
+                {/* Dönemi olmayan il GİZLENMEZ: resmî listesi var ve görülebilir. */}
+                <div className="flex flex-wrap items-center gap-2.5">
+                  {x.yil ? (
+                    <>
+                      <Rozet tur={x.listede > 0 ? "yesil" : "gri"} isaret={x.listede > 0 ? "■" : "—"}>
+                        {x.listede} listede
+                      </Rozet>
+                      {x.bekleyen > 0 && (
+                        <Rozet tur="amber" isaret="◌">
+                          {x.bekleyen} onay bekliyor
+                        </Rozet>
+                      )}
+                    </>
+                  ) : (
+                    <Rozet tur="gri" isaret="—">
+                      Açık dönem yok
                     </Rozet>
+                  )}
+                  {x.resmi_konu > 0 && (
+                    <Rozet tur="notr">{x.resmi_konu} resmî yatırım konusu</Rozet>
                   )}
                 </div>
 
                 <div className="ml-auto flex gap-2.5">
-                  <Bag href={`/oneri?il=${x.il_kod}`}>Öneri ver</Bag>
-                  <Bag varyant="dolu" href={`/il/${x.il_kod}`}>
-                    Sıralamayı gör
+                  {x.yil && <Bag href={`/oneri?il=${x.il_kod}`}>Öneri ver</Bag>}
+                  <Bag varyant={x.yil ? "dolu" : "cizgi"} href={`/il/${x.il_kod}`}>
+                    {x.yil ? "Sıralamayı gör" : "Resmî listeyi gör"}
                   </Bag>
                 </div>
               </div>

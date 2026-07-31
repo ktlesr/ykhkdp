@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { adaylariGetir, donemGetir, yatirimKonulari } from "@ykh/database";
+import { adaylariGetir, donemGetir, ilGetir, konuluYillar, yatirimKonulari } from "@ykh/database";
 import { onaylayabilir, type Sonuc } from "@ykh/domain";
 import { ayardan, grupAgirligi, hesapla } from "@ykh/scoring";
 import { Bag, Baslik, Bos, Rozet, Sayfa, UstBar, Uyari } from "@/components/ui.tsx";
@@ -22,14 +22,26 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
   const b = await baglam();
   const k = await kullanici();
 
-  const d = await donemGetir(b, il);
-  if (!d) notFound();
+  /**
+   * Sayfa AÇIK DÖNEM OLMADAN da çalışır.
+   *
+   * Önce `donemGetir` null dönünce `notFound()` veriyordu; 81 ilin 77'sinde
+   * dönem yok ve o illerin yürürlükteki resmî listesi yüklü olduğu hâlde
+   * görünmüyordu. Dönem yoksa sıralama yok — resmî liste yine var.
+   */
+  const ilKaydi = await ilGetir(b, il);
+  if (!ilKaydi) notFound();
 
-  const adaylar = await adaylariGetir(b, d);
-  // Yürürlükteki resmî liste — platformun sıralaması bunun yerine geçmez.
-  const resmi = await yatirimKonulari(b, il, Number(d.yil) - 1);
-  const h = hesapla(adaylar, ayardan(d.set));
-  const yerellik = Math.round(grupAgirligi(d.set.agirliklar, "yerellik") * 100);
+  const d = await donemGetir(b, il);
+  const yillar = await konuluYillar(b, il);
+  // Sıralama bir sonraki dönem içindir; karşılaştırma zemini bir önceki yılın
+  // yürürlükteki listesidir. Dönem yoksa elimizdeki en güncel yıl gösterilir.
+  const resmiYil = d ? Number(d.yil) - 1 : (yillar[0] ?? 0);
+  const resmi = resmiYil ? await yatirimKonulari(b, il, resmiYil) : [];
+
+  const adaylar = d ? await adaylariGetir(b, d) : [];
+  const h = d ? hesapla(adaylar, ayardan(d.set)) : null;
+  const yerellik = d ? Math.round(grupAgirligi(d.set.agirliklar, "yerellik") * 100) : 0;
 
   return (
     <>
@@ -37,26 +49,38 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
         kullanici={k}
         nav={[
           { ad: "İller", yol: "/iller" },
-          { ad: d.il, yol: `/il/${il}`, aktif: true },
+          { ad: ilKaydi.ad, yol: `/il/${il}`, aktif: true },
           { ad: "Öneri ver", yol: `/oneri?il=${il}` },
           ...(k && onaylayabilir(k.rol) ? [{ ad: "Onay", yol: "/onay" }] : []),
         ]}
       />
       <Sayfa genis>
         <Baslik
-          ustEtiket={`${d.ajans} · ${d.yil} dönemi`}
+          ustEtiket={
+            d
+              ? `${ilKaydi.ajans} · ${d.yil} dönemi`
+              : `${ilKaydi.ajans}${ilKaydi.kisa_ad ? ` · ${ilKaydi.kisa_ad}` : ""} · açık dönem yok`
+          }
           alt={
-            <>
-              {d.set.slotSayisi} slot. Mevcut konular ve yeni öneriler aynı sekiz kriterle sıralanır; puanın en büyük
-              payı (<b>%{yerellik}</b>) “neden burada?” sorusuna ait. Mevcut konulara{" "}
-              <b className="num">+{h.pay}</b> devamlılık payı uygulanır — gizli katsayı yok, sürüm {d.set.surum}.
-            </>
+            d && h ? (
+              <>
+                {d.set.slotSayisi} slot. Mevcut konular ve yeni öneriler aynı sekiz kriterle sıralanır; puanın en
+                büyük payı (<b>%{yerellik}</b>) “neden burada?” sorusuna ait. Mevcut konulara{" "}
+                <b className="num">+{h.pay}</b> devamlılık payı uygulanır; gizli katsayı yok, sürüm {d.set.surum}.
+              </>
+            ) : (
+              <>
+                Bu ilde henüz açık bir dönem yok, bu yüzden platformun ürettiği bir sıralama da yok. Aşağıda
+                yürürlükteki resmî yatırım konuları listesi ve bir önceki yıla göre ne değiştiği görünüyor.
+              </>
+            )
           }
         >
-          {d.il} — yatırım konusu sıralaması
+          {ilKaydi.ad}
+          {d ? " — yatırım konusu sıralaması" : " — resmî yatırım konuları"}
         </Baslik>
 
-        {adaylar.length === 0 ? (
+        {!d || !h ? null : adaylar.length === 0 ? (
           <Bos baslik="Bu ilde henüz onaylanmış öneri yok.">
             Öneriler yapay zekâ değerlendirmesinden ve ajans onayından sonra burada listelenir.
             <div className="mt-3">
@@ -158,7 +182,7 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
           </>
         )}
 
-        {/* Yürürlükteki resmî liste — sıralamanın karşılaştırma zemini */}
+        {/* Yürürlükteki resmî liste ve yıllar arası süreklilik */}
         {resmi.length > 0 && (
           <div className="mt-8 border border-hairline bg-surface">
             <div className="panel-koyu flex flex-wrap items-baseline gap-x-3 px-4 py-2.5 font-mono text-[10px] uppercase tracking-[.13em]">
@@ -166,15 +190,45 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
               <span className="num text-[#C9CDD3]">{resmi[0].kaynak}</span>
             </div>
             <p className="border-b border-b-hairline-soft px-4 py-2.5 text-[12.5px] leading-[1.45] text-ink-soft">
-              Sanayi ve Teknoloji Bakanlığı tebliğiyle ilan edilen dört yatırım konusu. Yukarıdaki sıralama bunun
-              yerine geçmez, bir sonraki dönem için hazırlık katmanıdır.
+              Sanayi ve Teknoloji Bakanlığı tebliğiyle ilan edilen dört yatırım konusu.{" "}
+              {yillar.length > 1 && (
+                <>
+                  Her konunun yanında <b className="font-medium">bir önceki yıla göre durumu</b> yazıyor: yalnızca
+                  başlığı birebir aynı olan konu “aynen korundu” sayılır. Yakın ama yeniden yazılmış başlıklar
+                  doğrulanmamış eşleşme olarak gösterilir; kararı okuyan verir.
+                </>
+              )}
             </p>
             {resmi.map((x) => (
               <div key={x.sira} className="border-b border-b-hairline-soft px-4 py-3.5 last:border-b-0">
-                <div className="flex items-baseline gap-3">
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5">
                   <span className="num shrink-0 text-[12px] text-ink-mute">{String(x.sira).padStart(2, "0")}</span>
-                  <h3 className="text-[14.5px] font-medium leading-[1.35] text-pretty">{x.baslik}</h3>
+                  <h3 className="min-w-0 flex-1 text-[14.5px] font-medium leading-[1.35] text-pretty">{x.baslik}</h3>
+                  {yillar.length > 1 &&
+                    (x.onceki_durum === "aynen" ? (
+                      <Rozet tur="yesil" isaret="■">
+                        {resmiYil - 1}’de de aynen vardı
+                      </Rozet>
+                    ) : x.onceki_durum === "benzer" ? (
+                      <Rozet tur="amber" isaret="◌">
+                        {resmiYil - 1}’de benzeri · %{Math.round((x.onceki_benzerlik ?? 0) * 100)}
+                      </Rozet>
+                    ) : (
+                      <Rozet tur="notr" isaret="▲">
+                        {resmiYil - 1} listesinde yok
+                      </Rozet>
+                    ))}
                 </div>
+
+                {x.onceki_durum === "benzer" && x.onceki_baslik && (
+                  <div className="tex-unverified mt-2 ml-[30px] max-w-[78ch] px-3 py-2">
+                    <div className="font-mono text-[9.5px] uppercase tracking-[.12em] text-unverif">
+                      <span aria-hidden>◌</span> {resmiYil - 1} karşılığı · doğrulanmadı
+                    </div>
+                    <p className="mt-1 text-[12.5px] leading-[1.45] text-pretty text-ink-soft">{x.onceki_baslik}</p>
+                  </div>
+                )}
+
                 {x.gerekce && (
                   <p className="mt-2 max-w-[78ch] pl-[30px] text-[13px] leading-[1.5] text-pretty text-ink-soft">
                     {x.gerekce}
@@ -184,6 +238,14 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
             ))}
           </div>
         )}
+
+        {!d && (
+          <p className="mt-6 text-[12.5px] leading-[1.5] text-ink-mute">
+            Ajans bu il için bir dönem açtığında öneri kabulü başlar ve bu konular sıralamaya mevcut aday olarak
+            girer.
+          </p>
+        )}
+
       </Sayfa>
     </>
   );

@@ -3,7 +3,8 @@ import test, { after, before } from "node:test";
 import {
   adaylariGetir, baglamdan, belgeEkle, bolgeler, donemGetir, durumDegistir, girisYap, islem, kapat,
   kayitOl, misafirAc, naceAra, onayKuyrugu, oneriGetir, oneriOlustur, ornekDegerlendirme, oturumCoz,
-  platformOzeti, puanDuzelt, ANONIM, type Baglam,
+  platformOzeti, puanDuzelt, illeriListele, ilGetir, konuluYillar, yatirimKonulari,
+  SUREKLILIK_ESIGI, ANONIM, type Baglam,
 } from "@ykh/database";
 import { sifirla, yukari } from "@ykh/database/migrate";
 import { DEMO_PAROLA, seed } from "@ykh/database/seed";
@@ -336,4 +337,70 @@ test("16d · dönemi olmayan il URL'den gelse de öneri adımına atlanmaz", asy
 
   // Kapalı ile öneri gönderilemez: dönem yok, eylem katmanı reddeder.
   assert.equal(await donemGetir(ANONIM, kapali.kod), null);
+});
+
+// ── resmî liste görünürlüğü ve yıllar arası süreklilik ─────────────────────
+
+test("18 · açık dönemi olmayan il de resmî listesini gösterir", async () => {
+  const b = await bolgeler(ANONIM);
+  const kapali = b.flatMap((x) => x.iller).find((i) => !i.yil);
+  assert.ok(kapali, "dönemi olmayan bir il olmalı");
+
+  // Sayfanın kullandığı iki kaynak: il künyesi ve resmî liste. İkisi de dönem
+  // şartı olmadan çalışmalı — 77 il aksi hâlde ulaşılamaz kalıyordu.
+  const kunye = await ilGetir(ANONIM, kapali.kod);
+  assert.ok(kunye, "il künyesi dönem olmadan da gelir");
+  assert.equal(await donemGetir(ANONIM, kapali.kod), null);
+
+  const yillar = await konuluYillar(ANONIM, kapali.kod);
+  assert.deepEqual(yillar, [2026, 2025], "en güncel yıl başta");
+
+  const konular = await yatirimKonulari(ANONIM, kapali.kod, yillar[0]);
+  assert.equal(konular.length, 4);
+  assert.ok(konular.every((k) => k.gerekce.length > 40), "2026 gerekçeleri gelir");
+});
+
+test("18b · il listesi 81 ilin tamamını taşır", async () => {
+  const iller = await illeriListele(ANONIM);
+  assert.equal(iller.length, 81, "dönemi olmayan il gizlenmez");
+  assert.ok(iller.some((x) => x.yil), "pilot illerde açık dönem var");
+  assert.ok(iller.some((x) => !x.yil), "diğerlerinde yok ve öyle görünür");
+  assert.ok(iller.every((x) => x.resmi_konu === 8), "il başına 2 yıl × 4 konu");
+});
+
+test("19 · süreklilik: aynen korunan yalnızca birebir aynı başlıktır", async () => {
+  const iller = await illeriListele(ANONIM);
+  let aynen = 0;
+  let benzer = 0;
+
+  for (const il of iller) {
+    const konular = await yatirimKonulari(ANONIM, il.il_kod, 2026);
+    // Birebir eşleme: bir önceki yılın aynı konusu iki kez kullanılamaz.
+    const kullanilan = konular.map((k) => k.onceki_baslik).filter(Boolean);
+    assert.equal(
+      new Set(kullanilan).size,
+      kullanilan.length,
+      `${il.il}: aynı önceki konu iki kez eşleşmiş`,
+    );
+
+    for (const k of konular) {
+      if (k.onceki_durum === "aynen") {
+        aynen++;
+        const sade = (x: string) => x.replace(/\s+/g, " ").trim().toLocaleLowerCase("tr-TR");
+        assert.equal(
+          sade(k.baslik),
+          sade(k.onceki_baslik ?? ""),
+          "aynen korundu iddiası birebir aynı başlık demektir",
+        );
+      }
+      if (k.onceki_durum === "benzer") {
+        benzer++;
+        assert.ok(k.onceki_baslik, "benzer eşleşmede önceki başlık gösterilir");
+        assert.ok((k.onceki_benzerlik ?? 0) >= SUREKLILIK_ESIGI);
+        assert.notEqual(k.baslik, k.onceki_baslik, "birebir aynıysa 'aynen' olmalıydı");
+      }
+      if (k.onceki_durum === "yok") assert.equal(k.onceki_baslik, null);
+    }
+  }
+  assert.ok(aynen > 0 && benzer > 0, "iki durum da veride var");
 });

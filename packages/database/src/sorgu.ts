@@ -155,17 +155,29 @@ export async function donemGetir(b: Baglam, ilKod: string, yil?: string): Promis
   });
 }
 
+/**
+ * İl listesi — 81 ilin TAMAMI, dönemi olmayanlar da.
+ *
+ * Önce `donem` ile iç birleştirme yapıyordu ve dönemi olmayan 77 il hiç
+ * görünmüyordu; o illerin yürürlükteki resmî listesi yüklü olduğu hâlde
+ * ulaşılamıyordu. Dönemi olmayan ilde `yil` null gelir ve ekran bunu
+ * "açık dönem yok" olarak yazar, gizlemez.
+ */
 export async function illeriListele(b: Baglam) {
   return islem(b, (sql) =>
-    sql<{ il_kod: string; il: string; ajans: string; yil: string; listede: number; bekleyen: number }[]>`
-      select i.kod as il_kod, i.ad as il, a.ad as ajans, d.yil,
+    sql<
+      { il_kod: string; il: string; ajans: string; kisa_ad: string | null; yil: string | null;
+        listede: number; bekleyen: number; resmi_konu: number }[]
+    >`
+      select i.kod as il_kod, i.ad as il, a.ad as ajans, a.kisa_ad, max(d.yil) as yil,
              count(*) filter (where o.durum = 'listede')::int as listede,
-             count(*) filter (where o.durum in ('degerlendiriliyor','onay_bekliyor'))::int as bekleyen
-      from donem d
-      join il i on i.kod = d.il_kod
+             count(*) filter (where o.durum in ('degerlendiriliyor','onay_bekliyor'))::int as bekleyen,
+             (select count(*) from yatirim_konusu y where y.il_kod = i.kod)::int as resmi_konu
+      from il i
       join ajans a on a.kod = i.ajans_kod
+      left join donem d on d.il_kod = i.kod
       left join oneri o on o.donem_id = d.id
-      group by i.kod, i.ad, a.ad, d.yil
+      group by i.kod, i.ad, a.ad, a.kisa_ad
       order by a.ad, i.ad
     `,
   );
@@ -234,7 +246,30 @@ export type YatirimKonusu = {
   baslik: string;
   gerekce: string;
   kaynak: string;
+  /**
+   * Bir önceki yıl karşılığı:
+   *  `aynen`  — başlık BİREBİR aynı, kanıtlanabilir olgu
+   *  `benzer` — yakın bir başlık var ama yeniden ifade edilmiş; DOĞRULANMADI
+   *  `yok`    — bir önceki listede karşılık bulunamadı
+   */
+  onceki_durum: "aynen" | "benzer" | "yok";
+  onceki_baslik: string | null;
+  onceki_benzerlik: number | null;
 };
+
+/**
+ * Yıllar arası süreklilik eşiği — ADAY GÖSTERME eşiği, karar eşiği değil.
+ *
+ * Resmî başlıklar çok ortak kalıp taşıyor ("Katma Değerli Ürün Üretimi",
+ * "Entegre … İşleme Tesisi"), bu yüzden trigram benzerliğinin bir gürültü
+ * tabanı var: ölçüldü, Muş'ta "Entegre Kaz Yetiştiriciliği" ile "Su Ürünleri
+ * Yetiştiriciliği" 0.48 alıyor — farklı konular.
+ *
+ * Bu yüzden benzerlik KARAR VERMEZ: yalnızca birebir aynı başlık "aynen
+ * korundu" olgusu sayılır; kalan yakın eşleşmeler "doğrulanmadı" durumunda
+ * gösterilir ve iki başlık yan yana konur, yargıyı insan verir.
+ */
+export const SUREKLILIK_ESIGI = 0.45;
 
 /**
  * Bir ilin o yılki RESMÎ yatırım konuları — tebliğ listesi.
@@ -243,15 +278,82 @@ export type YatirimKonusu = {
  * Ekranda yan yana durmaları ürünün ne yaptığını anlatan şeydir: solda
  * yürürlükteki resmî liste, sağda platformun gerekçelendirdiği sıralama.
  */
-export async function yatirimKonulari(b: Baglam, ilKod: string, yil: number) {
-  return islem(b, (sql) =>
-    sql<YatirimKonusu[]>`
-      select sira, baslik, gerekce, kaynak
-      from yatirim_konusu
-      where il_kod = ${ilKod} and yil = ${yil}
-      order by sira
+export async function yatirimKonulari(
+  b: Baglam,
+  ilKod: string,
+  yil: number,
+): Promise<YatirimKonusu[]> {
+  const { konular, adaylar } = await islem(b, async (sql) => {
+    const konular = await sql<{ sira: number; baslik: string; gerekce: string; kaynak: string }[]>`
+      select sira, baslik, gerekce, kaynak from yatirim_konusu
+      where il_kod = ${ilKod} and yil = ${yil} order by sira
+    `;
+    const adaylar = await sql<{ sira: number; onceki_sira: number; onceki_baslik: string; benzerlik: number }[]>`
+      select y.sira, o.sira as onceki_sira, o.baslik as onceki_baslik,
+             round(similarity(y.baslik, o.baslik)::numeric, 2)::float8 as benzerlik
+      from yatirim_konusu y
+      join yatirim_konusu o
+        on o.il_kod = y.il_kod and o.yil = ${yil - 1}
+       and similarity(y.baslik, o.baslik) >= ${SUREKLILIK_ESIGI}
+      where y.il_kod = ${ilKod} and y.yil = ${yil}
+      order by similarity(y.baslik, o.baslik) desc, y.sira, o.sira
+    `;
+    return { konular, adaylar };
+  });
+
+  /**
+   * Birebir eşleme: bir önceki yılın bir konusu EN FAZLA bir konuya eşlenir.
+   *
+   * Aksi hâlde aynı 2025 konusu iki 2026 konusuna birden eşleşiyordu (ölçüldü:
+   * Muş'ta "Entegre Kaz Yetiştiriciliği" hem kendisine hem "Su Ürünleri
+   * Yetiştiriciliği"ne). En yüksek benzerlikten başlayarak açgözlü eşleme;
+   * her iki taraf da bir kez kullanılır.
+   */
+  const eslesme = new Map<number, { baslik: string; benzerlik: number }>();
+  const kullanilan = new Set<number>();
+  for (const a of adaylar) {
+    if (eslesme.has(a.sira) || kullanilan.has(a.onceki_sira)) continue;
+    eslesme.set(a.sira, { baslik: a.onceki_baslik, benzerlik: Number(a.benzerlik) });
+    kullanilan.add(a.onceki_sira);
+  }
+
+  /** "Aynen korundu" olgusu: boşluk ve büyük/küçük harf dışında fark yok. */
+  const sade = (x: string) => x.replace(/\s+/g, " ").trim().toLocaleLowerCase("tr-TR");
+
+  return konular.map((k) => {
+    const e = eslesme.get(k.sira);
+    if (!e) {
+      return { ...k, onceki_durum: "yok" as const, onceki_baslik: null, onceki_benzerlik: null };
+    }
+    return {
+      ...k,
+      onceki_durum: sade(k.baslik) === sade(e.baslik) ? ("aynen" as const) : ("benzer" as const),
+      onceki_baslik: e.baslik,
+      onceki_benzerlik: e.benzerlik,
+    };
+  });
+}
+
+/** Bir ilde herhangi bir yılın resmî listesi var mı — dönem şartı olmadan. */
+export async function konuluYillar(b: Baglam, ilKod: string): Promise<number[]> {
+  const r = await islem(b, (sql) =>
+    sql<{ yil: number }[]>`
+      select distinct yil from yatirim_konusu where il_kod = ${ilKod} order by yil desc
     `,
   );
+  return r.map((x) => Number(x.yil));
+}
+
+/** İl künyesi — dönem şartı yok, 81 ilin hepsi için çalışır. */
+export async function ilGetir(b: Baglam, ilKod: string) {
+  const [r] = await islem(b, (sql) =>
+    sql<{ kod: string; ad: string; ajans: string; ajans_kod: string; kisa_ad: string | null }[]>`
+      select i.kod, i.ad, a.ad as ajans, a.kod as ajans_kod, a.kisa_ad
+      from il i join ajans a on a.kod = i.ajans_kod
+      where i.kod = ${ilKod}
+    `,
+  );
+  return r ?? null;
 }
 
 export type Bolge = {

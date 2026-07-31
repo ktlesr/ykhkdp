@@ -294,8 +294,29 @@ Yükleyici **fail-closed**: 81 ilin tamamı ve il başına tam 4 konu şartı
 sağlanmazsa dosya hiç yüklenmez ve hangi ilin eksik olduğu yazılır. Yatırım
 konusunu yanlış ile atamak, bu ürünün var olma sebebi olan hatadır.
 
-`/il/[il]` yürürlükteki resmî listeyi sıralamanın altında gösterir: solda
-Bakanlığın ilan ettiği dört konu, üstte platformun gerekçelendirdiği sıralama.
+`/il/[il]` **açık dönem olmadan da çalışır**: 81 ilin 77'sinde dönem yok ve o
+illerin yürürlükteki resmî listesi yüklü olduğu hâlde görünmüyordu. Dönem yoksa
+sıralama yok, resmî liste yine var. `/iller` da 81 ilin tamamını listeler.
+
+### Yıllar arası süreklilik
+
+Bir konunun bir önceki listede karşılığı olup olmadığı gösterilir, ama
+**benzerlik karar vermez**:
+
+| Durum | Ne demek |
+|---|---|
+| `aynen` | başlık **birebir aynı** — kanıtlanabilir olgu |
+| `benzer` | yakın başlık var ama yeniden yazılmış — **doğrulanmadı**, iki başlık yan yana konur |
+| `yok` | önceki listede karşılık bulunamadı |
+
+Resmî başlıklar çok ortak kalıp taşıyor ("Katma Değerli Ürün Üretimi",
+"Entegre … İşleme Tesisi") ve trigram benzerliğinin gürültü tabanı var:
+ölçüldü, Muş'ta "Entegre Kaz Yetiştiriciliği" ile "Su Ürünleri Yetiştiriciliği"
+0.48 alıyor — farklı konular. "Bakanlık bu konuyu korudu" bir olgu iddiasıdır;
+eşikle verilmez. Eşleme **birebirdir**: bir önceki yılın bir konusu en fazla
+bir konuya eşlenir, aksi hâlde aynı konu iki yere birden eşleşiyordu.
+
+Ölçülen: 324 konunun **16'sı aynen**, 53'ü benzer, 255'i yeni.
 
 ### Üst ölçekli belge kümesi
 
