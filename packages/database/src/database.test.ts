@@ -235,9 +235,9 @@ test("KVKK: kimlik pseudonimleşir, öneri zinciri korunur", async () => {
 // ── migration geri alma ────────────────────────────────────────────────────
 
 test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
-  const geri = await asagi(8);
+  const geri = await asagi(9);
   assert.deepEqual(geri, [
-    "0008_ajans_kisa_ad", "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus",
+    "0009_yatirim_konusu", "0008_ajans_kisa_ad", "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus",
     "0004_kriter_dayanagi", "0003_kurallar", "0002_rls", "0001_sema",
   ]);
   const [{ n }] = await sahip()<{ n: string }[]>`
@@ -247,7 +247,7 @@ test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
 
   assert.deepEqual(await yukari(), [
     "0001_sema", "0002_rls", "0003_kurallar", "0004_kriter_dayanagi",
-    "0005_karsi_gorus", "0006_yakin_kopya", "0007_misafir", "0008_ajans_kisa_ad",
+    "0005_karsi_gorus", "0006_yakin_kopya", "0007_misafir", "0008_ajans_kisa_ad", "0009_yatirim_konusu",
   ]);
   await seed();
 });
@@ -353,4 +353,91 @@ test("misafir işareti ajansa görünür — kimin önerdiği saklanmaz", async 
     select misafir from gonderen where ref = ${ref}
   `);
   assert.equal(g?.misafir, true);
+});
+
+// ── resmî yatırım konuları listesi ─────────────────────────────────────────
+
+test("resmî liste yüklendi: 81 il × 4 konu, iki yıl", async () => {
+  const [r] = await islem(ANONIM, (sql) =>
+    sql<{ konu: number; il: number; yil: number; gerekceli: number }[]>`
+      select count(*)::int as konu,
+             count(distinct il_kod)::int as il,
+             count(distinct yil)::int as yil,
+             count(*) filter (where gerekce <> '')::int as gerekceli
+      from yatirim_konusu
+    `,
+  );
+  assert.equal(r.il, 81, "81 ilin tamamı");
+  assert.equal(r.yil, 2, "2025 ve 2026");
+  assert.equal(r.konu, 648, "81 × 4 × 2");
+  assert.equal(r.gerekceli, 324, "yalnızca 2026 tebliğinde gerekçe var");
+
+  const [k] = await islem(ANONIM, (sql) =>
+    sql<{ kaynak: string }[]>`select distinct kaynak from yatirim_konusu where yil = 2026`,
+  );
+  assert.match(k.kaynak, /Tebliği/, "tebliğ künyesi taşınır — hangi belge böyle diyor kaybolmaz");
+});
+
+test("mevcut adaylar resmî listeden türetilir, uydurma puan taşımaz", async () => {
+  const mevcut = await islem(ANONIM, (sql) =>
+    sql<{ id: number; baslik: string; gerekce: string; dayanak: number | null }[]>`
+      select o.id, o.baslik, o.gerekce, g.dayanak
+      from oneri o
+      join donem d on d.id = o.donem_id
+      left join degerlendirme g on g.oneri_id = o.id
+      where o.koken = 'mevcut'
+    `,
+  );
+  assert.ok(mevcut.length > 0, "pilot illerde mevcut aday olmalı");
+
+  for (const o of mevcut) {
+    assert.equal(o.dayanak, null, "resmî konuya uydurma değerlendirme yazılmaz");
+    assert.ok(o.gerekce.length > 40, "gerekçe resmî tebliğden gelir");
+
+    // Başlık ve gerekçe resmî listede birebir var mı — türetme doğrulanabilir.
+    const [eslesme] = await islem(ANONIM, (sql) =>
+      sql<{ n: string }[]>`
+        select count(*) as n from yatirim_konusu
+        where baslik = ${o.baslik} and gerekce = ${o.gerekce}
+      `,
+    );
+    assert.ok(Number(eslesme.n) > 0, `resmî listede karşılığı yok: ${o.baslik.slice(0, 50)}`);
+  }
+});
+
+test("demo değerlendirmeler model künyesi uydurmaz", async () => {
+  const kunye = await islem(ANONIM, (sql) =>
+    sql<{ model_snapshot: string }[]>`select distinct model_snapshot from degerlendirme`,
+  );
+  for (const k of kunye) {
+    assert.equal(k.model_snapshot, "seed-demo", "seed puanı gerçek model künyesi taşıyamaz");
+  }
+});
+
+test("yükleyici fail-closed: eksik il varsa hiç yazmaz", async () => {
+  const { writeFile, rm } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { konulariYukle } = await import("./konu-yukle.ts");
+
+  const [{ n: once }] = await sahip()<{ n: string }[]>`select count(*) as n from yatirim_konusu`;
+
+  const yol = join(tmpdir(), `ykh-konu-eksik-${process.pid}.json`);
+  await writeFile(
+    yol,
+    JSON.stringify([{ il: "Uşak", yil: 2099, sira: 1, konu: "Tek il ile deneme konusu" }]),
+    "utf8",
+  );
+  await assert.rejects(() => konulariYukle(yol, "test"), /konusu olmayan il/);
+
+  await writeFile(
+    yol,
+    JSON.stringify([{ il: "Atlantis", yil: 2099, sira: 1, konu: "Tanınmayan il denemesi" }]),
+    "utf8",
+  );
+  await assert.rejects(() => konulariYukle(yol, "test"), /tanınmayan il/i);
+
+  const [{ n: sonra }] = await sahip()<{ n: string }[]>`select count(*) as n from yatirim_konusu`;
+  assert.equal(sonra, once, "reddedilen dosyadan tek satır bile yazılmaz");
+  await rm(yol, { force: true });
 });

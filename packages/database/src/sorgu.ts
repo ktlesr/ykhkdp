@@ -229,6 +229,31 @@ export async function ornekDegerlendirme(b: Baglam) {
   });
 }
 
+export type YatirimKonusu = {
+  sira: number;
+  baslik: string;
+  gerekce: string;
+  kaynak: string;
+};
+
+/**
+ * Bir ilin o yılki RESMÎ yatırım konuları — tebliğ listesi.
+ *
+ * Platformun sıralaması bu listenin yerine geçmez; onun hazırlık katmanıdır.
+ * Ekranda yan yana durmaları ürünün ne yaptığını anlatan şeydir: solda
+ * yürürlükteki resmî liste, sağda platformun gerekçelendirdiği sıralama.
+ */
+export async function yatirimKonulari(b: Baglam, ilKod: string, yil: number) {
+  return islem(b, (sql) =>
+    sql<YatirimKonusu[]>`
+      select sira, baslik, gerekce, kaynak
+      from yatirim_konusu
+      where il_kod = ${ilKod} and yil = ${yil}
+      order by sira
+    `,
+  );
+}
+
 export type Bolge = {
   ajans_kod: string;
   ajans: string;

@@ -3,6 +3,7 @@ import { asagi, sifirla, yukari } from "./migrate.ts";
 import { seed } from "./seed.ts";
 import { belgeYukle, parcala, RESMI_BELGELER, yolCoz } from "./belge-yukle.ts";
 import { belgeDenetle, denetimiYaz } from "./belge-dogrula.ts";
+import { konulariYukle, RESMI_LISTELER } from "./konu-yukle.ts";
 
 const komut = process.argv[2] ?? "up";
 
@@ -47,6 +48,16 @@ try {
       console.log();
       break;
     }
+    case "konular": {
+      // Resmî Yerel Yatırım Konuları Listesi (tebliğ) — fail-closed doğrulama.
+      for (const l of RESMI_LISTELER) {
+        const r = await konulariYukle(l.dosya, l.kaynak);
+        console.log(
+          `${r.yil}: ${r.konu} konu · ${r.il} il · ${r.gerekceli} gerekçeli`,
+        );
+      }
+      break;
+    }
     case "reset": {
       await sifirla();
       const yeni = await yukari();
@@ -55,7 +66,7 @@ try {
       break;
     }
     default:
-      console.error(`Bilinmeyen komut: ${komut}. up | down [n] | seed | belgeler | belge-dogrula [dosya…] | reset`);
+      console.error(`Bilinmeyen komut: ${komut}. up | down [n] | seed | belgeler | belge-dogrula [dosya…] | konular | reset`);
       process.exitCode = 1;
   }
 } catch (e) {

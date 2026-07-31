@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { adaylariGetir, donemGetir } from "@ykh/database";
+import { adaylariGetir, donemGetir, yatirimKonulari } from "@ykh/database";
 import { onaylayabilir, type Sonuc } from "@ykh/domain";
 import { ayardan, grupAgirligi, hesapla } from "@ykh/scoring";
 import { Bag, Baslik, Bos, Rozet, Sayfa, UstBar, Uyari } from "@/components/ui.tsx";
@@ -26,6 +26,8 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
   if (!d) notFound();
 
   const adaylar = await adaylariGetir(b, d);
+  // Yürürlükteki resmî liste — platformun sıralaması bunun yerine geçmez.
+  const resmi = await yatirimKonulari(b, il, Number(d.yil) - 1);
   const h = hesapla(adaylar, ayardan(d.set));
   const yerellik = Math.round(grupAgirligi(d.set.agirliklar, "yerellik") * 100);
 
@@ -151,9 +153,36 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
 
             <p className="mt-4 text-[12.5px] leading-[1.5] text-ink-mute">
               Puanlar yapay zekâ tarafından üretilir ve ajans onayından geçer. Üst ölçekli belgelere bağlanamayan aday,
-              puanı yüksek olsa da slot dolduramaz — dayanak eşiği {d.set.dayanakEsigi}/100. Sıralama karar değildir.
+              puanı yüksek olsa da slot dolduramaz; dayanak eşiği {d.set.dayanakEsigi}/100. Sıralama karar değildir.
             </p>
           </>
+        )}
+
+        {/* Yürürlükteki resmî liste — sıralamanın karşılaştırma zemini */}
+        {resmi.length > 0 && (
+          <div className="mt-8 border border-hairline bg-surface">
+            <div className="panel-koyu flex flex-wrap items-baseline gap-x-3 px-4 py-2.5 font-mono text-[10px] uppercase tracking-[.13em]">
+              <span>Yürürlükteki resmî liste</span>
+              <span className="num text-[#C9CDD3]">{resmi[0].kaynak}</span>
+            </div>
+            <p className="border-b border-b-hairline-soft px-4 py-2.5 text-[12.5px] leading-[1.45] text-ink-soft">
+              Sanayi ve Teknoloji Bakanlığı tebliğiyle ilan edilen dört yatırım konusu. Yukarıdaki sıralama bunun
+              yerine geçmez, bir sonraki dönem için hazırlık katmanıdır.
+            </p>
+            {resmi.map((x) => (
+              <div key={x.sira} className="border-b border-b-hairline-soft px-4 py-3.5 last:border-b-0">
+                <div className="flex items-baseline gap-3">
+                  <span className="num shrink-0 text-[12px] text-ink-mute">{String(x.sira).padStart(2, "0")}</span>
+                  <h3 className="text-[14.5px] font-medium leading-[1.35] text-pretty">{x.baslik}</h3>
+                </div>
+                {x.gerekce && (
+                  <p className="mt-2 max-w-[78ch] pl-[30px] text-[13px] leading-[1.5] text-pretty text-ink-soft">
+                    {x.gerekce}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </Sayfa>
     </>

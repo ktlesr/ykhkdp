@@ -15,6 +15,8 @@ kullanır. Türkçe terim kanoniktir.
 | dayanak eşiği | `dayanak_esigi` | "Dayanak eşiği" |
 | alıntı | `alintilar` | "Kaynaktan alıntı" |
 | belge | `belge` (ad'a göre gruplanır) | "Üst ölçekli belge" |
+| resmî yatırım konusu | `yatirim_konusu` | "Yürürlükteki resmî liste" |
+| tebliğ künyesi | `yatirim_konusu.kaynak` | "…Listesi Tebliği · 2026" |
 | parça | `belge` satırı · `parcala()` | görünmez (arama ve doğrulama birimi) |
 | atıf çıpası | `belge.bolum` | "s. 92–93" · "madde 613.1" · başlık |
 | düşen alıntı | `dusenler` | denetimde; ekranda gösterilmez |

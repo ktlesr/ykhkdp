@@ -273,6 +273,30 @@ NACE Rev.2.1 (Altılı, 2026) — 3190 kod, `packages/database/data/nace.json`.
 23 kısım · 87 bölüm · 287 grup · 651 sınıf · 2142 faaliyet. Yatırımcıya yalnızca
 sınıf ve faaliyet düzeyi seçilebilir olarak sunulur.
 
+### Resmî yatırım konuları listesi
+
+Sanayi ve Teknoloji Bakanlığı **Yerel Yatırım Konuları Listesi Tebliği** —
+her il için o yılın dört yatırım konusu. `docs/` altındaki iki JSON dosyası
+`pnpm db:konular` ile yüklenir: 2025 ve 2026, 81 il × 4 konu = 648 kayıt.
+2026 tebliğinde her konunun **gerekçesi** de var (226–810 karakter).
+
+Bu liste `oneri` tablosuna **zorlanmaz**, kendi tablosunda (`yatirim_konusu`)
+durur. Zorlansaydı iki şey uydurmak gerekirdi: `gonderen_ref` (kimse önermedi,
+Bakanlık ilan etti) ve `onaylayan_ref` (ajans onaylamadı).
+
+Karar modelindeki **`koken='mevcut'` adaylar buradan türetilir** — gerçek
+başlık, gerçek gerekçe, kaynağı denetime yazılı. Türetilen adaya **uydurma
+değerlendirme yazılmaz**: platform onları henüz puanlamadı, dayanakları 0 ve
+sıralamada "dayanaksız" görünüyorlar. Bu doğru davranış ve ürünün kendi
+kuralının gösterimi — mevcut konu da belgeye bağlanmak zorunda.
+
+Yükleyici **fail-closed**: 81 ilin tamamı ve il başına tam 4 konu şartı
+sağlanmazsa dosya hiç yüklenmez ve hangi ilin eksik olduğu yazılır. Yatırım
+konusunu yanlış ile atamak, bu ürünün var olma sebebi olan hatadır.
+
+`/il/[il]` yürürlükteki resmî listeyi sıralamanın altında gösterir: solda
+Bakanlığın ilan ettiği dört konu, üstte platformun gerekçelendirdiği sıralama.
+
 ### Üst ölçekli belge kümesi
 
 `docs/` altındaki üç gerçek plan belgesi `pnpm db:belgeler` ile yüklenir. Tek
@@ -323,8 +347,9 @@ Redis, S3/MinIO, pgvector, PostGIS **yok**. Gerekene kadar eklenmez.
 
 ## 9. Veri modeli
 
-13 tablo: `gonderen` · `kimlik` · `oturum` · `ajans` · `il` · `ilce` · `nace` ·
-`agirlik_seti` · `donem` · `belge` · `oneri` · `degerlendirme` · `denetim`.
+14 tablo: `gonderen` · `kimlik` · `oturum` · `ajans` · `il` · `ilce` · `nace` ·
+`agirlik_seti` · `donem` · `belge` · `yatirim_konusu` · `oneri` · `degerlendirme` ·
+`denetim`.
 
 - **KVKK ayrımı:** öneri kişiye değil değişmez `gonderen.ref` anahtarına bağlanır;
   kişisel veri ayrı `kimlik` tablosunda. `kimlik_pseudonimlestir()` silme talebinde
@@ -362,3 +387,5 @@ kilidi, künye çekmecesi) bu üründe **yok**.
 - Belge yükleme yalnızca `.txt`/`.md` veya metin yapıştırma. PDF/docx ayrıştırıcı yok.
 - E-posta doğrulama SMTP'ye bağlı değil.
 - Rapor/Excel çıktısı yok.
+- Seed'in demo değerlendirmeleri `model_snapshot = 'seed-demo'` künyesi taşır;
+  gerçek bir model künyesi uydurulmaz. `/oneri/[id]` künye satırında görünür.

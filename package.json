@@ -17,6 +17,7 @@
     "ai:test": "pnpm --filter @ykh/ai-gateway sinama",
     "ai:eval": "pnpm --filter @ykh/degerlendirme eval",
     "db:belgeler": "pnpm --filter @ykh/database belgeler",
+    "db:konular": "pnpm --filter @ykh/database konular",
     "belge:dogrula": "pnpm --filter @ykh/database belge-dogrula"
   },
   "packageManager": "pnpm@10.19.0",
