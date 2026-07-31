@@ -3,7 +3,7 @@ import test, { after, before } from "node:test";
 import {
   adaylariGetir, ayarGetir, ayarYaz, baglamdan, belgeEkle, bolgeler, donemGetir, durumDegistir, girisYap, islem, kapat,
   kayitOl, misafirAc, naceAra, onayKuyrugu, oneriGetir, oneriOlustur, ornekDegerlendirme, oturumCoz,
-  platformOzeti, puanDuzelt, illeriListele, ilGetir, konuluYillar, yatirimKonulari,
+  platformOzeti, puanDuzelt, illeriListele, ilGetir, konuluYillar, sahip, yatirimKonulari,
   SUREKLILIK_ESIGI, ANONIM, type Baglam,
 } from "@ykh/database";
 import { sifirla, yukari } from "@ykh/database/migrate";
@@ -38,6 +38,29 @@ before(async () => {
 after(async () => {
   await kapat();
 });
+
+/**
+ * Dönemi olmayan geçici bir il kurar ve testten sonra kaldırır.
+ *
+ * Artık 81 ilin tamamında açık dönem var (program yıllık ve ulusal), ama
+ * "dönemi olmayan il" durumu hâlâ olabilir: yeni bir il eklenebilir ya da
+ * ajans bir dönemi kapatabilir. Ekranların o durumda çalıştığını seed'in
+ * tesadüfen böyle olmasına bırakmıyoruz; koşulu test kuruyor.
+ *
+ * Mevcut bir ilin dönemini SİLMİYORUZ: her ilin dört mevcut adayı o döneme
+ * bağlı ve yabancı anahtar engelliyor. Geçici il hem daha temiz hem de
+ * gerçekte yaşanacak senaryo (dönem açılmadan önceki il).
+ */
+async function donemsizIl<T>(govde: (kod: string) => Promise<T>): Promise<T> {
+  const kod = `test${process.pid}`;
+  const [a] = await sahip()<{ kod: string }[]>`select kod from ajans limit 1`;
+  await sahip()`insert into il (kod, ad, ajans_kod) values (${kod}, 'Test İli', ${a.kod})`;
+  try {
+    return await govde(kod);
+  } finally {
+    await sahip()`delete from il where kod = ${kod}`;
+  }
+}
 
 test("1 · kayıt olan kullanıcı yatirimci rolüyle gelir", async () => {
   const r = await kayitOl("yeni@ykh.local", "cok-guclu-parola-2027", "Y. Kullanıcı");
@@ -265,22 +288,20 @@ test("16 · sihirbaz coğrafyası: 26 ajans, 81 il, hepsi ajansa göre gruplu", 
   assert.equal(kodlar.size, 81);
 });
 
-test("16b · açık dönemi olmayan il GİZLENMEZ, dönemi null gelir", async () => {
-  const b = await bolgeler(ANONIM);
-  const acik = b.flatMap((x) => x.iller).filter((i) => i.yil);
-  const kapali = b.flatMap((x) => x.iller).filter((i) => !i.yil);
+test("16b · her ilin açık dönemi var; dönemsiz il GİZLENMEZ", async () => {
+  const iller = (await bolgeler(ANONIM)).flatMap((x) => x.iller);
+  assert.equal(iller.length, 81);
+  assert.ok(
+    iller.every((i) => i.yil),
+    "program yıllık ve ulusal: 81 ilin tamamında açık dönem olmalı",
+  );
 
-  assert.ok(acik.length > 0, "pilot bölgede açık dönem var");
-  assert.ok(kapali.length > 0, "dönemi olmayan iller de listede — yatırımcı ilini bulur");
-  assert.equal(acik.length + kapali.length, 81);
-
-  // Dönemi olan iller pilot ajansa ait; kodda hiçbir ajans sabitlenmiyor,
-  // ilişkiyi veriden okuyoruz.
-  const acikBolge = b.filter((x) => x.iller.some((i) => i.yil));
-  assert.equal(acikBolge.length, 1, "şu an tek pilot bölge açık");
-  for (const i of acikBolge[0].iller) {
-    assert.ok(i.ilceler.length > 0, "pilot illerde ilçe verisi var");
-  }
+  // Dönemi olmayan il listeden DÜŞMEZ, `yil` null gelir ve ekran bunu yazar.
+  await donemsizIl(async (kod) => {
+    const sonra = (await bolgeler(ANONIM)).flatMap((x) => x.iller);
+    assert.equal(sonra.length, 82, "dönemsiz il gizlenmiyor");
+    assert.equal(sonra.find((i) => i.kod === kod)?.yil, null, "dönemsiz ilde yıl null");
+  });
 });
 
 test("16c · ilçe verisi olmayan ilde ilçe UYDURULMAZ", async () => {
@@ -323,49 +344,49 @@ test("17 · misafir sihirbazdan öneri verebilir, adı hiçbir yerde tutulmaz", 
 });
 
 test("16d · dönemi olmayan il URL'den gelse de öneri adımına atlanmaz", async () => {
-  const b = await bolgeler(ANONIM);
-  const kapali = b.flatMap((x) => x.iller).find((i) => !i.yil);
-  assert.ok(kapali, "dönemi olmayan bir il olmalı");
+  await donemsizIl(async (kod) => {
+    const b = await bolgeler(ANONIM);
 
-  // /oneri sayfasının başlangıç seçimi kuralı: açık dönem şart.
-  const gecerli = (kod: string | undefined) =>
-    b.some((x) => x.iller.some((i) => i.kod === kod && i.yil));
-  assert.equal(gecerli(kapali.kod), false, "kapalı il başlangıç seçimi olamaz");
+    // /oneri sayfasının başlangıç seçimi kuralı: açık dönem şart.
+    const gecerli = (x: string | undefined) =>
+      b.some((y) => y.iller.some((i) => i.kod === x && i.yil));
+    assert.equal(gecerli(kod), false, "dönemsiz il başlangıç seçimi olamaz");
+    assert.equal(gecerli("usak"), true, "açık il başlangıç seçimi olabilir");
 
-  const acik = b.flatMap((x) => x.iller).find((i) => i.yil);
-  assert.ok(acik && gecerli(acik.kod), "açık il başlangıç seçimi olabilir");
-
-  // Kapalı ile öneri gönderilemez: dönem yok, eylem katmanı reddeder.
-  assert.equal(await donemGetir(ANONIM, kapali.kod), null);
+    // Dönemsiz ile öneri gönderilemez: eylem katmanı dönem bulamaz.
+    assert.equal(await donemGetir(ANONIM, kod), null);
+  });
 });
 
-// ── resmî liste görünürlüğü ve yıllar arası süreklilik ─────────────────────
+test("18 · il künyesi ve resmî liste dönem şartı olmadan çalışır", async () => {
+  // /il/[il] sayfasının iki kaynağı; dönem olmadan da çalışmalı, yoksa
+  // 77 ilin resmî listesi ulaşılmaz kalıyordu (yaşanmış kusur).
+  await donemsizIl(async (kod) => {
+    assert.ok(await ilGetir(ANONIM, kod), "il künyesi dönem olmadan gelir");
+    assert.equal(await donemGetir(ANONIM, kod), null);
+    assert.deepEqual(await konuluYillar(ANONIM, kod), [], "yeni ilin resmî listesi yok");
+  });
 
-test("18 · açık dönemi olmayan il de resmî listesini gösterir", async () => {
-  const b = await bolgeler(ANONIM);
-  const kapali = b.flatMap((x) => x.iller).find((i) => !i.yil);
-  assert.ok(kapali, "dönemi olmayan bir il olmalı");
-
-  // Sayfanın kullandığı iki kaynak: il künyesi ve resmî liste. İkisi de dönem
-  // şartı olmadan çalışmalı — 77 il aksi hâlde ulaşılamaz kalıyordu.
-  const kunye = await ilGetir(ANONIM, kapali.kod);
-  assert.ok(kunye, "il künyesi dönem olmadan da gelir");
-  assert.equal(await donemGetir(ANONIM, kapali.kod), null);
-
-  const yillar = await konuluYillar(ANONIM, kapali.kod);
-  assert.deepEqual(yillar, [2026, 2025], "en güncel yıl başta");
-
-  const konular = await yatirimKonulari(ANONIM, kapali.kod, yillar[0]);
+  // Resmî liste sorgusu `donem`e hiç bakmıyor: yüklü olan her il için çalışır.
+  assert.deepEqual(await konuluYillar(ANONIM, "ankara"), [2026, 2025]);
+  const konular = await yatirimKonulari(ANONIM, "ankara", 2026);
   assert.equal(konular.length, 4);
   assert.ok(konular.every((k) => k.gerekce.length > 40), "2026 gerekçeleri gelir");
 });
 
-test("18b · il listesi 81 ilin tamamını taşır", async () => {
+test("18b · il listesi 81 ilin tamamını ve kalibrasyon kaynağını taşır", async () => {
   const iller = await illeriListele(ANONIM);
-  assert.equal(iller.length, 81, "dönemi olmayan il gizlenmez");
-  assert.ok(iller.some((x) => x.yil), "pilot illerde açık dönem var");
-  assert.ok(iller.some((x) => !x.yil), "diğerlerinde yok ve öyle görünür");
+  assert.equal(iller.length, 81);
+  assert.ok(iller.every((x) => x.yil), "hepsinde açık dönem var");
   assert.ok(iller.every((x) => x.resmi_konu === 8), "il başına 2 yıl × 4 konu");
+
+  // Pilot il kendi kalibrasyonunu, diğerleri ulusal varsayılanı kullanır ve
+  // hangisinin uygulandığı `kalibre` ile dışa taşınır — ekran bunu yazar.
+  const pilot = await donemGetir(ANONIM, "usak");
+  const digeri = await donemGetir(ANONIM, "ankara");
+  assert.equal(pilot?.kalibre, true, "TR33 kendi setini yayımladı");
+  assert.equal(digeri?.kalibre, false, "diğerlerinde ulusal varsayılan");
+  assert.notEqual(pilot?.set.surum, digeri?.set.surum);
 });
 
 test("19 · süreklilik: aynen korunan yalnızca birebir aynı başlıktır", async () => {

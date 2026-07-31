@@ -119,17 +119,24 @@ export type DonemKaydi = {
   ajans: string;
   yil: string;
   set: AgirlikSeti;
+  /**
+   * Ağırlık seti bu ajansın YAYIMLADIĞI kalibrasyon mu, yoksa ulusal
+   * varsayılan mı. False ise ekran bunu yazmak zorunda: brief §5 "gizli
+   * katsayı yok" — hangi sayının nereden geldiği görünmeli.
+   */
+  kalibre: boolean;
 };
 
 export async function donemGetir(b: Baglam, ilKod: string, yil?: string): Promise<DonemKaydi | null> {
   return islem(b, async (sql) => {
     const [d] = await sql<
       { donem_id: number; il_kod: string; il: string; ajans_kod: string; ajans: string; yil: string;
-        surum: string; agirliklar: Record<Kriter, number>; devamlilik_payi: number;
-        dayanak_esigi: number; devir_siniri: number; slot_sayisi: number }[]
+        surum: string; set_ajans_kod: string | null; agirliklar: Record<Kriter, number>;
+        devamlilik_payi: number; dayanak_esigi: number; devir_siniri: number; slot_sayisi: number }[]
     >`
       select d.id as donem_id, i.kod as il_kod, i.ad as il, a.kod as ajans_kod, a.ad as ajans, d.yil,
-             s.surum, s.agirliklar, s.devamlilik_payi, s.dayanak_esigi, s.devir_siniri, s.slot_sayisi
+             s.surum, s.ajans_kod as set_ajans_kod, s.agirliklar, s.devamlilik_payi,
+             s.dayanak_esigi, s.devir_siniri, s.slot_sayisi
       from donem d
       join il i on i.kod = d.il_kod
       join ajans a on a.kod = i.ajans_kod
@@ -140,7 +147,9 @@ export async function donemGetir(b: Baglam, ilKod: string, yil?: string): Promis
     if (!d) return null;
 
     const set: AgirlikSeti = {
-      surum: d.surum, ajans: d.ajans_kod, donem: d.yil, agirliklar: d.agirliklar,
+      // Ulusal varsayılanda `set_ajans_kod` null; puanlama açısından fark yok,
+      // ama "bu sayıları kim koydu" sorusu ekranda cevaplanıyor (bkz. `kalibre`).
+      surum: d.surum, ajans: d.set_ajans_kod ?? d.ajans_kod, donem: d.yil, agirliklar: d.agirliklar,
       devamlilikPayi: d.devamlilik_payi, dayanakEsigi: d.dayanak_esigi,
       devirSiniri: d.devir_siniri, slotSayisi: d.slot_sayisi,
     };
@@ -151,6 +160,8 @@ export async function donemGetir(b: Baglam, ilKod: string, yil?: string): Promis
     return {
       donemId: d.donem_id, ilKod: d.il_kod, il: d.il,
       ajansKod: d.ajans_kod, ajans: d.ajans, yil: d.yil, set,
+      /** false ise ulusal varsayılan uygulanıyor; ekran bunu yazmak zorunda */
+      kalibre: d.set_ajans_kod !== null,
     };
   });
 }

@@ -28,6 +28,11 @@ export default async function Belgeler() {
     belgeKapsami(b),
   ]);
 
+  // Eyleme dönük ayrım: yerel belgesi olmayan il, yapay zekânın "neden burada?"
+  // sorusunu ulusal metinden gerekçelendiremediği ildir.
+  const yerelsiz = kapsam.filter((x) => x.il_belgesi + x.ajans_belgesi === 0);
+  const yerelli = kapsam.filter((x) => x.il_belgesi + x.ajans_belgesi > 0);
+
   return (
     <>
       <UstBar
@@ -49,7 +54,67 @@ export default async function Belgeler() {
 
         <BelgeFormu iller={iller.map((x) => ({ kod: x.il_kod, ad: x.il }))} />
 
-        {/* Kapsama — hangi ilde yerellik gerekçelendirilebiliyor */}
+        {/* Kapsama — 81 satır duvar değil, eyleme dönük olan öne */}
+        {kapsam.length > 0 && (
+          <div className="mt-6 border border-hairline bg-surface">
+            <div className="panel-koyu px-4 py-2.5 font-mono text-[10px] uppercase tracking-[.13em]">
+              Belge kapsaması
+            </div>
+            <p className="border-b border-b-hairline-soft px-4 py-2.5 text-[12.5px] leading-[1.45] text-ink-soft">
+              Ulusal belgeler {kapsam.length} ilin tamamında geçerli.{" "}
+              {yerelsiz.length === 0 ? (
+                <b className="font-medium">Her ilde en az bir yerel belge var.</b>
+              ) : (
+                <>
+                  <b className="font-medium">{yerelsiz.length} ilde yerel belge yok</b>; o illerde “neden burada?”
+                  grubu ulusal metinden gerekçelendirilemez ve dayanak düşük kalır.
+                </>
+              )}
+            </p>
+
+            {yerelsiz.length > 0 && (
+              <details className="katlanir">
+                <summary className="flex min-h-11 items-center gap-3 bg-paper px-4 py-2.5">
+                  <span aria-hidden className="katlanir-isaret text-[11px] text-ink-mute" />
+                  <span className="font-mono text-[10px] uppercase tracking-[.1em] text-ink">
+                    Yerel belgesi olmayan iller
+                  </span>
+                  <span className="num ml-auto font-mono text-[10px] text-ink-mute">{yerelsiz.length}</span>
+                </summary>
+                <div className="border-t border-t-hairline-soft px-4 py-3 text-[13px] leading-[1.6] text-ink-soft">
+                  {yerelsiz.map((x) => x.il).join(" · ")}
+                </div>
+              </details>
+            )}
+
+            {yerelli.length > 0 && (
+              <details className="katlanir border-t border-t-hairline-soft">
+                <summary className="flex min-h-11 items-center gap-3 bg-paper px-4 py-2.5">
+                  <span aria-hidden className="katlanir-isaret text-[11px] text-ink-mute" />
+                  <span className="font-mono text-[10px] uppercase tracking-[.1em] text-ink">
+                    Yerel belgesi olan iller
+                  </span>
+                  <span className="num ml-auto font-mono text-[10px] text-ink-mute">{yerelli.length}</span>
+                </summary>
+                <div className="border-t border-t-hairline-soft">
+                  {yerelli.map((x) => (
+                    <div
+                      key={x.il_kod}
+                      className="flex flex-wrap items-center gap-3 border-b border-b-hairline-soft px-4 py-2.5 last:border-b-0"
+                    >
+                      <span className="min-w-0 flex-1 text-[13.5px]">{x.il}</span>
+                      <span className="num font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
+                        il {x.il_belgesi} · ajans {x.ajans_belgesi} · ulusal {x.ulusal}
+                      </span>
+                      <Rozet tur="notr">{x.il_belgesi + x.ajans_belgesi} yerel belge</Rozet>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
+          </div>
+        )}
+
         <div className="mt-6 border border-hairline bg-surface">
           <div className="border-b-2 border-b-ink bg-paper px-4 py-2.5 font-mono text-[10px] uppercase tracking-[.13em] text-ink">
             Belge kapsaması

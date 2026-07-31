@@ -259,11 +259,20 @@ kodda sabitlenmez, NACE gibi veri dosyasından yüklenir.
 DOĞAKA) ve ekranda kodun yanında görünür; Türkçe harf taşıdığı için anahtar
 olarak kullanılmaz. `il.kod` ASCII katlanmış slug (`afyonkarahisar`, `usak`).
 
-**Dönem ve ağırlık seti yüklenmez.** İkisi de ajans politika kararıdır ve 25
-ajans için uydurulamaz. Pilot TR33 dışındaki 77 il veritabanında vardır ama
-açık dönemi yoktur: sihirbaz onları **listede gösterir ve "açık dönem yok"
-der** — gizlemek ilin hiç olmadığı izlenimi verirdi. `/iller` ve `/belgeler`
-yalnızca açık dönemi olanları listeler.
+**Dönemin varlığı ile ağırlık seti ayrı şeylerdir.** Program yıllık ve 81 ilin
+tamamını kapsıyor (2025 ve 2026 tebliğleri bunu gösteriyor), yani her ilin açık
+dönemi olması bir **program olgusudur**. Ağırlık seti ise bir **ajans
+kalibrasyonudur** ve 25 ajans adına uydurulamaz. Ayrım şöyle çözüldü:
+
+- **Dönem 81 ilin tamamında açılır.**
+- `agirlik_seti.ajans_kod` **null olabilir**: null = ulusal varsayılan
+  (`ULUSAL-2027-v1`), dolu = o ajansın yayımladığı kalibrasyon.
+- Kalibrasyonu olmayan il ulusal varsayılanı kullanır ve `/il/[il]` bunu
+  **ekranda yazar**: "… henüz kendi ağırlık setini yayımlamadı; ulusal
+  varsayılan uygulanıyor." Gizli katsayı yok (§5).
+
+Bu ayrım olmadan 77 il "açık dönem yok" diye kalıyordu; oysa dönemin olmaması
+bir politika kararı değil, benim fazla temkinli davranmamdı.
 
 **İlçe verisi yalnızca dört pilot il için var** (21 ilçe). Kalan 77 il için ilçe
 listesi yüklenmemiştir ve uydurulmaz: öneri formu o illerde ilçeyi hiç sormaz,

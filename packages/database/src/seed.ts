@@ -13,6 +13,9 @@ export const DEMO_PAROLA = "ykh-demo-2027";
 /** Sıralamaya `mevcut` aday olarak giren resmî liste yılı. */
 export const RESMI_YIL = 2026;
 
+/** Ulusal varsayılan ağırlık seti — ajans kendi setini yayımlayana kadar. */
+export const ULUSAL_SURUM = "ULUSAL-2027-v1";
+
 /**
  * Demo hesapları — tek kaynak. Giriş ekranı bu listeyi gösterir, seed bunu
  * yazar. Rol adı değişirse iki yer birden değişir, ayrışamazlar.
@@ -187,7 +190,36 @@ export async function seed(): Promise<{ ozet: string }> {
     values (${set.surum}, ${set.ajans}, ${set.donem}, ${sql.json(set.agirliklar as never)},
             ${set.devamlilikPayi}, ${set.dayanakEsigi}, ${set.devirSiniri}, ${set.slotSayisi})
   `;
+
+  /**
+   * Ulusal varsayılan ağırlık seti (`ajans_kod` null).
+   *
+   * Yerel Kalkınma Hamlesi yıllık ve 81 ilin tamamını kapsıyor, yani her ilin
+   * açık dönemi olması gerekir. Ama ağırlık seti bir ajans kalibrasyonudur ve
+   * 25 ajans adına uydurulamaz. Ayrım şu: DÖNEM herkes için açılır, kalibrasyonu
+   * olmayan ulusal varsayılanı kullanır ve `/il/[il]` bunu ekranda yazar.
+   *
+   * Değerler TR33 kalibrasyonuyla aynı çünkü yayımlanmış tek set o; ajans kendi
+   * setini yayımladığında `donem.agirlik_seti_surum` ona çevrilir.
+   */
+  await sql`
+    insert into agirlik_seti (surum, ajans_kod, donem_yil, agirliklar, devamlilik_payi, dayanak_esigi, devir_siniri, slot_sayisi)
+    values (${ULUSAL_SURUM}, null, ${set.donem}, ${sql.json(set.agirliklar as never)},
+            ${set.devamlilikPayi}, ${set.dayanakEsigi}, ${set.devirSiniri}, ${set.slotSayisi})
+  `;
   const donemler: Record<string, number> = {};
+  // 81 ilin tamamına açık dönem: program yıllık ve ulusal. Pilot TR33 illeri
+  // kendi kalibrasyonunu, kalan 77 il ulusal varsayılanı kullanır.
+  const pilot = new Set(["usak", "kutahya", "manisa", "afyonkarahisar"]);
+  const tumIller = await sql<{ kod: string }[]>`select kod from il order by kod`;
+  for (const { kod } of tumIller) {
+    if (pilot.has(kod)) continue;
+    const [d] = await sql<{ id: number }[]>`
+      insert into donem (il_kod, yil, agirlik_seti_surum)
+      values (${kod}, ${set.donem}, ${ULUSAL_SURUM}) returning id
+    `;
+    donemler[kod] = d.id;
+  }
   for (const il of ["usak", "kutahya", "manisa", "afyonkarahisar"]) {
     const [d] = await sql<{ id: number }[]>`
       insert into donem (il_kod, yil, agirlik_seti_surum) values (${il}, '2027', ${set.surum}) returning id
@@ -279,9 +311,8 @@ export async function seed(): Promise<{ ozet: string }> {
     }
   }
 
-  for (const il of ["usak", "kutahya", "manisa", "afyonkarahisar"]) {
-    await mevcutKonulariKur(il, RESMI_YIL);
-  }
+  // Mevcut adaylar 81 ilin tamamında: resmî liste her il için yüklü.
+  for (const { kod } of tumIller) await mevcutKonulariKur(kod, RESMI_YIL);
   await onerileriKur("usak", USAK);
   await onerileriKur("kutahya", KUTAHYA);
 

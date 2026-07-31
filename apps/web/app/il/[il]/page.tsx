@@ -66,7 +66,16 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
               <>
                 {d.set.slotSayisi} slot. Mevcut konular ve yeni öneriler aynı sekiz kriterle sıralanır; puanın en
                 büyük payı (<b>%{yerellik}</b>) “neden burada?” sorusuna ait. Mevcut konulara{" "}
-                <b className="num">+{h.pay}</b> devamlılık payı uygulanır; gizli katsayı yok, sürüm {d.set.surum}.
+                <b className="num">+{h.pay}</b> devamlılık payı uygulanır; gizli katsayı yok, sürüm{" "}
+                <span className="num">{d.set.surum}</span>.{" "}
+                {d.kalibre ? (
+                  <>Bu ağırlıklar {d.ajans} tarafından yayımlandı.</>
+                ) : (
+                  <>
+                    <b className="font-medium">{d.ajans} henüz kendi ağırlık setini yayımlamadı</b>; ulusal
+                    varsayılan uygulanıyor.
+                  </>
+                )}
               </>
             ) : (
               <>

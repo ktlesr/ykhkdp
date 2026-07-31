@@ -235,9 +235,9 @@ test("KVKK: kimlik pseudonimleşir, öneri zinciri korunur", async () => {
 // ── migration geri alma ────────────────────────────────────────────────────
 
 test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
-  const geri = await asagi(10);
+  const geri = await asagi(11);
   assert.deepEqual(geri, [
-    "0010_ayar", "0009_yatirim_konusu", "0008_ajans_kisa_ad", "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus",
+    "0011_ulusal_agirlik", "0010_ayar", "0009_yatirim_konusu", "0008_ajans_kisa_ad", "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus",
     "0004_kriter_dayanagi", "0003_kurallar", "0002_rls", "0001_sema",
   ]);
   const [{ n }] = await sahip()<{ n: string }[]>`
@@ -247,7 +247,7 @@ test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
 
   assert.deepEqual(await yukari(), [
     "0001_sema", "0002_rls", "0003_kurallar", "0004_kriter_dayanagi",
-    "0005_karsi_gorus", "0006_yakin_kopya", "0007_misafir", "0008_ajans_kisa_ad", "0009_yatirim_konusu", "0010_ayar",
+    "0005_karsi_gorus", "0006_yakin_kopya", "0007_misafir", "0008_ajans_kisa_ad", "0009_yatirim_konusu", "0010_ayar", "0011_ulusal_agirlik",
   ]);
   await seed();
 });
@@ -310,13 +310,16 @@ test("yakın kopya aynı dönemde bulunur, reddedilen sayılmaz", async () => {
 
 test("belge kapsaması yerel belgesi olmayan ili gösterir", async () => {
   const kapsam = await belgeKapsami(ANONIM);
-  assert.equal(kapsam.length, 4);
+  // 81 ilin tamamında açık dönem var (program yıllık ve ulusal).
+  assert.equal(kapsam.length, 81);
   const usak = kapsam.find((x) => x.il_kod === "usak");
   const manisa = kapsam.find((x) => x.il_kod === "manisa");
   assert.ok(usak && usak.il_belgesi > 0, "Uşak'ın il raporu var");
   assert.ok(manisa && manisa.il_belgesi === 0, "Manisa'nın ile özgü belgesi yok");
   assert.ok(manisa && manisa.ajans_belgesi > 0, "ajans belgesi (bölge planı) her ilde geçerli");
   assert.ok(kapsam.every((x) => x.ulusal > 0), "ulusal belgeler her ilde geçerli");
+  const yerelsiz = kapsam.filter((x) => x.il_belgesi + x.ajans_belgesi === 0);
+  assert.ok(yerelsiz.length > 0, "TR33 dışındaki illerde yerel belge yok");
 });
 
 // ── misafir · kayıt olmadan devam et ───────────────────────────────────────
