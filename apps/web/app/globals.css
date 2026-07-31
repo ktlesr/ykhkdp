@@ -20,6 +20,14 @@
   --color-hairline: #c9c4b8;
   --color-hairline-soft: #e2ded4;
 
+  /**
+   * Form alanı zemini. Handoff §2 token listesinde yok — orada form alanı
+   * tanımlanmamış — ama renk kodda zaten kullanılıyordu (`#FDFCFA`) ve
+   * isimsizdi. İsimlendirmek koyu tema karşılığını da mümkün kılıyor:
+   * isimsiz sabit renk temayla dönmüyor, token dönüyor.
+   */
+  --color-alan: #fdfcfa;
+
   --color-verified: #1d5b4a;
   --color-verified-tint: #eaf4f0;
   --color-verified-line: #2c7a64;
@@ -93,6 +101,7 @@
   --color-surface: #161b21;
   --color-hairline: #2a3039;
   --color-hairline-soft: #1e242b;
+  --color-alan: #1a1f26;
   --color-verified: #6fbfa3;
   --color-unverif: #d9b25f;
   --color-absent: #9a9186;
@@ -207,20 +216,6 @@
   );
 }
 
-/* Yalnızca konum kayması: içerik hiçbir anda gizlenmiyor, bu yüzden animasyon
-   çalışmasa da (arka sekme, headless) sayfa tam görünür. */
-@keyframes landingRise {
-  from {
-    transform: translateY(10px);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-.landing-rise {
-  animation: landingRise 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards;
-}
-
 /* Koyu panel — HER İKİ temada koyu kalır.
    `bg-ink` kullanmak yanlış olurdu: koyu temada `--color-ink` açık renge
    dönüyor ve üzerindeki sabit açık metin görünmez hâle geliyor. Bu panel bir
@@ -229,7 +224,16 @@
   background: #101419;
   color: #ede9e0;
 }
-.panel-koyu a {
+/**
+ * Varsayılan link rengi — `:where()` ile ÖZGÜLLÜK SIFIR.
+ *
+ * Önce `.panel-koyu a` yazmıştım: özgüllüğü (0,1,1) olduğu için panelin
+ * içindeki `.dugme-ters` (0,1,0) yardımcı sınıfını eziyordu ve birincil
+ * düğmeler #EDE9E0 metin / #F6F4EF zemin, yani 1.09:1 kontrastla görünmez
+ * kalıyordu. `:where()` seçiciyi (0,0,1)'e indirir; yardımcı sınıf kazanır.
+ * Kural: bileşen sınıfı içindeki eleman seçicileri her zaman `:where()` ile.
+ */
+.panel-koyu :where(a) {
   color: #ede9e0;
 }
 /* Koyu panel üzerindeki dolu düğme: zemin de metin de sabit. */

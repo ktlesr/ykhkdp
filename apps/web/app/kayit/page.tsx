@@ -6,7 +6,7 @@ import { kayitEylemi } from "@/lib/eylem.ts";
 import { kullanici } from "@/lib/oturum.ts";
 
 const ETIKET = "mb-1.5 block font-mono text-[9.5px] uppercase tracking-[.13em] text-ink-mute";
-const GIRDI = "min-h-11 w-full border border-hairline bg-[#FDFCFA] px-3 py-[11px] text-[14px] text-ink";
+const GIRDI = "min-h-11 w-full border border-hairline bg-alan px-3 py-[11px] text-[14px] text-ink";
 
 export default async function Kayit() {
   if (await kullanici()) redirect("/oneri");

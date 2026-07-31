@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils.ts";
  */
 
 export const ETIKET = "font-mono text-[9.5px] uppercase tracking-[.14em] text-ink-mute";
-export const GIRDI = "min-h-11 w-full border border-hairline bg-[#FDFCFA] px-3 py-[11px] text-[14px] text-ink";
+export const GIRDI = "min-h-11 w-full border border-hairline bg-alan px-3 py-[11px] text-[14px] text-ink";
 export const ALAN_ETIKET = "mb-1.5 block font-mono text-[9.5px] uppercase tracking-[.13em] text-ink-mute";
 
 export function UstBar({
@@ -21,7 +21,7 @@ export function UstBar({
   nav?: Array<{ ad: string; yol: string; aktif?: boolean }>;
 }) {
   return (
-    <div className="sticky top-0 z-40 border-b border-b-black bg-ink text-[#EDE9E0]">
+    <div className="panel-koyu sticky top-0 z-40 border-b border-b-[#000]">
       <div className="mx-auto flex h-[52px] max-w-[1180px] items-center gap-7 px-6">
         <Link href="/" className="flex items-baseline gap-2.5 border-0 text-[#EDE9E0]">
           <span className="font-display text-[17px] font-medium tracking-[.01em]">YKH</span>

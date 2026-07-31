@@ -86,7 +86,7 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
             )}
 
             <div className="mt-5 border border-hairline bg-surface">
-              <div className="grid grid-cols-[44px_1fr_86px_92px_120px] bg-ink px-4 py-2.5 font-mono text-[9.5px] uppercase tracking-[.12em] text-[#C9CDD3] max-[760px]:grid-cols-[44px_1fr_120px]">
+              <div className="panel-koyu grid grid-cols-[44px_1fr_86px_92px_120px] px-4 py-2.5 font-mono text-[9.5px] uppercase tracking-[.12em] text-[#C9CDD3] max-[760px]:grid-cols-[44px_1fr_120px]">
                 <div>Sıra</div>
                 <div>Yatırım konusu</div>
                 <div className="max-[760px]:hidden">Köken</div>

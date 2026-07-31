@@ -57,7 +57,7 @@ const ZINCIR = [
     ad: "İl sıralamasına girer",
     metin:
       "Belgeye bağlanamayan aday, puanı yüksek olsa da slot dolduramaz. Yeterince gerekçelendirilebilir " +
-      "aday yoksa slot boş kalır — bu bir hata değil, geçerli bir sonuçtur.",
+      "aday yoksa slot boş kalır. Bu bir hata değil, geçerli bir sonuçtur.",
   },
 ];
 
@@ -73,7 +73,7 @@ const SINIRLAR = [
   {
     ad: "Alıntı uyduramaz",
     metin:
-      "Kaydedilen her alıntı, modele verilmiş bir belgede birebir geçer. Geçmeyen metin kaydedilmez — " +
+      "Kaydedilen her alıntı, modele verilmiş bir belgede birebir geçer. Geçmeyen metin kaydedilmez; " +
       "puana, dayanağa, ekrana girmez.",
   },
   {
@@ -124,7 +124,7 @@ export default async function Tanitim() {
       <section className="panel-koyu tex-cetvel">
         <div className="mx-auto w-full max-w-[1120px] px-6 max-[560px]:px-4">
           <header className="flex flex-wrap items-baseline gap-x-5 gap-y-2 border-b border-b-[#2A3039] py-4">
-            <Link href="/" className="border-0 font-mono text-[11px] uppercase tracking-[.2em] text-[#EDE9E0]">
+            <Link href="/" className="border-0 font-mono text-[10.5px] uppercase tracking-[.16em] text-[#EDE9E0]">
               YKH<span className="text-[#8E959F]">·</span>KDP
             </Link>
             <span className="font-mono text-[9.5px] uppercase tracking-[.14em] text-[#8E959F]">
@@ -149,28 +149,25 @@ export default async function Tanitim() {
           <div className="grid grid-cols-[1.35fr_1fr] gap-x-12 gap-y-10 pt-16 pb-14 max-[900px]:grid-cols-1 max-[900px]:pt-12">
             <div>
               <h1
-                className="landing-rise max-w-[24ch] font-display text-[clamp(2.35rem,5.4vw,4.4rem)] leading-[1.03] tracking-[-0.028em] text-balance text-[#F6F4EF]"
-                style={{ animationDelay: "40ms" }}
+                className="max-w-[26ch] font-display text-[clamp(1.9rem,4.6vw,2.5rem)] font-medium leading-[1.06] tracking-[-0.01em] text-balance text-[#F6F4EF]"
               >
                 Dört yatırım konusu, gerekçesi gösterilebilir olsun.
               </h1>
               <p
-                className="landing-rise mt-6 max-w-[62ch] text-[16.5px] leading-[1.55] text-pretty text-[#C9CDD3]"
-                style={{ animationDelay: "120ms" }}
+                className="mt-6 max-w-[62ch] text-[16px] leading-[1.5] text-pretty text-[#C9CDD3]"
               >
                 Yerel Kalkınma Hamlesi kapsamında her il için dört yatırım konusu belirleniyor. Bu platform o kararın
                 hazırlık katmanı: öneriler üst ölçekli plan belgelerine <b className="font-medium text-[#EDE9E0]">birebir
                 alıntıyla</b> bağlanır, sekiz kriterle puanlanır ve ajans onayından geçer.
               </p>
               <p
-                className="landing-rise mt-4 max-w-[62ch] text-[14px] leading-[1.55] text-[#8E959F]"
-                style={{ animationDelay: "180ms" }}
+                className="mt-4 max-w-[62ch] text-[13.5px] leading-[1.5] text-[#8E959F]"
               >
                 Resmî başvuru portalının yerine geçmez. Yatırımcı başvuruları başlamadan önceki politika hazırlama
                 aşamasıdır.
               </p>
 
-              <div className="landing-rise mt-9 flex flex-wrap items-center gap-3" style={{ animationDelay: "240ms" }}>
+              <div className="mt-9 flex flex-wrap items-center gap-3">
                 <Link
                   href="/iller"
                   className="dugme-ters inline-flex min-h-12 items-center border px-6 font-mono text-[11px] uppercase tracking-[.13em]"
@@ -189,8 +186,7 @@ export default async function Tanitim() {
             {/* Ölçü rafı: gerçek sayılar, mono ve tabular. Büyük-rakam
                 şablonu değil — cetvel gibi okunuyor. */}
             <dl
-              className="landing-rise self-end border-t border-t-[#2A3039]"
-              style={{ animationDelay: "300ms" }}
+              className="self-end border-t border-t-[#2A3039]"
               aria-label="Platformdaki veri"
             >
               {raf.map((x) => (
@@ -210,7 +206,7 @@ export default async function Tanitim() {
       {/* ── Zincir ───────────────────────────────────────────────────────── */}
       <section className="border-b border-b-hairline bg-page">
         <div className="mx-auto w-full max-w-[1120px] px-6 py-16 max-[560px]:px-4 max-[560px]:py-12">
-          <h2 className="max-w-[30ch] font-display text-[clamp(1.6rem,3vw,2.3rem)] leading-[1.15] tracking-[-0.02em] text-balance">
+          <h2 className="max-w-[32ch] font-display text-[clamp(1.5rem,2.8vw,1.9375rem)] font-medium leading-[1.12] tracking-[-0.01em] text-balance">
             Bir öneri sıralamaya girene kadar dört kapıdan geçer.
           </h2>
 
@@ -235,7 +231,7 @@ export default async function Tanitim() {
       {/* ── Kanıt · imza anı ─────────────────────────────────────────────── */}
       <section className="border-b border-b-hairline bg-paper">
         <div className="mx-auto w-full max-w-[1120px] px-6 py-16 max-[560px]:px-4 max-[560px]:py-12">
-          <h2 className="max-w-[34ch] font-display text-[clamp(1.6rem,3vw,2.3rem)] leading-[1.15] tracking-[-0.02em] text-balance">
+          <h2 className="max-w-[36ch] font-display text-[clamp(1.5rem,2.8vw,1.9375rem)] font-medium leading-[1.12] tracking-[-0.01em] text-balance">
             Anlatmıyoruz. Platformdaki gerçek bir kayıt şöyle görünüyor.
           </h2>
 
@@ -243,8 +239,8 @@ export default async function Tanitim() {
             <div className="tex-absent mt-8 border border-hairline px-5 py-6">
               <h3 className="text-[15px] font-medium">Henüz yayımlanmış bir değerlendirme yok.</h3>
               <p className="mt-2 max-w-[70ch] text-[14px] leading-[1.55] text-ink-soft">
-                Bu bölüm veritabanındaki gerçek kayıtları gösterir. Ajans ilk öneriyi onayladığında burada belirir —
-                örnek uydurulmaz.
+                Bu bölüm veritabanındaki gerçek kayıtları gösterir. Ajans ilk öneriyi onayladığında burada belirir.
+                Örnek uydurulmaz.
               </p>
             </div>
           ) : (
@@ -264,7 +260,7 @@ export default async function Tanitim() {
               </div>
 
               <div className="grid grid-cols-[1fr_auto] items-start gap-x-8 gap-y-4 border-b border-b-hairline-soft px-5 py-5 max-[640px]:grid-cols-1">
-                <h3 className="max-w-[40ch] font-display text-[21px] leading-tight text-balance">{ornek.baslik}</h3>
+                <h3 className="max-w-[40ch] font-display text-[24px] font-medium leading-[1.15] text-balance">{ornek.baslik}</h3>
                 <div className="text-right max-[640px]:text-left">
                   <div className="font-mono text-[9.5px] uppercase tracking-[.13em] text-ink-mute">Belge dayanağı</div>
                   <div className="num mt-1 text-[30px] leading-none text-verified">{ornek.dayanak}</div>
@@ -303,7 +299,7 @@ export default async function Tanitim() {
                     {dayanaksizKriterler.map((kr) => KRITER_ETIKET[kr]).join(" · ")}
                   </p>
                   <p className="mt-2 max-w-[74ch] text-[12.5px] leading-[1.5] text-ink-mute">
-                    Eksik dayanak gizlenmez. Kriterin puanı yine sayılır ama belge dayanağını düşürür — ajans neyi
+                    Eksik dayanak gizlenmez. Kriterin puanı yine sayılır ama belge dayanağını düşürür; ajans neyi
                     onayladığını bilerek onaylar.
                   </p>
                 </div>
@@ -340,7 +336,7 @@ export default async function Tanitim() {
         <div className="mx-auto w-full max-w-[1120px] px-6 py-16 max-[560px]:px-4 max-[560px]:py-12">
           <div className="grid grid-cols-[1fr_1.15fr] items-start gap-x-12 gap-y-8 max-[820px]:grid-cols-1">
             <div>
-              <h2 className="max-w-[26ch] font-display text-[clamp(1.6rem,3vw,2.3rem)] leading-[1.15] tracking-[-0.02em] text-balance">
+              <h2 className="max-w-[28ch] font-display text-[clamp(1.5rem,2.8vw,1.9375rem)] font-medium leading-[1.12] tracking-[-0.01em] text-balance">
                 En büyük pay “neden burada?” sorusunda.
               </h2>
               <p className="mt-5 max-w-[54ch] text-[14.5px] leading-[1.6] text-pretty text-ink-soft">
@@ -401,7 +397,7 @@ export default async function Tanitim() {
       {/* ── Sınırlar ─────────────────────────────────────────────────────── */}
       <section className="border-b border-b-hairline bg-paper">
         <div className="mx-auto w-full max-w-[1120px] px-6 py-16 max-[560px]:px-4 max-[560px]:py-12">
-          <h2 className="max-w-[32ch] font-display text-[clamp(1.6rem,3vw,2.3rem)] leading-[1.15] tracking-[-0.02em] text-balance">
+          <h2 className="max-w-[34ch] font-display text-[clamp(1.5rem,2.8vw,1.9375rem)] font-medium leading-[1.12] tracking-[-0.01em] text-balance">
             Yapay zekânın burada yapamadıkları.
           </h2>
           <p className="mt-4 max-w-[68ch] text-[14.5px] leading-[1.6] text-pretty text-ink-soft">
@@ -424,7 +420,7 @@ export default async function Tanitim() {
       <section className="border-b border-b-hairline bg-page">
         <div className="mx-auto w-full max-w-[1120px] px-6 py-16 max-[560px]:px-4 max-[560px]:py-12">
           <div className="grid grid-cols-[1fr_1.3fr] items-start gap-x-12 gap-y-8 max-[820px]:grid-cols-1">
-            <h2 className="max-w-[22ch] font-display text-[clamp(1.6rem,3vw,2.3rem)] leading-[1.15] tracking-[-0.02em] text-balance">
+            <h2 className="max-w-[24ch] font-display text-[clamp(1.5rem,2.8vw,1.9375rem)] font-medium leading-[1.12] tracking-[-0.01em] text-balance">
               Üç rol. Kurum kaydı ve kurum onayı istenmez.
             </h2>
             <dl>
@@ -444,11 +440,11 @@ export default async function Tanitim() {
         <div className="mx-auto w-full max-w-[1120px] px-6 py-16 max-[560px]:px-4 max-[560px]:py-12">
           <div className="flex flex-wrap items-end justify-between gap-x-12 gap-y-8">
             <div>
-              <h2 className="max-w-[26ch] font-display text-[clamp(1.7rem,3.4vw,2.6rem)] leading-[1.12] tracking-[-0.022em] text-balance text-[#F6F4EF]">
+              <h2 className="max-w-[28ch] font-display text-[clamp(1.6rem,3vw,2.125rem)] font-medium leading-[1.1] tracking-[-0.01em] text-balance text-[#F6F4EF]">
                 İlinizde hangi konu neden öne çıkıyor?
               </h2>
               <p className="mt-4 max-w-[56ch] text-[14.5px] leading-[1.6] text-pretty text-[#C9CDD3]">
-                Sıralamayı herkes görebilir. Öneri vermek için kayıt zorunlu değil — kayıt olmadan devam edebilir,
+                Sıralamayı herkes görebilir. Öneri vermek için kayıt zorunlu değil: kayıt olmadan devam edebilir,
                 sonradan hesap açabilirsiniz.
               </p>
             </div>

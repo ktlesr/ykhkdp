@@ -49,7 +49,7 @@ export function BelgeFormu({ iller }: { iller: Array<{ kod: string; ad: string }
         }
       }}
     >
-      <div className="flex items-center justify-between bg-ink px-4 py-2.5 font-mono text-[10px] uppercase tracking-[.12em] text-[#C9CDD3]">
+      <div className="panel-koyu flex items-center justify-between px-4 py-2.5 font-mono text-[10px] uppercase tracking-[.12em] text-[#C9CDD3]">
         <span>Yeni belge</span>
         <button type="button" onClick={() => setAcik(false)} className="cursor-pointer text-[#8E959F]">
           Kapat
@@ -116,7 +116,7 @@ export function BelgeFormu({ iller }: { iller: Array<{ kod: string; ad: string }
           rows={8}
           value={metin}
           onChange={(e) => setMetin(e.target.value)}
-          className="w-full resize-y border border-hairline bg-[#FDFCFA] px-3 py-2.5 text-[13px] leading-[1.5] text-ink"
+          className="w-full resize-y border border-hairline bg-alan px-3 py-2.5 text-[13px] leading-[1.5] text-ink"
           placeholder="PDF'ten kopyaladığınız metni buraya yapıştırabilirsiniz."
         />
         <div className="num mt-1.5 text-[10px] text-ink-mute">{metin.length} karakter</div>

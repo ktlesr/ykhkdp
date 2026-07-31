@@ -29,7 +29,7 @@ export function OnayKutusu({
 
   return (
     <div className="mt-6 border border-ink bg-surface">
-      <div className="bg-ink px-4 py-2.5 font-mono text-[10px] uppercase tracking-[.12em] text-[#C9CDD3]">
+      <div className="panel-koyu px-4 py-2.5 font-mono text-[10px] uppercase tracking-[.12em] text-[#C9CDD3]">
         Ajans işlemleri
       </div>
 
@@ -46,7 +46,7 @@ export function OnayKutusu({
               id={`gerekce-${oneriId}`}
               name="gerekce"
               rows={2}
-              className="w-full resize-y border border-hairline bg-[#FDFCFA] px-3 py-2.5 text-[13px] leading-[1.5] text-ink"
+              className="w-full resize-y border border-hairline bg-alan px-3 py-2.5 text-[13px] leading-[1.5] text-ink"
             />
             <div className="mt-3 flex flex-wrap gap-2.5">
               {gecisler.map((g) => (

@@ -10,7 +10,7 @@ export function KayitSatiriAlani() {
 export function kayitSatiri(mesaj: string): void {
   const saat = new Intl.DateTimeFormat("tr-TR", { hour: "2-digit", minute: "2-digit" }).format(new Date());
   toast.custom(() => (
-    <div className="flex w-[400px] max-w-[calc(100vw-48px)] animate-ledger-in gap-3 border border-black border-l-[3px] border-l-verified bg-ink p-4 text-[#EDE9E0]">
+    <div className="panel-koyu flex w-[400px] max-w-[calc(100vw-48px)] animate-ledger-in gap-3 border border-[#000] border-l-[3px] border-l-verified p-4">
       <span className="font-mono text-[12px] leading-[1.3] text-[#6FBFA3]" aria-hidden>
         ■
       </span>

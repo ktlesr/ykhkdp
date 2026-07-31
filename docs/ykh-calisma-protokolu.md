@@ -21,8 +21,16 @@
 10. **Ekran eklemeden önce sor.** Tanıtım sayfası (`/`) ve `/iller` ayrımı
     kullanıcı onayıyla eklendi; öneri sihirbazı yeni ekran DEĞİL, `/oneri`
     içinde dört adım. Yeni bir route gerekçe ister.
-11. **Koyu panel token kullanmaz.** `bg-ink` koyu temada açık renge döner;
-    matbu künye alanları `.panel-koyu` ile her iki temada koyu kalır.
+11. **Tasarımın başvuru referansı `design_handoff_ykh_kdp/README.md`.**
+    §1 değişmez kurallar, §2 token ve animasyon listesi, §4 epistemik gramer
+    bağlayıcıdır. Uygulanmış hâli ve bu ürüne özgü kararlar:
+    `apps/web/DESIGN.md`. Makineyle denetlenen kısmı `lib/tasarim.test.ts`.
+12. **Koyu panel token kullanmaz.** `bg-ink` koyu temada açık renge döner;
+    matbu künye alanları `.panel-koyu` ile her iki temada koyu kalır. Sabit
+    açık renk metin yalnızca o kapsamda meşrudur.
+13. **CSS'te bileşen sınıfı içindeki eleman seçicisi `:where()` ile sarılır.**
+    `.sinif eleman` (0,1,1) yardımcı sınıfı (0,1,0) ezer ve sessiz kırılma
+    üretir; ölçüldü: iki birincil düğme 1.09:1 kontrastla görünmez kaldı.
 
 ## Kodda hiçbir zaman
 

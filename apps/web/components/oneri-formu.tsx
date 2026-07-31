@@ -25,7 +25,7 @@ export function OneriFormu({
 
   return (
     <EylemFormu eylem={oneriEylemi} className="mt-6 border border-ink bg-surface">
-      <div className="flex items-center justify-between bg-ink px-4 py-2.5 font-mono text-[10px] uppercase tracking-[.12em] text-[#C9CDD3]">
+      <div className="panel-koyu flex items-center justify-between px-4 py-2.5 font-mono text-[10px] uppercase tracking-[.12em] text-[#C9CDD3]">
         <span>Öneri formu</span>
         <span>{il.ad}</span>
       </div>
@@ -56,7 +56,7 @@ export function OneriFormu({
             value={gerekce}
             onChange={(e) => setGerekce(e.target.value)}
             placeholder="Hangi yerel kaynak, hangi mevcut sanayi, hangi arazi-enerji-işgücü donanımı bu konuyu burada mümkün kılıyor?"
-            className="w-full resize-y border border-ink bg-[#FDFCFA] px-3 py-[11px] text-[13.5px] leading-[1.5] text-ink"
+            className="w-full resize-y border border-ink bg-alan px-3 py-[11px] text-[13.5px] leading-[1.5] text-ink"
             required
             minLength={40}
           />
