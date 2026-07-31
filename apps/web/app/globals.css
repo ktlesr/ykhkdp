@@ -367,3 +367,22 @@
   --color-conflict-tint: #f7eae8;
   --color-conflict-line: #b4655b;
 }
+
+/* ── Katlanır bölüm (details/summary) ─────────────────────────────────────
+   Yerel `<details>`: JavaScript yok, klavye ve ekran okuyucu desteği bedava.
+   Varsayılan üçgen işareti kaldırılıp ürünün kendi geometrik işaretleri
+   kullanılıyor (§1.8 emoji yasağı; ▸ ▾ diğer durum işaretleriyle aynı aile).
+   Açılıp kapanma gerçek bir durum değişimidir (§1.10), dekoratif değil.      */
+.katlanir > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.katlanir > summary::-webkit-details-marker {
+  display: none;
+}
+.katlanir > summary :where(.katlanir-isaret)::before {
+  content: "▸";
+}
+.katlanir[open] > summary :where(.katlanir-isaret)::before {
+  content: "▾";
+}

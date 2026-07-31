@@ -171,6 +171,20 @@ token'larından alınmaz, **handoff'un kendi ilişkisinden OKLab'de türetilir**
 M3 `outline` doğrudan `ink-mute` olarak kullanıldığında kontrast 4,08:1'e
 düşüyordu (10px etiketler için eşik altı).
 
+## Katlanır bölüm
+
+`.katlanir` — yerel `<details>/<summary>`. JavaScript yok; klavye, ekran
+okuyucu ve tarayıcı içi arama desteği bedava gelir.
+
+- Varsayılan üçgen işareti kaldırılır, ürünün kendi geometrik işaretleri
+  kullanılır (`▸` / `▾`) — §1.8 emoji yasağı, ve diğer durum işaretleriyle
+  (`■ ◌ — ▲ ▼`) aynı aile.
+- Yükseklik animasyonu **yok**. §1.10 hareketi durum değişimi için meşru
+  sayıyor ama layout özelliği animasyonu ayrı bir maliyet; açılma anında
+  içerik hemen görünür.
+- Açık gelen bölüm **veriden türetilir**, keyfî değil. `/iller` sayfasında
+  açık dönemi olan ajans bölgeleri açık, olmayanlar kapalı gelir.
+
 ## Erişilebilirlik (handoff §11)
 
 - Odak halkası her etkileşimli öğede görünür (`:focus-visible`, 2px `#8A6A1F`).

@@ -166,10 +166,11 @@ export async function donemGetir(b: Baglam, ilKod: string, yil?: string): Promis
 export async function illeriListele(b: Baglam) {
   return islem(b, (sql) =>
     sql<
-      { il_kod: string; il: string; ajans: string; kisa_ad: string | null; yil: string | null;
-        listede: number; bekleyen: number; resmi_konu: number }[]
+      { il_kod: string; il: string; ajans_kod: string; ajans: string; kisa_ad: string | null;
+        yil: string | null; listede: number; bekleyen: number; resmi_konu: number }[]
     >`
-      select i.kod as il_kod, i.ad as il, a.ad as ajans, a.kisa_ad, max(d.yil) as yil,
+      select i.kod as il_kod, i.ad as il, a.kod as ajans_kod, a.ad as ajans, a.kisa_ad,
+             max(d.yil) as yil,
              count(*) filter (where o.durum = 'listede')::int as listede,
              count(*) filter (where o.durum in ('degerlendiriliyor','onay_bekliyor'))::int as bekleyen,
              (select count(*) from yatirim_konusu y where y.il_kod = i.kod)::int as resmi_konu
@@ -177,8 +178,8 @@ export async function illeriListele(b: Baglam) {
       join ajans a on a.kod = i.ajans_kod
       left join donem d on d.il_kod = i.kod
       left join oneri o on o.donem_id = d.id
-      group by i.kod, i.ad, a.ad, a.kisa_ad
-      order by a.ad, i.ad
+      group by i.kod, i.ad, a.kod, a.ad, a.kisa_ad
+      order by a.kod, i.ad
     `,
   );
 }
