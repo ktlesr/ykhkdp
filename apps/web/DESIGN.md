@@ -127,6 +127,50 @@ kurallarına tabidir.
 - **Numaralı bölüm işaretleri (01–04)** yalnızca zincir bölümünde, çünkü orası
   gerçek bir sıradır ve sıra bilgi taşır. Başka bölümde numara kullanılmaz.
 
+## Renk paleti varyasyonları
+
+Palet **yalnızca rengi** değiştirir. Tipografi, boşluk, yarıçap, gölge ve
+hareket handoff §1–§2'de kalır — kaynak dosyalardaki `rounded-lg (8px)`,
+250–350ms geçiş ve elevation §1.8'i ihlal ettiği için alınmadı.
+
+| id | ad | kalibrasyon |
+|---|---|---|
+| `temel` | Kağıt ve mürekkep | handoff'un özgün paleti |
+| `gece` | Gece ve krem | gerekmedi (markaya en yakın epistemik renk ΔE 0.243) |
+| `antrasit` | Antrasit ve alabaster | marka yuvası `primary` yerine `inverse-surface` |
+| `orman` | Orman ve keten | `verified` #1D5B4A → #0f6558 (sapma ΔE 0.033) |
+
+Ayar **kurumsaldır**: `ayar` tablosunda tek kayıt, yalnızca yönetici değiştirir
+(`/ayarlar`), değişiklik denetime yazılır. Kişisel tercih yok — ekran görüntüsü
+paylaşıldığında herkeste aynı çıksın diye. Palet sunucuda okunup
+`<html data-palet>` olarak basılır; ilk boyamada sıçrama olmaz.
+
+### Doğrulama kuralları
+
+**Sert** (`tasarim.test.ts` kırar):
+
+- her epistemik renk `surface`, `paper` ve `page` üzerinde **≥4,5:1**
+- `ink-soft` ve `ink-mute` de aynı eşiğe tabi — küçük punto taşıyorlar
+- epistemik renkler birbirinden **≥ handoff'un kendi en yakın çifti**
+- palet bloğu **renk dışı token taşıyamaz**
+
+Eşikler sabit yazılmaz, handoff'un kendi değerlerinden hesaplanır. Kural
+"handoff'tan kötü olamaz"; sabit yazıldığında (0.091) handoff'un kendisi kendi
+testini geçemiyordu — gerçek değer 0.09099…
+
+**Tavsiye** (rapor edilir, zorlanmaz): epistemik renk ile kurumsal aksan arası
+mesafe. Handoff §1.2 anlamı renkle değil kenar+doku+işaret+etiket ile taşıyor,
+bu yüzden marka yakınlığı zayıf bir risktir. Kısıtı zorlamak Antrasit'te
+"dayanak yok" rengini griden **pembeye** itiyordu — anlamı yok eden bir sonuç.
+Kural şu: **ucuzsa düzelt, anlamı bozacaksa marka yuvasını değiştir.**
+
+### Türetilen renkler
+
+`ink-soft`, `ink-mute`, `alan` ve tüm `-tint`/`-line` varyantları M3
+token'larından alınmaz, **handoff'un kendi ilişkisinden OKLab'de türetilir**.
+M3 `outline` doğrudan `ink-mute` olarak kullanıldığında kontrast 4,08:1'e
+düşüyordu (10px etiketler için eşik altı).
+
 ## Erişilebilirlik (handoff §11)
 
 - Odak halkası her etkileşimli öğede görünür (`:focus-visible`, 2px `#8A6A1F`).

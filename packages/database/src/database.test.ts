@@ -235,9 +235,9 @@ test("KVKK: kimlik pseudonimleşir, öneri zinciri korunur", async () => {
 // ── migration geri alma ────────────────────────────────────────────────────
 
 test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
-  const geri = await asagi(9);
+  const geri = await asagi(10);
   assert.deepEqual(geri, [
-    "0009_yatirim_konusu", "0008_ajans_kisa_ad", "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus",
+    "0010_ayar", "0009_yatirim_konusu", "0008_ajans_kisa_ad", "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus",
     "0004_kriter_dayanagi", "0003_kurallar", "0002_rls", "0001_sema",
   ]);
   const [{ n }] = await sahip()<{ n: string }[]>`
@@ -247,7 +247,7 @@ test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
 
   assert.deepEqual(await yukari(), [
     "0001_sema", "0002_rls", "0003_kurallar", "0004_kriter_dayanagi",
-    "0005_karsi_gorus", "0006_yakin_kopya", "0007_misafir", "0008_ajans_kisa_ad", "0009_yatirim_konusu",
+    "0005_karsi_gorus", "0006_yakin_kopya", "0007_misafir", "0008_ajans_kisa_ad", "0009_yatirim_konusu", "0010_ayar",
   ]);
   await seed();
 });

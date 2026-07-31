@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test, { after, before } from "node:test";
 import {
-  adaylariGetir, baglamdan, belgeEkle, bolgeler, donemGetir, durumDegistir, girisYap, islem, kapat,
+  adaylariGetir, ayarGetir, ayarYaz, baglamdan, belgeEkle, bolgeler, donemGetir, durumDegistir, girisYap, islem, kapat,
   kayitOl, misafirAc, naceAra, onayKuyrugu, oneriGetir, oneriOlustur, ornekDegerlendirme, oturumCoz,
   platformOzeti, puanDuzelt, illeriListele, ilGetir, konuluYillar, yatirimKonulari,
   SUREKLILIK_ESIGI, ANONIM, type Baglam,
@@ -403,4 +403,40 @@ test("19 · süreklilik: aynen korunan yalnızca birebir aynı başlıktır", as
     }
   }
   assert.ok(aynen > 0 && benzer > 0, "iki durum da veride var");
+});
+
+// ── kurumsal ayar · renk paleti ────────────────────────────────────────────
+
+test("20 · paleti yalnızca yönetici değiştirir; ajans bile değiştiremez", async () => {
+  const yonetici = await girisBaglami("yonetici@ykh.local");
+
+  assert.equal(await ayarGetir(ANONIM, "palet"), "temel", "varsayılan palet kurulu");
+
+  // Ajans yazamaz. RLS SESSİZCE düşürmüyor, hata fırlatıyor — yetkisiz yazma
+  // denemesinin gürültülü olması doğru davranış.
+  await assert.rejects(
+    () => ayarYaz(ajans, "palet", "orman"),
+    /row-level security/i,
+    "ajans yazamaz",
+  );
+  assert.equal(await ayarGetir(ANONIM, "palet"), "temel", "değer değişmedi");
+
+  assert.equal(await ayarYaz(yonetici, "palet", "orman"), true, "yönetici yazar");
+  assert.equal(await ayarGetir(ANONIM, "palet"), "orman");
+
+  // Değişiklik denetime yazılır: "kim değiştirdi" kaybolmaz.
+  const [iz] = await islem(yonetici, (sql) =>
+    sql<{ detay: { anahtar: string; onceki: string; yeni: string } }[]>`
+      select detay from denetim where eylem = 'ayar_degistirildi' order by zaman desc limit 1
+    `,
+  );
+  assert.equal(iz.detay.anahtar, "palet");
+  assert.equal(iz.detay.onceki, "temel");
+  assert.equal(iz.detay.yeni, "orman");
+
+  await ayarYaz(yonetici, "palet", "temel");
+});
+
+test("20b · palet kamuya açık okunur — anonim de doğru görünümü alır", async () => {
+  assert.ok(await ayarGetir(ANONIM, "palet"), "anonim paleti okuyabilmeli");
 });

@@ -5,13 +5,14 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import {
   belgeEkle, belgeSil, cikisYap, donemGetir, girisYap, islem, kayitOl, naceAra, naceDuzelt,
-  misafirAc, oneriOlustur, puanDuzelt, durumDegistir,
+  ayarYaz, misafirAc, oneriOlustur, puanDuzelt, durumDegistir,
 } from "@ykh/database";
 import { gecisIzinli, onaylayabilir, type OneriDurumu } from "@ykh/domain";
 import { log } from "@ykh/observability";
 import { KRITERLER, type Kriter } from "@ykh/scoring";
 import { degerlendirmeYap, SERVIS } from "@ykh/degerlendirme";
 import { baglam, cerezSil, COOKIE, kullanici, oturumCerezi } from "./oturum.ts";
+import { paletGecerli } from "./palet.ts";
 
 export type EylemSonucu = { ok: boolean; mesaj: string };
 
@@ -57,6 +58,33 @@ export async function misafirEylemi(): Promise<EylemSonucu> {
   // yazılmakta olan formu ve adım durumunu riske atar. Çerez sunucuda hazır;
   // `oneriEylemi` gönderim anında onu okuyor.
   return { ok: true, mesaj: "Misafir olarak devam ediyorsunuz." };
+}
+
+// ── kurumsal ayarlar ───────────────────────────────────────────────────────
+
+/**
+ * Renk paleti — kurumsal karar, yalnızca yönetici.
+ *
+ * Rol kontrolü burada VE RLS'te: `ayarYaz` yazma 0 satır etkilerse false
+ * döner, yani politika sessizce engellese bile arayüz "kaydedildi" demez.
+ */
+export async function paletEylemi(id: string): Promise<EylemSonucu> {
+  const k = await kullanici();
+  if (!k || k.rol !== "yonetici") return { ok: false, mesaj: "Bu ayarı yalnızca yönetici değiştirebilir." };
+  if (!paletGecerli(id) || paletGecerli(id) !== id) {
+    return { ok: false, mesaj: "Tanınmayan palet." };
+  }
+
+  // İkinci katman RLS: yetkisiz çağrı hata fırlatır. Rol kontrolü yukarıda
+  // yapıldığı için buraya düşen bir hata ilk katmanın atlandığını gösterir —
+  // yutulmaz, kullanıcıya bildirilir.
+  const yazildi = await ayarYaz(await baglam(), "palet", id);
+  if (!yazildi) return { ok: false, mesaj: "Ayar yazılamadı; yetki reddedildi." };
+
+  log.info("palet_degistirildi", { palet: id });
+  // Palet <html data-palet> ile sunucudan basılıyor: tüm sayfalar tazelenmeli.
+  revalidatePath("/", "layout");
+  return { ok: true, mesaj: "Palet değiştirildi." };
 }
 
 // ── NACE arama (yatırımcı biliyorsa girer) ─────────────────────────────────

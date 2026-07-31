@@ -242,3 +242,128 @@
   border-color: #f6f4ef;
   color: #101419;
 }
+
+/* ── Renk paleti varyasyonları ─────────────────────────────────────────
+   YALNIZCA RENK. Tipografi, yarıçap, gölge ve hareket handoff §1–§2'de
+   kalır; palet dosyalarındaki rounded-lg (8px), 250–350ms geçiş ve
+   elevation §1.8'i ihlal ettiği için ALINMADI.
+
+   Epistemik dörtlü palet başına doğrulanır (apps/web/lib/tasarim.test.ts):
+     kontrast ≥ 4.5:1  her epistemik renk surface ve paper üzerinde
+     çift ΔE  ≥ handoff'un kendi en yakın çifti (0.0910)
+     ink-soft / ink-mute da aynı kontrast eşiğine tabi
+
+   Marka ile epistemik renk arası mesafe TAVSİYEDİR, sert kural değil:
+   handoff §1.2 anlamı renkle değil kenar+doku+işaret+etiket ile taşıyor.
+   Ucuz düzeltme uygulandı, anlamı bozacak olan reddedildi.             */
+
+/* ── Midnight & Cream · [data-palet="gece"] ────────────────────────
+   Kaynak: DESIGNPURE.md (Material 3 seti). YALNIZCA renk alındı; tipografi,
+   yarıçap, gölge ve hareket handoff §1–§2'de kalıyor.
+   Kalibrasyon gerekmedi: markaya en yakın epistemik renk ΔE 0.243, handoff'un kendi değerinin (0.166) üstünde. */
+[data-palet="gece"] {
+  --color-ink: #0a1d2d;
+  --color-ink-soft: #374e68;
+  --color-ink-mute: #577089;
+
+  --color-navy: #041627;
+  --color-navy-tint: #d9eaff;
+  --color-navy-line: #74777d;
+
+  --color-paper: #edf4ff;
+  --color-page: #f7f9ff;
+  --color-surface: #ffffff;
+  --color-alan: #fdfcfa;
+
+  --color-hairline: #c4c6cd;
+  --color-hairline-soft: #d2e4fa;
+
+  --color-verified: #1D5B4A;
+  --color-verified-tint: #eaf4f0;
+  --color-verified-line: #2c7a64;
+
+  --color-unverif: #8A6A1F;
+  --color-unverif-tint: #fbf4e2;
+  --color-unverif-line: #c9a557;
+
+  --color-absent: #6B6259;
+  --color-absent-tint: #f1eee7;
+
+  --color-conflict: #8C2F24;
+  --color-conflict-tint: #f7eae8;
+  --color-conflict-line: #b4655b;
+}
+
+/* ── Anthracite & Alabaster · [data-palet="antrasit"] ────────────────────────
+   Kaynak: DESIGNANTRASIT.md (Material 3 seti). YALNIZCA renk alındı; tipografi,
+   yarıçap, gölge ve hareket handoff §1–§2'de kalıyor.
+   Marka yuvası primary yerine inverse-surface: orta gri marka ile nötr 'kanıt yok' rengi ayrışmıyordu. Epistemik dörtlü değişmedi. */
+[data-palet="antrasit"] {
+  --color-ink: #1a1c1a;
+  --color-ink-soft: #484d51;
+  --color-ink-mute: #696e71;
+
+  --color-navy: #2f312f;
+  --color-navy-tint: #e9e8e5;
+  --color-navy-line: #777770;
+
+  --color-paper: #f4f3f1;
+  --color-page: #faf9f6;
+  --color-surface: #ffffff;
+  --color-alan: #fdfcfa;
+
+  --color-hairline: #c8c7be;
+  --color-hairline-soft: #e3e2e0;
+
+  --color-verified: #1D5B4A;
+  --color-verified-tint: #eaf4f0;
+  --color-verified-line: #2c7a64;
+
+  --color-unverif: #8A6A1F;
+  --color-unverif-tint: #fbf4e2;
+  --color-unverif-line: #c9a557;
+
+  --color-absent: #6B6259;
+  --color-absent-tint: #f1eee7;
+
+  --color-conflict: #8C2F24;
+  --color-conflict-tint: #f7eae8;
+  --color-conflict-line: #b4655b;
+}
+
+/* ── Forest & Linen · [data-palet="orman"] ────────────────────────
+   Kaynak: DESIGNGREENISH.md (Material 3 seti). YALNIZCA renk alındı; tipografi,
+   yarıçap, gölge ve hareket handoff §1–§2'de kalıyor.
+   verified #1D5B4A → #0f6558 (sapma ΔE 0.033): marka orman yeşiliyle aynı aileden, sıralama ekranında yan yana duruyorlar. */
+[data-palet="orman"] {
+  --color-ink: #1b1c1c;
+  --color-ink-soft: #494c54;
+  --color-ink-mute: #6a6e74;
+
+  --color-navy: #163328;
+  --color-navy-tint: #eae8e7;
+  --color-navy-line: #727974;
+
+  --color-paper: #f5f3f3;
+  --color-page: #fbf9f8;
+  --color-surface: #ffffff;
+  --color-alan: #fdfcfa;
+
+  --color-hairline: #c1c8c3;
+  --color-hairline-soft: #e4e2e2;
+
+  --color-verified: #0f6558;
+  --color-verified-tint: #eaffff;
+  --color-verified-line: #208573;
+
+  --color-unverif: #8A6A1F;
+  --color-unverif-tint: #fbf4e2;
+  --color-unverif-line: #c9a557;
+
+  --color-absent: #6B6259;
+  --color-absent-tint: #f1eee7;
+
+  --color-conflict: #8C2F24;
+  --color-conflict-tint: #f7eae8;
+  --color-conflict-line: #b4655b;
+}

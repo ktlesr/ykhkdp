@@ -137,3 +137,118 @@ test("sabit açık renk metin yalnızca koyu panelde meşru", async () => {
       "Token kullan (text-paper) veya elemanı panel-koyu içine al.",
   );
 });
+
+// ── renk paleti varyasyonları ──────────────────────────────────────────────
+
+/**
+ * Palet doğrulaması.
+ *
+ * Eşikler handoff'un KENDİ ulaştığı değerlerden alınır, sabit yazılmaz: kural
+ * "handoff'tan kötü olamaz". Sabit yazıldığında (0.091) handoff'un kendisi
+ * kendi testini geçemiyordu — gerçek değer 0.09099…
+ */
+const HANDOFF_EPIS = {
+  verified: "#1D5B4A",
+  unverif: "#8A6A1F",
+  absent: "#6B6259",
+  conflict: "#8C2F24",
+};
+
+function oklab(hex: string): [number, number, number] {
+  const [r, g, b] = [0, 2, 4]
+    .map((i) => Number.parseInt(hex.replace("#", "").slice(i, i + 2), 16) / 255)
+    .map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [
+    0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+  ];
+}
+const dE = (x: string, y: string) => {
+  const a = oklab(x);
+  const b = oklab(y);
+  return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+};
+const lum = (hex: string) =>
+  [0, 2, 4]
+    .map((i) => Number.parseInt(hex.replace("#", "").slice(i, i + 2), 16) / 255)
+    .map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4))
+    .reduce((t, c, i) => t + [0.2126, 0.7152, 0.0722][i] * c, 0);
+const kontrast = (x: string, y: string) => {
+  const [a, b] = [lum(x), lum(y)].sort((p, q) => q - p);
+  return (a + 0.05) / (b + 0.05);
+};
+
+/** `[data-palet="…"]` bloklarındaki token'ları çıkarır. */
+async function paletTokenlari(): Promise<Map<string, Record<string, string>>> {
+  const css = await readFile(CSS, "utf8");
+  const out = new Map<string, Record<string, string>>();
+  for (const m of css.matchAll(/\[data-palet="([\w-]+)"\]\s*\{([^}]*)\}/g)) {
+    out.set(
+      m[1],
+      Object.fromEntries([...m[2].matchAll(/--color-([\w-]+):\s*(#[0-9a-fA-F]{6})/g)].map((x) => [x[1], x[2]])),
+    );
+  }
+  return out;
+}
+
+test("her palet epistemik dörtlüyü handoff'tan kötü olmayacak şekilde taşır", async () => {
+  const epis = Object.values(HANDOFF_EPIS);
+  let temelCift = Number.POSITIVE_INFINITY;
+  for (let i = 0; i < epis.length; i++) {
+    for (let j = i + 1; j < epis.length; j++) temelCift = Math.min(temelCift, dE(epis[i], epis[j]));
+  }
+
+  const paletler = await paletTokenlari();
+  assert.ok(paletler.size > 0, "en az bir palet tanımlı olmalı");
+
+  for (const [id, t] of paletler) {
+    const dortlu = ["verified", "unverif", "absent", "conflict"].map((k) => {
+      assert.ok(t[k], `${id}: --color-${k} eksik`);
+      return [k, t[k]] as const;
+    });
+
+    // 1. Kontrast — epistemik renkler ve yardımcı metin renkleri
+    for (const [k, v] of [...dortlu, ["ink-soft", t["ink-soft"]], ["ink-mute", t["ink-mute"]]] as const) {
+      for (const zemin of ["surface", "paper", "page"] as const) {
+        if (!t[zemin] || !v) continue;
+        const c = kontrast(v, t[zemin]);
+        assert.ok(c >= 4.5, `${id}: ${k} / ${zemin} kontrast ${c.toFixed(2)}:1 (eşik 4.5)`);
+      }
+    }
+
+    // 2. Gövde metni
+    assert.ok(
+      kontrast(t.ink, t.page) >= 4.5,
+      `${id}: gövde metni kontrastı ${kontrast(t.ink, t.page).toFixed(2)}:1`,
+    );
+
+    // 3. Epistemik renkler birbirinden — handoff'un kendi ayrışmasından kötü olamaz
+    for (let i = 0; i < dortlu.length; i++) {
+      for (let j = i + 1; j < dortlu.length; j++) {
+        const d = dE(dortlu[i][1], dortlu[j][1]);
+        assert.ok(
+          d >= temelCift,
+          `${id}: ${dortlu[i][0]}↔${dortlu[j][0]} ΔE ${d.toFixed(3)} < handoff ${temelCift.toFixed(3)}`,
+        );
+      }
+    }
+  }
+});
+
+test("palet yalnızca rengi değiştirir — yarıçap, gölge, animasyon paletsiz", async () => {
+  const css = await readFile(CSS, "utf8");
+  for (const m of css.matchAll(/\[data-palet="([\w-]+)"\]\s*\{([^}]*)\}/g)) {
+    const govde = m[2];
+    const renkDisi = [...govde.matchAll(/--(?!color-)[\w-]+:/g)].map((x) => x[0]);
+    assert.deepEqual(
+      renkDisi,
+      [],
+      `${m[1]}: palet bloğu renk dışı token taşıyor (${renkDisi.join(", ")}). ` +
+        "Tipografi, yarıçap, gölge ve hareket handoff §1–§2'de kalır.",
+    );
+  }
+});

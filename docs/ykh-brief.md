@@ -34,6 +34,7 @@ Platform resmî Portal veya E-TUYS'un yerine geçmez; yatırımcı başvuruları
 | `/oneri/[id]` | herkes | AI bu puanı neye dayanarak verdi: gerekçe, belge alıntıları, kriter kırılımı |
 | `/onay` | ajans | AI puanladı, onay bekliyor: onayla · puanı düzelt · NACE'yi düzelt · reddet · yakın kopya işareti |
 | `/belgeler` | ajans | üst ölçekli belge yükleme + il bazlı kapsama — AI'nin dayanağı |
+| `/ayarlar` | yönetici | kurumsal ayarlar; şimdilik tek karar: arayüz renk paleti |
 
 Ayrıca `/giris` ve `/kayit`. Başka ekran yok.
 
@@ -368,7 +369,7 @@ Redis, S3/MinIO, pgvector, PostGIS **yok**. Gerekene kadar eklenmez.
 
 ## 9. Veri modeli
 
-14 tablo: `gonderen` · `kimlik` · `oturum` · `ajans` · `il` · `ilce` · `nace` ·
+15 tablo: `ayar` · `gonderen` · `kimlik` · `oturum` · `ajans` · `il` · `ilce` · `nace` ·
 `agirlik_seti` · `donem` · `belge` · `yatirim_konusu` · `oneri` · `degerlendirme` ·
 `denetim`.
 

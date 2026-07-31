@@ -19,6 +19,7 @@ export default async function Iller() {
             ? [
                 { ad: "Onay", yol: "/onay" },
                 { ad: "Belgeler", yol: "/belgeler" },
+          ...(k.rol === "yonetici" ? [{ ad: "Ayarlar", yol: "/ayarlar" }] : []),
               ]
             : []),
         ]}

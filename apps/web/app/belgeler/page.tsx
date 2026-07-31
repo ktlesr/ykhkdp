@@ -36,6 +36,7 @@ export default async function Belgeler() {
           { ad: "İller", yol: "/iller" },
           { ad: "Onay", yol: "/onay" },
           { ad: "Belgeler", yol: "/belgeler", aktif: true },
+          ...(k.rol === "yonetici" ? [{ ad: "Ayarlar", yol: "/ayarlar" }] : []),
         ]}
       />
       <Sayfa genis>

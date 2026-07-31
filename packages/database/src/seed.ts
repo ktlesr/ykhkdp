@@ -131,10 +131,18 @@ export async function naceYukle(): Promise<number> {
 export async function seed(): Promise<{ ozet: string }> {
   const sql = sahip();
 
+  /**
+   * CASCADE tuzağı: `gonderen`'e yabancı anahtarla bağlı HER tablo da boşalır.
+   * `ayar.guncelleyen_ref` bu yüzden `ayar`ı da siliyordu ve migration'ın
+   * yazdığı varsayılan palet kayboluyordu. Yeni bir tablo `gonderen`e
+   * bağlanırsa aynı şey olur.
+   */
   await sql`
     truncate denetim, degerlendirme, oneri, belge, donem, agirlik_seti,
              ilce, il, ajans, nace, oturum, kimlik, gonderen restart identity cascade
   `;
+  await sql`insert into ayar (anahtar, deger) values ('palet', 'temel')
+            on conflict (anahtar) do nothing`;
 
   const naceSayisi = await naceYukle();
 

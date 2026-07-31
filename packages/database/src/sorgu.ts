@@ -241,6 +241,55 @@ export async function ornekDegerlendirme(b: Baglam) {
   });
 }
 
+// ── kurumsal ayarlar ───────────────────────────────────────────────────────
+
+/**
+ * Kurumsal ayar okuma — herkes okur (palet kamuya açık bir görünüm kararı).
+ * Anahtar yoksa null döner ve çağıran kendi varsayılanını kullanır; ayar
+ * tablosu boşken arayüz çalışmaya devam eder.
+ */
+export async function ayarGetir(b: Baglam, anahtar: string): Promise<string | null> {
+  const [r] = await islem(b, (sql) =>
+    sql<{ deger: string }[]>`select deger from ayar where anahtar = ${anahtar}`,
+  );
+  return r?.deger ?? null;
+}
+
+/**
+ * Kurumsal ayar yazma — RLS yalnızca yöneticiye izin verir; denetime yazılır.
+ *
+ * Yetkisiz çağrı SESSİZCE BAŞARISIZ OLMAZ, hata fırlatır: `with check` ihlali
+ * PostgreSQL'de "new row violates row-level security policy" olarak yükselir.
+ * Bu doğru davranış — yetkisiz yazma denemesi gürültülü olmalı — ve arayüz
+ * katmanı rol kontrolünü zaten önce yapıyor; buraya düşen bir çağrı ilk
+ * katmanın atlandığı anlamına gelir.
+ *
+ * Dönüş değeri UPDATE yolu içindir: politika satırı filtrelerse 0 satır etkiler
+ * ve hata yükselmez.
+ */
+export async function ayarYaz(b: Baglam, anahtar: string, deger: string): Promise<boolean> {
+  return islem(b, async (sql) => {
+    const [onceki] = await sql<{ deger: string }[]>`select deger from ayar where anahtar = ${anahtar}`;
+    const yazilan = await sql`
+      insert into ayar (anahtar, deger, guncelleyen_ref, guncellendi)
+      values (${anahtar}, ${deger}, ${b.gonderenRef}, now())
+      on conflict (anahtar) do update set
+        deger = excluded.deger,
+        guncelleyen_ref = excluded.guncelleyen_ref,
+        guncellendi = now()
+      returning anahtar
+    `;
+    // RLS yazmayı sessizce 0 satıra düşürebilir; çağıran bunu bilmeli.
+    if (!yazilan.length) return false;
+    await denetle(sql, b, "ayar_degistirildi", "ayar", null, {
+      anahtar,
+      onceki: onceki?.deger ?? null,
+      yeni: deger,
+    });
+    return true;
+  });
+}
+
 export type YatirimKonusu = {
   sira: number;
   baslik: string;
