@@ -10,3 +10,7 @@ next-env.d.ts
 .env.*.local
 .DS_Store
 Thumbs.db
+
+# Tema paleti taslakları (uygulanana kadar depoya girmez)
+DESIGN*.md
+!apps/web/DESIGN.md
