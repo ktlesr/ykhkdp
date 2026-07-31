@@ -20,7 +20,11 @@
 9. Arayüz dili Türkçe, sade fiil, kısaltma yok.
 10. **Ekran eklemeden önce sor.** Tanıtım sayfası (`/`) ve `/iller` ayrımı
     kullanıcı onayıyla eklendi; öneri sihirbazı yeni ekran DEĞİL, `/oneri`
-    içinde dört adım. Yeni bir route gerekçe ister.
+    içinde dört adım. Yeni bir route gerekçe ister. `/onerilerim` gerekçesi:
+    öneriler sahibi ve ajans dışında kapatıldı, yatırımcının kendi
+    önerilerine ulaşacağı başka yer kalmadı.
+11. **Onay yayın değildir.** Onaylanmış öneri de sahibi ve ajans dışında
+    görünmez; kamuya açık olan Bakanlığın resmî listesidir.
 11. **Tasarımın başvuru referansı `design_handoff_ykh_kdp/README.md`.**
     §1 değişmez kurallar, §2 token ve animasyon listesi, §4 epistemik gramer
     bağlayıcıdır. Uygulanmış hâli ve bu ürüne özgü kararlar:

@@ -194,20 +194,49 @@ test("etkin puan düzeltmeyi tercih eder", async () => {
   const [o] = await sahip()<{ id: number }[]>`
     select oneri_id as id from degerlendirme where duzeltilmis_puanlar is null limit 1
   `;
-  const [{ taban: once }] = await sahip()<{ taban: number }[]>`
-    select oneri_taban_puani(${o.id}, (select agirliklar from agirlik_seti limit 1)) as taban
-  `;
+  // Fonksiyon `security definer` ama görünürlük kontrolü İÇİNDE: çağrının
+  // bağlamı önemli. Ajans bağlamıyla okunuyor — gerçek çağıran o.
+  const taban = async (b: Baglam) => {
+    const [r] = await islem(b, (sql) =>
+      sql<{ taban: number }[]>`
+        select oneri_taban_puani(${o.id}, (select agirliklar from agirlik_seti limit 1)) as taban
+      `,
+    );
+    return r.taban;
+  };
+
+  const once = await taban(ajans);
   await sahip()`
     update degerlendirme
     set duzeltilmis_puanlar = (select jsonb_object_agg(k, 100) from unnest(enum_range(null::kriter)) k),
         duzelten_ref = (select ref from gonderen where rol = 'ajans' limit 1)
     where oneri_id = ${o.id}
   `;
-  const [{ taban: sonra }] = await sahip()<{ taban: number }[]>`
-    select oneri_taban_puani(${o.id}, (select agirliklar from agirlik_seti limit 1)) as taban
-  `;
+  const sonra = await taban(ajans);
   assert.equal(sonra, 100);
   assert.notEqual(sonra, once);
+});
+
+test("taban puanı görmediğin öneri için 0 döner — security definer kapısı", async () => {
+  // `oneri_taban_puani` RLS'i aşar. Öneriler kamuya açıkken zararsızdı; öneri
+  // gizliliği açıldıktan sonra aynı fonksiyon "id dene, başkasının puanını oku"
+  // kapısına dönüşürdü. Kontrol fonksiyonun içine alındı; bu test onu tutar.
+  const [o] = await sahip()<{ id: number }[]>`
+    select d.oneri_id as id from degerlendirme d
+    join oneri o on o.id = d.oneri_id
+    where o.koken = 'yeni' limit 1
+  `;
+  const taban = async (b: Baglam) => {
+    const [r] = await islem(b, (sql) =>
+      sql<{ taban: number }[]>`
+        select oneri_taban_puani(${o.id}, (select agirliklar from agirlik_seti limit 1)) as taban
+      `,
+    );
+    return r.taban;
+  };
+
+  assert.ok((await taban(ajans)) > 0, "ajans görür");
+  assert.equal(await taban(ANONIM), 0, "anonim başkasının puanını okuyamaz");
 });
 
 test("KVKK: kimlik pseudonimleşir, öneri zinciri korunur", async () => {
@@ -235,9 +264,9 @@ test("KVKK: kimlik pseudonimleşir, öneri zinciri korunur", async () => {
 // ── migration geri alma ────────────────────────────────────────────────────
 
 test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
-  const geri = await asagi(11);
+  const geri = await asagi(12);
   assert.deepEqual(geri, [
-    "0011_ulusal_agirlik", "0010_ayar", "0009_yatirim_konusu", "0008_ajans_kisa_ad", "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus",
+    "0012_oneri_gizlilik", "0011_ulusal_agirlik", "0010_ayar", "0009_yatirim_konusu", "0008_ajans_kisa_ad", "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus",
     "0004_kriter_dayanagi", "0003_kurallar", "0002_rls", "0001_sema",
   ]);
   const [{ n }] = await sahip()<{ n: string }[]>`
@@ -247,7 +276,7 @@ test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
 
   assert.deepEqual(await yukari(), [
     "0001_sema", "0002_rls", "0003_kurallar", "0004_kriter_dayanagi",
-    "0005_karsi_gorus", "0006_yakin_kopya", "0007_misafir", "0008_ajans_kisa_ad", "0009_yatirim_konusu", "0010_ayar", "0011_ulusal_agirlik",
+    "0005_karsi_gorus", "0006_yakin_kopya", "0007_misafir", "0008_ajans_kisa_ad", "0009_yatirim_konusu", "0010_ayar", "0011_ulusal_agirlik", "0012_oneri_gizlilik",
   ]);
   await seed();
 });
@@ -356,6 +385,80 @@ test("misafir işareti ajansa görünür — kimin önerdiği saklanmaz", async 
     select misafir from gonderen where ref = ${ref}
   `);
   assert.equal(g?.misafir, true);
+});
+
+// ── öneri gizliliği · görünürlük matrisi ───────────────────────────────────
+
+/**
+ * Kim hangi öneriyi görüyor — tek tabloda.
+ *
+ * Ürün kuralı: yatırımcının gönderdiği konu başlığı ticari fikirdir; sahibi ve
+ * ajans dışında kimseye görünmez, ONAYLANMIŞ OLSA BİLE. Tek istisna
+ * `koken = 'mevcut'`: o satırlar Bakanlığın yayımladığı `yatirim_konusu`
+ * tablosundan türer, yani zaten kamuya açık metindir.
+ *
+ * Bu test hem tabloyu hem de istisnayı tutar. Bir gün politikaya `durum =
+ * 'listede'` geri eklenirse ilk kırılan burasıdır.
+ */
+test("görünürlük matrisi: öneri sahibine ve ajansa görünür, başkasına görünmez", async () => {
+  // Bağlamlar burada tazeleniyor: migration testi şemayı düşürüp yeniden
+  // kuruyor ve `seed()` yeni `gonderen.ref` üretiyor. Modül düzeyindeki
+  // `yatirimci` bağlamı o noktadan sonra kimsenin sahibi değil.
+  const yatirimci = await girisBaglami("yatirimci@ykh.local");
+  const ajans = await girisBaglami("ajans@ykh.local");
+  const yonetici = await girisBaglami("yonetici@ykh.local");
+  const { jeton } = await misafirAc();
+  const m = await oturumCoz(jeton);
+  assert.ok(m);
+  const misafir = baglamdan(m);
+
+  // Yatırımcının kendi önerisi (yeni) ve resmî listeden türeyen bir mevcut konu.
+  const [benim] = await islem(yatirimci, (sql) => sql<{ id: number }[]>`
+    select id from oneri where gonderen_ref = app_ref() and koken = 'yeni' limit 1
+  `);
+  assert.ok(benim, "yatırımcının kendi önerisi olmalı");
+  const [resmi] = await sahip()<{ id: number }[]>`select id from oneri where koken = 'mevcut' limit 1`;
+
+  const gorur = async (b: Baglam, id: number) =>
+    (await islem(b, (sql) => sql`select id from oneri where id = ${id}`)).length === 1;
+
+  for (const [ad, b, kendi, digeri] of [
+    ["anonim", ANONIM, false, false],
+    ["misafir", misafir, false, false],
+    ["yatırımcı", yatirimci, true, false],
+    ["ajans", ajans, true, true],
+    ["yönetici", yonetici, true, true],
+  ] as Array<[string, Baglam, boolean, boolean]>) {
+    // `kendi` sütunu yatırımcı satırında gerçekten kendi önerisi; diğerlerinde
+    // "başkasının önerisi" anlamına gelir. İkisi de aynı id ile sınanıyor.
+    assert.equal(await gorur(b, Number(benim.id)), kendi || digeri, `${ad}: yatırımcının önerisi`);
+    assert.equal(await gorur(b, Number(resmi.id)), true, `${ad}: resmî konu herkese açık`);
+  }
+
+  // Misafir kendi önerisini görür — kural "kayıtlı olmak" değil, "sahibi olmak".
+  const [d] = await islem(misafir, (sql) => sql<{ id: number }[]>`select id from donem limit 1`);
+  const o = await oneriOlustur(misafir, {
+    donemId: Number(d.id),
+    baslik: "Görünürlük matrisi denemesi",
+    gerekce: "Misafirin kendi önerisi kendisine görünmeli, başka yatırımcıya görünmemeli.",
+    ilce: null,
+    naceKod: null,
+  });
+  assert.equal(await gorur(misafir, o.id), true, "misafir kendi önerisini görür");
+  assert.equal(await gorur(yatirimci, o.id), false, "başka yatırımcı göremez");
+  assert.equal(await gorur(ANONIM, o.id), false, "anonim göremez");
+  assert.equal(await gorur(ajans, o.id), true, "ajans görür — değerlendirme ve onay ondadır");
+});
+
+test("onaylanmış öneri de gizli kalır — onay yayın demek değildir", async () => {
+  // Yaşanmış tasarım hatası: `durum = 'listede'` politikada kamuya açma koşulu
+  // sayılıyordu. Onay bir İÇ karardır: öneri sıralamaya girer, yayımlanmaz.
+  const [o] = await sahip()<{ id: number }[]>`
+    select id from oneri where durum = 'listede' and koken = 'yeni' limit 1
+  `;
+  assert.ok(o, "onaylanmış bir yatırımcı önerisi olmalı");
+  const gorunen = await islem(ANONIM, (sql) => sql`select id from oneri where id = ${o.id}`);
+  assert.equal(gorunen.length, 0, "onaylanmış olması anonime açmaz");
 });
 
 // ── resmî yatırım konuları listesi ─────────────────────────────────────────

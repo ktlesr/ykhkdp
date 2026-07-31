@@ -9,19 +9,25 @@ import { degerlendirEylemi } from "@/lib/eylem.ts";
  * `degerlendiriliyor` durumundaki öneri için aşama göstergesi.
  *
  * İki soruyu cevaplar: başladı mı, hangi aşamada. Arka plan işleyicisi kapalıysa
- * kullanıcı beklemekle kalmasın diye elle tetikleme butonu var — aynı kod yolunu
- * çağırır. Sayfa açıkken 5 saniyede bir kendini yeniler.
+ * ajans elle tetikleyebilsin diye buton var — aynı kod yolunu çağırır. Sayfa
+ * açıkken 5 saniyede bir kendini yeniler.
+ *
+ * Buton yalnızca `tetikleyebilir` ile gelir. Yatırımcı kendi önerisinin
+ * aşamasını görür ama değerlendirmeyi başlatamaz: puanı üreten de onaylayan da
+ * ajanstır. Yetki kontrolü sunucuda (`degerlendirEylemi`); bu yalnızca görünüm.
  */
 export function DegerlendirmeDurumu({
   oneriId,
   deneme,
   maksDeneme,
   sonHata,
+  tetikleyebilir,
 }: {
   oneriId: number;
   deneme: number;
   maksDeneme: number;
   sonHata: string | null;
+  tetikleyebilir: boolean;
 }) {
   const router = useRouter();
 
@@ -66,17 +72,27 @@ export function DegerlendirmeDurumu({
         </tbody>
       </table>
 
-      {baslamadi && (
+      {tetikleyebilir ? (
+        <>
+          {baslamadi && (
+            <p className="mt-3 max-w-[70ch] text-[12.5px] leading-[1.5] text-ink-soft">
+              Öneri kuyrukta ama henüz alınmamış. Arka plan işleyicisi (
+              <span className="num">pnpm worker</span>) çalışmıyorsa hiç alınmaz. Beklemek yerine
+              aşağıdaki butonla şimdi çalıştırabilirsiniz.
+            </p>
+          )}
+
+          <EylemFormu eylem={degerlendirEylemi} className="mt-3">
+            <input type="hidden" name="oneriId" value={oneriId} />
+            <Gonder>{tukendi ? "Yeniden dene" : "Şimdi değerlendir"}</Gonder>
+          </EylemFormu>
+        </>
+      ) : (
         <p className="mt-3 max-w-[70ch] text-[12.5px] leading-[1.5] text-ink-soft">
-          Öneri kuyrukta ama henüz alınmamış. Arka plan işleyicisi (<span className="num">pnpm worker</span>)
-          çalışmıyorsa hiç alınmaz. Beklemek yerine aşağıdaki butonla şimdi çalıştırabilirsiniz.
+          Değerlendirmeyi ajans yürütür. Puan hazır olduğunda bu sayfada görünür; sıralamaya
+          girmesi için ayrıca ajans onayı gerekir.
         </p>
       )}
-
-      <EylemFormu eylem={degerlendirEylemi} className="mt-3">
-        <input type="hidden" name="oneriId" value={oneriId} />
-        <Gonder>{tukendi ? "Yeniden dene" : "Şimdi değerlendir"}</Gonder>
-      </EylemFormu>
 
       <p className="mt-2 font-mono text-[10px] tracking-[.06em] text-ink-mute">
         Sayfa 5 saniyede bir kendini yeniliyor.

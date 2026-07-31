@@ -135,9 +135,14 @@ export default async function Tanitim() {
                 İller
               </Link>
               {k ? (
-                <Link href="/oneri" className="border-0 text-[#C9CDD3]">
-                  Öneri ver
-                </Link>
+                <>
+                  <Link href="/oneri" className="border-0 text-[#C9CDD3]">
+                    Öneri ver
+                  </Link>
+                  <Link href="/onerilerim" className="border-0 text-[#C9CDD3]">
+                    Önerilerim
+                  </Link>
+                </>
               ) : (
                 <Link href="/giris" className="border-0 text-[#C9CDD3]">
                   Giriş yap
@@ -237,16 +242,17 @@ export default async function Tanitim() {
 
           {!ornek ? (
             <div className="tex-absent mt-8 border border-hairline px-5 py-6">
-              <h3 className="text-[15px] font-medium">Henüz yayımlanmış bir değerlendirme yok.</h3>
+              <h3 className="text-[15px] font-medium">Henüz değerlendirilmiş bir resmî konu yok.</h3>
               <p className="mt-2 max-w-[70ch] text-[14px] leading-[1.55] text-ink-soft">
-                Bu bölüm veritabanındaki gerçek kayıtları gösterir. Ajans ilk öneriyi onayladığında burada belirir.
-                Örnek uydurulmaz.
+                Bu bölüm veritabanındaki gerçek kayıtları gösterir ve yalnızca <b className="font-medium">yürürlükteki
+                resmî yatırım konularını</b> açar — yatırımcıların gönderdiği öneriler sahibi ve ajans dışında
+                kimseye görünmez. Ajans resmî listeyi değerlendirdiğinde kayıt burada belirir. Örnek uydurulmaz.
               </p>
             </div>
           ) : (
             <article className="mt-8 border border-ink bg-surface">
               <div className="panel-koyu flex flex-wrap items-baseline gap-x-4 gap-y-1.5 px-5 py-3 text-[#C9CDD3]">
-                <span className="font-mono text-[10px] uppercase tracking-[.13em]">Onaylanmış · listede</span>
+                <span className="font-mono text-[10px] uppercase tracking-[.13em]">Yürürlükteki resmî konu</span>
                 <span className="num font-mono text-[10px] tracking-[.08em]">
                   {ornek.il}
                   {ornek.ilce ? ` · ${ornek.ilce}` : ""}

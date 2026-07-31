@@ -47,8 +47,11 @@ yazma sessizce 0 satır etkiler (RLS filtresi), hata fırlatmaz — bu bilinçli
 
 - **`denetim`** — INSERT var, UPDATE/DELETE politikası **yok**. Ayrıca
   `denetim_degistirilemez()` trigger'ı RLS baypas edilse bile reddeder.
-- **`oneri`** — onaylanmamış öneri yalnızca sahibinde ve ajansta görünür
-  (`durum = 'listede' or gonderen_ref = app_ref() or app_onaylayabilir()`).
+- **`oneri`** — öneri yalnızca sahibinde ve ajansta görünür, **onaylanmış olsa
+  bile** (`gonderen_ref = app_ref() or app_onaylayabilir() or koken = 'mevcut'`).
+  Tek istisna `koken = 'mevcut'`: o satırlar kamuya açık `yatirim_konusu`
+  tablosundan türer. Önceki politika `durum = 'listede'` olan her öneriyi
+  herkese açıyordu — onay yayın demek değildir.
   Yatırımcı kendi önerisini `listede` veya `koken='mevcut'` olarak açamaz.
   Durum değişimi yalnızca onaylayan rollerde.
 - **`degerlendirme`** — önerisi görünüyorsa görünür; yazma yalnızca ajans.
@@ -75,9 +78,12 @@ Kimlik doğrulaması bağlam oluşmadan önce çalışır; bu üç fonksiyon RLS
 | `oturum_coz(token_hash)` | ref, rol, eposta, ad_soyad (yalnızca geçerli oturum) |
 | `hesap_ac(...)` | yeni `gonderen.ref`; yalnızca `yatirimci` rolü açılabilir |
 
-Ayrıca `oneri_taban_puani(oneri_id, agirliklar)`: stratejik puanın **toplamı**
-kamuya açıktır. Bu ayrım olmadan kamu görünümü ajans görünümünden farklı bir
-sıralama hesaplardı.
+Ayrıca `oneri_taban_puani(oneri_id, agirliklar)`: RLS'i aşma gerekçesi
+"**kırılımı gizle, toplamı aç**" idi — kamu ile ajans farklı sıralama
+hesaplamasın diye. Öneri gizliliği açıldıktan sonra aynı fonksiyon "id dene,
+başkasının puanını oku" kapısına dönüşürdü; görünürlük kontrolü fonksiyonun
+**içine** alındı ve göremediğin öneri için 0 döner. Kamu artık sıralama
+hesaplamıyor, kapı yalnızca `koken = 'mevcut'` konular için anlamlı kalıyor.
 
 ## 6. Maskeleme
 

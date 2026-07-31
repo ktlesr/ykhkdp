@@ -31,6 +31,7 @@ export default async function OneriVer({ searchParams }: { searchParams: Promise
         nav={[
           { ad: "Öneri ver", yol: "/oneri", aktif: true },
           { ad: "İller", yol: "/iller" },
+          ...(k ? [{ ad: "Önerilerim", yol: "/onerilerim" }] : []),
         ]}
       />
       <Sayfa>

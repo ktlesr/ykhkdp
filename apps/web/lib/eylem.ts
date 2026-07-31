@@ -137,19 +137,26 @@ export async function oneriEylemi(_o: EylemSonucu | null, f: FormData): Promise<
  * worker açık olsa da olmasa da öneri tıkanıp kalmaz. Servis bağlamıyla çalışır
  * çünkü AI puanı bir sistem çıktısıdır, kullanıcının yetkisiyle yazılmaz.
  */
+/**
+ * Elle değerlendirme tetiği — yalnızca ajans ve yönetici.
+ *
+ * Yatırımcı kendi önerisini yeniden değerlendirtemez: değerlendirme ajansın
+ * onaylayacağı bir puan üretir ve model maliyeti doğurur. Otomatik akış
+ * değişmedi — worker `degerlendiriliyor` durumundaki öneriyi kendisi alır.
+ * Bu düğme yalnızca o akış takıldığında ajansın elle müdahalesidir.
+ */
 export async function degerlendirEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
   const k = await kullanici();
-  if (!k) return { ok: false, mesaj: "Giriş yapın." };
+  if (!k || !onaylayabilir(k.rol)) {
+    return { ok: false, mesaj: "Değerlendirmeyi yalnızca ajans ve yönetici başlatabilir." };
+  }
 
   const oneriId = Number(f.get("oneriId"));
   const b = await baglam();
   const [sahip] = await islem(b, (sql) =>
-    sql<{ gonderen_ref: string; durum: string }[]>`select gonderen_ref, durum from oneri where id = ${oneriId}`,
+    sql<{ durum: string }[]>`select durum from oneri where id = ${oneriId}`,
   );
   if (!sahip) return { ok: false, mesaj: "Öneri bulunamadı." };
-  if (sahip.gonderen_ref !== k.ref && !onaylayabilir(k.rol)) {
-    return { ok: false, mesaj: "Bu öneriyi yalnızca sahibi veya ajans değerlendirebilir." };
-  }
 
   const s = await degerlendirmeYap(SERVIS, oneriId);
   revalidatePath(`/oneri/${oneriId}`);

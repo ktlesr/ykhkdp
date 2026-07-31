@@ -223,9 +223,13 @@ export async function platformOzeti(b: Baglam) {
  * Tanıtım sayfası için GERÇEK bir değerlendirme kaydı.
  *
  * Landing sayfasının imza anı: mekanizmayı anlatmak yerine çalıştığını
- * göstermek. Yalnızca `listede` (kamuya açık) öneriler arasından, en çok
- * doğrulanmış alıntısı olan kayıt seçilir. Kayıt yoksa null döner ve sayfa
- * uydurma bir örnek göstermez.
+ * göstermek. En çok doğrulanmış alıntısı olan kayıt seçilir; kayıt yoksa null
+ * döner ve sayfa uydurma bir örnek göstermez.
+ *
+ * YALNIZCA `koken = 'mevcut'`: yatırımcının gönderdiği konu başlığı ticari
+ * fikirdir ve sahibi ile ajans dışında kimseye gösterilmez — onaylanmış olsa
+ * bile. Resmî listeden türeyen konular ise zaten yayımlanmış tebliğ metnidir;
+ * platformun onlara ne dediğini göstermek kimsenin verisini açmaz.
  */
 export async function ornekDegerlendirme(b: Baglam) {
   return islem(b, async (sql) => {
@@ -245,7 +249,7 @@ export async function ornekDegerlendirme(b: Baglam) {
       join degerlendirme g on g.oneri_id = o.id
       join donem d on d.id = o.donem_id
       join il i on i.kod = d.il_kod
-      where o.durum = 'listede' and jsonb_array_length(g.alintilar) > 0
+      where o.koken = 'mevcut' and jsonb_array_length(g.alintilar) > 0
       order by jsonb_array_length(g.alintilar) desc, g.dayanak desc, o.id
       limit 1
     `;

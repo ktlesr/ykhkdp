@@ -36,6 +36,7 @@ export default async function Iller() {
         nav={[
           { ad: "İller", yol: "/iller", aktif: true },
           { ad: "Öneri ver", yol: "/oneri" },
+          ...(k ? [{ ad: "Önerilerim", yol: "/onerilerim" }] : []),
           ...(k && onaylayabilir(k.rol)
             ? [
                 { ad: "Onay", yol: "/onay" },
@@ -48,7 +49,21 @@ export default async function Iller() {
       <Sayfa genis>
         <Baslik
           ustEtiket="Yerel Kalkınma Hamlesi"
-          alt="Her il için dört yatırım konusu. Öneriler yapay zekâ tarafından üst ölçekli belgelere ve sekiz kritere göre puanlanır, ajans onayından sonra listeye girer. Sıralama karar değildir. Açık dönemi olmayan illerde yürürlükteki resmî liste görülebilir."
+          alt={
+            onaylayabilir(k?.rol ?? "yatirimci") ? (
+              <>
+                Her il için dört yatırım konusu. Öneriler yapay zekâ tarafından üst ölçekli belgelere ve sekiz
+                kritere göre puanlanır, ajans onayından sonra listeye girer. Sıralama karar değildir. Sayılar
+                bölgenizdeki tüm önerileri kapsar.
+              </>
+            ) : (
+              <>
+                Her il için dört yatırım konusu. Sayılar yalnızca <b className="font-medium">size görünen</b>{" "}
+                önerileri kapsar: yürürlükteki resmî konular ve kendi önerileriniz. Başka yatırımcıların
+                gönderdiği konular sahibi ve ajans dışında kimseye görünmez.
+              </>
+            )
+          }
         >
           İl bazında yatırım konusu önerileri
         </Baslik>

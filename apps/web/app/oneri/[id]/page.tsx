@@ -40,6 +40,7 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
         nav={[
           { ad: "İller", yol: "/iller" },
           { ad: o.il, yol: `/il/${o.il_kod}` },
+          ...(k && !ajans ? [{ ad: "Önerilerim", yol: "/onerilerim" }] : []),
           ...(ajans ? [{ ad: "Onay", yol: "/onay" }] : []),
         ]}
       />
@@ -276,6 +277,7 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
             deneme={o.deneme}
             maksDeneme={3}
             sonHata={o.son_hata}
+            tetikleyebilir={ajans}
           />
         )}
 

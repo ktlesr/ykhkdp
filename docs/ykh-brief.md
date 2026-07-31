@@ -27,16 +27,36 @@ Platform resmî Portal veya E-TUYS'un yerine geçmez; yatırımcı başvuruları
 
 | Yol | Kim | Ne |
 |---|---|---|
-| `/` | herkes | tanıtım sayfası; mekanizma, kriter payları ve **gerçek bir değerlendirme kaydı** |
-| `/iller` | herkes | il listesi; her ilde kaç öneri listede, kaç tanesi onay bekliyor |
+| `/` | herkes | tanıtım sayfası; mekanizma, kriter payları ve **gerçek bir değerlendirme kaydı** (yalnızca resmî konu) |
+| `/iller` | herkes | il listesi; sayılar bakanın görebildiği önerileri kapsar |
 | `/oneri` | yatırımcı | **öneri sihirbazı**: kimlik → ajans bölgesi → il → öneri (tek route, dört adım) |
-| `/il/[il]` | herkes | o ilin sıralaması, slotlar, boş slot gerekçesi |
-| `/oneri/[id]` | herkes | AI bu puanı neye dayanarak verdi: gerekçe, belge alıntıları, kriter kırılımı |
+| `/onerilerim` | yatırımcı | kendi önerileri ve her birinin hangi aşamada olduğu |
+| `/il/[il]` | herkes | yürürlükteki resmî liste ve yıllar arası süreklilik; **sıralama yalnızca ajansa** |
+| `/oneri/[id]` | sahibi + ajans | AI bu puanı neye dayanarak verdi: gerekçe, belge alıntıları, kriter kırılımı |
 | `/onay` | ajans | AI puanladı, onay bekliyor: onayla · puanı düzelt · NACE'yi düzelt · reddet · yakın kopya işareti |
 | `/belgeler` | ajans | üst ölçekli belge yükleme + il bazlı kapsama — AI'nin dayanağı |
 | `/ayarlar` | yönetici | kurumsal ayarlar; şimdilik tek karar: arayüz renk paleti |
 
 Ayrıca `/giris` ve `/kayit`. Başka ekran yok.
+
+### Öneri gizliliği
+
+Bir öneri **sahibi ve ajans dışında kimseye görünmez** — onaylanmış olsa bile.
+Yatırımcının yazdığı konu başlığı ticari fikirdir ve onay bir *iç* karardır,
+yayın değil. Sıralama da bu yüzden ajans görünümüdür: satırları başkalarının
+önerileridir.
+
+Kamuya açık olan Bakanlığın yayımladığı **resmî listedir** (`yatirim_konusu`).
+`koken = 'mevcut'` öneriler o listeden birebir türer; onları gizlemek hiçbir
+şeyi gizlemez, yalnızca kamu görünümünü tutarsız yapardı — tek istisna budur.
+
+`/onerilerim` bu kapatmanın doğurduğu ekrandır: yatırımcının kendi önerilerine
+ulaşabileceği tek yer. Protokol §10 altıncı ekran için gerekçe ister; gerekçe
+gizliliği kapatan değişikliğin kendisidir.
+
+Değerlendirmeyi ve onayı **yalnızca ajans ve yönetici** yürütür; yatırımcı
+kendi önerisini yeniden değerlendirtemez. Otomatik akış değişmedi: worker
+`degerlendiriliyor` durumundaki öneriyi kendisi alır.
 
 **Tanıtım sayfası** platformun başlangıç ekranıdır ve pazarlama yüzeyi olarak
 farklı kurallarla çalışır: ink panel + ölçü cetveli dokusu, ochre yalnızca

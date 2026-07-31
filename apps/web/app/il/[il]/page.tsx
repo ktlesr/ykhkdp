@@ -39,8 +39,20 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
   const resmiYil = d ? Number(d.yil) - 1 : (yillar[0] ?? 0);
   const resmi = resmiYil ? await yatirimKonulari(b, il, resmiYil) : [];
 
-  const adaylar = d ? await adaylariGetir(b, d) : [];
-  const h = d ? hesapla(adaylar, ayardan(d.set)) : null;
+  /**
+   * Sıralama AJANS GÖRÜNÜMÜDÜR.
+   *
+   * Sıralamanın satırları başka yatırımcıların önerileridir; onay öncesinde de
+   * sonrasında da o öneriler sahibi ve ajans dışında kimseye görünmez (RLS,
+   * `oneri_oku`). Sorguyu herkese çalıştırıp boş sonucu "onaylanmış öneri yok"
+   * diye yazmak yanlış olurdu: yok değil, görünmüyor. Bu yüzden sıralama hiç
+   * hesaplanmaz ve yerine ne olduğu yazıyla söylenir.
+   *
+   * Resmî liste bundan ayrıdır ve herkese açıktır — o Bakanlık tebliğidir.
+   */
+  const ajans = Boolean(k && onaylayabilir(k.rol));
+  const adaylar = d && ajans ? await adaylariGetir(b, d) : [];
+  const h = d && ajans ? hesapla(adaylar, ayardan(d.set)) : null;
   const yerellik = d ? Math.round(grupAgirligi(d.set.agirliklar, "yerellik") * 100) : 0;
 
   return (
@@ -62,7 +74,14 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
               : `${ilKaydi.ajans}${ilKaydi.kisa_ad ? ` · ${ilKaydi.kisa_ad}` : ""} · açık dönem yok`
           }
           alt={
-            d && h ? (
+            d && !ajans ? (
+              <>
+                Bu ilde <b className="num">{d.yil}</b> dönemi açık ve öneri kabul ediliyor. Öneri
+                sıralaması ajans görünümüdür: bir öneri, sahibi ve ajans dışında kimseye görünmez.
+                Aşağıda yürürlükteki resmî yatırım konuları listesi ve bir önceki yıla göre ne
+                değiştiği var.
+              </>
+            ) : d && h ? (
               <>
                 {d.set.slotSayisi} slot. Mevcut konular ve yeni öneriler aynı sekiz kriterle sıralanır; puanın en
                 büyük payı (<b>%{yerellik}</b>) “neden burada?” sorusuna ait. Mevcut konulara{" "}
@@ -86,7 +105,7 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
           }
         >
           {ilKaydi.ad}
-          {d ? " — yatırım konusu sıralaması" : " — resmî yatırım konuları"}
+          {d && ajans ? " — yatırım konusu sıralaması" : " — resmî yatırım konuları"}
         </Baslik>
 
         {!d || !h ? null : adaylar.length === 0 ? (
@@ -245,6 +264,15 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {d && !ajans && (
+          <div className="mt-6 flex flex-wrap items-center gap-2.5">
+            <Bag varyant="dolu" href={`/oneri?il=${il}`}>
+              Bu il için öneri ver
+            </Bag>
+            <Bag href="/onerilerim">Önerilerim</Bag>
           </div>
         )}
 

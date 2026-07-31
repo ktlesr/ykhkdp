@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test, { after, before } from "node:test";
 import {
   adaylariGetir, ayarGetir, ayarYaz, baglamdan, belgeEkle, bolgeler, donemGetir, durumDegistir, girisYap, islem, kapat,
-  kayitOl, misafirAc, naceAra, onayKuyrugu, oneriGetir, oneriOlustur, ornekDegerlendirme, oturumCoz,
+  kayitOl, misafirAc, naceAra, onayKuyrugu, oneriGetir, onerilerim, oneriOlustur, ornekDegerlendirme, oturumCoz,
   platformOzeti, puanDuzelt, illeriListele, ilGetir, konuluYillar, sahip, yatirimKonulari,
   SUREKLILIK_ESIGI, ANONIM, type Baglam,
 } from "@ykh/database";
@@ -227,17 +227,79 @@ test("13 · denetim izi zinciri kaydeder", async () => {
   }
 });
 
-test("14 · anonim kişisel veri ve denetim izi göremez", async () => {
+test("14 · anonim kişisel veri, denetim izi ve BAŞKASININ önerisini göremez", async () => {
   const anonim: Baglam = { gonderenRef: null, rol: "anonim" };
   const d = await donemGetir(anonim, "usak");
   assert.ok(d, "kamu dönem bilgisini görür");
-  assert.ok((await adaylariGetir(anonim, d)).length > 0, "kamu sıralamayı görür");
 
   assert.equal((await islem(anonim, (sql) => sql`select * from kimlik`)).length, 0);
   assert.equal((await islem(anonim, (sql) => sql`select * from denetim`)).length, 0);
-  // Onaylanmamış öneri kamuya kapalı
-  const gorunen = await islem(anonim, (sql) => sql`select id from oneri where durum <> 'listede'`);
-  assert.equal(gorunen.length, 0);
+
+  // Yatırımcının gönderdiği hiçbir öneri kamuya açık değil — durumu ne olursa
+  // olsun. Kamuya açık olan yalnızca resmî listeden türeyen mevcut konulardır.
+  const kamu = await islem(anonim, (sql) =>
+    sql<{ koken: string }[]>`select koken from oneri`,
+  );
+  assert.ok(kamu.length > 0, "resmî konular kamuya açık");
+  assert.ok(
+    kamu.every((x) => x.koken === "mevcut"),
+    "kamu görünümünde `yeni` köken bulunamaz",
+  );
+});
+
+test("14b · kamu sıralaması HESAPLANMAZ: girdisi eksik olurdu", async () => {
+  // Protokoldeki tuzak: "kamu görünümü farklı sıralama gösteriyorsa RLS bir
+  // puanlama girdisini gizliyordur." Öneri gizliliğinden sonra bu artık
+  // kaçınılmaz — bu yüzden `/il/[il]` sıralamayı ajans dışına HİÇ göstermez.
+  // Test o kararın gerekçesini ölçüyle tutar: iki görünüm aynı değil.
+  const anonim: Baglam = { gonderenRef: null, rol: "anonim" };
+  const d = await donemGetir(ajans, "usak");
+  assert.ok(d);
+
+  const kamu = await adaylariGetir(anonim, d);
+  const kurum = await adaylariGetir(ajans, d);
+  assert.ok(kurum.length > kamu.length, "ajans daha çok aday görür");
+  assert.ok(
+    kamu.every((a) => a.koken === "mevcut"),
+    "kamuya düşen adaylar yalnızca yürürlükteki konular",
+  );
+});
+
+// ── önerilerim ekranı ──────────────────────────────────────────────────────
+
+test("14c · /onerilerim yalnızca kendi önerilerini taşır", async () => {
+  const benim = await onerilerim(yatirimci);
+  assert.ok(benim.length > 0, "yatırımcının önerileri var");
+
+  // Sayfa kaynağının tamamı sahibine ait: başkasının önerisi hiç gelmiyor.
+  const idler = new Set(benim.map((x) => x.id));
+  const sahipler = await islem(ajans, (sql) =>
+    sql<{ id: number; gonderen_ref: string }[]>`
+      select id, gonderen_ref from oneri where id = any(${[...idler]})
+    `,
+  );
+  assert.equal(sahipler.length, idler.size);
+  assert.ok(
+    sahipler.every((x) => x.gonderen_ref === yatirimci.gonderenRef),
+    "listede başkasının önerisi yok",
+  );
+
+  // Misafirin listesi boş başlar ve kendi gönderimiyle dolar — kural
+  // "kayıtlı olmak" değil, "sahibi olmak".
+  const m = await oturumCoz((await misafirAc()).jeton);
+  assert.ok(m);
+  const misafir = baglamdan(m);
+  assert.equal((await onerilerim(misafir)).length, 0);
+  const d = await donemGetir(misafir, "usak");
+  assert.ok(d);
+  await oneriOlustur(misafir, {
+    donemId: d.donemId,
+    baslik: "Misafirin kendi listesi",
+    gerekce: "Kayıt olmadan gönderen kullanıcı kendi önerisini /onerilerim ekranında görmeli.",
+    ilce: null,
+    naceKod: null,
+  });
+  assert.equal((await onerilerim(misafir)).length, 1);
 });
 
 // ── tanıtım sayfası ve öneri sihirbazı ─────────────────────────────────────
@@ -250,14 +312,14 @@ test("15 · tanıtım sayfası yalnızca gerçek sayı gösterir", async () => {
   assert.ok(ozet.listede >= 0 && ozet.bekleyen >= 0);
 });
 
-test("15b · tanıtım örneği yalnızca ONAYLANMIŞ ve alıntılı kayıttan seçilir", async () => {
+test("15b · tanıtım örneği yalnızca RESMÎ konudan seçilir", async () => {
   const o = await ornekDegerlendirme(ANONIM);
-  if (!o) return; // henüz onaylanmış kayıt yoksa sayfa uydurma örnek göstermez
+  if (!o) return; // resmî konu henüz değerlendirilmemişse sayfa örnek uydurmaz
   assert.ok(o.alintilar.length > 0, "alıntısız kayıt örnek olarak seçilmez");
-  const [durum] = await islem(ANONIM, (sql) =>
-    sql<{ durum: string }[]>`select durum from oneri where id = ${o.id}`,
+  const [k] = await islem(ANONIM, (sql) =>
+    sql<{ koken: string }[]>`select koken from oneri where id = ${o.id}`,
   );
-  assert.equal(durum.durum, "listede", "yalnızca kamuya açık kayıt tanıtımda görünür");
+  assert.equal(k.koken, "mevcut", "yatırımcının önerisi tanıtımda gösterilemez");
   assert.ok(o.model_snapshot && o.model_snapshot !== "latest", "model künyesi taşınır");
 });
 
