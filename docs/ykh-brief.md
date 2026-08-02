@@ -465,7 +465,29 @@ docs/ykh-brief.md             → bu dosya
 docs/ykh-alan-sozlugu.md      → terim sözlüğü
 docs/ykh-guvenlik.md          → RLS, veri sınıfları, maskeleme
 docs/ykh-calisma-protokolu.md → çalışma ve debug protokolü
+docs/ykh-dagitim.md           → Dokploy'a üretim dağıtımı, adım adım
 ```
+
+## 10a. Üretim kurulumu
+
+`pnpm db:reset` üretimde **asla** çalıştırılmaz: ilk işi `truncate … cascade`.
+Üretimin komutu `pnpm db:kur` (`packages/database/src/kur.ts`) ve iki şeyi
+ayırır:
+
+| Yüklenir (gerçek veri) | Yüklenmez (demo) |
+|---|---|
+| NACE, 26 ajans, 81 il, 4 pilot ilin ilçeleri | demo hesaplar |
+| resmî tebliğ listeleri (648 konu) | varsayımsal yatırımcı önerileri |
+| ağırlık setleri + 81 ilde dönem | `seed-demo` künyeli sahte değerlendirmeler |
+| resmî listeden türeyen `mevcut` adaylar | |
+| ilk yönetici hesabı | |
+
+Tekrar çalıştırılabilir: her adım ya `on conflict do nothing` ya kendi
+anahtarını silip yeniden yazar. Her dağıtımda koşar.
+
+Ayrıca `ykh_app` rolünün parolasını `YKH_APP_PAROLA` ile **değiştirir** —
+migration onu depoda yazılı bir sabitle açıyor ve o parolayla üretime çıkmak
+olmaz.
 
 `design_handoff_ykh_kdp/` tarihsel referanstır: §2 token seti ve §4 epistemik
 gramer hâlâ geçerli, ama §5–7'deki ekranlar (kanıt bandı, uzman kuyruğu, kurul

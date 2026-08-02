@@ -1,6 +1,7 @@
 import { kapat } from "./baglanti.ts";
 import { asagi, sifirla, yukari } from "./migrate.ts";
 import { seed } from "./seed.ts";
+import { kur } from "./kur.ts";
 import { belgeYukle, parcala, RESMI_BELGELER, yolCoz } from "./belge-yukle.ts";
 import { belgeDenetle, denetimiYaz } from "./belge-dogrula.ts";
 import { konulariYukle, RESMI_LISTELER } from "./konu-yukle.ts";
@@ -58,6 +59,12 @@ try {
       }
       break;
     }
+    case "kur": {
+      // ÜRETİM kurulumu. `seed` DEĞİL: hiçbir şeyi silmez, demo veri yazmaz,
+      // tekrar çalıştırılabilir. Her dağıtımda koşturulmak üzere tasarlandı.
+      console.log(`Kurulum tamam — ${await kur()}`);
+      break;
+    }
     case "reset": {
       await sifirla();
       const yeni = await yukari();
@@ -66,7 +73,7 @@ try {
       break;
     }
     default:
-      console.error(`Bilinmeyen komut: ${komut}. up | down [n] | seed | belgeler | belge-dogrula [dosya…] | konular | reset`);
+      console.error(`Bilinmeyen komut: ${komut}. up | down [n] | kur | seed | belgeler | belge-dogrula [dosya…] | konular | reset`);
       process.exitCode = 1;
   }
 } catch (e) {

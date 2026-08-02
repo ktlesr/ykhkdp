@@ -1,0 +1,13 @@
+node_modules
+**/node_modules
+.next
+**/.next
+.git
+.env
+.env.*
+!.env.example
+*.docx
+*.xlsx
+design_handoff_ykh_kdp
+DESIGN*.md
+!apps/web/DESIGN.md

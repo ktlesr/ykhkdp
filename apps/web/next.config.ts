@@ -16,6 +16,16 @@ const kokEnv = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", ".en
 if (existsSync(kokEnv)) process.loadEnvFile(kokEnv);
 
 const nextConfig: NextConfig = {
+  /**
+   * Üretim imajı için tek başına çalışabilir çıktı: `node server.js`.
+   * `node_modules` kopyalanmıyor, yalnızca izlenen dosyalar geliyor —
+   * pnpm monorepo'da imaj ~1 GB yerine ~200 MB oluyor.
+   *
+   * `outputFileTracingRoot` şart: kök burada verilmezse Next izlemeyi
+   * `apps/web`'den başlatıyor ve workspace paketlerini dışarıda bırakıyor.
+   */
+  output: "standalone",
+  outputFileTracingRoot: resolve(dirname(fileURLToPath(import.meta.url)), "..", ".."),
   // Workspace paketleri kaynak TypeScript olarak yayınlanıyor; ayrı derleme adımı yok.
   transpilePackages: [
     "@ykh/ai-gateway",

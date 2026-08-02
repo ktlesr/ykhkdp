@@ -8,6 +8,7 @@
     "db:migrate": "pnpm --filter @ykh/database migrate",
     "db:seed": "pnpm --filter @ykh/database seed",
     "db:reset": "pnpm --filter @ykh/database reset",
+    "db:kur": "pnpm --filter @ykh/database kur",
     "dev": "pnpm --filter @ykh/web dev",
     "worker": "pnpm --filter @ykh/worker start",
     "build": "pnpm --filter @ykh/web build",

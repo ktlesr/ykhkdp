@@ -14,3 +14,7 @@ Thumbs.db
 # Tema paleti taslakları (uygulanana kadar depoya girmez)
 DESIGN*.md
 !apps/web/DESIGN.md
+
+# Üretim ortam dosyaları — sunucuda Dokploy panelinde tutulur, depoda değil.
+.env.dene
+.env.production

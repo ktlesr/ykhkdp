@@ -1,0 +1,88 @@
+# ── YKH-KDP · üretim (Dokploy) ────────────────────────────────────────────────
+#
+# Dokploy'da "Compose" tipi bir uygulama olarak kullanılır. Dört servis:
+#
+#   postgres  veritabanı (kalıcı disk)
+#   kurulum   şema + referans veri + ilk yönetici — bir kez çalışıp çıkar
+#   web       Next.js; alan adı ve TLS Dokploy tarafından bağlanır
+#   worker    AI değerlendirme döngüsü
+#
+# `kurulum` servisi web'den ÖNCE biter (`service_completed_successfully`).
+# Sıra bu yüzden garanti: uygulama hiçbir zaman eksik şemayla açılmaz.
+#
+# PORT YAYIMLANMIYOR. Yalnızca `web` Dokploy ağına açık; Postgres dış dünyaya
+# hiç bakmıyor. Veritabanına erişmek gerekirse Dokploy terminalinden girilir.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ykh_owner
+      POSTGRES_PASSWORD: ${POSTGRES_PAROLA:?POSTGRES_PAROLA zorunlu}
+      POSTGRES_DB: ykhkdp
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ykh_owner -d ykhkdp"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  kurulum:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    restart: "no"
+    command: ["pnpm", "db:kur"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Kurulum SAHİP bağlantısıyla çalışır: migration ve rol parolası için.
+      DATABASE_URL_OWNER: postgres://ykh_owner:${POSTGRES_PAROLA}@postgres:5432/ykhkdp
+      DATABASE_URL: postgres://ykh_app:${YKH_APP_PAROLA}@postgres:5432/ykhkdp
+      YKH_APP_PAROLA: ${YKH_APP_PAROLA:?YKH_APP_PAROLA zorunlu}
+      YKH_YONETICI_EPOSTA: ${YKH_YONETICI_EPOSTA:?YKH_YONETICI_EPOSTA zorunlu}
+      YKH_YONETICI_PAROLA: ${YKH_YONETICI_PAROLA:?YKH_YONETICI_PAROLA zorunlu}
+      YKH_YONETICI_AD: ${YKH_YONETICI_AD:-Yönetici}
+      # İlk kurulumda `evet`, sonra kaldırın: belgeler yeniden yüklenince
+      # `belge.id` değişir ve eski değerlendirmelerin atıf adresleri eskir.
+      YKH_KUR_BELGELER: ${YKH_KUR_BELGELER:-hayir}
+      YKH_LOG_SEVIYE: ${YKH_LOG_SEVIYE:-info}
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      kurulum:
+        condition: service_completed_successfully
+    environment:
+      # Web SAHİP bağlantısını ALMAZ. RLS'in uygulandığı tek yol bu.
+      DATABASE_URL: postgres://ykh_app:${YKH_APP_PAROLA}@postgres:5432/ykhkdp
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      YKH_MODEL_SNAPSHOT: ${YKH_MODEL_SNAPSHOT:-}
+      YKH_LOG_SEVIYE: ${YKH_LOG_SEVIYE:-info}
+      NODE_ENV: production
+    expose:
+      - "3000"
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    restart: unless-stopped
+    depends_on:
+      kurulum:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgres://ykh_app:${YKH_APP_PAROLA}@postgres:5432/ykhkdp
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      YKH_MODEL_SNAPSHOT: ${YKH_MODEL_SNAPSHOT:-}
+      YKH_WORKER_ARALIK: ${YKH_WORKER_ARALIK:-5000}
+      YKH_LOG_SEVIYE: ${YKH_LOG_SEVIYE:-info}
+
+volumes:
+  pgdata:
