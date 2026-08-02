@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ornekDegerlendirme, platformOzeti } from "@ykh/database";
 import { KARSI_GORUS_ETIKET, type KarsiGorusTuru, onaylayabilir } from "@ykh/domain";
 import { GRUP_ETIKET, gruplaraGore, KRITER_ETIKET, TR33_2027_V1, type Kriter } from "@ykh/scoring";
+import { KanitAgi } from "@/components/kanit-agi.tsx";
 import { baglam, kullanici } from "@/lib/oturum.ts";
 
 /**
@@ -124,8 +125,14 @@ export default async function Tanitim() {
   return (
     <main>
       {/* ── Hero · ink panel ─────────────────────────────────────────────── */}
-      <section className="panel-koyu tex-cetvel">
-        <div className="mx-auto w-full max-w-[1120px] px-6 max-[560px]:px-4">
+      {/*
+        Kanıt ağı hero'nun ARKASINDA duruyor (`isolate` + `relative` kabı).
+        Metin kendi katmanında; ağın opaklığı okunabilirliği düşürmesin diye
+        düşük tutuldu ve cetvel dokusu korunuyor — marka dokusu kaybolmadı.
+      */}
+      <section className="panel-koyu tex-cetvel relative isolate overflow-hidden">
+        <KanitAgi />
+        <div className="relative mx-auto w-full max-w-[1120px] px-6 max-[560px]:px-4">
           <header className="flex flex-wrap items-baseline gap-x-5 gap-y-2 border-b border-b-[#2A3039] py-4">
             <Link href="/" className="border-0 font-mono text-[10.5px] uppercase tracking-[.16em] text-[#EDE9E0]">
               YKH<span className="text-[#8E959F]">·</span>KDP

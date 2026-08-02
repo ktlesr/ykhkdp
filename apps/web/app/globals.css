@@ -386,3 +386,109 @@
 .katlanir[open] > summary :where(.katlanir-isaret)::before {
   content: "▾";
 }
+
+/* ── Tanıtım hero'su · kanıt ağı ─────────────────────────────────────────────
+
+   TASARIM İSTİSNASI, kullanıcı kararıyla ve TEK YÜZEYE kapsanmış.
+
+   Handoff §1.8 glow'u, §2 ise "sheetIn/drawerIn/ledgerIn/veilIn dışında
+   animasyon yok" der. Tanıtım sayfası bir pazarlama yüzeyi ve ürünün geri
+   kalanından farklı bir kayıtta konuşuyor; hero için ikisi de gevşetildi.
+
+   İstisnanın SINIRI burada: `hero` önekli keyframe'ler ve `filter`/glow
+   yalnızca `.hero-ag` altında kullanılabilir. Tablo, kart, form, rozet ve
+   epistemik gramerin tamamı handoff'ta kalır. `lib/tasarim.test.ts` bu
+   kapsamı ölçer — kural kalkmadı, adresi yazıldı.
+
+   Hareket ANLAM taşıyor: hatlar belgeden öneriye çizilen alıntılardır,
+   bir kısmı çizilip düşer (doğrulanamayan alıntı). Dekoratif değil.        */
+
+.hero-ag {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.hero-ag :where(svg) {
+  width: 100%;
+  height: 100%;
+}
+/* Ağ soldan sağa açılıyor: başlığın arkasında neredeyse görünmez, boş sağ
+   alanda güçleniyor. Metnin okunabilirliği hiçbir ekran genişliğinde ağa
+   bağlı kalmasın diye maske SABİT — hesaplanan bir opaklık değil. */
+.hero-ag {
+  mask-image: linear-gradient(to right, transparent 0%, #000 34%, #000 100%);
+}
+
+.hero-dugumler :where(circle) {
+  fill: #7d8794;
+  animation: heroNabiz 9s ease-in-out infinite;
+}
+
+.hero-hat {
+  stroke: #2fbf95;
+  stroke-width: 0.9;
+  /* En uzun hat ~1300 birim; dash bir defada tüm yolu örtmeli. */
+  stroke-dasharray: 1500;
+  stroke-dashoffset: 1500;
+  opacity: 0;
+  animation: heroCizgi 7s ease-out infinite;
+}
+/* Doğrulanamayan alıntı: kesikli çizilir, yolun ortasında söner. Ochre bu
+   üründe yalnızca "doğrulanmadı" demektir (DESIGN.md); burada da öyle. */
+.hero-hat-dusen {
+  stroke: #d9a93a;
+  stroke-dasharray: 5 7;
+  stroke-dashoffset: 0;
+  animation-name: heroDusen;
+}
+
+.hero-belgeler :where(rect),
+.hero-belgeler :where(circle) {
+  fill: #2fbf95;
+}
+.hero-belgeler :where(g) {
+  animation: heroKaynak 9s ease-in-out infinite;
+}
+
+@keyframes heroCizgi {
+  0% { stroke-dashoffset: 1500; opacity: 0 }
+  14% { opacity: 0.5 }
+  55% { stroke-dashoffset: 0; opacity: 0.5 }
+  86% { stroke-dashoffset: 0; opacity: 0.16 }
+  100% { stroke-dashoffset: 0; opacity: 0 }
+}
+@keyframes heroDusen {
+  0% { opacity: 0; stroke-dashoffset: 0 }
+  18% { opacity: 0.55 }
+  46% { opacity: 0.55; stroke-dashoffset: -90 }
+  70% { opacity: 0; stroke-dashoffset: -90 }
+  100% { opacity: 0 }
+}
+@keyframes heroNabiz {
+  0%, 100% { opacity: 0.28 }
+  50% { opacity: 0.62 }
+}
+@keyframes heroKaynak {
+  0%, 100% { opacity: 0.55 }
+  50% { opacity: 0.9 }
+}
+
+/* Hareket kapalıysa ağ TAM ÇİZİLİ ve durağan görünür: bilgi kaybı yok. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-ag :where(.hero-hat) {
+    animation: none;
+    stroke-dashoffset: 0;
+    stroke-dasharray: none;
+    opacity: 0.34;
+  }
+  .hero-ag :where(.hero-hat-dusen) {
+    opacity: 0.4;
+  }
+  .hero-ag :where(circle),
+  .hero-ag :where(rect),
+  .hero-ag :where(g) {
+    animation: none;
+    opacity: 0.55;
+  }
+}

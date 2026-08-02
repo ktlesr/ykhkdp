@@ -49,13 +49,19 @@ test("globals.css: bileşen sınıfı içindeki eleman seçicisi :where() ile sa
   );
 });
 
-test("globals.css: yalnızca handoff §2'de tanımlı animasyonlar", async () => {
+test("globals.css: handoff §2 animasyonları + kapsanmış hero istisnası", async () => {
   const css = await readFile(CSS, "utf8");
   // §2: "Animasyon: sheetIn/drawerIn/ledgerIn 180–200ms ease-out … veilIn 160ms.
   //      Başka animasyon yok."
+  //
+  // TEK İSTİSNA, kullanıcı kararıyla: tanıtım hero'su. `hero` önekli
+  // keyframe'ler serbest ama ADRESİ SABİT — yalnızca `.hero-*` seçicilerinde
+  // kullanılabilirler. Ürünün geri kalanı §2'de kalır. Kural kalkmadı,
+  // kapsamı yazıldı; bir gün bir tablo `heroNabiz` kullanmaya kalkarsa
+  // aşağıdaki ikinci assert kırılır.
   const IZINLI = new Set(["sheetIn", "drawerIn", "ledgerIn", "veilIn"]);
   const tanimli = [...css.matchAll(/@keyframes\s+([A-Za-z][\w-]*)/g)].map((m) => m[1]);
-  const fazla = tanimli.filter((a) => !IZINLI.has(a));
+  const fazla = tanimli.filter((a) => !IZINLI.has(a) && !a.startsWith("hero"));
 
   assert.deepEqual(
     fazla,
@@ -63,6 +69,42 @@ test("globals.css: yalnızca handoff §2'de tanımlı animasyonlar", async () =>
     `Handoff §2 dışı animasyon: ${fazla.join(", ")}. Hareket yalnızca durum ` +
       "değişimini anlaşılır kılmak için (§1.10); dekoratif giriş animasyonu yok.",
   );
+
+  // Hero animasyonları hero dışında ÇAĞRILAMAZ.
+  const heroAdlari = tanimli.filter((a) => a.startsWith("hero"));
+  assert.ok(heroAdlari.length > 0, "istisna kullanılmıyorsa kaldırılmalı");
+
+  const kacak: string[] = [];
+  for (const kural of css.split("}")) {
+    const [secici, govde = ""] = kural.split("{");
+    // `String.raw`: düz şablonda `\b` KELİME SINIRI DEĞİL, backspace karakteri
+    // (U+0008) olur ve regex hiçbir zaman eşleşmez — kontrol sessizce hep
+    // geçerdi. Bu dosyanın işi sessiz kırılmayı yakalamak; kendisi sessizce
+    // geçemez.
+    if (!heroAdlari.some((a) => new RegExp(String.raw`animation[^;]*\b${a}\b`).test(govde))) continue;
+    if (!/\.hero-/.test(secici)) kacak.push(secici.trim().slice(0, 60));
+  }
+  assert.deepEqual(kacak, [], `Hero animasyonu hero dışında: ${kacak.join(", ")}`);
+});
+
+test("hero istisnası TEK YÜZEYE kapsanmış: glow başka yerde yok", async () => {
+  /**
+   * Handoff §1.8 glow'u yasaklıyor. Tanıtım hero'su için gevşetildi ama
+   * gevşeme sızmamalı: `filter`, `drop-shadow` ve `box-shadow` yalnızca
+   * `.hero-*` seçicilerinde durabilir.
+   *
+   * Yaşanmış risk şu: bir istisna açıldığında ikinci kullanım "zaten var"
+   * diye gelir ve üçüncüde kural fiilen ölmüş olur. Test istisnanın
+   * adresini tutuyor.
+   */
+  const css = await readFile(CSS, "utf8");
+  const kacak: string[] = [];
+  for (const kural of css.split("}")) {
+    const [secici, govde = ""] = kural.split("{");
+    if (!/(^|[\s;])(filter|box-shadow)\s*:|drop-shadow\(/.test(govde)) continue;
+    if (!/\.hero-/.test(secici)) kacak.push(`${secici.trim().slice(0, 48)} → ${govde.trim().slice(0, 40)}`);
+  }
+  assert.deepEqual(kacak, [], `Glow/gölge hero dışında (§1.8): ${kacak.join(" · ")}`);
 });
 
 test("handoff §1.8 yasakları: gölge, gradyan, 3px üstü köşe yok", async () => {
@@ -78,9 +120,18 @@ test("handoff §1.8 yasakları: gölge, gradyan, 3px üstü köşe yok", async (
   );
 
   // Dekoratif gradyan yasak; doku için `repeating-linear-gradient` meşru
-  // (handoff §2 doku utility'leri bu biçimde tanımlı).
-  const gradyan = [...css.matchAll(/(?<!repeating-)linear-gradient\(/g)];
-  assert.equal(gradyan.length, 0, "dekoratif gradyan yasak (§1.8)");
+  // (handoff §2 doku utility'leri bu biçimde tanımlı). Hero istisnası burada
+  // da KAPSANMIŞ: gradyan yalnızca `.hero-*` seçicisinde ve yalnızca maske
+  // olarak kullanılabilir — zemin boyamak için değil.
+  const gradyanlar: string[] = [];
+  for (const kural of css.split("}")) {
+    const [secici, govde = ""] = kural.split("{");
+    if (!/(?<!repeating-)linear-gradient\(/.test(govde)) continue;
+    if (!/\.hero-/.test(secici) || !/mask-image/.test(govde)) {
+      gradyanlar.push(secici.trim().slice(0, 48));
+    }
+  }
+  assert.deepEqual(gradyanlar, [], `dekoratif gradyan yasak (§1.8): ${gradyanlar.join(", ")}`);
 });
 
 test("sabit açık renk metin yalnızca koyu panelde meşru", async () => {

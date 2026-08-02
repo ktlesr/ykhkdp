@@ -17,6 +17,8 @@
 6. **"Neden burada?" en büyük paydır** — yerellik grubu en az %40 ve her zaman en büyük.
 7. **Reddedilen AI çıktısı kaydedilmez;** yalnızca denetime yazılır.
 8. Gradyan, glow, gölge, cam efekti, emoji, `border-radius > 3px` yasak.
+   **Tek istisna tanıtım hero'su** (`.hero-*`) ve kapsamı `tasarim.test.ts`
+   ile tutulur; ürünün geri kalanında yasak sürüyor.
 9. Arayüz dili Türkçe, sade fiil, kısaltma yok.
 10. **Ekran eklemeden önce sor.** Tanıtım sayfası (`/`) ve `/iller` ayrımı
     kullanıcı onayıyla eklendi; öneri sihirbazı yeni ekran DEĞİL, `/oneri`

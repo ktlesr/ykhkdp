@@ -57,12 +57,41 @@ Tüm sayılar `.num` (mono + `tabular-nums`).
 ### Animasyon (handoff §2)
 
 **Yalnızca** `sheetIn` · `drawerIn` · `ledgerIn` (180–200ms ease-out, mesafe
-≤24px) ve `veilIn` (160ms). **Başka animasyon yok.** Test bunu denetler:
-`@keyframes` listesi bu dörtle sınırlı.
+≤24px) ve `veilIn` (160ms). Test bunu denetler.
 
 Yaşanmış ihlal: tanıtım sayfasına 550ms'lik dekoratif giriş animasyonu
 eklenmişti; §1.10 "hareket yalnızca durum değişimi için" der, giriş animasyonu
 durum değişimi değildir. Kaldırıldı.
+
+### Tanıtım hero'su — kapsanmış istisna
+
+Handoff §1.8 (glow, gradyan) ve §2 (animasyon listesi) **yalnızca tanıtım
+hero'su için** gevşetildi. Karar kullanıcıya ait; gerekçe pazarlama yüzeyinin
+ürünün geri kalanından farklı bir kayıtta konuşması.
+
+İstisnanın **kapsamı testle tutuluyor** — kural kalkmadı, adresi yazıldı:
+
+| İzin | Sınır |
+|---|---|
+| `hero` önekli `@keyframes` | yalnızca `.hero-*` seçicisinde çağrılabilir |
+| `filter` · `box-shadow` · `drop-shadow` | yalnızca `.hero-*` |
+| `linear-gradient` | yalnızca `.hero-*` **ve** yalnızca `mask-image` olarak |
+
+Üç kural da enjekte edilmiş ihlalle sınandı: `.tablo-satiri`'ye `heroNabiz`,
+`.kart`'a `box-shadow`, `.bant`'a gradyan eklenince üç test birden kırılıyor.
+Bir istisna açıldığında ikinci kullanım "zaten var" diye gelir ve üçüncüde
+kural fiilen ölür; test bunu engelliyor.
+
+**Kanıt ağı** (`components/kanit-agi.tsx`): üç belge düğümünden öneri
+düğümlerine alıntı hatları çizilir; azınlığı çizilip **düşer** (ochre, kesikli)
+— pakette birebir bulunamayan alıntı. Hareket dekoratif değil, ürünün tek
+pazarlıksız kuralını gösteriyor. Referans sitedeki Türkiye haritası kopyalanmadı:
+bu platform coğrafya değil, bir iddianın belgeye bağlanışını gösteriyor.
+
+Yerleşim **determinist** (tam sayı LCG; `Math.random`/`Math.sin` yok) — sunucu
+ve tarayıcı aynı işaretlemeyi üretmezse hydration uyuşmazlığı olurdu.
+`prefers-reduced-motion: reduce` altında ağ tam çizili ve durağan: bilgi kaybı
+yok, yalnızca hareket yok.
 
 ## Epistemik gramer (handoff §4)
 
