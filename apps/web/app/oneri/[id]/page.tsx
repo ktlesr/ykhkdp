@@ -28,6 +28,14 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
 
   const puanlar = o.puanlar ?? null;
   const ajans = Boolean(k && onaylayabilir(k.rol));
+
+  /**
+   * RLS yatırımcıya iki şey gösteriyor: kendi önerileri ve `koken = 'mevcut'`
+   * resmî konular. İkincisi burada kapatılıyor — resmî konunun platform
+   * değerlendirmesi ajansın çalışmasıdır ve yatırımcıya gerekmez. Tanıtım
+   * sayfası tek bir örneği kendi içinde açar; gezinilecek bir küme değil.
+   */
+  if (!ajans && o.koken === "mevcut") notFound();
   const durumTuru = { listede: "yesil", onay_bekliyor: "amber", degerlendiriliyor: "notr", reddedildi: "kirmizi" } as const;
   const alintilar = o.alintilar ?? [];
   const kriterDayanagi = o.kriter_dayanagi ?? null;
@@ -39,9 +47,12 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
         kullanici={k}
         nav={[
           { ad: "İller", yol: "/iller" },
-          { ad: o.il, yol: `/il/${o.il_kod}` },
-          ...(k && !ajans ? [{ ad: "Önerilerim", yol: "/onerilerim" }] : []),
-          ...(ajans ? [{ ad: "Onay", yol: "/onay" }] : []),
+          ...(ajans
+            ? [
+                { ad: o.il, yol: `/il/${o.il_kod}` },
+                { ad: "Onay", yol: "/onay" },
+              ]
+            : [{ ad: "Öneri ver", yol: "/oneri" }, { ad: "Önerilerim", yol: "/onerilerim" }]),
         ]}
       />
       <Sayfa>

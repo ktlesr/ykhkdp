@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { adaylariGetir, donemGetir, ilGetir, konuluYillar, yatirimKonulari } from "@ykh/database";
 import { onaylayabilir, type Sonuc } from "@ykh/domain";
 import { ayardan, grupAgirligi, hesapla } from "@ykh/scoring";
@@ -7,7 +7,18 @@ import { Bag, Baslik, Bos, Rozet, Sayfa, UstBar, Uyari } from "@/components/ui.t
 import { baglam, kullanici } from "@/lib/oturum.ts";
 import { cn } from "@/lib/utils.ts";
 
-/** İl sıralaması — ürünün cevabını verdiği ekran. */
+/**
+ * İl sıralaması — ürünün cevabını verdiği ekran. AJANS VE YÖNETİCİ.
+ *
+ * Sıralamanın satırları başka yatırımcıların önerileridir; onay öncesinde de
+ * sonrasında da sahibi ve ajans dışında kimseye görünmezler (RLS `oneri_oku`).
+ * Sorguyu herkese çalıştırıp eksik sonucu sıralama diye göstermek yanlış
+ * olurdu: yok değil, görünmüyor.
+ *
+ * Yürürlükteki resmî liste ve yıllar arası süreklilik de bu ekranda kalıyor.
+ * O metin kamuya açık bir tebliğ ama burada ajansın karar zeminidir; yatırımcı
+ * kendi önerilerini `/onerilerim` ekranında görür.
+ */
 
 const SONUC_ROZET: Record<Sonuc, { tur: "yesil" | "notr" | "kirmizi" | "amber" | "gri"; isaret: string }> = {
   korunuyor: { tur: "yesil", isaret: "■" },
@@ -29,6 +40,8 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
    * dönem yok ve o illerin yürürlükteki resmî listesi yüklü olduğu hâlde
    * görünmüyordu. Dönem yoksa sıralama yok — resmî liste yine var.
    */
+  if (!k || !onaylayabilir(k.rol)) redirect("/oneri");
+
   const ilKaydi = await ilGetir(b, il);
   if (!ilKaydi) notFound();
 
@@ -39,20 +52,8 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
   const resmiYil = d ? Number(d.yil) - 1 : (yillar[0] ?? 0);
   const resmi = resmiYil ? await yatirimKonulari(b, il, resmiYil) : [];
 
-  /**
-   * Sıralama AJANS GÖRÜNÜMÜDÜR.
-   *
-   * Sıralamanın satırları başka yatırımcıların önerileridir; onay öncesinde de
-   * sonrasında da o öneriler sahibi ve ajans dışında kimseye görünmez (RLS,
-   * `oneri_oku`). Sorguyu herkese çalıştırıp boş sonucu "onaylanmış öneri yok"
-   * diye yazmak yanlış olurdu: yok değil, görünmüyor. Bu yüzden sıralama hiç
-   * hesaplanmaz ve yerine ne olduğu yazıyla söylenir.
-   *
-   * Resmî liste bundan ayrıdır ve herkese açıktır — o Bakanlık tebliğidir.
-   */
-  const ajans = Boolean(k && onaylayabilir(k.rol));
-  const adaylar = d && ajans ? await adaylariGetir(b, d) : [];
-  const h = d && ajans ? hesapla(adaylar, ayardan(d.set)) : null;
+  const adaylar = d ? await adaylariGetir(b, d) : [];
+  const h = d ? hesapla(adaylar, ayardan(d.set)) : null;
   const yerellik = d ? Math.round(grupAgirligi(d.set.agirliklar, "yerellik") * 100) : 0;
 
   return (
@@ -62,8 +63,8 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
         nav={[
           { ad: "İller", yol: "/iller" },
           { ad: ilKaydi.ad, yol: `/il/${il}`, aktif: true },
-          { ad: "Öneri ver", yol: `/oneri?il=${il}` },
-          ...(k && onaylayabilir(k.rol) ? [{ ad: "Onay", yol: "/onay" }] : []),
+          { ad: "Onay", yol: "/onay" },
+          { ad: "Belgeler", yol: "/belgeler" },
         ]}
       />
       <Sayfa genis>
@@ -74,14 +75,7 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
               : `${ilKaydi.ajans}${ilKaydi.kisa_ad ? ` · ${ilKaydi.kisa_ad}` : ""} · açık dönem yok`
           }
           alt={
-            d && !ajans ? (
-              <>
-                Bu ilde <b className="num">{d.yil}</b> dönemi açık ve öneri kabul ediliyor. Öneri
-                sıralaması ajans görünümüdür: bir öneri, sahibi ve ajans dışında kimseye görünmez.
-                Aşağıda yürürlükteki resmî yatırım konuları listesi ve bir önceki yıla göre ne
-                değiştiği var.
-              </>
-            ) : d && h ? (
+            d && h ? (
               <>
                 {d.set.slotSayisi} slot. Mevcut konular ve yeni öneriler aynı sekiz kriterle sıralanır; puanın en
                 büyük payı (<b>%{yerellik}</b>) “neden burada?” sorusuna ait. Mevcut konulara{" "}
@@ -105,7 +99,7 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
           }
         >
           {ilKaydi.ad}
-          {d && ajans ? " — yatırım konusu sıralaması" : " — resmî yatırım konuları"}
+          {d ? " — yatırım konusu sıralaması" : " — resmî yatırım konuları"}
         </Baslik>
 
         {!d || !h ? null : adaylar.length === 0 ? (
@@ -264,15 +258,6 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
                 )}
               </div>
             ))}
-          </div>
-        )}
-
-        {d && !ajans && (
-          <div className="mt-6 flex flex-wrap items-center gap-2.5">
-            <Bag varyant="dolu" href={`/oneri?il=${il}`}>
-              Bu il için öneri ver
-            </Bag>
-            <Bag href="/onerilerim">Önerilerim</Bag>
           </div>
         )}
 

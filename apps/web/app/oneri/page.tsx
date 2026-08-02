@@ -30,7 +30,6 @@ export default async function OneriVer({ searchParams }: { searchParams: Promise
         kullanici={k}
         nav={[
           { ad: "Öneri ver", yol: "/oneri", aktif: true },
-          { ad: "İller", yol: "/iller" },
           ...(k ? [{ ad: "Önerilerim", yol: "/onerilerim" }] : []),
         ]}
       />

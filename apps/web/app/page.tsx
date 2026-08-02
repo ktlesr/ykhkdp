@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ornekDegerlendirme, platformOzeti } from "@ykh/database";
-import { KARSI_GORUS_ETIKET, type KarsiGorusTuru } from "@ykh/domain";
+import { KARSI_GORUS_ETIKET, type KarsiGorusTuru, onaylayabilir } from "@ykh/domain";
 import { GRUP_ETIKET, gruplaraGore, KRITER_ETIKET, TR33_2027_V1, type Kriter } from "@ykh/scoring";
 import { baglam, kullanici } from "@/lib/oturum.ts";
 
@@ -102,6 +102,9 @@ export default async function Tanitim() {
   const b = await baglam();
   const k = await kullanici();
   const [ozet, ornek] = await Promise.all([platformOzeti(b), ornekDegerlendirme(b)]);
+  // İl listesi ve sıralama ajans görünümü; tanıtım sayfası yatırımcıyı
+  // sihirbaza, ajansı kendi ekranlarına yollar.
+  const ajans = Boolean(k && onaylayabilir(k.rol));
 
   const sayi = (n: number) => n.toLocaleString("tr-TR");
   const raf = [
@@ -131,18 +134,18 @@ export default async function Tanitim() {
               Yerel Kalkınma Hamlesi · karar destek
             </span>
             <nav className="ml-auto flex items-center gap-5 font-mono text-[10px] uppercase tracking-[.12em]">
-              <Link href="/iller" className="border-0 text-[#C9CDD3]">
-                İller
+              {ajans && (
+                <Link href="/iller" className="border-0 text-[#C9CDD3]">
+                  İller
+                </Link>
+              )}
+              <Link href="/oneri" className="border-0 text-[#C9CDD3]">
+                Öneri ver
               </Link>
               {k ? (
-                <>
-                  <Link href="/oneri" className="border-0 text-[#C9CDD3]">
-                    Öneri ver
-                  </Link>
-                  <Link href="/onerilerim" className="border-0 text-[#C9CDD3]">
-                    Önerilerim
-                  </Link>
-                </>
+                <Link href="/onerilerim" className="border-0 text-[#C9CDD3]">
+                  Önerilerim
+                </Link>
               ) : (
                 <Link href="/giris" className="border-0 text-[#C9CDD3]">
                   Giriş yap
@@ -174,16 +177,16 @@ export default async function Tanitim() {
 
               <div className="mt-9 flex flex-wrap items-center gap-3">
                 <Link
-                  href="/iller"
+                  href="/oneri"
                   className="dugme-ters inline-flex min-h-12 items-center border px-6 font-mono text-[11px] uppercase tracking-[.13em]"
                 >
                   Başla
                 </Link>
                 <Link
-                  href="/oneri"
+                  href={k ? "/onerilerim" : "/giris"}
                   className="inline-flex min-h-12 items-center border border-[#5C6470] px-6 font-mono text-[11px] uppercase tracking-[.13em] text-[#EDE9E0]"
                 >
-                  Öneri sihirbazı
+                  {k ? "Önerilerim" : "Giriş yap"}
                 </Link>
               </div>
             </div>
@@ -257,12 +260,14 @@ export default async function Tanitim() {
                   {ornek.il}
                   {ornek.ilce ? ` · ${ornek.ilce}` : ""}
                 </span>
-                <Link
-                  href={`/oneri/${ornek.id}`}
-                  className="ml-auto border-0 font-mono text-[10px] uppercase tracking-[.11em] text-[#EDE9E0] underline decoration-[#5C6470] underline-offset-4"
-                >
-                  Tam kaydı aç
-                </Link>
+                {ajans && (
+                  <Link
+                    href={`/oneri/${ornek.id}`}
+                    className="ml-auto border-0 font-mono text-[10px] uppercase tracking-[.11em] text-[#EDE9E0] underline decoration-[#5C6470] underline-offset-4"
+                  >
+                    Tam kaydı aç
+                  </Link>
+                )}
               </div>
 
               <div className="grid grid-cols-[1fr_auto] items-start gap-x-8 gap-y-4 border-b border-b-hairline-soft px-5 py-5 max-[640px]:grid-cols-1">
@@ -450,8 +455,9 @@ export default async function Tanitim() {
                 İlinizde hangi konu neden öne çıkıyor?
               </h2>
               <p className="mt-4 max-w-[56ch] text-[14.5px] leading-[1.6] text-pretty text-[#C9CDD3]">
-                Sıralamayı herkes görebilir. Öneri vermek için kayıt zorunlu değil: kayıt olmadan devam edebilir,
-                sonradan hesap açabilirsiniz.
+                Sihirbaz sırayla soruyor: ajans bölgesi, il, sonra öneriniz. Kayıt zorunlu değil — kayıt olmadan
+                devam edebilir, sonradan hesap açabilirsiniz. Verdiğiniz öneri size ve ajansa görünür, başka
+                kimseye görünmez.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -462,10 +468,10 @@ export default async function Tanitim() {
                 Öneri sihirbazını başlat
               </Link>
               <Link
-                href="/iller"
+                href={k ? "/onerilerim" : "/giris"}
                 className="inline-flex min-h-12 items-center border border-[#5C6470] px-6 font-mono text-[11px] uppercase tracking-[.13em] text-[#EDE9E0]"
               >
-                İl sıralamalarına bak
+                {k ? "Önerilerime bak" : "Hesabıma gir"}
               </Link>
             </div>
           </div>

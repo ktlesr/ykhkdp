@@ -14,7 +14,7 @@ import { paletGecerli } from "@/lib/palet.ts";
 export default async function Ayarlar() {
   const k = await kullanici();
   if (!k) redirect("/giris?hedef=%2Fayarlar");
-  if (k.rol !== "yonetici") redirect("/iller");
+  if (k.rol !== "yonetici") redirect("/oneri");
 
   const b = await baglam();
   const secili = paletGecerli(await ayarGetir(b, "palet"));

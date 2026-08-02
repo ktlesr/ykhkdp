@@ -14,6 +14,11 @@ import { baglam, kullanici } from "@/lib/oturum.ts";
  *
  * Kişisel veri yok: liste `gonderen_ref` ile filtrelenir, misafir de aynı
  * sayfayı kullanır.
+ *
+ * İLE GÖRE GRUPLU: yatırımcı birden çok ile öneri verebiliyor ve düz listede
+ * "hangi il" satır içinde kaybolan bir alan kalıyordu. Gruplama okuma sırasını
+ * kullanıcının kafasındaki sıraya çeviriyor: önce il, sonra o ile ne verdiği.
+ * Sıra en çok öneri verilen ilden başlar; eşitlikte il adı.
  */
 
 const DURUM_TURU = {
@@ -36,7 +41,7 @@ export default async function Onerilerim() {
   if (!k) {
     return (
       <>
-        <UstBar nav={[{ ad: "İller", yol: "/iller" }, { ad: "Öneri ver", yol: "/oneri" }]} />
+        <UstBar nav={[{ ad: "Öneri ver", yol: "/oneri" }]} />
         <Sayfa>
           <Baslik alt="Öneriler yalnızca sahibine ve ajansa görünür. Listeyi görmek için oturum gerekiyor.">
             Önerilerim
@@ -55,25 +60,33 @@ export default async function Onerilerim() {
 
   const liste = await onerilerim(await baglam());
 
+  type Satir = (typeof liste)[number];
+  const iller = liste
+    .reduce<Array<{ kod: string; ad: string; yil: string; oneriler: Satir[] }>>((out, o) => {
+      const g = out.find((x) => x.kod === o.il_kod);
+      if (g) g.oneriler.push(o);
+      else out.push({ kod: o.il_kod, ad: o.il, yil: o.yil, oneriler: [o] });
+      return out;
+    }, [])
+    .sort((a, b) => b.oneriler.length - a.oneriler.length || a.ad.localeCompare(b.ad, "tr"));
+
   return (
     <>
       <UstBar
         kullanici={k}
         nav={[
-          { ad: "İller", yol: "/iller" },
           { ad: "Öneri ver", yol: "/oneri" },
           { ad: "Önerilerim", yol: "/onerilerim", aktif: true },
-          ...(onaylayabilir(k.rol)
-            ? [
-                { ad: "Onay", yol: "/onay" },
-                { ad: "Belgeler", yol: "/belgeler" },
-              ]
-            : []),
+          ...(onaylayabilir(k.rol) ? [{ ad: "İller", yol: "/iller" }] : []),
         ]}
       />
       <Sayfa>
         <Baslik
-          ustEtiket={liste.length > 0 ? `${liste.length} öneri` : undefined}
+          ustEtiket={
+            liste.length > 0
+              ? `${liste.length} öneri · ${iller.length} il`
+              : undefined
+          }
           alt="Verdiğiniz öneriler ve her birinin hangi aşamada olduğu. Bir öneri sahibi ve ajans dışında kimseye görünmez; sıralamaya girmesi için ajans onayı gerekir."
         >
           Önerilerim
@@ -101,41 +114,48 @@ export default async function Onerilerim() {
           </Bos>
         ) : (
           <div className="mt-6 border border-hairline bg-surface">
-            <div className="panel-koyu grid grid-cols-[1fr_130px_96px_150px] px-4 py-2.5 font-mono text-[9.5px] uppercase tracking-[.12em] text-[#C9CDD3] max-[760px]:grid-cols-[1fr_150px]">
-              <div>Yatırım konusu</div>
-              <div className="max-[760px]:hidden">İl · dönem</div>
-              <div className="text-right max-[760px]:hidden">Dayanak</div>
-              <div>Durum</div>
-            </div>
+            {iller.map((g) => (
+              <section key={g.kod} className="border-b border-b-hairline last:border-b-0">
+                <h2 className="flex min-h-11 flex-wrap items-center gap-x-4 gap-y-2 border-b border-b-hairline-soft bg-paper px-5 py-3">
+                  <span className="text-[15px] font-medium">{g.ad}</span>
+                  <span className="num font-mono text-[10px] uppercase tracking-[.1em] text-ink-mute">
+                    {g.yil} dönemi
+                  </span>
+                  <span className="num ml-auto font-mono text-[10px] uppercase tracking-[.1em] text-ink-mute">
+                    {g.oneriler.length} öneri
+                  </span>
+                </h2>
 
-            {liste.map((o) => (
-              <Link
-                key={o.id}
-                href={`/oneri/${o.id}`}
-                className="grid grid-cols-[1fr_130px_96px_150px] items-center gap-y-1.5 border-b border-b-hairline-soft px-4 py-3.5 last:border-b-0 hover:bg-paper max-[760px]:grid-cols-[1fr_150px]"
-              >
-                <div className="pr-4">
-                  <div className="text-[14px] font-medium leading-[1.35] text-pretty">{o.baslik}</div>
-                  <div className="mt-1 font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
-                    <span className="num">{o.olusturuldu.slice(0, 10)}</span>
-                    <span className="max-[760px]:inline hidden">
-                      {" · "}
-                      {o.il} {o.yil}
-                    </span>
-                  </div>
-                </div>
-                <div className="text-[13px] text-ink-soft max-[760px]:hidden">
-                  {o.il} <span className="num text-ink-mute">{o.yil}</span>
-                </div>
-                <div className="num pr-2 text-right text-[15px] max-[760px]:hidden">
-                  {o.durum === "degerlendiriliyor" ? <span className="text-ink-mute">—</span> : o.dayanak}
-                </div>
-                <div>
-                  <Rozet tur={DURUM_TURU[o.durum]} isaret={DURUM_ISARET[o.durum]}>
-                    {ONERI_DURUM_ETIKET[o.durum]}
-                  </Rozet>
-                </div>
-              </Link>
+                {g.oneriler.map((o) => (
+                  <Link
+                    key={o.id}
+                    href={`/oneri/${o.id}`}
+                    className="grid grid-cols-[1fr_96px_150px] items-center gap-x-4 gap-y-1.5 border-b border-b-hairline-soft px-5 py-3.5 last:border-b-0 hover:bg-paper max-[640px]:grid-cols-[1fr_150px]"
+                  >
+                    <div>
+                      <div className="text-[14px] font-medium leading-[1.35] text-pretty">{o.baslik}</div>
+                      <div className="num mt-1 font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
+                        {o.olusturuldu.slice(0, 10)}
+                      </div>
+                    </div>
+                    <div className="num pr-2 text-right text-[15px] max-[640px]:hidden">
+                      {o.durum === "degerlendiriliyor" ? (
+                        <span className="text-ink-mute">—</span>
+                      ) : (
+                        <>
+                          {o.dayanak}
+                          <span className="text-[10px] text-ink-mute">/100</span>
+                        </>
+                      )}
+                    </div>
+                    <div>
+                      <Rozet tur={DURUM_TURU[o.durum]} isaret={DURUM_ISARET[o.durum]}>
+                        {ONERI_DURUM_ETIKET[o.durum]}
+                      </Rozet>
+                    </div>
+                  </Link>
+                ))}
+              </section>
             ))}
           </div>
         )}

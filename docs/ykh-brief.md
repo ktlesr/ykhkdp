@@ -28,11 +28,11 @@ Platform resmî Portal veya E-TUYS'un yerine geçmez; yatırımcı başvuruları
 | Yol | Kim | Ne |
 |---|---|---|
 | `/` | herkes | tanıtım sayfası; mekanizma, kriter payları ve **gerçek bir değerlendirme kaydı** (yalnızca resmî konu) |
-| `/iller` | herkes | il listesi; sayılar bakanın görebildiği önerileri kapsar |
-| `/oneri` | yatırımcı | **öneri sihirbazı**: kimlik → ajans bölgesi → il → öneri (tek route, dört adım) |
-| `/onerilerim` | yatırımcı | kendi önerileri ve her birinin hangi aşamada olduğu |
-| `/il/[il]` | herkes | yürürlükteki resmî liste ve yıllar arası süreklilik; **sıralama yalnızca ajansa** |
+| `/oneri` | herkes | **öneri sihirbazı** ve yatırımcının GİRİŞ NOKTASI: kimlik → ajans bölgesi → il → öneri (tek route, dört adım) |
+| `/onerilerim` | yatırımcı | kendi önerileri, **ile göre gruplu**; yatırımcının kendi alanı |
 | `/oneri/[id]` | sahibi + ajans | AI bu puanı neye dayanarak verdi: gerekçe, belge alıntıları, kriter kırılımı |
+| `/iller` | **ajans** | il listesi, ajans bölgesine göre katlanır; sayılar öneri kümesinden türer |
+| `/il/[il]` | **ajans** | sıralama, slotlar, yürürlükteki resmî liste ve yıllar arası süreklilik |
 | `/onay` | ajans | AI puanladı, onay bekliyor: onayla · puanı düzelt · NACE'yi düzelt · reddet · yakın kopya işareti |
 | `/belgeler` | ajans | üst ölçekli belge yükleme + il bazlı kapsama — AI'nin dayanağı |
 | `/ayarlar` | yönetici | kurumsal ayarlar; şimdilik tek karar: arayüz renk paleti |
@@ -46,13 +46,31 @@ Yatırımcının yazdığı konu başlığı ticari fikirdir ve onay bir *iç* k
 yayın değil. Sıralama da bu yüzden ajans görünümüdür: satırları başkalarının
 önerileridir.
 
-Kamuya açık olan Bakanlığın yayımladığı **resmî listedir** (`yatirim_konusu`).
-`koken = 'mevcut'` öneriler o listeden birebir türer; onları gizlemek hiçbir
-şeyi gizlemez, yalnızca kamu görünümünü tutarsız yapardı — tek istisna budur.
+`koken = 'mevcut'` öneriler Bakanlık listesinden birebir türer ve RLS onları
+açık bırakır; onları gizlemek hiçbir şeyi gizlemezdi. Ama **kayıt sayfası
+yine de kapatır**: resmî konunun platform değerlendirmesi ajansın çalışmasıdır.
+Tanıtım sayfası tek bir örneği kendi içinde açar — gezinilecek bir küme değil.
 
 `/onerilerim` bu kapatmanın doğurduğu ekrandır: yatırımcının kendi önerilerine
 ulaşabileceği tek yer. Protokol §10 altıncı ekran için gerekçe ister; gerekçe
 gizliliği kapatan değişikliğin kendisidir.
+
+### Yatırımcının akışı — il listesi bir EKRAN değil, bir ADIM
+
+Yumurta-tavuk şuydu: "il seçmek için listeyi görmeli" ile "başkasının önerisini
+görmemeli" çatışıyordu. Çözüm listeyi kapatmak değil, **yerini değiştirmek**:
+
+```
+/  tanıtım  →  Başla  →  /oneri sihirbazı
+                          kimlik → ajans bölgesi → il → öneri
+                                   ↑ il seçimi burada, gezinilecek sayfada değil
+   giriş yapınca              →  /onerilerim  (ile göre gruplu, kendi alanı)
+```
+
+`bolgeler()` yalnızca coğrafya taşır (26 ajans, 81 il, dönem yılı) ve sihirbazı
+besler; sayaç taşıyan `illeriListele()` `/iller` ile birlikte ajansta kalır.
+Yatırımcı `/iller` veya `/il/[il]`'ye giderse `/oneri`'ye yönlendirilir — 404
+değil, çünkü ekran var, o kişi için değil.
 
 Değerlendirmeyi ve onayı **yalnızca ajans ve yönetici** yürütür; yatırımcı
 kendi önerisini yeniden değerlendirtemez. Otomatik akış değişmedi: worker

@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { illeriListele } from "@ykh/database";
 import { onaylayabilir } from "@ykh/domain";
 import { Bag, Baslik, Bos, Rozet, Sayfa, UstBar } from "@/components/ui.tsx";
@@ -13,9 +14,15 @@ import { baglam, kullanici } from "@/lib/oturum.ts";
  * Katlama yerel `<details>` ile: JavaScript yok, klavye ve ekran okuyucu
  * desteği bedava. Açık dönemi olan bölgeler AÇIK gelir — varsayılan veriden
  * türetiliyor, keyfî değil: iş olan yer açık, olmayan yer kapalı.
+ *
+ * AJANS VE YÖNETİCİ EKRANI. Sayaçları öneri sayısından türüyor ve bir
+ * yatırımcı için o sayılar ya eksik ya anlamsız olurdu. Yatırımcının il
+ * seçimi gezinilecek bir sayfada değil, sihirbazın kendi adımında yapılır —
+ * yumurta-tavuk buradan çıkıyor: liste bir EKRAN değil, bir SEÇİM ADIMI.
  */
 export default async function Iller() {
   const k = await kullanici();
+  if (!k || !onaylayabilir(k.rol)) redirect("/oneri");
   const iller = await illeriListele(await baglam());
 
   // `typeof iller` postgres.js'in RowList'i; gruplama düz dizi taşır.
@@ -35,35 +42,15 @@ export default async function Iller() {
         kullanici={k}
         nav={[
           { ad: "İller", yol: "/iller", aktif: true },
-          { ad: "Öneri ver", yol: "/oneri" },
-          ...(k ? [{ ad: "Önerilerim", yol: "/onerilerim" }] : []),
-          ...(k && onaylayabilir(k.rol)
-            ? [
-                { ad: "Onay", yol: "/onay" },
-                { ad: "Belgeler", yol: "/belgeler" },
-                ...(k.rol === "yonetici" ? [{ ad: "Ayarlar", yol: "/ayarlar" }] : []),
-              ]
-            : []),
+          { ad: "Onay", yol: "/onay" },
+          { ad: "Belgeler", yol: "/belgeler" },
+          ...(k.rol === "yonetici" ? [{ ad: "Ayarlar", yol: "/ayarlar" }] : []),
         ]}
       />
       <Sayfa genis>
         <Baslik
           ustEtiket="Yerel Kalkınma Hamlesi"
-          alt={
-            onaylayabilir(k?.rol ?? "yatirimci") ? (
-              <>
-                Her il için dört yatırım konusu. Öneriler yapay zekâ tarafından üst ölçekli belgelere ve sekiz
-                kritere göre puanlanır, ajans onayından sonra listeye girer. Sıralama karar değildir. Sayılar
-                bölgenizdeki tüm önerileri kapsar.
-              </>
-            ) : (
-              <>
-                Her il için dört yatırım konusu. Sayılar yalnızca <b className="font-medium">size görünen</b>{" "}
-                önerileri kapsar: yürürlükteki resmî konular ve kendi önerileriniz. Başka yatırımcıların
-                gönderdiği konular sahibi ve ajans dışında kimseye görünmez.
-              </>
-            )
-          }
+          alt="Her il için dört yatırım konusu. Öneriler yapay zekâ tarafından üst ölçekli belgelere ve sekiz kritere göre puanlanır, ajans onayından sonra listeye girer. Sıralama karar değildir. Bu ekran ve il sıralamaları yalnızca ajans ve yöneticiye görünür."
         >
           İl bazında yatırım konusu önerileri
         </Baslik>

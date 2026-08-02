@@ -25,14 +25,18 @@
     önerilerine ulaşacağı başka yer kalmadı.
 11. **Onay yayın değildir.** Onaylanmış öneri de sahibi ve ajans dışında
     görünmez; kamuya açık olan Bakanlığın resmî listesidir.
-11. **Tasarımın başvuru referansı `design_handoff_ykh_kdp/README.md`.**
+12. **Yatırımcının giriş noktası sihirbazdır.** `/iller` ve `/il/[il]` ajans
+    ekranıdır; yetkisiz kullanıcı `/oneri`'ye yönlendirilir. Yetkisiz
+    yönlendirmeyi `/iller`'e yapmak sonsuz sekme üretir —
+    `lib/erisim.test.ts` bunu ve kapıların varlığını ölçer.
+13. **Tasarımın başvuru referansı `design_handoff_ykh_kdp/README.md`.**
     §1 değişmez kurallar, §2 token ve animasyon listesi, §4 epistemik gramer
     bağlayıcıdır. Uygulanmış hâli ve bu ürüne özgü kararlar:
     `apps/web/DESIGN.md`. Makineyle denetlenen kısmı `lib/tasarim.test.ts`.
-12. **Koyu panel token kullanmaz.** `bg-ink` koyu temada açık renge döner;
+14. **Koyu panel token kullanmaz.** `bg-ink` koyu temada açık renge döner;
     matbu künye alanları `.panel-koyu` ile her iki temada koyu kalır. Sabit
     açık renk metin yalnızca o kapsamda meşrudur.
-13. **CSS'te bileşen sınıfı içindeki eleman seçicisi `:where()` ile sarılır.**
+15. **CSS'te bileşen sınıfı içindeki eleman seçicisi `:where()` ile sarılır.**
     `.sinif eleman` (0,1,1) yardımcı sınıfı (0,1,0) ezer ve sessiz kırılma
     üretir; ölçüldü: iki birincil düğme 1.09:1 kontrastla görünmez kaldı.
 

@@ -19,7 +19,7 @@ const TUR_ETIKET: Record<string, string> = {
 export default async function Belgeler() {
   const k = await kullanici();
   if (!k) redirect("/giris?hedef=%2Fbelgeler");
-  if (!onaylayabilir(k.rol)) redirect("/iller");
+  if (!onaylayabilir(k.rol)) redirect("/oneri");
 
   const b = await baglam();
   const [belgeler, iller, kapsam] = await Promise.all([

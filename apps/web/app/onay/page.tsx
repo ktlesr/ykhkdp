@@ -9,7 +9,7 @@ import { baglam, kullanici } from "@/lib/oturum.ts";
 export default async function Onay() {
   const k = await kullanici();
   if (!k) redirect("/giris?hedef=%2Fonay");
-  if (!onaylayabilir(k.rol)) redirect("/iller");
+  if (!onaylayabilir(k.rol)) redirect("/oneri");
 
   const b = await baglam();
   const [kuyruk, kopyalar] = await Promise.all([onayKuyrugu(b), kuyrukKopyalari(b)]);
