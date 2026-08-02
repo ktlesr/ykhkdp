@@ -133,7 +133,13 @@ export default async function Tanitim() {
       <section className="panel-koyu tex-cetvel relative isolate overflow-hidden">
         <KanitAgi />
         <div className="relative mx-auto w-full max-w-[1120px] px-6 max-[560px]:px-4">
-          <header className="flex flex-wrap items-baseline gap-x-5 gap-y-2 border-b border-b-[#2A3039] py-4">
+          {/*
+            Üç plaka: künye şeridi, metin sütunu, ölçü rafı. Aralarındaki ve
+            çevrelerindeki boşlukta ağ tam güçte akıyor. Plaka bir KART değil —
+            yarıçapı, gölgesi ve kutusu yok; kâğıda konmuş bir baskı plakası
+            gibi kenar çizgileriyle duruyor.
+          */}
+          <header className="hero-plaka -mx-5 flex flex-wrap items-baseline gap-x-5 gap-y-2 border-b border-b-[#2A3039] px-5 py-4">
             <Link href="/" className="border-0 font-mono text-[10.5px] uppercase tracking-[.16em] text-[#EDE9E0]">
               YKH<span className="text-[#8E959F]">·</span>KDP
             </Link>
@@ -166,8 +172,8 @@ export default async function Tanitim() {
             </nav>
           </header>
 
-          <div className="grid grid-cols-[1.35fr_1fr] gap-x-12 gap-y-10 pt-16 pb-14 max-[900px]:grid-cols-1 max-[900px]:pt-12">
-            <div>
+          <div className="grid grid-cols-[1.35fr_1fr] items-start gap-x-12 gap-y-10 pt-16 pb-14 max-[900px]:grid-cols-1 max-[900px]:pt-12">
+            <div className="hero-plaka -mx-5 border-y border-y-[#242B34] px-5 py-9">
               <h1
                 className="max-w-[26ch] font-display text-[clamp(1.9rem,4.6vw,2.5rem)] font-medium leading-[1.06] tracking-[-0.01em] text-balance text-[#F6F4EF]"
               >
@@ -206,7 +212,7 @@ export default async function Tanitim() {
             {/* Ölçü rafı: gerçek sayılar, mono ve tabular. Büyük-rakam
                 şablonu değil — cetvel gibi okunuyor. */}
             <dl
-              className="self-end border-t border-t-[#2A3039]"
+              className="hero-plaka -mx-5 border-y border-y-[#242B34] px-5 py-3 max-[900px]:mt-0"
               aria-label="Platformdaki veri"
             >
               {raf.map((x) => (

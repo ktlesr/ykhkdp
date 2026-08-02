@@ -93,6 +93,31 @@ ve tarayıcı aynı işaretlemeyi üretmezse hydration uyuşmazlığı olurdu.
 `prefers-reduced-motion: reduce` altında ağ tam çizili ve durağan: bilgi kaybı
 yok, yalnızca hareket yok.
 
+**Buzlu plaka** (`.hero-plaka`). Üç blok — künye şeridi, metin sütunu, ölçü
+rafı — canlı ağın üstünde kendi zeminini taşır. Kart değil: yarıçapı, gölgesi
+ve kutusu yok, yalnızca kenar çizgileri var; kâğıda konmuş bir baskı plakası.
+
+İlk çözüm maskeydi (ağ başlığın arkasında soluyordu) ve yanlış taraftandı:
+görseli kısıyordu. Plaka tersini yapar — ağ tam güçte kalır, metin kendi
+zeminini getirir. Gradyan istisnası bu yüzden **kapatıldı**; kullanılmayan
+istisna kuralda bırakılmaz.
+
+**Kontrast blur'a bağlı değil.** `backdrop-filter` desteklenmeyen tarayıcıda
+tint %86'ya çıkar. En kötü durumda — parlak bir alıntı hattı plakanın tam
+altından geçerken — ölçülen değerler:
+
+| | başlık | gövde | mikro 13.5px |
+|---|---|---|---|
+| destek yok · tint %86 | 14,99 | 10,33 | **5,45** |
+| destek var · tint %76 | 13,4 | 9,2 | **4,85** |
+
+Model bilerek kötümser: hattın plakanın altında tam güçte durduğunu varsayıyor,
+blur gerçekte dağıtıyor. Hepsi 4,5:1 eşiğinin üstünde.
+
+`backdrop-filter` de kapsam testine **ayrıca** yazıldı: `filter` kalıbı onu
+yakalamıyor (önündeki karakter `-`, kalıbın istediği boşluk değil). Kapsam
+testinin sessizce geçmesi, kuralın hiç olmamasından beterdir.
+
 ## Epistemik gramer (handoff §4)
 
 Üç durum her tabloda, her kartta **birebir aynı** görünür:
