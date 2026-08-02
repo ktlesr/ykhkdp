@@ -54,6 +54,28 @@ export async function kur(): Promise<string> {
   if (appParola === "ykh_app_parola") {
     throw new Error("YKH_APP_PAROLA varsayılan değerde. Üretimde depoda yazılı parola kullanılamaz.");
   }
+  /**
+   * Parola bir BAĞLANTI ADRESİNİN içine giriyor:
+   *   postgres://ykh_app:PAROLA@postgres:5432/ykhkdp
+   *
+   * `openssl rand -base64` çıktısında `/` `+` `=` bulunabiliyor ve `/` bu
+   * adresi ayrıştırılamaz yapıyor (ölçüldü: `new URL(...)` "Invalid URL"
+   * fırlatıyor). `@` ise ana makine adını kaydırıyor.
+   *
+   * Sessiz bir bağlantı hatası yerine kurulum ANINDA duruyor: üretimde
+   * "bazen bağlanamıyor" diye aranan bir kusur, buradaki üç satırla
+   * doğmadan bitiyor. `openssl rand -hex 24` kullanın.
+   */
+  if (!/^[A-Za-z0-9._~-]+$/.test(appParola)) {
+    throw new Error(
+      "YKH_APP_PAROLA yalnızca harf, rakam ve . _ ~ - içerebilir. " +
+        "Parola bağlantı adresinin içine giriyor; `/` `+` `=` `@` onu bozar. " +
+        "Üretmek için: openssl rand -hex 24",
+    );
+  }
+  if (appParola.length < 24) {
+    throw new Error("YKH_APP_PAROLA en az 24 karakter olmalı. openssl rand -hex 24 → 48 karakter.");
+  }
   // Parola bir SQL literali olmak zorunda: ALTER ROLE parametre kabul etmiyor.
   // Tek tırnak ikileniyor; parola ortam değişkeninden geliyor ve kullanıcı
   // girdisi değil, ama kaçış yine de yapılıyor.

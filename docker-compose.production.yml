@@ -12,6 +12,10 @@
 #
 # PORT YAYIMLANMIYOR. Yalnızca `web` Dokploy ağına açık; Postgres dış dünyaya
 # hiç bakmıyor. Veritabanına erişmek gerekirse Dokploy terminalinden girilir.
+#
+# PAROLALAR `openssl rand -hex 24` İLE ÜRETİLİR. Aşağıda bağlantı adresinin
+# içine dizgi olarak giriyorlar; base64 çıktısındaki `/` adresi ayrıştırılamaz
+# yapıyor. Kurulum servisi biçimi ayrıca kontrol ediyor.
 
 services:
   postgres:
