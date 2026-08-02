@@ -172,7 +172,7 @@ export default async function Tanitim() {
             </nav>
           </header>
 
-          <div className="grid grid-cols-[1.35fr_1fr] items-start gap-x-12 gap-y-10 pt-16 pb-14 max-[900px]:grid-cols-1 max-[900px]:pt-12">
+          <div className="grid grid-cols-[1.35fr_1fr] gap-x-12 gap-y-10 pt-16 pb-14 max-[900px]:grid-cols-1 max-[900px]:pt-12">
             <div className="hero-plaka -mx-5 border-y border-y-[#242B34] px-5 py-9">
               <h1
                 className="max-w-[26ch] font-display text-[clamp(1.9rem,4.6vw,2.5rem)] font-medium leading-[1.06] tracking-[-0.01em] text-balance text-[#F6F4EF]"
@@ -212,7 +212,7 @@ export default async function Tanitim() {
             {/* Ölçü rafı: gerçek sayılar, mono ve tabular. Büyük-rakam
                 şablonu değil — cetvel gibi okunuyor. */}
             <dl
-              className="hero-plaka -mx-5 border-y border-y-[#242B34] px-5 py-3 max-[900px]:mt-0"
+              className="hero-plaka -mx-5 self-end border-y border-y-[#242B34] px-5 py-3"
               aria-label="Platformdaki veri"
             >
               {raf.map((x) => (
