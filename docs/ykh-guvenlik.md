@@ -94,12 +94,26 @@ Belge metni maskelenmez — üst ölçekli belgeler kamuya açık politika belge
 
 ## 7. KVKK — silme talebi
 
+### Kayıtlı kullanıcı listesi (yönetici)
+
+`/ayarlar` içinde. Kişisel veri **maskeli** döner (`k****@ykh.local`, `A***`)
+ve maskeleme **SQL'de** yapılır: açık değer uygulama katmanına hiç gelmezse
+log'a, hata izine veya bir React ağacına sızma yolu da kalmaz.
+
+Tek bir kaydı açmak ayrı bir eylemdir (`kimlikAc`), **gerekçe ister** ve
+`kimlik_goruntulendi` olarak denetime yazılır. KVKK'nın istediği yetkiyi
+kaldırmak değil, kullanımını kayıt altına almaktır: liste okumak ifşa değil,
+tekil açmak ifşadır.
+
 `kimlik_pseudonimlestir(ref)`:
 
 1. `kimlik` satırında e-posta, ad, parola özeti silinir, `pseudonimlestirildi`
    işaretlenir.
 2. Oturumlar silinir.
-3. Denetime kayıt düşülür.
+3. Denetime kayıt düşülür — **aktör yöneticidir**, silinen kişi değil.
+   Önceki sürüm `aktor_ref = p_ref` yazıyordu ve kayıt "bu kişi kendi verisini
+   sildi" anlamına geliyordu; izin tek işi olan soruyu yanlış cevaplıyordu
+   (0013 ile düzeltildi).
 
 `gonderen.ref` ve ona bağlı öneri/değerlendirme zinciri **bozulmaz**.
 

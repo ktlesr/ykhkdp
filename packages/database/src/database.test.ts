@@ -11,8 +11,13 @@ import {
   misafirAc,
   naceAra,
   oneriOlustur,
+  kayitliKullanicilar,
+  kimlikAc,
+  kimlikSil,
   naceGetir,
   oturumCoz,
+  raporResmiListe,
+  raporSatirlari,
   yakinKopyalar,
 } from "./sorgu.ts";
 
@@ -264,9 +269,9 @@ test("KVKK: kimlik pseudonimleşir, öneri zinciri korunur", async () => {
 // ── migration geri alma ────────────────────────────────────────────────────
 
 test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
-  const geri = await asagi(12);
+  const geri = await asagi(13);
   assert.deepEqual(geri, [
-    "0012_oneri_gizlilik", "0011_ulusal_agirlik", "0010_ayar", "0009_yatirim_konusu", "0008_ajans_kisa_ad", "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus",
+    "0013_gonderen_ajans", "0012_oneri_gizlilik", "0011_ulusal_agirlik", "0010_ayar", "0009_yatirim_konusu", "0008_ajans_kisa_ad", "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus",
     "0004_kriter_dayanagi", "0003_kurallar", "0002_rls", "0001_sema",
   ]);
   const [{ n }] = await sahip()<{ n: string }[]>`
@@ -276,7 +281,7 @@ test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
 
   assert.deepEqual(await yukari(), [
     "0001_sema", "0002_rls", "0003_kurallar", "0004_kriter_dayanagi",
-    "0005_karsi_gorus", "0006_yakin_kopya", "0007_misafir", "0008_ajans_kisa_ad", "0009_yatirim_konusu", "0010_ayar", "0011_ulusal_agirlik", "0012_oneri_gizlilik",
+    "0005_karsi_gorus", "0006_yakin_kopya", "0007_misafir", "0008_ajans_kisa_ad", "0009_yatirim_konusu", "0010_ayar", "0011_ulusal_agirlik", "0012_oneri_gizlilik", "0013_gonderen_ajans",
   ]);
   await seed();
 });
@@ -459,6 +464,106 @@ test("onaylanmış öneri de gizli kalır — onay yayın demek değildir", asyn
   assert.ok(o, "onaylanmış bir yatırımcı önerisi olmalı");
   const gorunen = await islem(ANONIM, (sql) => sql`select id from oneri where id = ${o.id}`);
   assert.equal(gorunen.length, 0, "onaylanmış olması anonime açmaz");
+});
+
+// ── toplu rapor kapsamı ve KVKK ────────────────────────────────────────────
+
+test("rapor kapsamı: yönetici tüm bölgeler, ajans YALNIZCA kendi bölgesi", async () => {
+  const yatirimci = await girisBaglami("yatirimci@ykh.local");
+  const ajans = await girisBaglami("ajans@ykh.local");
+  const yonetici = await girisBaglami("yonetici@ykh.local");
+
+  const a = await raporSatirlari(ajans);
+  const y = await raporSatirlari(yonetici);
+
+  assert.ok(a.length > 0, "ajans kendi bölgesini görür");
+  assert.deepEqual([...new Set(a.map((r) => r.ajans_kod))], ["TR33"], "yalnızca kendi bölgesi");
+  assert.ok(y.length > a.length, "yönetici daha fazlasını görür");
+  assert.ok(new Set(y.map((r) => r.ajans_kod)).size > 1, "yönetici tüm bölgeleri görür");
+
+  // Ajans bölgesindeki HER kaydı görür — kim girdiyse. Kapsam kuralı ili
+  // daraltır, gönderen'i değil.
+  const kokenler = new Set(a.map((r) => r.koken));
+  assert.ok(kokenler.has("mevcut") && kokenler.has("yeni"), "resmî konu da yatırımcı önerisi de görünür");
+
+  // Yatırımcı bu sorguyu çağırsa hiçbir satır göremez: yönetici değil ve
+  // `gonderen.ajans_kod` yok. Fail-closed.
+  assert.equal((await raporSatirlari(yatirimci)).length, 0);
+  assert.equal((await raporResmiListe(yatirimci)).length, 0);
+});
+
+test("bölgesi atanmamış ajans hesabı HİÇBİR satır görmez", async () => {
+  // "Bölge bilinmiyorsa hepsini göster" sessiz bir yetki genişlemesi olurdu.
+  const ajans = await girisBaglami("ajans@ykh.local");
+  const [g] = await sahip()<{ ajans_kod: string }[]>`
+    update gonderen set ajans_kod = null
+    where ref = (select gonderen_ref from kimlik where eposta = 'ajans@ykh.local')
+    returning 'TR33' as ajans_kod
+  `;
+  try {
+    assert.equal((await raporSatirlari(ajans)).length, 0, "bölgesiz ajans hiçbir öneri görmez");
+    assert.equal((await raporResmiListe(ajans)).length, 0, "resmî listeyi de görmez");
+  } finally {
+    await sahip()`
+      update gonderen set ajans_kod = ${g.ajans_kod}
+      where ref = (select gonderen_ref from kimlik where eposta = 'ajans@ykh.local')
+    `;
+  }
+});
+
+test("kayıtlı kullanıcı listesi kişisel veriyi MASKELİ döndürür", async () => {
+  const yonetici = await girisBaglami("yonetici@ykh.local");
+  const liste = await kayitliKullanicilar(yonetici);
+  assert.ok(liste.length >= 3, "demo hesapları görünür");
+
+  for (const u of liste) {
+    if (!u.eposta_maske) continue;
+    // Açık e-posta uygulama katmanına HİÇ gelmiyor: maskeleme SQL'de.
+    assert.match(u.eposta_maske, /^.\*\*\*\*@/, `maskelenmemiş e-posta: ${u.eposta_maske}`);
+    assert.ok(!u.eposta_maske.startsWith("yonetici@"), "tam adres sızmamalı");
+    assert.match(u.ad_maske ?? "", /^.\*\*\*$/);
+  }
+
+  const aj = liste.find((u) => u.rol === "ajans");
+  assert.equal(aj?.ajans_kod, "TR33", "ajans kullanıcısının bölgesi taşınır");
+});
+
+test("kişisel veriyi açmak denetime yazılır; silmede AKTÖR yöneticidir", async () => {
+  const yonetici = await girisBaglami("yonetici@ykh.local");
+  const [hedef] = await sahip()<{ ref: string }[]>`
+    select gonderen_ref as ref from kimlik where eposta = 'yatirimci@ykh.local'
+  `;
+
+  const acik = await kimlikAc(yonetici, hedef.ref, "KVKK başvurusu 2027/14 · kimlik eşleştirme");
+  assert.equal(acik?.eposta, "yatirimci@ykh.local", "yönetici açık değeri alır");
+
+  const [iz] = await sahip()<{ aktor_ref: string; aktor_rol: string; detay: { gerekce?: string } }[]>`
+    select aktor_ref, aktor_rol, detay from denetim
+    where eylem = 'kimlik_goruntulendi' order by id desc limit 1
+  `;
+  assert.equal(iz.aktor_rol, "yonetici");
+  assert.equal(iz.detay.gerekce, "KVKK başvurusu 2027/14 · kimlik eşleştirme", "gerekçe kayda geçer");
+
+  // Silmede denetim AKTÖRÜ yöneticidir, silinen kişi değil. Önceki sürüm
+  // `aktor_ref = p_ref` yazıyordu: kayıt "bu kişi kendi verisini sildi"
+  // anlamına geliyordu ve izin tek işi olan soruyu yanlış cevaplıyordu.
+  await kimlikSil(yonetici, hedef.ref);
+  const [sil] = await sahip()<{ aktor_ref: string; nesne_id: string; detay: { ozne?: string } }[]>`
+    select aktor_ref, nesne_id, detay from denetim
+    where eylem = 'kimlik_pseudonimlestirildi' order by id desc limit 1
+  `;
+  assert.equal(sil.aktor_ref, yonetici.gonderenRef, "aktör yönetici");
+  assert.equal(sil.nesne_id, hedef.ref, "nesne silinen kişi");
+  assert.equal(sil.detay.ozne, hedef.ref);
+
+  // Kimlik gitti, öneri zinciri durdu.
+  const [k] = await sahip()<{ eposta: string | null; p: boolean }[]>`
+    select eposta::text, pseudonimlestirildi as p from kimlik where gonderen_ref = ${hedef.ref}
+  `;
+  assert.equal(k.eposta, null);
+  assert.equal(k.p, true);
+  const [o] = await sahip()<{ n: string }[]>`select count(*) as n from oneri where gonderen_ref = ${hedef.ref}`;
+  assert.ok(Number(o.n) > 0, "öneriler duruyor");
 });
 
 // ── resmî yatırım konuları listesi ─────────────────────────────────────────

@@ -65,6 +65,7 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
           { ad: ilKaydi.ad, yol: `/il/${il}`, aktif: true },
           { ad: "Onay", yol: "/onay" },
           { ad: "Belgeler", yol: "/belgeler" },
+          { ad: "Ayarlar", yol: "/ayarlar" },
         ]}
       />
       <Sayfa genis>

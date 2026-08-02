@@ -877,3 +877,181 @@ export async function denetimIzi(b: Baglam, limit = 50) {
     `,
   );
 }
+
+// ── yönetici: kayıtlı kullanıcılar (KVKK sınırlı) ──────────────────────────
+
+export type KayitliKullanici = {
+  ref: string;
+  rol: Rol;
+  misafir: boolean;
+  ajans_kod: string | null;
+  ajans: string | null;
+  /** MASKELİ e-posta — açmak ayrı ve denetlenen bir eylemdir */
+  eposta_maske: string | null;
+  ad_maske: string | null;
+  pseudonimlestirildi: boolean;
+  oneri: number;
+  olusturuldu: string;
+};
+
+/**
+ * Kayıtlı kullanıcı listesi — `kimlik` `gizli` sınıfta olduğu için RLS zaten
+ * yalnızca yöneticiye satır verir; burada ayrıca rol kontrolü yapılmıyor,
+ * fail-closed olan katman veritabanıdır.
+ *
+ * KİŞİSEL VERİ MASKELİ DÖNER. Yönetici bu veriye erişebilir (güvenlik §3) ama
+ * KVKK'nın istediği şey "yetkili görebilir" değil, **veri minimizasyonu**:
+ * listeyi okumak için e-postanın tamamına gerek yok. Açmak `kimlikAc()` ile
+ * ve tek tek yapılır, denetime yazılır.
+ *
+ * Maskeleme SQL'de yapılıyor, bilerek: açık değer uygulama katmanına hiç
+ * gelmezse log'a, hata izine veya bir React ağacına sızma yolu da kalmaz.
+ */
+export async function kayitliKullanicilar(b: Baglam) {
+  return islem(b, (sql) =>
+    sql<KayitliKullanici[]>`
+      select g.ref, g.rol, g.misafir, g.ajans_kod, a.ad as ajans,
+             case
+               when k.eposta is null then null
+               else left(k.eposta::text, 1) || '****' ||
+                    substring(k.eposta::text from position('@' in k.eposta::text))
+             end as eposta_maske,
+             -- Bu şablonda ters bölü KULLANILAMAZ: postgres.js etiketli
+             -- şablon kullanıyor, geçersiz bir kaçış cooked dizide undefined
+             -- bırakıyor ve SQL sessizce bozuluyor (regexp_replace denendi,
+             -- "syntax error at position 1" verdi). Maske için baş harf yeter;
+             -- liste tarama için değil, KVKK talebini eşleştirmek için var.
+             case
+               when k.ad_soyad is null then null
+               else left(k.ad_soyad, 1) || '***'
+             end as ad_maske,
+             coalesce(k.pseudonimlestirildi, false) as pseudonimlestirildi,
+             (select count(*)::int from oneri o where o.gonderen_ref = g.ref) as oneri,
+             g.olusturuldu::text
+      from kimlik k
+      join gonderen g on g.ref = k.gonderen_ref
+      left join ajans a on a.kod = g.ajans_kod
+      order by g.rol, k.eposta
+    `,
+  );
+}
+
+/**
+ * Bir kimliğin AÇIK hâlini döndürür ve erişimi denetime yazar.
+ *
+ * "Kim ne zaman kimin verisini açtı" sorusunun cevabı buradan çıkar. Liste
+ * okumak kişisel veri ifşası değildir (maskeli), tekil açmak ifşadır.
+ */
+export async function kimlikAc(b: Baglam, ref: string, gerekce: string) {
+  return islem(b, async (sql) => {
+    const [k] = await sql<{ eposta: string | null; ad_soyad: string | null }[]>`
+      select eposta::text, ad_soyad from kimlik where gonderen_ref = ${ref}
+    `;
+    if (!k) return null;
+    await denetle(sql, b, "kimlik_goruntulendi", "gonderen", ref, { gerekce });
+    return k;
+  });
+}
+
+/** KVKK silme talebi — kimliği siler, öneri zincirini korur. */
+export async function kimlikSil(b: Baglam, ref: string): Promise<void> {
+  await islem(b, async (sql) => {
+    await sql`select kimlik_pseudonimlestir(${ref}::uuid)`;
+  });
+}
+
+// ── toplu rapor ────────────────────────────────────────────────────────────
+
+export type RaporSatiri = {
+  id: number;
+  il: string;
+  il_kod: string;
+  ajans_kod: string;
+  ajans: string;
+  yil: string;
+  koken: Koken;
+  baslik: string;
+  gerekce: string;
+  ilce: string | null;
+  durum: OneriDurumu;
+  nace_kod: string | null;
+  nace_tanim: string | null;
+  nace_kaynagi: string | null;
+  puanlar: Record<string, number> | null;
+  duzeltildi: boolean;
+  dayanak: number | null;
+  ai_gerekce: string | null;
+  alinti: number;
+  model_snapshot: string | null;
+  prompt_surum: string | null;
+  misafir: boolean;
+  olusturuldu: string;
+  onay_zamani: string | null;
+};
+
+/**
+ * Toplu öneri raporu — yönetici tüm iller, ajans YALNIZCA KENDİ BÖLGESİ.
+ *
+ * Kapsam SQL'de ve `gonderen.ajans_kod` üzerinden kuruluyor; uygulama katmanı
+ * bir il listesi göndermiyor. Sebebi basit: kapsamı çağıran belirlerse,
+ * çağırmayı unutan yer hepsini görür.
+ *
+ * FAIL-CLOSED: bölgesi atanmamış bir ajans kullanıcısı HİÇBİR satır görmez.
+ * "Bölge bilinmiyorsa hepsini göster" sessiz bir yetki genişlemesi olurdu.
+ *
+ * RLS bunun üstünde ayrıca çalışır: yatırımcı bu fonksiyonu çağırsa kendi
+ * önerilerinden fazlasını göremez. Kapsam kuralı RLS'in YERİNE değil,
+ * ÜSTÜNE geliyor.
+ */
+export async function raporSatirlari(b: Baglam) {
+  return islem(b, (sql) =>
+    sql<RaporSatiri[]>`
+      with yetki as (
+        select app_rol()::text as rol,
+               (select ajans_kod from gonderen where ref = app_ref()) as ajans
+      )
+      select o.id, i.ad as il, i.kod as il_kod, i.ajans_kod, a.ad as ajans, d.yil,
+             o.koken, o.baslik, o.gerekce, o.ilce, o.durum,
+             o.nace_kod, n.tanim as nace_tanim, o.nace_kaynagi::text,
+             coalesce(g.duzeltilmis_puanlar, g.puanlar) as puanlar,
+             (g.duzeltilmis_puanlar is not null) as duzeltildi,
+             g.dayanak, g.gerekce as ai_gerekce,
+             coalesce(jsonb_array_length(g.alintilar), 0) as alinti,
+             g.model_snapshot, g.prompt_surum,
+             gn.misafir, o.olusturuldu::text, o.onay_zamani::text
+      from oneri o
+      join donem d on d.id = o.donem_id
+      join il i on i.kod = d.il_kod
+      join ajans a on a.kod = i.ajans_kod
+      join gonderen gn on gn.ref = o.gonderen_ref
+      left join degerlendirme g on g.oneri_id = o.id
+      left join nace n on n.kod = o.nace_kod
+      where (select rol from yetki) = 'yonetici'
+         or i.ajans_kod = (select ajans from yetki)
+      order by i.ajans_kod, i.ad, o.koken desc, o.id
+    `,
+  );
+}
+
+/** Rapordaki resmî liste sayfası — tebliğ künyesiyle, aynı kapsam kuralıyla. */
+export async function raporResmiListe(b: Baglam) {
+  return islem(b, (sql) =>
+    sql<
+      { il: string; ajans_kod: string; ajans: string; yil: number; sira: number;
+        baslik: string; gerekce: string; kaynak: string }[]
+    >`
+      with yetki as (
+        select app_rol()::text as rol,
+               (select ajans_kod from gonderen where ref = app_ref()) as ajans
+      )
+      select i.ad as il, i.ajans_kod, a.ad as ajans, y.yil, y.sira,
+             y.baslik, y.gerekce, y.kaynak
+      from yatirim_konusu y
+      join il i on i.kod = y.il_kod
+      join ajans a on a.kod = i.ajans_kod
+      where (select rol from yetki) = 'yonetici'
+         or i.ajans_kod = (select ajans from yetki)
+      order by i.ajans_kod, i.ad, y.yil desc, y.sira
+    `,
+  );
+}

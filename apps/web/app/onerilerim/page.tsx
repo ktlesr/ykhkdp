@@ -77,7 +77,12 @@ export default async function Onerilerim() {
         nav={[
           { ad: "Öneri ver", yol: "/oneri" },
           { ad: "Önerilerim", yol: "/onerilerim", aktif: true },
-          ...(onaylayabilir(k.rol) ? [{ ad: "İller", yol: "/iller" }] : []),
+          ...(onaylayabilir(k.rol)
+            ? [
+                { ad: "İller", yol: "/iller" },
+                { ad: "Ayarlar", yol: "/ayarlar" },
+              ]
+            : []),
         ]}
       />
       <Sayfa>

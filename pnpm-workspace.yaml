@@ -5,9 +5,15 @@ packages:
 # next'in geçişli bağımlılıkları — GHSA-qx2v-qp2m-jg93 (postcss XSS),
 # postcss sourceMappingURL path traversal (2 kayıt) ve sharp/libvips
 # CVE-2026-33327/33328/35590/35591. Yamalı sürüme zorlanıyor.
+# exceljs 4.4.0 uuid@^8.3.0 çekiyor — GHSA-w5hq-g745-h8pq. uuid yalnızca
+# koşullu biçimlendirme uzantısında (`cf-rule-ext-xform`) kullanılıyor, bizim
+# ürettiğimiz çalışma kitabında o yol hiç çalışmıyor; yine de `pnpm audit
+# --prod` temiz kalmalı diye yamalı sürüme zorlanıyor. uuid 11 CJS `require`
+# girişini hâlâ veriyor, exceljs `require('uuid')` ile çağırıyor.
 overrides:
   postcss: "8.5.24"
   sharp: "0.35.3"
+  uuid: "11.1.1"
 
 onlyBuiltDependencies:
   - "@electric-sql/pglite"

@@ -22,7 +22,7 @@ export default async function Onay() {
           { ad: "İller", yol: "/iller" },
           { ad: "Onay", yol: "/onay", aktif: true },
           { ad: "Belgeler", yol: "/belgeler" },
-          ...(k.rol === "yonetici" ? [{ ad: "Ayarlar", yol: "/ayarlar" }] : []),
+          { ad: "Ayarlar", yol: "/ayarlar" },
         ]}
       />
       <Sayfa genis>

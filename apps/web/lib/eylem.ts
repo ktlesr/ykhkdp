@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import {
   belgeEkle, belgeSil, cikisYap, donemGetir, girisYap, islem, kayitOl, naceAra, naceDuzelt,
-  ayarYaz, misafirAc, oneriOlustur, puanDuzelt, durumDegistir,
+  ayarYaz, kimlikAc, kimlikSil, misafirAc, oneriOlustur, puanDuzelt, durumDegistir,
 } from "@ykh/database";
 import { gecisIzinli, onaylayabilir, type OneriDurumu } from "@ykh/domain";
 import { log } from "@ykh/observability";
@@ -275,4 +275,50 @@ export async function belgeSilEylemi(ad: string): Promise<EylemSonucu> {
   if (!parca) return { ok: false, mesaj: `“${ad}” bulunamadı.` };
   revalidatePath("/belgeler");
   return { ok: true, mesaj: `“${ad}” silindi (${parca} parça). Yeni değerlendirmeler buna dayanamaz.` };
+}
+
+// ── KVKK: kişisel veriyi açma ve silme ─────────────────────────────────────
+
+/**
+ * Tek bir kimliğin açık hâlini döndürür. Yalnızca yönetici.
+ *
+ * Listede maskeli duran veriyi açmak ayrı bir eylemdir ve GEREKÇE ister:
+ * denetim izine "kim, ne zaman, kimin verisini, NEDEN açtı" yazılır. KVKK'nın
+ * istediği amaç sınırlılığı bu — yetkiyi kaldırmak değil, kullanımını
+ * kayıt altına almak.
+ */
+export async function kimlikAcEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
+  const k = await kullanici();
+  if (!k || k.rol !== "yonetici") return { ok: false, mesaj: "Kişisel veriyi yalnızca yönetici açabilir." };
+
+  const ref = String(f.get("ref") ?? "");
+  const gerekce = String(f.get("gerekce") ?? "").trim();
+  if (gerekce.length < 8) return { ok: false, mesaj: "Erişim gerekçesi yazın (en az 8 karakter); denetime yazılacak." };
+
+  const kimlik = await kimlikAc(await baglam(), ref, gerekce);
+  if (!kimlik) return { ok: false, mesaj: "Kayıt bulunamadı." };
+
+  log.info("kimlik_goruntulendi", { ref });
+  revalidatePath("/ayarlar");
+  return { ok: true, mesaj: `${kimlik.eposta ?? "—"} · ${kimlik.ad_soyad ?? "—"}` };
+}
+
+/**
+ * KVKK silme talebi. Kimlik silinir, öneri zinciri korunur.
+ *
+ * Geri alınamaz: e-posta, ad ve parola özeti kalıcı olarak gider, oturumlar
+ * kapanır. Onay kutusu bu yüzden var — düğmeye yanlışlıkla basılabilir.
+ */
+export async function kimlikSilEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
+  const k = await kullanici();
+  if (!k || k.rol !== "yonetici") return { ok: false, mesaj: "Bu işlemi yalnızca yönetici yapabilir." };
+  if (f.get("onay") !== "evet") return { ok: false, mesaj: "Geri alınamaz işlem: onay kutusunu işaretleyin." };
+
+  const ref = String(f.get("ref") ?? "");
+  if (ref === k.ref) return { ok: false, mesaj: "Kendi kimliğinizi silemezsiniz; oturumunuz kapanır ve işlem sahipsiz kalır." };
+
+  await kimlikSil(await baglam(), ref);
+  log.info("kimlik_pseudonimlestirildi", { ref });
+  revalidatePath("/ayarlar");
+  return { ok: true, mesaj: "Kişisel veri silindi; öneri ve sıralama zinciri korundu." };
 }

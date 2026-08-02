@@ -44,7 +44,7 @@ export default async function Iller() {
           { ad: "İller", yol: "/iller", aktif: true },
           { ad: "Onay", yol: "/onay" },
           { ad: "Belgeler", yol: "/belgeler" },
-          ...(k.rol === "yonetici" ? [{ ad: "Ayarlar", yol: "/ayarlar" }] : []),
+          { ad: "Ayarlar", yol: "/ayarlar" },
         ]}
       />
       <Sayfa genis>

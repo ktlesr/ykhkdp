@@ -135,9 +135,14 @@ export default async function Tanitim() {
             </span>
             <nav className="ml-auto flex items-center gap-5 font-mono text-[10px] uppercase tracking-[.12em]">
               {ajans && (
-                <Link href="/iller" className="border-0 text-[#C9CDD3]">
-                  İller
-                </Link>
+                <>
+                  <Link href="/iller" className="border-0 text-[#C9CDD3]">
+                    İller
+                  </Link>
+                  <Link href="/ayarlar" className="border-0 text-[#C9CDD3]">
+                    Ayarlar
+                  </Link>
+                </>
               )}
               <Link href="/oneri" className="border-0 text-[#C9CDD3]">
                 Öneri ver

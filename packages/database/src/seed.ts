@@ -23,6 +23,8 @@ export const ULUSAL_SURUM = "ULUSAL-2027-v1";
 export const DEMO_HESAPLAR = [
   { eposta: "yatirimci@ykh.local", ad: "A. Kaya", rol: "yatirimci", etiket: "yatırımcı — öneri verir" },
   { eposta: "ajans@ykh.local", ad: "S. Aydın", rol: "ajans", etiket: "ajans — onaylar, belge yükler" },
+  // `ajansKod` yalnızca ajans rolünde anlamlı: toplu rapor bu kullanıcıyı
+  // kendi bölgesiyle sınırlar. Yöneticide null = tüm bölgeler.
   { eposta: "yonetici@ykh.local", ad: "T. Arslan", rol: "yonetici", etiket: "yönetici — hepsi + kişisel veri" },
 ] as const;
 
@@ -167,6 +169,10 @@ export async function seed(): Promise<{ ozet: string }> {
   // dışındaki iller veritabanında var ama açık dönemi yok — sihirbaz bunu
   // "açık dönem yok" olarak gösterir, gizlemez.
   const ajansSayisi = await ajanslariYukle();
+
+  // Ajans kullanıcısının bölgesi ancak `ajans` tablosu yüklendikten sonra
+  // yazılabilir (yabancı anahtar). Demo ajansı pilot bölgede: TR33.
+  await sql`update gonderen set ajans_kod = 'TR33' where ref = ${ref["ajans@ykh.local"]}`;
 
   // Resmî Yerel Yatırım Konuları Listesi (tebliğ). `mevcut` adaylar buradan
   // türetilir; seed hiçbir resmî konu uydurmaz.

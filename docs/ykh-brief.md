@@ -33,9 +33,11 @@ Platform resmî Portal veya E-TUYS'un yerine geçmez; yatırımcı başvuruları
 | `/oneri/[id]` | sahibi + ajans | AI bu puanı neye dayanarak verdi: gerekçe, belge alıntıları, kriter kırılımı |
 | `/iller` | **ajans** | il listesi, ajans bölgesine göre katlanır; sayılar öneri kümesinden türer |
 | `/il/[il]` | **ajans** | sıralama, slotlar, yürürlükteki resmî liste ve yıllar arası süreklilik |
+| `/ayarlar` | ajans + **yönetici** | toplu rapor (+ Excel); yönetici ayrıca kayıtlı kullanıcılar ve palet |
+| `/rapor` | ajans + yönetici | ekran değil, `.xlsx` indirme ucu |
 | `/onay` | ajans | AI puanladı, onay bekliyor: onayla · puanı düzelt · NACE'yi düzelt · reddet · yakın kopya işareti |
 | `/belgeler` | ajans | üst ölçekli belge yükleme + il bazlı kapsama — AI'nin dayanağı |
-| `/ayarlar` | yönetici | kurumsal ayarlar; şimdilik tek karar: arayüz renk paleti |
+
 
 Ayrıca `/giris` ve `/kayit`. Başka ekran yok.
 
@@ -54,6 +56,31 @@ Tanıtım sayfası tek bir örneği kendi içinde açar — gezinilecek bir küm
 `/onerilerim` bu kapatmanın doğurduğu ekrandır: yatırımcının kendi önerilerine
 ulaşabileceği tek yer. Protokol §10 altıncı ekran için gerekçe ister; gerekçe
 gizliliği kapatan değişikliğin kendisidir.
+
+### Toplu rapor ve kapsam
+
+Ajans ve yönetici `/ayarlar` içinde **toplu öneri raporunu** görür: yürürlükteki
+resmî konular ve yatırımcı önerileri, gerekçeleri, sekiz kriter puanı, belge
+dayanağı ve model künyesiyle. `/rapor` aynı veriyi **`.xlsx`** olarak verir —
+üç sayfa: Öneriler · Resmî liste · Künye.
+
+Kapsam **sorguda** kurulur, sayfada değil (`raporSatirlari`):
+
+| Rol | Görür |
+|---|---|
+| `yonetici` | 81 ilin tamamı |
+| `ajans` | **kendi bölgesindeki illere girilmiş her kayıt** — kim girdiyse |
+| `yatirimci` · misafir · anonim | hiçbiri (403) |
+
+Ajansın bölgesi `gonderen.ajans_kod` ile tutulur (NUTS-2). **Fail-closed:**
+bölgesi atanmamış bir ajans hesabı hiçbir satır görmez — eksik bilgiyle hepsini
+göstermek sessiz bir yetki genişlemesi olurdu. Bu kolon şu an yalnızca rapor
+kapsamını daraltır; onay kuyruğu ve belge yükleme hâlâ rol tabanlıdır.
+
+Raporda **değerlendirilmemiş kayıt 0 yazmaz, boş kalır.** 0 bir ölçümdür;
+boş "henüz ölçülmedi" demektir ve ikisi karıştırılırsa rapor yalan söyler.
+Ham AI puanı ile ajans düzeltmesi ayrı sütunlarda durur, model künyesi her
+satırda taşınır: "bu sayıyı kim koydu" sorusu dosyada da cevaplanır.
 
 ### Yatırımcının akışı — il listesi bir EKRAN değil, bir ADIM
 
