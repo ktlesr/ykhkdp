@@ -46,27 +46,25 @@ hazır yedekleme ekranı işe yaramazdı.
 
 Servis ayağa kalkınca **iki yoldan biriyle** bağlanacaksın.
 
-### Yol A — tam adresi yapıştır (önerilen)
+> ## ⚠ DOKPLOY'UN VERDİĞİ ADRESİ `DATABASE_URL` OLARAK KULLANMA
+>
+> Yaşandı: Dokploy'un "Internal Connection URL" değeri hem
+> `DATABASE_URL_OWNER` hem `DATABASE_URL` olarak yapıştırıldı. O adres **şema
+> sahibinin** adresi ve o rol çoğu kurulumda superuser — **RLS'i baypas eder.**
+>
+> Sonuç sessizdir ve tam da bu yüzden tehlikelidir: sayfalar açılır, hiçbir
+> hata görünmez, ama **her yatırımcı herkesin önerisini görür.** Bu ürünün
+> gizlilik modelinin tamamı RLS'e dayanıyor ve RLS yalnızca `ykh_app` rolünde
+> uygulanıyor.
+>
+> Uygulama artık bunu reddediyor: `DATABASE_URL` `ykh_app` dışında bir rolle
+> geliyorsa açılmıyor ve sebebini yazıyor.
 
-Dokploy sana hazır bir **"Internal Connection URL"** veriyor. Kopyala:
+### Yol A — parçaları ver (önerilen)
 
-```env
-DATABASE_URL_OWNER=postgres://postgres:PAROLA@ykh-db-a1b2c3:5432/ykhkdp
-```
-
-Sonra aynı adresi **yalnızca kullanıcı ve parolayı değiştirerek** bir kez daha
-yaz — uygulama rolü için:
-
-```env
-DATABASE_URL=postgres://ykh_app:YKH_APP_PAROLA@ykh-db-a1b2c3:5432/ykhkdp
-```
-
-Bu iki satırı verdiysen aşağıdaki dört değişkene **gerek yok**.
-
-### Yol B — parçaları ver
-
-Adresi iki kez yazmak istemiyorsan dört değeri gir, adresi compose kursun.
-Ekrandan not al:
+Dört değeri gir, iki adresi de compose kursun. Uygulama rolünü **compose
+yazar**, yani yanlış rolle bağlanmak yapısal olarak imkânsız hâle gelir.
+Dokploy → Databases → servisin ekranından not al:
 
 | Dokploy'daki alan | Env değişkeni | Örnek |
 |---|---|---|
@@ -77,6 +75,21 @@ Ekrandan not al:
 
 > **Evet, `POSTGRES_PAROLA` tam olarak bu servisin parolası.** Uyduracağın bir
 > şey değil — Dokploy ekranından kopyalayacaksın.
+
+Bu dördü yeterlidir. Compose iki adresi şöyle kurar:
+
+```
+DATABASE_URL_OWNER = postgres://YKH_DB_SAHIP:POSTGRES_PAROLA@SUNUCU:5432/AD
+DATABASE_URL       = postgres://ykh_app:YKH_APP_PAROLA@SUNUCU:5432/AD
+                              └──────┘ uygulama rolü — compose yazar, sen değil
+```
+
+### Yol B — adresleri elle ver (yalnızca gerekiyorsa)
+
+`?sslmode=require` gibi bir parametre eklemen gerekiyorsa `DATABASE_URL_OWNER`
+ve `DATABASE_URL` satırlarını doğrudan verebilirsin. O zaman **uygulama
+adresindeki kullanıcı `ykh_app`, parolası `YKH_APP_PAROLA` olmak zorunda** —
+Dokploy'un verdiği kullanıcı adı değil.
 
 > ### Parolada özel karakter varsa değiştir
 >

@@ -98,6 +98,38 @@ function adresSec(ad: string, varsayilan: string): string {
         `Dokploy'un verdiği tam bağlantı adresini ${ad} olarak yapıştırın.`,
     );
   }
+  /**
+   * UYGULAMA BAĞLANTISI `ykh_app` OLMAK ZORUNDA.
+   *
+   * Yaşandı: Dokploy'un verdiği bağlantı adresi HEM `DATABASE_URL_OWNER` HEM
+   * `DATABASE_URL` olarak yapıştırıldı. Uygulama şema sahibiyle bağlanıyordu —
+   * o rol çoğu kurulumda superuser ve **RLS'i baypas eder**. Sayfalar açılırdı,
+   * hiçbir hata görünmezdi, ama her yatırımcı herkesin önerisini görürdü.
+   *
+   * Bu ürünün gizlilik modelinin tamamı RLS'e dayanıyor ve RLS yalnızca
+   * `ykh_app` rolünde uygulanıyor (superuser değil, tablo sahibi değil,
+   * BYPASSRLS taşımıyor). Yanlış rolle çalışmak sessizce her şeyi açardı;
+   * sessiz kalmaktansa açılmamak doğru.
+   */
+  if (ad === "DATABASE_URL") {
+    let kullanici: string;
+    try {
+      kullanici = decodeURIComponent(new URL(deger).username);
+    } catch {
+      kullanici = "";
+    }
+    if (kullanici !== "ykh_app") {
+      throw new Error(
+        `DATABASE_URL '${kullanici || "(boş)"}' rolüyle bağlanıyor; 'ykh_app' olmalı. ` +
+          "Satır güvenliği (RLS) yalnızca o rolde uygulanır — şema sahibiyle " +
+          "bağlanmak her öneriyi herkese açardı. Dokploy'un verdiği adresi " +
+          "DATABASE_URL olarak KULLANMAYIN; ya DATABASE_URL satırını silin " +
+          "(compose onu YKH_APP_PAROLA ile kendisi kurar) ya da adresteki " +
+          "kullanıcıyı `ykh_app` ve parolayı YKH_APP_PAROLA yapın.",
+      );
+    }
+  }
+
   if (YEREL.has(sunucu)) {
     throw new Error(
       `${ad} üretimde YEREL adrese bakıyor (${sunucu}). Konteynerin içinde ` +
