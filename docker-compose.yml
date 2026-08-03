@@ -1,3 +1,17 @@
+# ⚠ BU DOSYA YALNIZCA YEREL GELİŞTİRME İÇİNDİR — DOKPLOY'DA KULLANMAYIN.
+#
+# İçinde tek bir Postgres servisi var (port 5470) ve uygulama YOK. Dokploy'da
+# "Compose Path" varsayılan olarak `./docker-compose.yml` gelir; olduğu gibi
+# bırakılırsa bu dosya çalışır ve sonuç şu olur:
+#
+#   · web ve worker hiç dağıtılmaz
+#   · İKİNCİ bir veritabanı doğar (Dokploy'un kendi servisinin yanında)
+#   · uygulama `ECONNREFUSED 127.0.0.1:5470` ile hata verir
+#
+# Yaşandı ve saatler aldı. Üretimde kullanılacak dosya:
+#
+#     docker-compose.production.yml
+#
 services:
   postgres:
     image: postgres:17-alpine

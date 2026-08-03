@@ -161,6 +161,11 @@ olsun.**
    - **Repository**: `ktlesr/ykhkdp`
    - **Branch**: `main`
    - **Compose Path**: `docker-compose.production.yml`
+     > ⚠ **Bu alanı mutlaka değiştir.** Dokploy varsayılan olarak
+     > `./docker-compose.yml` yazar; o dosya YEREL GELİŞTİRME içindir, içinde
+     > yalnızca Postgres var ve uygulama yok. Olduğu gibi bırakırsan web ve
+     > worker hiç dağıtılmaz, üstelik ikinci bir veritabanı doğar ve hata
+     > `ECONNREFUSED 127.0.0.1:5470` olarak görünür. Yaşandı, saatler aldı.
 4. **Save**. **Deploy'a HENÜZ BASMA.**
 
 > **Ağ hakkında.** Compose dosyası `dokploy-network` ağına dışarıdan bağlanıyor
@@ -502,6 +507,7 @@ Son iki blok ölçüm yanlışını da içeriyor:
 | Her sayfa 500 · logda `ECONNREFUSED 127.0.0.1:5470` | Ortam sekmesine yerel `.env` yapıştırılmış | `DATABASE_URL` ve `DATABASE_URL_OWNER` satırlarını **sil**, yeniden dağıt |
 | `web`: "üretimde YEREL adrese bakıyor" | aynı sebep, artık açık hatayla | aynı çözüm |
 | `web`: "üretimde tanımlı değil" | `DATABASE_URL` boş geliyor | ortam sekmesinde tam adres yazılı mı bak |
+| `ECONNREFUSED 127.0.0.1:5470` · worker hiç görünmüyor · ikinci bir Postgres var | **Compose Path `./docker-compose.yml` kalmış** | `docker-compose.production.yml` yap, yeniden dağıt; yerel dosyadan doğan Postgres konteynerini ve volume'ünü sil |
 | `kurulum`: "YKH_APP_PAROLA varsayılan değerde" | depodaki sabit parola bırakılmış | `openssl rand -hex 24` |
 | `kurulum`: "yalnızca harf, rakam ve . _ ~ - içerebilir" | base64 parola kullanılmış | `openssl rand -hex 24` |
 | `worker`: "en az 12 karakter olmalı" | `YKH_YONETICI_PAROLA` kısa | 12+ karakter yap |
