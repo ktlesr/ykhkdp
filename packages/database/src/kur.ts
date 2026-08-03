@@ -36,7 +36,37 @@ function gerekli(ad: string): string {
   return d;
 }
 
+/**
+ * Bağlantı adresinin AYRIŞTIRILABİLDİĞİNİ en başta doğrular.
+ *
+ * Adres bir paroladan kuruluyor ve parola çoğu zaman elle üretilmiyor:
+ * Dokploy'un veritabanı servisi kendi parolasını rastgele üretiyor ve içinde
+ * `/` `@` `:` bulunabiliyor. `/` adresi ayrıştırılamaz yapar, `@` ana makine
+ * adını kaydırır — ikisi de "bağlanamıyor" diye görünür, sebebi görünmez.
+ *
+ * postgres.js'in kendi hatası bu durumda okunaksız. Burada erken, adıyla ve
+ * çözümüyle duruyoruz.
+ */
+function adresiDogrula(ad: string, deger: string): void {
+  let u: URL;
+  try {
+    u = new URL(deger);
+  } catch {
+    throw new Error(
+      `${ad} geçerli bir bağlantı adresi değil. En sık sebep paroladaki özel ` +
+        "karakter: `/` adresi bozar, `@` ana makine adını kaydırır. Parolayı " +
+        "yalnızca harf ve rakamdan oluşacak şekilde değiştirin (Dokploy'un " +
+        "veritabanı ekranından) ya da özel karakterleri yüzde kodlayın (`/` → %2F).",
+    );
+  }
+  if (!u.hostname) throw new Error(`${ad} içinde sunucu adı yok: ${u.protocol}//…`);
+  if (!u.pathname.replace(/^\//, "")) throw new Error(`${ad} içinde veritabanı adı yok.`);
+}
+
 export async function kur(): Promise<string> {
+  adresiDogrula("DATABASE_URL_OWNER", gerekli("DATABASE_URL_OWNER"));
+  adresiDogrula("DATABASE_URL", gerekli("DATABASE_URL"));
+
   const sql = sahip();
   const rapor: string[] = [];
 

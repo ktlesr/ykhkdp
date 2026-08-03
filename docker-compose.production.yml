@@ -1,56 +1,57 @@
 # ── YKH-KDP · üretim (Dokploy) ────────────────────────────────────────────────
 #
-# Dokploy'da "Compose" tipi bir uygulama olarak kullanılır. Dört servis:
+# Dokploy'da "Compose" tipi bir uygulama olarak kullanılır. Üç servis:
 #
-#   postgres  veritabanı (kalıcı disk)
 #   kurulum   şema + referans veri + ilk yönetici — bir kez çalışıp çıkar
 #   web       Next.js; alan adı ve TLS Dokploy tarafından bağlanır
 #   worker    AI değerlendirme döngüsü
 #
+# VERİTABANI BURADA DEĞİL. Dokploy'un kendi PostgreSQL servisi kullanılıyor:
+# yedekleme, izleme ve sürüm yükseltme onun panelinden yönetiliyor. Paketli
+# bir Postgres konteyneri olsaydı iki veritabanı doğardı ve Dokploy'un hazır
+# yedekleme ekranı işe yaramazdı.
+#
+# BAĞLANTI ADRESİ İKİ PARÇADAN KURULUYOR — ve tek yerden:
+#
+#   DATABASE_URL_OWNER  →  YKH_DB_SAHIP  + POSTGRES_PAROLA   (şema sahibi)
+#   DATABASE_URL        →  ykh_app       + YKH_APP_PAROLA    (uygulama rolü)
+#
+# İkisi de aynı sunucu ve aynı veritabanı adını kullanıyor. Böylece adresi iki
+# kez yazma ve birinde yazım hatası yapma ihtimali yok. Gerekirse ikisi de
+# doğrudan geçersiz kılınabilir (ör. TLS parametresi eklemek için).
+#
 # `kurulum` servisi web'den ÖNCE biter (`service_completed_successfully`).
 # Sıra bu yüzden garanti: uygulama hiçbir zaman eksik şemayla açılmaz.
 #
-# PORT YAYIMLANMIYOR. Yalnızca `web` Dokploy ağına açık; Postgres dış dünyaya
-# hiç bakmıyor. Veritabanına erişmek gerekirse Dokploy terminalinden girilir.
-#
-# PAROLALAR `openssl rand -hex 24` İLE ÜRETİLİR. Aşağıda bağlantı adresinin
-# içine dizgi olarak giriyorlar; base64 çıktısındaki `/` adresi ayrıştırılamaz
-# yapıyor. Kurulum servisi biçimi ayrıca kontrol ediyor.
+# AĞ: Dokploy'un veritabanı servisleri `dokploy-network` üzerinde durur. Bu
+# compose kendi ağını kursaydı uygulama veritabanını GÖREMEZDİ ve hata
+# "bağlanamıyor" olurdu — sebebi hiçbir yerde yazmazdı. Ağ dışarıdan bağlanıyor.
+
+x-veritabani: &veritabani
+  DATABASE_URL: >-
+    ${DATABASE_URL:-postgres://ykh_app:${YKH_APP_PAROLA}@${YKH_DB_SUNUCU}:${YKH_DB_PORT:-5432}/${YKH_DB_ADI}}
 
 services:
-  postgres:
-    image: postgres:17-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ykh_owner
-      POSTGRES_PASSWORD: ${POSTGRES_PAROLA:?POSTGRES_PAROLA zorunlu}
-      POSTGRES_DB: ykhkdp
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ykh_owner -d ykhkdp"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
   kurulum:
     build:
       context: .
       dockerfile: Dockerfile.worker
     restart: "no"
     command: ["pnpm", "db:kur"]
-    depends_on:
-      postgres:
-        condition: service_healthy
+    networks: [dokploy-network]
     environment:
-      # Kurulum SAHİP bağlantısıyla çalışır: migration ve rol parolası için.
-      DATABASE_URL_OWNER: postgres://ykh_owner:${POSTGRES_PAROLA}@postgres:5432/ykhkdp
-      DATABASE_URL: postgres://ykh_app:${YKH_APP_PAROLA}@postgres:5432/ykhkdp
+      <<: *veritabani
+      # Kurulum SAHİP bağlantısıyla çalışır: migration, `create role`,
+      # `create extension pg_trgm` ve `ykh_app` parolasının değiştirilmesi için.
+      # Dokploy'un veritabanı kullanıcısı bu işleri yapabilir (resmî imajda
+      # POSTGRES_USER superuser'dır).
+      DATABASE_URL_OWNER: >-
+        ${DATABASE_URL_OWNER:-postgres://${YKH_DB_SAHIP:?YKH_DB_SAHIP zorunlu}:${POSTGRES_PAROLA:?POSTGRES_PAROLA zorunlu}@${YKH_DB_SUNUCU:?YKH_DB_SUNUCU zorunlu}:${YKH_DB_PORT:-5432}/${YKH_DB_ADI:?YKH_DB_ADI zorunlu}}
       YKH_APP_PAROLA: ${YKH_APP_PAROLA:?YKH_APP_PAROLA zorunlu}
       YKH_YONETICI_EPOSTA: ${YKH_YONETICI_EPOSTA:?YKH_YONETICI_EPOSTA zorunlu}
       YKH_YONETICI_PAROLA: ${YKH_YONETICI_PAROLA:?YKH_YONETICI_PAROLA zorunlu}
       YKH_YONETICI_AD: ${YKH_YONETICI_AD:-Yönetici}
-      # İlk kurulumda `evet`, sonra kaldırın: belgeler yeniden yüklenince
+      # İlk kurulumda `evet`, sonra `hayir`: belgeler yeniden yüklenince
       # `belge.id` değişir ve eski değerlendirmelerin atıf adresleri eskir.
       YKH_KUR_BELGELER: ${YKH_KUR_BELGELER:-hayir}
       YKH_LOG_SEVIYE: ${YKH_LOG_SEVIYE:-info}
@@ -60,12 +61,14 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
+    networks: [dokploy-network]
     depends_on:
       kurulum:
         condition: service_completed_successfully
     environment:
-      # Web SAHİP bağlantısını ALMAZ. RLS'in uygulandığı tek yol bu.
-      DATABASE_URL: postgres://ykh_app:${YKH_APP_PAROLA}@postgres:5432/ykhkdp
+      # Web SAHİP bağlantısını ALMAZ. RLS'in uygulandığı tek yol bu:
+      # `ykh_app` superuser değil, tablo sahibi değil, BYPASSRLS taşımıyor.
+      <<: *veritabani
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       YKH_MODEL_SNAPSHOT: ${YKH_MODEL_SNAPSHOT:-}
       YKH_LOG_SEVIYE: ${YKH_LOG_SEVIYE:-info}
@@ -78,15 +81,18 @@ services:
       context: .
       dockerfile: Dockerfile.worker
     restart: unless-stopped
+    networks: [dokploy-network]
     depends_on:
       kurulum:
         condition: service_completed_successfully
     environment:
-      DATABASE_URL: postgres://ykh_app:${YKH_APP_PAROLA}@postgres:5432/ykhkdp
+      # Worker da sahip bağlantısını almaz; RLS onun için de uygulanır.
+      <<: *veritabani
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       YKH_MODEL_SNAPSHOT: ${YKH_MODEL_SNAPSHOT:-}
       YKH_WORKER_ARALIK: ${YKH_WORKER_ARALIK:-5000}
       YKH_LOG_SEVIYE: ${YKH_LOG_SEVIYE:-info}
 
-volumes:
-  pgdata:
+networks:
+  dokploy-network:
+    external: true

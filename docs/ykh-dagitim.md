@@ -30,86 +30,121 @@ karıştırma.
 
 ---
 
-## 1. Üç parola üret — ve hangisinin nereye gittiğini bil
+## 1. Dokploy'da PostgreSQL servisi
 
-Sunucuda ya da kendi bilgisayarında **üç kez** çalıştır:
+Veritabanı bu compose dosyasının içinde **değil**. Dokploy'un kendi PostgreSQL
+servisi kullanılıyor; yedekleme, izleme ve sürüm yükseltme onun panelinden
+yönetiliyor. Paketli bir Postgres olsaydı iki veritabanı doğardı ve Dokploy'un
+hazır yedekleme ekranı işe yaramazdı.
+
+**Zaten kurduysan** bu adımı atla, sadece bilgileri not et. Kurmadıysan:
+
+1. Panelde **Projects** → projeni aç → **Create Service** → **Database** →
+   **PostgreSQL**.
+2. Sürüm **17** seç (uygulama Postgres 17 ile geliştirildi ve sınandı).
+3. Kaydet ve **Deploy** et.
+
+Servis ayağa kalkınca ekranından **dört değeri** not al:
+
+| Dokploy'daki alan | Env değişkeni | Örnek |
+|---|---|---|
+| Internal host (bağlantı adresinde `@` ile `:5432` arası) | `YKH_DB_SUNUCU` | `ykhkdp-db-a1b2c3` |
+| Database Name | `YKH_DB_ADI` | `ykhkdp` |
+| Database User | `YKH_DB_SAHIP` | `postgres` |
+| Database Password | `POSTGRES_PAROLA` | Dokploy'un ürettiği değer |
+
+> **Evet, `POSTGRES_PAROLA` tam olarak bu servisin parolası.** Uyduracağın bir
+> şey değil — Dokploy ekranından kopyalayacaksın.
+
+> ### Parolada özel karakter varsa değiştir
+>
+> Parola bir bağlantı adresinin içine giriyor:
+> `postgres://kullanici:PAROLA@sunucu:5432/veritabani`
+>
+> Dokploy rastgele parola üretiyor ve içinde `/` `@` `:` bulunabiliyor. `/`
+> adresi **ayrıştırılamaz** yapar, `@` ana makine adını kaydırır. İkisi de
+> "bağlanamıyor" olarak görünür ve sebebi hiçbir yerde yazmaz.
+>
+> Parolada harf ve rakam dışında bir şey varsa Dokploy'un veritabanı ekranından
+> değiştir. `openssl rand -hex 24` çıktısı güvenlidir. Kurulum bunu ayrıca
+> kontrol ediyor ve bozuksa çözümüyle birlikte hata veriyor.
+
+**Ana makine adı sunucunun IP'si değildir.** Uygulama ile veritabanı aynı
+Docker ağında konuşuyor; dışarıdan erişilebilir bir adres kullanmana gerek yok
+ve kullanmamalısın.
+
+---
+
+## 2. İki parola üret
+
+Veritabanı parolasını Dokploy verdi. Senin üreteceğin **iki** parola var:
 
 ```bash
 openssl rand -hex 24
 ```
 
-Üç ayrı çıktı alacaksın, her biri 48 karakterlik bir dize:
+İki kez çalıştır, iki ayrı 48 karakterlik dize al:
 
 ```
 7f3a1c9b2e5d8a6f4c0b1d9e3a7f2c5b8d1e4a9c6f0b3d7e   ← 1. çıktı
 2b8e5c1f9a4d7b0e3c6f2a5d8b1e4c7f0a3d6b9e2c5f8a1d   ← 2. çıktı
-9c4f1a7e3b6d0c9f2a5e8b1d4c7f0a3e6b9d2c5f8a1e4b7d   ← 3. çıktı
 ```
 
 ### Hangisi nereye gidiyor
 
-| # | Değişken adı | Kim kullanır | Ne işe yarar |
+| Değişken | Nereden gelir | Kim kullanır | Ne işe yarar |
 |---|---|---|---|
-| **1** | `POSTGRES_PAROLA` | yalnızca `kurulum` servisi | **Şema sahibi** (`ykh_owner`). Tablo oluşturur, migration çalıştırır, RLS'i baypas eder. Web ve worker bunu **hiç görmez**. |
-| **2** | `YKH_APP_PAROLA` | `web` + `worker` | **Uygulama rolü** (`ykh_app`). Superuser değil, tablo sahibi değil, `BYPASSRLS` taşımıyor. Satır güvenliği bu rolde uygulanır. |
-| **3** | `YKH_YONETICI_PAROLA` | **sen**, tarayıcıdan | YKH platformuna giriş yapacağın yönetici hesabının parolası. Veritabanıyla ilgisi yok — `/giris` ekranına yazacağın şey. |
+| `POSTGRES_PAROLA` | **Dokploy verdi** | yalnızca `kurulum` | **Şema sahibi.** Tablo oluşturur, migration çalıştırır, rol açar, RLS'i baypas eder. Web ve worker bunu **hiç görmez**. |
+| `YKH_APP_PAROLA` | **1. çıktı** | `web` + `worker` | **Uygulama rolü** (`ykh_app`). Superuser değil, tablo sahibi değil, `BYPASSRLS` taşımıyor. Satır güvenliği bu rolde uygulanır. |
+| `YKH_YONETICI_PAROLA` | **2. çıktı** | **sen**, tarayıcıdan | `/giris` ekranına yazacağın parola. Veritabanıyla ilgisi yok. |
 
-Yani: 1 ve 2 **makinelerin** birbirine bağlanma parolası, 3 **senin** giriş
-parolan. Üçünü de bir parola yöneticisine kaydet; 1 ve 2'yi bir daha yazmayacaksın,
-3'ü her giriş yapışında yazacaksın.
+Yani ilk ikisi **makinelerin** birbirine bağlanma parolası, üçüncüsü **senin**
+giriş parolan. Üçünü de bir parola yöneticisine kaydet.
 
-> **Neden iki ayrı veritabanı parolası?** Uygulamanın şemayı değiştirebilen
-> bir bağlantıyla çalışması, bir SQL enjeksiyon açığının tablo silmesi
-> demektir. Ayrım ürünün güvenlik temeli ([ykh-guvenlik.md](ykh-guvenlik.md)
-> §1); birleştirmeyin.
+> **Neden iki ayrı veritabanı rolü?** Uygulamanın şemayı değiştirebilen bir
+> bağlantıyla çalışması, bir SQL enjeksiyon açığının tablo silmesi demektir.
+> Ayrım ürünün güvenlik temeli ([ykh-guvenlik.md](ykh-guvenlik.md) §1);
+> birleştirmeyin.
 
 ### Neden `-hex 24`, `-base64 32` değil
 
-İki ayrı sebep, ikisi de önemli:
-
-**1 · Alfabe.** Parola bir bağlantı adresinin içine giriyor:
-
-```
-postgres://ykh_app:PAROLA@postgres:5432/ykhkdp
-```
-
-`openssl rand -base64` çıktısında `/` `+` `=` bulunabiliyor. `/` bu adresi
-**ayrıştırılamaz** yapıyor, `@` ise ana makine adını kaydırıyor. Ölçüldü:
+**1 · Alfabe.** Yukarıda anlatılan sebep: `-base64` çıktısında `/` `+` `=`
+bulunabiliyor ve bağlantı adresini bozuyor. Ölçüldü:
 
 ```
 base64 · "/" içeriyor   → AYRIŞTIRILAMADI: Invalid URL
 hex                     → DOĞRU
 ```
 
-`-hex` çıktısı yalnızca `0-9a-f` — hiçbir kaçış gerektirmiyor. Kurulum artık
-bunu **kontrol ediyor**: adresi bozacak bir karakter varsa hata verip duruyor,
-üretimde "bazen bağlanamıyor" diye aranan bir kusur doğmuyor.
+`-hex` çıktısı yalnızca `0-9a-f` — hiçbir kaçış gerektirmiyor.
 
-**2 · Uzunluk.** `-hex 24` **24 bayt** rastgelelik üretir = **192 bit**
-= 48 karakter. Kaba kuvvetle kırmak için gereken deneme sayısı 2¹⁹²; evrenin
-yaşı boyunca saniyede trilyon deneme yapsan bitiremezsin. 32 bayt (256 bit)
-yanlış değil, sadece **gereksiz** — ikisi de "asla kırılamaz" kategorisinde ve
-48 karakter panele yapıştırmak için daha rahat.
-
-İstersen `-hex 32` kullan, hiçbir şey bozulmaz. Kural şu: **`-hex` olsun ve en
-az 24 bayt olsun.**
+**2 · Uzunluk.** `-hex 24` = **24 bayt** rastgelelik = **192 bit** = 48
+karakter. Kırmak için 2¹⁹² deneme gerekir; evrenin yaşı boyunca saniyede
+trilyon deneme yapsan bitiremezsin. 32 bayt (256 bit) yanlış değil, sadece
+**gereksiz**. İstersen `-hex 32` kullan. Kural: **`-hex` olsun, en az 24 bayt
+olsun.**
 
 ---
 
-## 2. Dokploy'da proje ve uygulama oluştur
+## 2b. Compose uygulamasını oluştur
 
-1. Panelde **Projects** → **Create Project**. Ad: `ykh-kdp`. Kaydet.
-2. Projenin içinde **Create Service** → **Compose**.
-   - "Application" değil, **Compose** — dört servis var, tek uygulama değil.
-3. Ad: `ykh`. Kaydet.
-4. Açılan ekranda **General** sekmesi:
+1. Aynı projenin içinde **Create Service** → **Compose**.
+   - "Application" değil, **Compose** — üç servis var.
+2. Ad: `ykh`. Kaydet.
+3. **General** sekmesi:
    - **Provider**: `GitHub`
    - Depo listesi boşsa **Settings → Git → GitHub → Install GitHub App** ile
-     Dokploy'a erişim ver, sonra buraya dön.
+     erişim ver, sonra buraya dön.
    - **Repository**: `ktlesr/ykhkdp`
    - **Branch**: `main`
    - **Compose Path**: `docker-compose.production.yml`
-5. **Save**. **Deploy'a HENÜZ BASMA** — önce ortam değişkenleri.
+4. **Save**. **Deploy'a HENÜZ BASMA.**
+
+> **Ağ hakkında.** Compose dosyası `dokploy-network` ağına dışarıdan bağlanıyor
+> — Dokploy'un veritabanı servisleri orada duruyor. Kendi ağını kursaydı
+> uygulama veritabanını **göremezdi**. Dokploy bu ağı kendisi oluşturur; farklı
+> bir ad kullanıyorsa sunucuda `docker network ls` ile bak ve compose
+> dosyasının son satırındaki adı değiştir.
 
 ---
 
@@ -119,25 +154,28 @@ az 24 bayt olsun.**
 `<...>` yazan yerleri doldur.
 
 ```env
-# ══ 1 · VERİTABANI ══════════════════════════════════════════════════════════
-# 1. openssl çıktısı. Şema sahibi; yalnızca kurulum servisi kullanır.
-POSTGRES_PAROLA=<1. çıktı>
+# ══ 1 · DOKPLOY'DAKİ VERİTABANI ═════════════════════════════════════════════
+# Dördü de Dokploy → Databases → (servisiniz) ekranından okunur.
+YKH_DB_SUNUCU=<internal host · ör. ykhkdp-db-a1b2c3>
+YKH_DB_ADI=<database name · ör. ykhkdp>
+YKH_DB_SAHIP=<database user · genelde postgres>
+POSTGRES_PAROLA=<database password · Dokploy'un ürettiği değer>
 
-# 2. openssl çıktısı. Uygulama rolü; web ve worker bunu kullanır, RLS uygulanır.
-# Yalnızca harf/rakam olmalı — bağlantı adresinin içine giriyor.
-YKH_APP_PAROLA=<2. çıktı>
+# ══ 2 · UYGULAMA ROLÜ ═══════════════════════════════════════════════════════
+# openssl rand -hex 24 · 1. çıktı. Yalnızca harf/rakam olmalı.
+YKH_APP_PAROLA=<1. çıktı>
 
-# ══ 2 · İLK YÖNETİCİ HESABI ═════════════════════════════════════════════════
+# ══ 3 · İLK YÖNETİCİ HESABI ═════════════════════════════════════════════════
 # Kurulumda bir kez açılır. Zaten varsa dokunulmaz, parola sıfırlanmaz.
 YKH_YONETICI_EPOSTA=ad.soyad@kurumun.gov.tr
-YKH_YONETICI_PAROLA=<3. çıktı>
+YKH_YONETICI_PAROLA=<2. çıktı>
 YKH_YONETICI_AD=Ad Soyad
 
-# ══ 3 · ÜST ÖLÇEKLİ BELGELER ════════════════════════════════════════════════
+# ══ 4 · ÜST ÖLÇEKLİ BELGELER ════════════════════════════════════════════════
 # İLK kurulumda `evet`. Kurulum bitince `hayir` yapıp yeniden dağıt (§6).
 YKH_KUR_BELGELER=evet
 
-# ══ 4 · YAPAY ZEKÂ ══════════════════════════════════════════════════════════
+# ══ 5 · YAPAY ZEKÂ ══════════════════════════════════════════════════════════
 # BOŞ BIRAKILABİLİR. Anahtar yoksa çevrimdışı deterministik istemci devreye
 # girer: doğrulama zinciri aynen çalışır, puanlar ve NACE eşleşmesi kaba olur.
 OPENAI_API_KEY=
@@ -146,11 +184,8 @@ OPENAI_API_KEY=
 # `latest` YASAK — hem uygulama hem veritabanı kısıtı reddeder.
 YKH_MODEL_SNAPSHOT=
 
-# ══ 5 · WORKER VE LOG ═══════════════════════════════════════════════════════
-# Kuyruk boşken bekleme (ms). Üretimde 5000 yeterli; düşürmek maliyeti artırır.
+# ══ 6 · WORKER VE LOG ═══════════════════════════════════════════════════════
 YKH_WORKER_ARALIK=5000
-
-# debug | info | uyari | hata
 YKH_LOG_SEVIYE=info
 ```
 
@@ -158,66 +193,46 @@ YKH_LOG_SEVIYE=info
 
 Compose dosyasının okuduğu **her** değişken — başka yok:
 
-| Değişken | Zorunlu | Varsayılan | Nerede kullanılır |
-|---|---|---|---|
-| `POSTGRES_PAROLA` | **evet** | — | postgres, kurulum |
-| `YKH_APP_PAROLA` | **evet** | — | kurulum, web, worker |
-| `YKH_YONETICI_EPOSTA` | **evet** | — | kurulum |
-| `YKH_YONETICI_PAROLA` | **evet** | — | kurulum |
-| `YKH_YONETICI_AD` | hayır | `Yönetici` | kurulum |
-| `YKH_KUR_BELGELER` | hayır | `hayir` | kurulum |
-| `OPENAI_API_KEY` | hayır | boş | web, worker |
-| `YKH_MODEL_SNAPSHOT` | hayır | boş | web, worker |
-| `YKH_WORKER_ARALIK` | hayır | `5000` | worker |
-| `YKH_LOG_SEVIYE` | hayır | `info` | hepsi |
+| Değişken | Zorunlu | Varsayılan | Nereden gelir | Nerede kullanılır |
+|---|---|---|---|---|
+| `YKH_DB_SUNUCU` | **evet** | — | Dokploy | kurulum, web, worker |
+| `YKH_DB_ADI` | **evet** | — | Dokploy | kurulum, web, worker |
+| `YKH_DB_SAHIP` | **evet** | — | Dokploy | kurulum |
+| `POSTGRES_PAROLA` | **evet** | — | **Dokploy** | kurulum |
+| `YKH_DB_PORT` | hayır | `5432` | Dokploy | kurulum, web, worker |
+| `YKH_APP_PAROLA` | **evet** | — | sen üretirsin | kurulum, web, worker |
+| `YKH_YONETICI_EPOSTA` | **evet** | — | sen seçersin | kurulum |
+| `YKH_YONETICI_PAROLA` | **evet** | — | sen üretirsin | kurulum |
+| `YKH_YONETICI_AD` | hayır | `Yönetici` | sen | kurulum |
+| `YKH_KUR_BELGELER` | hayır | `hayir` | sen | kurulum |
+| `OPENAI_API_KEY` | hayır | boş | OpenAI | web, worker |
+| `YKH_MODEL_SNAPSHOT` | hayır | boş | sen | web, worker |
+| `YKH_WORKER_ARALIK` | hayır | `5000` | sen | worker |
+| `YKH_LOG_SEVIYE` | hayır | `info` | sen | hepsi |
+| `DATABASE_URL_OWNER` | hayır | parçalardan | gelişmiş | kurulum |
+| `DATABASE_URL` | hayır | parçalardan | gelişmiş | kurulum, web, worker |
 
 Zorunlu olanlardan biri eksikse **kurulum başlamadan durur** ve hangisinin
-eksik olduğunu yazar. Sessizce yanlış çalışmaz.
+eksik olduğunu adıyla yazar. Sessizce yanlış çalışmaz.
 
-### `.env` ile bu liste neden farklı
+### `DATABASE_URL` neden listede "hayır" yazıyor
 
-Yereldeki `.env` dosyanda `DATABASE_URL` ve `DATABASE_URL_OWNER` var, yukarıdaki
-listede yok. Eksiklik değil:
-
-| | Postgres nerede | Adresi kim yazıyor |
-|---|---|---|
-| yerel | `localhost:5470` | sen, `.env` içinde |
-| üretim | `postgres` konteyneri | **compose**, iki paroladan |
-
-Compose şunları kendisi kuruyor:
+Yereldeki `.env` dosyanda `DATABASE_URL` ve `DATABASE_URL_OWNER` elle yazılı.
+Üretimde bunları **yazmana gerek yok**: compose ikisini de yukarıdaki
+parçalardan kuruyor.
 
 ```
-DATABASE_URL       = postgres://ykh_app:${YKH_APP_PAROLA}@postgres:5432/ykhkdp
-DATABASE_URL_OWNER = postgres://ykh_owner:${POSTGRES_PAROLA}@postgres:5432/ykhkdp
+DATABASE_URL_OWNER = postgres://SAHIP:POSTGRES_PAROLA@SUNUCU:PORT/AD
+DATABASE_URL       = postgres://ykh_app:YKH_APP_PAROLA@SUNUCU:PORT/AD
 ```
 
-> **Dokploy'a `DATABASE_URL` YAZMA.** Compose her servisin `environment:`
-> bloğunu kendisi dolduruyor ve o blok bu dosyadan gelen aynı adlı değişkeni
-> **ezer**. Yazarsan hiçbir şey olmaz — ama "yazdım, neden çalışmıyor" diye
-> saatlerce aranır. Bağlantı adresini gerçekten değiştirmek istersen
-> düzenlenecek yer `docker-compose.production.yml` dosyasıdır.
+Aynı sunucu, aynı veritabanı — adresi iki kez yazmıyorsun, birinde yazım hatası
+yapma ihtimali yok.
 
-Yukarıdaki on değişken compose'un okuduğu değişkenlerin **tamamıdır**. Kendin
-doğrulayabilirsin:
-
-```bash
-diff <(grep -oE '\$\{[A-Z_]+' docker-compose.production.yml | tr -d '${' | sort -u)      <(grep -oE '^[A-Z_]+=' .env.production.example | tr -d '=' | sort)
-```
-
-Çıktı boşsa iki liste birebir aynıdır.
-
-### Kodun okuduğu diğer değişkenler
-
-Bunlar compose'un işi değil, bilgi olsun diye:
-
-| Değişken | Nerede | Not |
-|---|---|---|
-| `DATABASE_URL` | web, worker, kurulum | compose kuruyor |
-| `DATABASE_URL_OWNER` | **yalnızca kurulum** | compose kuruyor; web asla almaz |
-| `NODE_ENV` | web | compose `production` yazıyor |
-| `YKH_EVAL_TEKRAR` | `pnpm ai:eval` | yalnızca geliştirme, üretimde kullanılmaz |
-
-**Save** ile kaydet.
+**Yine de doğrudan vermek istersen** (ör. `?sslmode=require` eklemek için) ikisi
+de geçersiz kılınabilir. O zaman **ikisini birden** doldur: biri parçalardan,
+diğeri elden gelirse ikisi farklı veritabanına bakabilir ve bunu ancak veri
+kaybolduğunda fark edersin.
 
 ---
 
@@ -385,6 +400,8 @@ Bu rehber yazılmadan önce tüm yığın yerelde ayağa kaldırıldı:
 kurulum   13 migration · ykh_app parolası ayarlandı · 3190 NACE · 26 ajans ·
           648 resmî konu · 81 ilde 2027 dönemi · yönetici açıldı ·
           324 mevcut aday · 594 belge parçası
+          (ölçüm paketli Postgres ile alındı; sonra veritabanı Dokploy'un
+           servisine taşındı — kurulum adımının kendisi değişmedi)
 web       HTTP/1.1 200 OK · hero ve kanıt ağı render oldu
 worker    worker_basladi · aralik 5000 · maksDeneme 3
 imaj      web 260 MB · worker 286 MB
@@ -417,6 +434,10 @@ Son iki blok ölçüm yanlışını da içeriyor:
 | Belirti | Sebep | Çözüm |
 |---|---|---|
 | `kurulum`: "… tanımlı değil" | zorunlu değişken eksik | §3'teki tabloya bak |
+| `kurulum`: "geçerli bir bağlantı adresi değil" | veritabanı parolasında `/` `@` `:` var | Dokploy'un veritabanı ekranından parolayı harf+rakam yap |
+| `kurulum`: `getaddrinfo ENOTFOUND` | `YKH_DB_SUNUCU` yanlış ya da ağ bağlı değil | Dokploy'un iç ana makine adını kullan; `docker network ls` ile ağ adını doğrula |
+| `kurulum`: "password authentication failed" | `POSTGRES_PAROLA` Dokploy'daki değerle aynı değil | ekrandan kopyala, boşluk bırakma |
+| `kurulum`: "permission denied to create role" | `YKH_DB_SAHIP` superuser değil | Dokploy'un oluşturduğu kullanıcıyı kullan |
 | `kurulum`: "YKH_APP_PAROLA varsayılan değerde" | depodaki sabit parola bırakılmış | `openssl rand -hex 24` |
 | `kurulum`: "yalnızca harf, rakam ve . _ ~ - içerebilir" | base64 parola kullanılmış | `openssl rand -hex 24` |
 | `kurulum`: "en az 12 karakter olmalı" | yönetici parolası kısa | uzat |
