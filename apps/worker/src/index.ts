@@ -14,7 +14,9 @@ import { log } from "@ykh/observability";
  */
 
 const SERVIS: Baglam = { gonderenRef: null, rol: "yonetici" };
-const ARALIK = Number(process.env.YKH_WORKER_ARALIK ?? 2000);
+// `||` bilerek: compose tanımsız bir değişkeni BOŞ DİZGE olarak geçiriyor ve
+// `??` boş dizgeyi yakalamaz — `Number("")` sıfır verir, döngü CPU'yu yakardı.
+const ARALIK = Number(process.env.YKH_WORKER_ARALIK || 2000);
 export const MAKS_DENEME = 3;
 
 let calisiyor = true;

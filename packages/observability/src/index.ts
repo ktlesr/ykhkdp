@@ -15,7 +15,9 @@ export type Olay = {
 };
 
 const SIRA: Record<Seviye, number> = { debug: 10, info: 20, uyari: 30, hata: 40 };
-const ESIK = SIRA[(process.env.YKH_LOG_SEVIYE as Seviye) ?? "info"] ?? 20;
+// Boş dizge `??` tetiklemez ama `SIRA[""]` de undefined döner; sondaki `?? 20`
+// zaten karşılıyor. Yine de niyet açık olsun diye `||`.
+const ESIK = SIRA[(process.env.YKH_LOG_SEVIYE || "info") as Seviye] ?? 20;
 
 /**
  * Kişisel veri log'a yazılmaz. Bu alanlar görülürse maskelenir — brief §4

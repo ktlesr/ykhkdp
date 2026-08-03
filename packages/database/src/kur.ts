@@ -239,7 +239,7 @@ export async function kur(): Promise<string> {
     `;
     await sql`
       insert into kimlik (gonderen_ref, eposta, ad_soyad, parola_hash)
-      values (${g.ref}, ${eposta}, ${process.env.YKH_YONETICI_AD ?? "Yönetici"}, ${await parolaOzetle(parola)})
+      values (${g.ref}, ${eposta}, ${process.env.YKH_YONETICI_AD?.trim() || "Yönetici"}, ${await parolaOzetle(parola)})
     `;
     yoneticiRef = g.ref;
     rapor.push("yönetici hesabı açıldı");

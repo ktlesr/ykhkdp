@@ -1,49 +1,41 @@
 # ── YKH-KDP · üretim (Dokploy) ────────────────────────────────────────────────
 #
-# Dokploy'da "Compose" tipi bir uygulama olarak kullanılır. İki servis:
-#
+# İki servis:
 #   web       Next.js; alan adı ve TLS Dokploy tarafından bağlanır
 #   worker    açılışta şemayı kurar, sonra AI değerlendirme döngüsüne girer
 #
-# VERİTABANI BURADA DEĞİL. Dokploy'un kendi PostgreSQL servisi kullanılıyor:
-# yedekleme, izleme ve sürüm yükseltme onun panelinden yönetiliyor. Paketli
-# bir Postgres konteyneri olsaydı iki veritabanı doğardı ve Dokploy'un hazır
-# yedekleme ekranı işe yaramazdı.
+# ═══ BU DOSYADA HİÇ AKILLILIK YOK — BİLEREK ═════════════════════════════════
 #
-# BAĞLANTI ADRESİ İKİ PARÇADAN KURULUYOR — ve tek yerden:
+# Değişkenler DÜZ `${AD}` biçiminde. Varsayılan (`:-`), zorunluluk (`:?`) ve
+# iç içe ifade YOK. Sebebi Dokploy'da ölçülen iki davranış:
 #
-#   DATABASE_URL_OWNER  →  YKH_DB_SAHIP  + POSTGRES_PAROLA   (şema sahibi)
-#   DATABASE_URL        →  ykh_app       + YKH_APP_PAROLA    (uygulama rolü)
+#   1. YAML birleştirme anahtarı (`<<: *ankra`) düşüyor — ortak tanım
+#      servislere hiç ulaşmadı.
+#   2. `${A:-…${B}…}` biçimi çözülmüyor — `DATABASE_URL` boş geldi ve uygulama
+#      "üretimde tanımlı değil" diyerek durdu.
 #
-# İkisi de aynı sunucu ve aynı veritabanı adını kullanıyor. Böylece adresi iki
-# kez yazma ve birinde yazım hatası yapma ihtimali yok. Gerekirse ikisi de
-# doğrudan geçersiz kılınabilir (ör. TLS parametresi eklemek için).
+# İkisi de yerelde `docker compose config` ile DOĞRU çalışıyordu; fark
+# Dokploy'un compose dosyasını kendi ayrıştırıcısından geçirmesi. Bu yüzden
+# artık hiçbir şey türetilmiyor: ne verirseniz o gidiyor.
 #
-# ŞEMAYI WORKER KURAR. Ayrı bir tek seferlik `kurulum` servisi vardı ve
-# Dokploy onu çalıştırmadı; sonuç `relation "oneri" does not exist` oldu.
-# Web ilk saniyelerde şema henüz yokken hata verebilir ve kendiliğinden
-# düzelir — kalıcı olarak bozuk kalmaktansa kısa süre eksik olması iyidir.
+# Eksik ya da tutarsız yapılandırmayı UYGULAMA yakalıyor ve ne yapılacağını
+# yazıyor (`packages/database/src/kur.ts`, `baglanti.ts`):
+#   · adres ayrıştırılamıyorsa                        → sebebini ve çözümünü söyler
+#   · uygulama rolü `ykh_app` değilse                 → açılmaz (RLS baypas edilirdi)
+#   · yerel adrese bakıyorsa                          → açılmaz
+#   · DATABASE_URL parolası YKH_APP_PAROLA ile ayrıysa → kurulum durur
 #
-# AĞ: Dokploy'un veritabanı servisleri `dokploy-network` üzerinde durur. Bu
-# compose kendi ağını kursaydı uygulama veritabanını GÖREMEZDİ ve hata
-# "bağlanamıyor" olurdu — sebebi hiçbir yerde yazmazdı. Ağ dışarıdan bağlanıyor.
-
-# YAML BİRLEŞTİRME ANAHTARI KULLANILMIYOR — bilerek.
+# ═══ AĞ ═════════════════════════════════════════════════════════════════════
 #
-# Yaşandı: ortak bir ankra tanımlanıp servislere birleştirme anahtarıyla
-# veriliyordu. Yerelde `docker compose config` doğru çözüyordu ama Dokploy
-# compose dosyasını AYRIŞTIRIP YENİDEN YAZIYOR ve birleştirme o turda düşüyor.
-# Sonuç: `DATABASE_URL` konteynere hiç ulaşmadı, uygulama "üretimde tanımlı
-# değil" diyerek durdu — hata mesajı doğruydu, sebebi burasıydı.
+# Dokploy'un veritabanı servisleri `dokploy-network` üzerinde durur. Bu compose
+# kendi ağını kursaydı uygulama veritabanını GÖREMEZDİ.
 #
-# Üç satır tekrar, bir satır zarafetten iyi. Değiştirirken üçünü de değiştirin.
+# ═══ ŞEMAYI WORKER KURAR ════════════════════════════════════════════════════
 #
-# VARSAYILANIN İÇİNDE `:?` KONTROLÜ YOK — bilerek. Ölçüldü: Compose
-# `${A:-…${B:?hata}…}` ifadesinde B kontrolünü A VERİLMİŞ OLSA BİLE
-# çalıştırıyor. Yani `DATABASE_URL` doğrudan yapıştırıldığında bile parça
-# değişkenleri istiyor ve dağıtım durduruyordu. Eksik yapılandırmayı artık
-# uygulama yakalıyor: sunucu adı boş kalırsa `adresSec()` hangi değişkenin
-# eksik olduğunu yazarak duruyor.
+# Ayrı bir tek seferlik `kurulum` servisi vardı; Dokploy onu çalıştırmadı ve
+# sonuç `relation "oneri" does not exist` oldu. Kurulum tekrar çalıştırılabilir
+# ve `pg_advisory_xact_lock` ile yarış korumalı, her açılışta koşması güvenli.
+# Web ilk ~30 saniye şema yokken hata verebilir ve kendiliğinden düzelir.
 
 services:
   web:
@@ -53,29 +45,17 @@ services:
     restart: unless-stopped
     networks: [dokploy-network]
     environment:
-      # Web SAHİP bağlantısını ALMAZ. RLS'in uygulandığı tek yol bu:
-      # `ykh_app` superuser değil, tablo sahibi değil, BYPASSRLS taşımıyor.
-      DATABASE_URL: "${DATABASE_URL:-postgres://ykh_app:${YKH_APP_PAROLA}@${YKH_DB_SUNUCU}:${YKH_DB_PORT:-5432}/${YKH_DB_ADI}}"
-      # Paylaşım kartlarının ve sitemap'in mutlak adresi. Verilmezse kartlar
-      # localhost'a bakar ve WhatsApp/LinkedIn/X hiçbir şey gösteremez.
-      YKH_SITE_URL: ${YKH_SITE_URL:-}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      YKH_MODEL_SNAPSHOT: ${YKH_MODEL_SNAPSHOT:-}
-      YKH_LOG_SEVIYE: ${YKH_LOG_SEVIYE:-info}
+      # SAHİP bağlantısını ALMAZ. RLS'in uygulandığı tek yol bu: `ykh_app`
+      # superuser değil, tablo sahibi değil, BYPASSRLS taşımıyor.
+      DATABASE_URL: ${DATABASE_URL}
+      YKH_SITE_URL: ${YKH_SITE_URL}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      YKH_MODEL_SNAPSHOT: ${YKH_MODEL_SNAPSHOT}
+      YKH_LOG_SEVIYE: ${YKH_LOG_SEVIYE}
       NODE_ENV: production
     expose:
       - "3000"
 
-  # Worker AÇILIŞTA ŞEMAYI DA KURAR, sonra değerlendirme döngüsüne girer.
-  #
-  # Önce ayrı bir `kurulum` servisi vardı ve web ondan
-  # `service_completed_successfully` ile bekliyordu. Dokploy'da o servis
-  # çalışmadı; sonuç `relation "oneri" does not exist` oldu ve nedeni panelde
-  # görünmüyordu. Tek seferlik bir servisin çalıştırılmasına GÜVENMEK bu
-  # ortamda yanlış varsayımdı.
-  #
-  # Kurulum zaten tekrar çalıştırılabilir ve `pg_advisory_xact_lock` ile
-  # yarış korumalı: her açılışta koşması güvenli.
   worker:
     build:
       context: .
@@ -84,21 +64,19 @@ services:
     networks: [dokploy-network]
     command: ["sh", "-c", "pnpm db:kur && pnpm worker"]
     environment:
-      DATABASE_URL: "${DATABASE_URL:-postgres://ykh_app:${YKH_APP_PAROLA}@${YKH_DB_SUNUCU}:${YKH_DB_PORT:-5432}/${YKH_DB_ADI}}"
+      DATABASE_URL: ${DATABASE_URL}
       # SAHİP bağlantısı YALNIZCA burada. Web onu görmüyor — internete bakan
-      # yüzey hâlâ yalnızca `ykh_app` rolüyle çalışıyor ve RLS orada uygulanıyor.
-      # Bilinçli bir genişleme: şema kurulumu bir yerde olmak zorunda ve
-      # worker dışarıdan istek almıyor.
-      DATABASE_URL_OWNER: "${DATABASE_URL_OWNER:-postgres://${YKH_DB_SAHIP}:${POSTGRES_PAROLA}@${YKH_DB_SUNUCU}:${YKH_DB_PORT:-5432}/${YKH_DB_ADI}}"
-      YKH_APP_PAROLA: ${YKH_APP_PAROLA:?YKH_APP_PAROLA zorunlu}
-      YKH_YONETICI_EPOSTA: ${YKH_YONETICI_EPOSTA:?YKH_YONETICI_EPOSTA zorunlu}
-      YKH_YONETICI_PAROLA: ${YKH_YONETICI_PAROLA:?YKH_YONETICI_PAROLA zorunlu}
-      YKH_YONETICI_AD: ${YKH_YONETICI_AD:-Yönetici}
-      YKH_KUR_BELGELER: ${YKH_KUR_BELGELER:-hayir}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      YKH_MODEL_SNAPSHOT: ${YKH_MODEL_SNAPSHOT:-}
-      YKH_WORKER_ARALIK: ${YKH_WORKER_ARALIK:-5000}
-      YKH_LOG_SEVIYE: ${YKH_LOG_SEVIYE:-info}
+      # yüzey hâlâ yalnızca `ykh_app` rolüyle çalışıyor.
+      DATABASE_URL_OWNER: ${DATABASE_URL_OWNER}
+      YKH_APP_PAROLA: ${YKH_APP_PAROLA}
+      YKH_YONETICI_EPOSTA: ${YKH_YONETICI_EPOSTA}
+      YKH_YONETICI_PAROLA: ${YKH_YONETICI_PAROLA}
+      YKH_YONETICI_AD: ${YKH_YONETICI_AD}
+      YKH_KUR_BELGELER: ${YKH_KUR_BELGELER}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      YKH_MODEL_SNAPSHOT: ${YKH_MODEL_SNAPSHOT}
+      YKH_WORKER_ARALIK: ${YKH_WORKER_ARALIK}
+      YKH_LOG_SEVIYE: ${YKH_LOG_SEVIYE}
 
 networks:
   dokploy-network:

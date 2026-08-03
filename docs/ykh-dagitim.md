@@ -44,69 +44,57 @@ hazır yedekleme ekranı işe yaramazdı.
 2. Sürüm **17** seç (uygulama Postgres 17 ile geliştirildi ve sınandı).
 3. Kaydet ve **Deploy** et.
 
-Servis ayağa kalkınca **iki yoldan biriyle** bağlanacaksın.
-
-> ## ⚠ DOKPLOY'UN VERDİĞİ ADRESİ `DATABASE_URL` OLARAK KULLANMA
->
-> Yaşandı: Dokploy'un "Internal Connection URL" değeri hem
-> `DATABASE_URL_OWNER` hem `DATABASE_URL` olarak yapıştırıldı. O adres **şema
-> sahibinin** adresi ve o rol çoğu kurulumda superuser — **RLS'i baypas eder.**
->
-> Sonuç sessizdir ve tam da bu yüzden tehlikelidir: sayfalar açılır, hiçbir
-> hata görünmez, ama **her yatırımcı herkesin önerisini görür.** Bu ürünün
-> gizlilik modelinin tamamı RLS'e dayanıyor ve RLS yalnızca `ykh_app` rolünde
-> uygulanıyor.
->
-> Uygulama artık bunu reddediyor: `DATABASE_URL` `ykh_app` dışında bir rolle
-> geliyorsa açılmıyor ve sebebini yazıyor.
-
-### Yol A — parçaları ver (önerilen)
-
-Dört değeri gir, iki adresi de compose kursun. Uygulama rolünü **compose
-yazar**, yani yanlış rolle bağlanmak yapısal olarak imkânsız hâle gelir.
-Dokploy → Databases → servisin ekranından not al:
-
-| Dokploy'daki alan | Env değişkeni | Örnek |
-|---|---|---|
-| Internal host (bağlantı adresinde `@` ile `:5432` arası) | `YKH_DB_SUNUCU` | `ykhkdp-db-a1b2c3` |
-| Database Name | `YKH_DB_ADI` | `ykhkdp` |
-| Database User | `YKH_DB_SAHIP` | `postgres` |
-| Database Password | `POSTGRES_PAROLA` | Dokploy'un ürettiği değer |
-
-> **Evet, `POSTGRES_PAROLA` tam olarak bu servisin parolası.** Uyduracağın bir
-> şey değil — Dokploy ekranından kopyalayacaksın.
-
-Bu dördü yeterlidir. Compose iki adresi şöyle kurar:
+Servis ayağa kalkınca ekranından **"Internal Connection URL"** değerini kopyala.
+Şuna benzer:
 
 ```
-DATABASE_URL_OWNER = postgres://YKH_DB_SAHIP:POSTGRES_PAROLA@SUNUCU:5432/AD
-DATABASE_URL       = postgres://ykh_app:YKH_APP_PAROLA@SUNUCU:5432/AD
-                              └──────┘ uygulama rolü — compose yazar, sen değil
+postgres://ykhadmin:PAROLA@ykhkdp-db-a1b2c3:5432/ykhkdp_db
 ```
 
-### Yol B — adresleri elle ver (yalnızca gerekiyorsa)
+Bu adres **iki kez** kullanılacak, birbirinden yalnızca kullanıcı ve parolayla
+ayrılarak:
 
-`?sslmode=require` gibi bir parametre eklemen gerekiyorsa `DATABASE_URL_OWNER`
-ve `DATABASE_URL` satırlarını doğrudan verebilirsin. O zaman **uygulama
-adresindeki kullanıcı `ykh_app`, parolası `YKH_APP_PAROLA` olmak zorunda** —
-Dokploy'un verdiği kullanıcı adı değil.
+```env
+# şema sahibi — Dokploy'un verdiği adres, olduğu gibi
+DATABASE_URL_OWNER=postgres://ykhadmin:PAROLA@ykhkdp-db-a1b2c3:5432/ykhkdp_db
+
+# uygulama rolü — yalnızca kullanıcı ve parola farklı
+DATABASE_URL=postgres://ykh_app:YKH_APP_PAROLA@ykhkdp-db-a1b2c3:5432/ykhkdp_db
+                       └──────┘ └────────────┘
+                       birebir   §2'deki 1. çıktı
+```
+
+Sunucu, port ve veritabanı adı **ikisinde de aynı** olmalı.
+
+> ### Kullanıcı `ykh_app` olmak zorunda
+>
+> Dokploy'un verdiği kullanıcı **şema sahibidir** ve çoğu kurulumda superuser —
+> **RLS'i baypas eder.** Sonuç sessizdir ve tam da bu yüzden tehlikelidir:
+> sayfalar açılır, hiçbir hata görünmez, ama **her yatırımcı herkesin
+> önerisini görür.** Bu ürünün gizlilik modelinin tamamı RLS'e dayanıyor ve
+> RLS yalnızca `ykh_app` rolünde uygulanıyor.
+>
+> Uygulama bunu reddediyor: `DATABASE_URL` başka bir rolle geliyorsa açılmıyor.
 
 > ### Parolada özel karakter varsa değiştir
 >
-> Parola bir bağlantı adresinin içine giriyor:
-> `postgres://kullanici:PAROLA@sunucu:5432/veritabani`
+> `/` adresi **ayrıştırılamaz** yapar, `@` ana makine adını kaydırır. Dokploy
+> rastgele parola üretiyor; harf ve rakam dışında bir şey varsa veritabanı
+> ekranından değiştir (`openssl rand -hex 24`). Kurulum bunu kontrol ediyor.
+
+> ### Compose hiçbir şey türetmiyor
 >
-> Dokploy rastgele parola üretiyor ve içinde `/` `@` `:` bulunabiliyor. `/`
-> adresi **ayrıştırılamaz** yapar, `@` ana makine adını kaydırır. İkisi de
-> "bağlanamıyor" olarak görünür ve sebebi hiçbir yerde yazmaz.
+> İlk sürümlerde adres parçalardan (`YKH_DB_SUNUCU` vb.) kuruluyordu. Dokploy
+> `${AD:-varsayilan}` biçimini **çözemiyor** — ölçüldü: `DATABASE_URL` boş
+> geldi ve uygulama durdu. Aynı şekilde YAML birleştirme anahtarını da
+> düşürüyor. İkisi de yerelde doğru çalışıyordu; fark Dokploy'un compose
+> dosyasını kendi ayrıştırıcısından geçirmesi.
 >
-> Parolada harf ve rakam dışında bir şey varsa Dokploy'un veritabanı ekranından
-> değiştir. `openssl rand -hex 24` çıktısı güvenlidir. Kurulum bunu ayrıca
-> kontrol ediyor ve bozuksa çözümüyle birlikte hata veriyor.
+> Artık compose'da hiç varsayılan, hiç iç içe ifade yok. **Ne verirsen o
+> gider.** Eksik ya da tutarsız yapılandırmayı uygulama yakalıyor.
 
 **Ana makine adı sunucunun IP'si değildir.** Uygulama ile veritabanı aynı
-Docker ağında konuşuyor; dışarıdan erişilebilir bir adres kullanmana gerek yok
-ve kullanmamalısın.
+Docker ağında konuşuyor.
 
 ---
 
@@ -189,40 +177,29 @@ olsun.**
 `<...>` yazan yerleri doldur.
 
 ```env
-# ══ 1 · DOKPLOY'DAKİ VERİTABANI ═════════════════════════════════════════════
-# Dördü de Dokploy → Databases → (servisiniz) ekranından okunur.
-YKH_DB_SUNUCU=<internal host · ör. ykhkdp-db-a1b2c3>
-YKH_DB_ADI=<database name · ör. ykhkdp>
-YKH_DB_SAHIP=<database user · genelde postgres>
-POSTGRES_PAROLA=<database password · Dokploy'un ürettiği değer>
+# ══ 1 · VERİTABANI ADRESLERİ ════════════════════════════════════════════════
+DATABASE_URL_OWNER=<Dokploy'un verdiği Internal Connection URL, olduğu gibi>
+DATABASE_URL=<aynı adres, kullanıcı ykh_app, parola YKH_APP_PAROLA>
 
-# ══ 2 · UYGULAMA ROLÜ ═══════════════════════════════════════════════════════
-# openssl rand -hex 24 · 1. çıktı. Yalnızca harf/rakam olmalı.
+# ══ 2 · UYGULAMA ROLÜNÜN PAROLASI ═══════════════════════════════════════════
+# openssl rand -hex 24 · 1. çıktı. DATABASE_URL içindekiyle BİREBİR AYNI.
 YKH_APP_PAROLA=<1. çıktı>
 
 # ══ 3 · İLK YÖNETİCİ HESABI ═════════════════════════════════════════════════
-# Kurulumda bir kez açılır. Zaten varsa dokunulmaz, parola sıfırlanmaz.
 YKH_YONETICI_EPOSTA=ad.soyad@kurumun.gov.tr
-YKH_YONETICI_PAROLA=<2. çıktı>
+YKH_YONETICI_PAROLA=<2. çıktı · en az 12 karakter>
 YKH_YONETICI_AD=Ad Soyad
 
 # ══ 4 · ÜST ÖLÇEKLİ BELGELER ════════════════════════════════════════════════
-# İLK kurulumda `evet`. Kurulum bitince `hayir` yapıp yeniden dağıt (§6).
+# İLK kurulumda `evet` — yoksa yapay zekânın dayanacağı belge olmaz ve her
+# önerinin belge dayanağı 0 kalır. Kurulum bitince `hayir` yapıp yeniden dağıt.
 YKH_KUR_BELGELER=evet
 
 # ══ 5 · SİTE ADRESİ ═════════════════════════════════════════════════════════
-# Alan adınız, şema dahil. WhatsApp, LinkedIn, X, Facebook ve Telegram
-# paylaşımlarındaki kart ile sitemap.xml bu adrese göre kuruluyor. Verilmezse
-# kartlar localhost'a bakar ve hiçbir yerde görünmez.
 YKH_SITE_URL=https://ykh.kurumun.gov.tr
 
 # ══ 6 · YAPAY ZEKÂ ══════════════════════════════════════════════════════════
-# BOŞ BIRAKILABİLİR. Anahtar yoksa çevrimdışı deterministik istemci devreye
-# girer: doğrulama zinciri aynen çalışır, puanlar ve NACE eşleşmesi kaba olur.
 OPENAI_API_KEY=
-
-# Pinli model künyesi. Boş bırakılırsa gpt-4.1-2025-04-14 kullanılır.
-# `latest` YASAK — hem uygulama hem veritabanı kısıtı reddeder.
 YKH_MODEL_SNAPSHOT=
 
 # ══ 7 · WORKER VE LOG ═══════════════════════════════════════════════════════
@@ -234,25 +211,20 @@ YKH_LOG_SEVIYE=info
 
 Compose dosyasının okuduğu **her** değişken — başka yok:
 
-| Değişken | Zorunlu | Varsayılan | Nereden gelir | Nerede kullanılır |
-|---|---|---|---|---|
-| `YKH_DB_SUNUCU` | **evet** | — | Dokploy | kurulum, web, worker |
-| `YKH_DB_ADI` | **evet** | — | Dokploy | kurulum, web, worker |
-| `YKH_DB_SAHIP` | **evet** | — | Dokploy | kurulum |
-| `POSTGRES_PAROLA` | **evet** | — | **Dokploy** | kurulum |
-| `YKH_DB_PORT` | hayır | `5432` | Dokploy | kurulum, web, worker |
-| `YKH_APP_PAROLA` | **evet** | — | sen üretirsin | kurulum, web, worker |
-| `YKH_YONETICI_EPOSTA` | **evet** | — | sen seçersin | kurulum |
-| `YKH_YONETICI_PAROLA` | **evet** | — | sen üretirsin | kurulum |
-| `YKH_YONETICI_AD` | hayır | `Yönetici` | sen | kurulum |
-| `YKH_KUR_BELGELER` | hayır | `hayir` | sen | kurulum |
-| `YKH_SITE_URL` | hayır* | boş | sen | web |
-| `OPENAI_API_KEY` | hayır | boş | OpenAI | web, worker |
-| `YKH_MODEL_SNAPSHOT` | hayır | boş | sen | web, worker |
-| `YKH_WORKER_ARALIK` | hayır | `5000` | sen | worker |
-| `YKH_LOG_SEVIYE` | hayır | `info` | sen | hepsi |
-| `DATABASE_URL_OWNER` | hayır | parçalardan | gelişmiş | kurulum |
-| `DATABASE_URL` | hayır | parçalardan | gelişmiş | kurulum, web, worker |
+| Değişken | Zorunlu | Nereden gelir | Nerede kullanılır |
+|---|---|---|---|
+| `DATABASE_URL_OWNER` | **evet** | Dokploy'un verdiği adres | worker |
+| `DATABASE_URL` | **evet** | aynı adres, `ykh_app` rolüyle | web, worker |
+| `YKH_APP_PAROLA` | **evet** | sen üretirsin | worker |
+| `YKH_YONETICI_EPOSTA` | **evet** | sen seçersin | worker |
+| `YKH_YONETICI_PAROLA` | **evet** | sen üretirsin (12+) | worker |
+| `YKH_YONETICI_AD` | hayır | sen | worker |
+| `YKH_KUR_BELGELER` | hayır | sen (`evet` / `hayir`) | worker |
+| `YKH_SITE_URL` | hayır* | alan adın | web |
+| `OPENAI_API_KEY` | hayır | OpenAI | web, worker |
+| `YKH_MODEL_SNAPSHOT` | hayır | sen | web, worker |
+| `YKH_WORKER_ARALIK` | hayır | sen | worker |
+| `YKH_LOG_SEVIYE` | hayır | sen | hepsi |
 
 Zorunlu olanlardan biri eksikse **kurulum başlamadan durur** ve hangisinin
 eksik olduğunu adıyla yazar. Sessizce yanlış çalışmaz.
@@ -270,7 +242,7 @@ adresine bakar ve **hiçbir yerde görünmez**. Log'a bir kez uyarı düşer.
 >
 > Konteynerin içinde `localhost` **konteynerin kendisidir**; veritabanı orada
 > değil. `DATABASE_URL` ve `DATABASE_URL_OWNER` satırlarını buraya **yazma** —
-> compose adresi `YKH_DB_SUNUCU` ve parolalardan kendisi kurar.
+> `DATABASE_URL` içindeki sunucu adı Dokploy'un İÇ ana makine adı olmalı.
 >
 > Uygulama artık bunu kabul etmiyor: `NODE_ENV=production` altında yerel bir
 > adrese bağlanmayı denerse **açık bir hatayla** duruyor ve ne yapılacağını
@@ -524,17 +496,17 @@ Son iki blok ölçüm yanlışını da içeriyor:
 |---|---|---|
 | `worker`: "… tanımlı değil" | zorunlu değişken eksik | §3'teki tabloya bak |
 | `worker`: "geçerli bir bağlantı adresi değil" | veritabanı parolasında `/` `@` `:` var | Dokploy'un veritabanı ekranından parolayı harf+rakam yap |
-| `worker`: `getaddrinfo ENOTFOUND` | `YKH_DB_SUNUCU` yanlış ya da ağ bağlı değil | Dokploy'un iç ana makine adını kullan; `docker network ls` ile ağ adını doğrula |
+| `worker`: `getaddrinfo ENOTFOUND` | adresteki sunucu adı yanlış ya da ağ bağlı değil | Dokploy'un İÇ ana makine adını kullan; `docker network ls` ile ağ adını doğrula |
 | `worker`: "password authentication failed" | `POSTGRES_PAROLA` Dokploy'daki değerle aynı değil | ekrandan kopyala, boşluk bırakma |
-| `worker`: "permission denied to create role" | `YKH_DB_SAHIP` superuser değil | Dokploy'un oluşturduğu kullanıcıyı kullan |
+| `worker`: "permission denied to create role" | `DATABASE_URL_OWNER` kullanıcısı superuser değil | Dokploy'un oluşturduğu kullanıcıyı kullan |
 | Her sayfa 500 · logda `ECONNREFUSED 127.0.0.1:5470` | Ortam sekmesine yerel `.env` yapıştırılmış | `DATABASE_URL` ve `DATABASE_URL_OWNER` satırlarını **sil**, yeniden dağıt |
 | `web`: "üretimde YEREL adrese bakıyor" | aynı sebep, artık açık hatayla | aynı çözüm |
-| `web`: "üretimde tanımlı değil" | `YKH_DB_SUNUCU` vb. eksik | §3'teki tabloya bak |
+| `web`: "üretimde tanımlı değil" | `DATABASE_URL` boş geliyor | ortam sekmesinde tam adres yazılı mı bak |
 | `kurulum`: "YKH_APP_PAROLA varsayılan değerde" | depodaki sabit parola bırakılmış | `openssl rand -hex 24` |
 | `kurulum`: "yalnızca harf, rakam ve . _ ~ - içerebilir" | base64 parola kullanılmış | `openssl rand -hex 24` |
 | `worker`: "en az 12 karakter olmalı" | `YKH_YONETICI_PAROLA` kısa | 12+ karakter yap |
-| `worker`: "DATABASE_URL içindeki parola YKH_APP_PAROLA ile aynı değil" | aynı sırrın iki kopyası ayrışmış | `DATABASE_URL` satırını **sil**, compose kursun |
-| `web`: `password authentication failed for user "ykh_app"` | aynı sebep — ya parolalar ayrışmış ya kurulum düşmüş | önce **worker** loguna bak |
+| `worker`: "DATABASE_URL içindeki parola YKH_APP_PAROLA ile aynı değil" | iki değer ayrışmış | ikisini birebir aynı yap; hata uzunlukları yazar |
+| `web`: `password authentication failed for user "ykh_app"` | parolalar ayrışmış ya da kurulum düşmüş | önce **worker** loguna bak |
 | Giriş yapılamıyor, forma geri dönüyor | HTTPS yok | §4 · Let's Encrypt |
 | Sertifika alınamıyor | DNS henüz yayılmamış | A kaydını doğrula, 15 dk sonra tekrar Deploy |
 | `/ayarlar` boş rapor (ajans hesabı) | `gonderen.ajans_kod` atanmamış | §8'deki SQL |
