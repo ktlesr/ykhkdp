@@ -26,6 +26,18 @@ const varsayilanUygulama = "postgres://ykh_app:ykh_app_parola@localhost:5470/ykh
 const YEREL = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
 
 /**
+ * Hata mesajında adresi gösterirken parolayı siler.
+ *
+ * Açgözlü `.*@` SON `@` işaretine kadar alıyor — bilerek: bozuk adresin sebebi
+ * çoğu zaman paroladaki özel karakter ve o parolanın içinde `@` ya da `/`
+ * olabiliyor. Dar bir kalıp (`[^:@/]*`) tam da o durumda tutmuyor ve parola
+ * log'a düşüyordu (yakalandı: `pa/rola` maskelenmeden yazıldı).
+ */
+function adresMaskele(adres: string): string {
+  return adres.replace(/\/\/([^:/@]*):.*@/, "//$1:***@");
+}
+
+/**
  * ÜRETİMDE YEREL ADRESE BAĞLANMAYI REDDEDER.
  *
  * Yaşanmış kusur: üretimde her sayfa 500 döndü ve tarayıcıda yalnızca "A
@@ -58,7 +70,33 @@ function adresSec(ad: string, varsayilan: string): string {
   try {
     sunucu = new URL(deger).hostname;
   } catch {
-    throw new Error(`${ad} geçerli bir bağlantı adresi değil. Paroladaki '/' veya '@' adresi bozar.`);
+    /**
+     * İki ayrı sebep aynı hataya çıkıyor ve ikisi de sık: paroladaki özel
+     * karakter, ve sunucu adının boş kalması (compose adresi parçalardan
+     * kurarken `YKH_DB_SUNUCU` verilmemişse `…@:5432/…` çıkıyor ve `new URL`
+     * bunu da reddediyor). Hangisi olduğunu bilemediğimiz için ikisini de
+     * söylüyoruz — tek sebebi suçlamak yanlış yere baktırır.
+     */
+    throw new Error(
+      `${ad} geçerli bir bağlantı adresi değil (${adresMaskele(deger)}). ` +
+        "İki sık sebep: (1) paroladaki `/` `@` `:` karakteri adresi bozuyor — " +
+        "parolayı harf+rakam yapın; (2) sunucu adı boş, yani `YKH_DB_SUNUCU` " +
+        "tanımlı değil. Alternatif: Dokploy'un verdiği tam bağlantı adresini " +
+        `${ad} olarak yapıştırın.`,
+    );
+  }
+  if (!sunucu) {
+    /**
+     * `postgres://ykh_app:parola@:5432/veritabani` — sunucu adı boş.
+     * Compose adresi parçalardan kurarken `YKH_DB_SUNUCU` boş kalmışsa böyle
+     * çıkıyor ve `new URL` buna itiraz etmiyor. Bağlantı denemesi anlamsız
+     * bir hataya (`ECONNREFUSED`) düşerdi; eksik olanı adıyla söylüyoruz.
+     */
+    throw new Error(
+      `${ad} içinde sunucu adı yok. Compose adresi parçalardan kuruyor: ` +
+        "`YKH_DB_SUNUCU` ve `YKH_DB_ADI` tanımlı olmalı. Alternatif olarak " +
+        `Dokploy'un verdiği tam bağlantı adresini ${ad} olarak yapıştırın.`,
+    );
   }
   if (YEREL.has(sunucu)) {
     throw new Error(

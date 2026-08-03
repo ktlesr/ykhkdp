@@ -27,9 +27,22 @@
 # compose kendi ağını kursaydı uygulama veritabanını GÖREMEZDİ ve hata
 # "bağlanamıyor" olurdu — sebebi hiçbir yerde yazmazdı. Ağ dışarıdan bağlanıyor.
 
-x-veritabani: &veritabani
-  DATABASE_URL: >-
-    ${DATABASE_URL:-postgres://ykh_app:${YKH_APP_PAROLA}@${YKH_DB_SUNUCU}:${YKH_DB_PORT:-5432}/${YKH_DB_ADI}}
+# YAML BİRLEŞTİRME ANAHTARI KULLANILMIYOR — bilerek.
+#
+# Yaşandı: ortak bir ankra tanımlanıp servislere birleştirme anahtarıyla
+# veriliyordu. Yerelde `docker compose config` doğru çözüyordu ama Dokploy
+# compose dosyasını AYRIŞTIRIP YENİDEN YAZIYOR ve birleştirme o turda düşüyor.
+# Sonuç: `DATABASE_URL` konteynere hiç ulaşmadı, uygulama "üretimde tanımlı
+# değil" diyerek durdu — hata mesajı doğruydu, sebebi burasıydı.
+#
+# Üç satır tekrar, bir satır zarafetten iyi. Değiştirirken üçünü de değiştirin.
+#
+# VARSAYILANIN İÇİNDE `:?` KONTROLÜ YOK — bilerek. Ölçüldü: Compose
+# `${A:-…${B:?hata}…}` ifadesinde B kontrolünü A VERİLMİŞ OLSA BİLE
+# çalıştırıyor. Yani `DATABASE_URL` doğrudan yapıştırıldığında bile parça
+# değişkenleri istiyor ve dağıtım durduruyordu. Eksik yapılandırmayı artık
+# uygulama yakalıyor: sunucu adı boş kalırsa `adresSec()` hangi değişkenin
+# eksik olduğunu yazarak duruyor.
 
 services:
   kurulum:
@@ -40,13 +53,12 @@ services:
     command: ["pnpm", "db:kur"]
     networks: [dokploy-network]
     environment:
-      <<: *veritabani
+      DATABASE_URL: "${DATABASE_URL:-postgres://ykh_app:${YKH_APP_PAROLA}@${YKH_DB_SUNUCU}:${YKH_DB_PORT:-5432}/${YKH_DB_ADI}}"
       # Kurulum SAHİP bağlantısıyla çalışır: migration, `create role`,
       # `create extension pg_trgm` ve `ykh_app` parolasının değiştirilmesi için.
       # Dokploy'un veritabanı kullanıcısı bu işleri yapabilir (resmî imajda
       # POSTGRES_USER superuser'dır).
-      DATABASE_URL_OWNER: >-
-        ${DATABASE_URL_OWNER:-postgres://${YKH_DB_SAHIP:?YKH_DB_SAHIP zorunlu}:${POSTGRES_PAROLA:?POSTGRES_PAROLA zorunlu}@${YKH_DB_SUNUCU:?YKH_DB_SUNUCU zorunlu}:${YKH_DB_PORT:-5432}/${YKH_DB_ADI:?YKH_DB_ADI zorunlu}}
+      DATABASE_URL_OWNER: "${DATABASE_URL_OWNER:-postgres://${YKH_DB_SAHIP}:${POSTGRES_PAROLA}@${YKH_DB_SUNUCU}:${YKH_DB_PORT:-5432}/${YKH_DB_ADI}}"
       YKH_APP_PAROLA: ${YKH_APP_PAROLA:?YKH_APP_PAROLA zorunlu}
       YKH_YONETICI_EPOSTA: ${YKH_YONETICI_EPOSTA:?YKH_YONETICI_EPOSTA zorunlu}
       YKH_YONETICI_PAROLA: ${YKH_YONETICI_PAROLA:?YKH_YONETICI_PAROLA zorunlu}
@@ -68,7 +80,7 @@ services:
     environment:
       # Web SAHİP bağlantısını ALMAZ. RLS'in uygulandığı tek yol bu:
       # `ykh_app` superuser değil, tablo sahibi değil, BYPASSRLS taşımıyor.
-      <<: *veritabani
+      DATABASE_URL: "${DATABASE_URL:-postgres://ykh_app:${YKH_APP_PAROLA}@${YKH_DB_SUNUCU}:${YKH_DB_PORT:-5432}/${YKH_DB_ADI}}"
       # Paylaşım kartlarının ve sitemap'in mutlak adresi. Verilmezse kartlar
       # localhost'a bakar ve WhatsApp/LinkedIn/X hiçbir şey gösteremez.
       YKH_SITE_URL: ${YKH_SITE_URL:-}
@@ -90,7 +102,7 @@ services:
         condition: service_completed_successfully
     environment:
       # Worker da sahip bağlantısını almaz; RLS onun için de uygulanır.
-      <<: *veritabani
+      DATABASE_URL: "${DATABASE_URL:-postgres://ykh_app:${YKH_APP_PAROLA}@${YKH_DB_SUNUCU}:${YKH_DB_PORT:-5432}/${YKH_DB_ADI}}"
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       YKH_MODEL_SNAPSHOT: ${YKH_MODEL_SNAPSHOT:-}
       YKH_WORKER_ARALIK: ${YKH_WORKER_ARALIK:-5000}

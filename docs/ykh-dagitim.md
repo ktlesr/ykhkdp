@@ -44,7 +44,29 @@ hazır yedekleme ekranı işe yaramazdı.
 2. Sürüm **17** seç (uygulama Postgres 17 ile geliştirildi ve sınandı).
 3. Kaydet ve **Deploy** et.
 
-Servis ayağa kalkınca ekranından **dört değeri** not al:
+Servis ayağa kalkınca **iki yoldan biriyle** bağlanacaksın.
+
+### Yol A — tam adresi yapıştır (önerilen)
+
+Dokploy sana hazır bir **"Internal Connection URL"** veriyor. Kopyala:
+
+```env
+DATABASE_URL_OWNER=postgres://postgres:PAROLA@ykh-db-a1b2c3:5432/ykhkdp
+```
+
+Sonra aynı adresi **yalnızca kullanıcı ve parolayı değiştirerek** bir kez daha
+yaz — uygulama rolü için:
+
+```env
+DATABASE_URL=postgres://ykh_app:YKH_APP_PAROLA@ykh-db-a1b2c3:5432/ykhkdp
+```
+
+Bu iki satırı verdiysen aşağıdaki dört değişkene **gerek yok**.
+
+### Yol B — parçaları ver
+
+Adresi iki kez yazmak istemiyorsan dört değeri gir, adresi compose kursun.
+Ekrandan not al:
 
 | Dokploy'daki alan | Env değişkeni | Örnek |
 |---|---|---|
