@@ -112,7 +112,40 @@ export async function asagi(kaçAdim = 1): Promise<string[]> {
   return geri;
 }
 
+/**
+ * UZAK VERİTABANINDA SIFIRLAMAYI REDDEDER.
+ *
+ * `sifirla()` `drop schema public cascade` çalıştırıyor: tüm öneriler,
+ * değerlendirmeler, kullanıcılar ve denetim izi gider. Geliştirme için doğru
+ * araç, üretim için felaket.
+ *
+ * Somut risk şu: dağıtımı yapan kişi üretim kimlik bilgilerini yerel `.env`
+ * dosyasına kopyalıyor (Dokploy ortam sekmesiyle aynı olsun diye) ve o
+ * dosyayla `pnpm db:reset` çalıştırdığı an üretimi siliyor. Tek koruma
+ * "dikkat et" olmamalı.
+ *
+ * Kural adres tabanlı: sunucu localhost değilse çalışmaz. `YKH_RESET_ONAY`
+ * ile bilinçli olarak aşılabilir — kapıyı kilitliyoruz, duvarı örmüyoruz.
+ */
+function yerelMi(adres: string): boolean {
+  try {
+    return ["localhost", "127.0.0.1", "::1", "[::1]", ""].includes(new URL(adres).hostname);
+  } catch {
+    return false;
+  }
+}
+
 export async function sifirla(): Promise<void> {
+  const adres = process.env.DATABASE_URL_OWNER ?? "";
+  if (adres && !yerelMi(adres) && process.env.YKH_RESET_ONAY !== "evet") {
+    throw new Error(
+      `db:reset UZAK bir veritabanına bakıyor (${new URL(adres).hostname}) ve REDDEDİLDİ. ` +
+        "Bu komut `drop schema public cascade` çalıştırır: tüm öneriler, " +
+        "değerlendirmeler ve kullanıcılar gider. Üretimde `pnpm db:kur` kullanın. " +
+        "Gerçekten uzak bir veritabanını sıfırlamak istiyorsanız " +
+        "`YKH_RESET_ONAY=evet` ile çalıştırın.",
+    );
+  }
   await veritabaniHazirla();
   const sql = sahip();
   await sql.unsafe(`
