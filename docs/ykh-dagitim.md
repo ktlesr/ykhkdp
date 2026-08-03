@@ -41,7 +41,8 @@ hazır yedekleme ekranı işe yaramazdı.
 
 1. Panelde **Projects** → projeni aç → **Create Service** → **Database** →
    **PostgreSQL**.
-2. Sürüm **17** seç (uygulama Postgres 17 ile geliştirildi ve sınandı).
+2. Sürüm **17 ya da 18** — ikisi de sınandı. Geliştirme 17 ile yapıldı,
+   üretim 18 üzerinde doğrulandı.
 3. Kaydet ve **Deploy** et.
 
 Servis ayağa kalkınca ekranından **"Internal Connection URL"** değerini kopyala.
@@ -458,7 +459,34 @@ yönetici hesabı zaten var · 0 mevcut aday · …
 
 ---
 
-## 10. Yerelde alınan ölçümler
+## 10. Üretimde doğrulandı
+
+`ykhkdp.ktlsr.com` · Dokploy · PostgreSQL 18 · 2026-08-03:
+
+```
+Kurulum tamam — 13 migration · ykh_app parolası ayarlandı · 3190 NACE kodu ·
+26 ajans · 648 resmî yatırım konusu · 81 ilde 2027 dönemi ·
+yönetici hesabı açıldı · 324 mevcut aday · 594 belge parçası
+{"seviye":"info","mesaj":"worker_basladi","aralik":5000,"maksDeneme":3}
+```
+
+Şema PostgreSQL **18** üzerinde sorunsuz kuruldu; ürün 17 ile geliştirilmişti.
+`create role`, `pg_trgm`, RLS politikaları ve trigger'lar aynen çalışıyor.
+
+Bu noktaya varana kadar Dokploy'a özgü dört davranış çıktı; hiçbiri yerelde
+`docker compose config` ile görünmüyordu:
+
+| Davranış | Belirti |
+|---|---|
+| Compose Path varsayılanı `./docker-compose.yml` | web ve worker hiç dağıtılmadı, ikinci Postgres doğdu, `ECONNREFUSED …:5470` |
+| YAML birleştirme anahtarı düşüyor | `DATABASE_URL` konteynere ulaşmadı |
+| `${A:-…${B}…}` çözülmüyor | aynı belirti, ikinci kez |
+| Tek seferlik servis çalıştırılmıyor | `relation "oneri" does not exist` |
+
+Alınan ders: dağıtım dosyasında **hiç türetme olmasın**. Ne verilirse o gitsin,
+eksik ya da tutarsız yapılandırmayı uygulama adıyla söylesin.
+
+## 11. Yerelde alınan ölçümler
 
 Bu rehber yazılmadan önce tüm yığın yerelde ayağa kaldırıldı:
 
