@@ -18,6 +18,7 @@ import {
   oturumCoz,
   raporResmiListe,
   raporSatirlari,
+  rolAta,
   yakinKopyalar,
 } from "./sorgu.ts";
 
@@ -269,9 +270,9 @@ test("KVKK: kimlik pseudonimleşir, öneri zinciri korunur", async () => {
 // ── migration geri alma ────────────────────────────────────────────────────
 
 test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
-  const geri = await asagi(13);
+  const geri = await asagi(14);
   assert.deepEqual(geri, [
-    "0013_gonderen_ajans", "0012_oneri_gizlilik", "0011_ulusal_agirlik", "0010_ayar", "0009_yatirim_konusu", "0008_ajans_kisa_ad", "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus",
+    "0014_rol_atama", "0013_gonderen_ajans", "0012_oneri_gizlilik", "0011_ulusal_agirlik", "0010_ayar", "0009_yatirim_konusu", "0008_ajans_kisa_ad", "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus",
     "0004_kriter_dayanagi", "0003_kurallar", "0002_rls", "0001_sema",
   ]);
   const [{ n }] = await sahip()<{ n: string }[]>`
@@ -281,7 +282,7 @@ test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
 
   assert.deepEqual(await yukari(), [
     "0001_sema", "0002_rls", "0003_kurallar", "0004_kriter_dayanagi",
-    "0005_karsi_gorus", "0006_yakin_kopya", "0007_misafir", "0008_ajans_kisa_ad", "0009_yatirim_konusu", "0010_ayar", "0011_ulusal_agirlik", "0012_oneri_gizlilik", "0013_gonderen_ajans",
+    "0005_karsi_gorus", "0006_yakin_kopya", "0007_misafir", "0008_ajans_kisa_ad", "0009_yatirim_konusu", "0010_ayar", "0011_ulusal_agirlik", "0012_oneri_gizlilik", "0013_gonderen_ajans", "0014_rol_atama",
   ]);
   await seed();
 });
@@ -564,6 +565,47 @@ test("kişisel veriyi açmak denetime yazılır; silmede AKTÖR yöneticidir", a
   assert.equal(k.p, true);
   const [o] = await sahip()<{ n: string }[]>`select count(*) as n from oneri where gonderen_ref = ${hedef.ref}`;
   assert.ok(Number(o.n) > 0, "öneriler duruyor");
+});
+
+test("yönetici rol ve ajans bölgesi atar; yatırımcı atayamaz", async () => {
+  const yonetici = await girisBaglami("yonetici@ykh.local");
+  const [hedef] = await sahip()<{ ref: string }[]>`
+  insert into gonderen (rol) values ('yatirimci') returning ref
+  `;
+  // Girişe bağlanmıyoruz: demo yatırımcı önceki KVKK testinde
+  // pseudonimleştiriliyor ve bu test sıraya bağımlı hâle gelirdi.
+  const yatirimci = { gonderenRef: hedef.ref, rol: "yatirimci" as const };
+
+  // ponytail: test satırı SİLİNMİYOR. `denetim` append-only ve trigger sahip
+  // bağlantısıyla bile silmeyi reddediyor; ona bağlı `gonderen` de silinemez.
+  // Kimliksiz bir gönderen satırı hiçbir listeye düşmüyor, `db:reset` temizler.
+
+  assert.equal(await rolAta(yonetici, hedef.ref, "ajans", "TR33"), true);
+  const [a] = await sahip()<{ rol: string; ajans_kod: string | null }[]>`
+    select rol::text, ajans_kod from gonderen where ref = ${hedef.ref}
+  `;
+  assert.equal(a.rol, "ajans");
+  assert.equal(a.ajans_kod, "TR33");
+
+  // Ajans dışına düşürünce bölge TEMİZLENİR; yoksa yatırımcıya inen bir
+  // hesapta eski bölge asılı kalır ve ileride yeniden ajans yapılırsa
+  // sessizce yanlış bölgeye bağlanır.
+  await rolAta(yonetici, hedef.ref, "yatirimci", "TR33");
+  const [b] = await sahip()<{ ajans_kod: string | null }[]>`
+    select ajans_kod from gonderen where ref = ${hedef.ref}
+  `;
+  assert.equal(b.ajans_kod, null);
+
+  // RLS son savunma hattı: yatırımcı KENDİ rolünü bile değiştiremez.
+  // Eski politika `ref = app_ref()` diyordu ve kendini yönetici yapmak
+  // mümkündü (0014 ile kapatıldı).
+  assert.equal(await rolAta(yatirimci, hedef.ref, "yonetici", null), false);
+
+  const [iz] = await sahip()<{ aktor_rol: string; detay: { yeni?: string } }[]>`
+    select aktor_rol, detay from denetim where eylem = 'rol_atandi' order by id desc limit 1
+  `;
+  assert.equal(iz.aktor_rol, "yonetici");
+  assert.equal(iz.detay.yeni, "yatirimci");
 });
 
 // ── resmî yatırım konuları listesi ─────────────────────────────────────────

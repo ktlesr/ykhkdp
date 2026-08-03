@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import type { KayitliKullanici } from "@ykh/database";
-import { ROL_ETIKET } from "@ykh/domain";
+import { ROL_ETIKET, ROLLER } from "@ykh/domain";
 import { EylemFormu, Gonder } from "./eylem-formu.tsx";
 import { Rozet } from "./ui.tsx";
-import { kimlikAcEylemi, kimlikSilEylemi } from "@/lib/eylem.ts";
+import { kimlikAcEylemi, kimlikSilEylemi, rolAtaEylemi } from "@/lib/eylem.ts";
 
 /**
  * Kayıtlı kullanıcılar — KVKK sınırlı görünüm.
@@ -17,8 +17,16 @@ import { kimlikAcEylemi, kimlikSilEylemi } from "@/lib/eylem.ts";
  * Açılan değer bu bileşenin STATE'İNDE durur, sayfa yenilenince gider.
  * Kalıcı olarak ekranda tutmak "maskeleme" iddiasını boşa çıkarırdı.
  */
-export function KullaniciListesi({ kullanicilar }: { kullanicilar: KayitliKullanici[] }) {
+export function KullaniciListesi({
+  kullanicilar,
+  ajanslar,
+}: {
+  kullanicilar: KayitliKullanici[];
+  ajanslar: Array<{ kod: string; ad: string }>;
+}) {
   const [acilan, setAcilan] = useState<Record<string, string>>({});
+  /** Seçili rol — ajans bölgesi alanını göstermek için. */
+  const [rol, setRol] = useState<Record<string, string>>({});
   const [secili, setSecili] = useState<string | null>(null);
 
   return (
@@ -73,6 +81,57 @@ export function KullaniciListesi({ kullanicilar }: { kullanicilar: KayitliKullan
                 Kişisel veriye erişim <b className="font-medium">denetim izine yazılır</b>: kim, ne zaman, kimin
                 verisini, hangi gerekçeyle açtı. Gerekçe zorunludur.
               </p>
+
+              {/*
+                Rol ataması. Yeni bir "süper yönetici" ROLÜ eklenmedi: yetkiler
+                yöneticiyle aynı olacaksa dördüncü bir rol enum'a, RLS'e,
+                testlere ve ekranlara yayılan bir maliyet olurdu. RLS zaten
+                `gonderen_guncelle` ile yöneticiye izin veriyor.
+
+                Ajans rolünde bölge ZORUNLU: bölgesiz bir ajans hesabı toplu
+                raporda hiçbir satır görmez (fail-closed) ve kullanıcı bunu
+                "bozuk" sanar.
+              */}
+              <EylemFormu eylem={rolAtaEylemi} className="mb-4 flex flex-wrap items-end gap-2.5 border-b border-b-hairline pb-4">
+                <input type="hidden" name="ref" value={u.ref} />
+                <label>
+                  <span className="block font-mono text-[10px] uppercase tracking-[.1em] text-ink-mute">Rol</span>
+                  <select
+                    name="rol"
+                    defaultValue={u.rol}
+                    onChange={(e) => setRol((o) => ({ ...o, [u.ref]: e.target.value }))}
+                    className="mt-1 min-h-11 border border-hairline bg-alan px-3 py-2 text-[13.5px]"
+                  >
+                    {ROLLER.map((r) => (
+                      <option key={r} value={r}>
+                        {ROL_ETIKET[r]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                {(rol[u.ref] ?? u.rol) === "ajans" && (
+                  <label>
+                    <span className="block font-mono text-[10px] uppercase tracking-[.1em] text-ink-mute">
+                      Ajans bölgesi
+                    </span>
+                    <select
+                      name="ajansKod"
+                      defaultValue={u.ajans_kod ?? ""}
+                      className="mt-1 min-h-11 border border-hairline bg-alan px-3 py-2 text-[13.5px]"
+                    >
+                      <option value="">— seçin —</option>
+                      {ajanslar.map((a) => (
+                        <option key={a.kod} value={a.kod}>
+                          {a.kod} · {a.ad}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+
+                <Gonder varyant="cizgi">Rolü kaydet</Gonder>
+              </EylemFormu>
 
               <EylemFormu
                 eylem={kimlikAcEylemi}

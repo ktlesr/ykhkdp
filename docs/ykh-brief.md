@@ -125,6 +125,12 @@ bölmek için değil KARARI bölmek için: yatırımcı önce nerede olduğuna, 
 
 Kurumsal kayıt, kurum doğrulama ve kurum onayı **yoktur**.
 
+**Rolleri yönetici atar** — `/ayarlar` içindeki kayıtlı kullanıcı listesinden.
+Ayrı bir "süper yönetici" rolü yok: yetkiler aynı olacaksa dördüncü bir rol
+enum'a, RLS'e, testlere ve ekranlara yayılan bir maliyet olurdu. Ajans rolünde
+bölge seçimi zorunlu (bölgesiz hesap toplu raporda hiçbir satır görmez); rol
+ajans dışına düşerse bölge temizlenir. Kimse kendi rolünü değiştiremez.
+
 **Misafir yatırımcı:** öneri vermek için kayıt zorunlu değil. `misafir_ac()`
 kişisel veri olmadan bir `gonderen` satırı açar — `kimlik` tablosuna hiç yazılmaz
 — ve oturum çerezi verir. Toplanan kişisel veri sıfır; KVKK silme talebinde

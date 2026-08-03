@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { ayarGetir, kayitliKullanicilar, raporSatirlari } from "@ykh/database";
+import { ayarGetir, bolgeler, kayitliKullanicilar, raporSatirlari } from "@ykh/database";
 import { onaylayabilir } from "@ykh/domain";
 import { KullaniciListesi } from "@/components/kullanici-listesi.tsx";
 import { PaletSecici } from "@/components/palet-secici.tsx";
@@ -46,7 +46,12 @@ export default async function Ayarlar() {
     yonetici ? kayitliKullanicilar(b) : Promise.resolve([]),
   ]);
 
-  const bolgeler = [...new Set(satirlar.map((r) => r.ajans_kod))];
+  // ponytail: ajans listesi için ayrı sorgu yazılmadı — `bolgeler()` zaten
+  // 26 ajansı getiriyor. İl listesi fazladan geliyor; ölçülebilir bir yük
+  // olursa dar bir sorgu eklenir.
+  const ajanslar = yonetici ? (await bolgeler(b)).map((x) => ({ kod: x.ajans_kod, ad: x.ajans })) : [];
+
+  const raporBolgeleri = [...new Set(satirlar.map((r) => r.ajans_kod))];
   const degerlendirilen = satirlar.filter((r) => r.dayanak !== null).length;
 
   return (
@@ -91,7 +96,7 @@ export default async function Ayarlar() {
               </>
             ) : (
               <>
-                <b className="font-medium">{bolgeler.join(", ") || "—"}</b> bölgesindeki illere girilmiş tüm
+                <b className="font-medium">{raporBolgeleri.join(", ") || "—"}</b> bölgesindeki illere girilmiş tüm
                 kayıtlar. Bölgesi atanmamış bir ajans hesabı hiçbir satır görmez — eksik bilgiyle hepsini
                 göstermek yerine hiçbirini göstermek doğru davranıştır.
               </>
@@ -101,7 +106,7 @@ export default async function Ayarlar() {
 
           <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2.5">
             <span className="num font-mono text-[10px] uppercase tracking-widest text-ink-mute">
-              {satirlar.length} kayıt · {degerlendirilen} değerlendirildi · {bolgeler.length} bölge
+              {satirlar.length} kayıt · {degerlendirilen} değerlendirildi · {raporBolgeleri.length} bölge
             </span>
             {satirlar.length > 0 && (
               <Bag varyant="dolu" href="/rapor">
@@ -140,7 +145,7 @@ export default async function Ayarlar() {
             {kullanicilar.length === 0 ? (
               <Bos baslik="Kayıtlı hesap yok.">Misafir gönderenlerin kimlik satırı hiç oluşturulmaz.</Bos>
             ) : (
-              <KullaniciListesi kullanicilar={kullanicilar} />
+              <KullaniciListesi kullanicilar={kullanicilar} ajanslar={ajanslar} />
             )}
           </section>
         )}

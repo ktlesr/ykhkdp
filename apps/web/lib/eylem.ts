@@ -5,9 +5,9 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import {
   belgeEkle, belgeSil, cikisYap, donemGetir, girisYap, islem, kayitOl, naceAra, naceDuzelt,
-  ayarYaz, kimlikAc, kimlikSil, misafirAc, oneriOlustur, puanDuzelt, durumDegistir,
+  ayarYaz, kimlikAc, kimlikSil, misafirAc, oneriOlustur, puanDuzelt, durumDegistir, rolAta,
 } from "@ykh/database";
-import { gecisIzinli, onaylayabilir, type OneriDurumu } from "@ykh/domain";
+import { gecisIzinli, onaylayabilir, ROL_ETIKET, ROLLER, type OneriDurumu, type Rol } from "@ykh/domain";
 import { log } from "@ykh/observability";
 import { KRITERLER, type Kriter } from "@ykh/scoring";
 import { degerlendirmeYap, SERVIS } from "@ykh/degerlendirme";
@@ -321,4 +321,33 @@ export async function kimlikSilEylemi(_o: EylemSonucu | null, f: FormData): Prom
   log.info("kimlik_pseudonimlestirildi", { ref });
   revalidatePath("/ayarlar");
   return { ok: true, mesaj: "Kişisel veri silindi; öneri ve sıralama zinciri korundu." };
+}
+
+/**
+ * Rol ataması — yalnızca yönetici, kendi rolü hariç.
+ *
+ * Kendi rolünü değiştirmek tek yöneticiyi kilitleyip sistemi yönetilemez
+ * bırakabilir; ikinci bir yönetici hesabından yapılsın.
+ */
+export async function rolAtaEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
+  const k = await kullanici();
+  if (!k || k.rol !== "yonetici") return { ok: false, mesaj: "Rol atamasını yalnızca yönetici yapabilir." };
+
+  const ref = String(f.get("ref") ?? "");
+  if (ref === k.ref) return { ok: false, mesaj: "Kendi rolünüzü değiştiremezsiniz; başka bir yönetici hesabından yapın." };
+
+  const rol = String(f.get("rol") ?? "");
+  if (!ROLLER.includes(rol as Rol)) return { ok: false, mesaj: "Tanınmayan rol." };
+
+  const ajansKod = String(f.get("ajansKod") ?? "") || null;
+  if (rol === "ajans" && !ajansKod) {
+    return { ok: false, mesaj: "Ajans rolü için bölge seçin; bölgesiz hesap toplu raporda hiçbir satır göremez." };
+  }
+
+  if (!(await rolAta(await baglam(), ref, rol as Rol, ajansKod))) {
+    return { ok: false, mesaj: "Kayıt bulunamadı ya da yetki reddedildi." };
+  }
+  log.info("rol_atandi", { ref, rol, ajansKod });
+  revalidatePath("/ayarlar");
+  return { ok: true, mesaj: `Rol ${ROL_ETIKET[rol as Rol]} olarak güncellendi.` };
 }

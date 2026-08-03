@@ -1055,3 +1055,33 @@ export async function raporResmiListe(b: Baglam) {
     `,
   );
 }
+
+/**
+ * Rol ve ajans bölgesi ataması — yalnızca yönetici.
+ *
+ * RLS zaten `gonderen_guncelle` politikasıyla yöneticiye izin veriyor; ayrı
+ * bir `security definer` kapıya gerek yok.
+ *
+ * `ajans_kod` yalnızca ajans rolünde anlamlı: rol değişince temizleniyor,
+ * yoksa yatırımcıya düşürülen bir hesapta eski bölge asılı kalırdı.
+ */
+export async function rolAta(b: Baglam, ref: string, rol: Rol, ajansKod: string | null): Promise<boolean> {
+  return islem(b, async (sql) => {
+    const [onceki] = await sql<{ rol: Rol; ajans_kod: string | null }[]>`
+      select rol, ajans_kod from gonderen where ref = ${ref}
+    `;
+    if (!onceki) return false;
+    const yaziliyor = await sql`
+      update gonderen set rol = ${rol}::rol, ajans_kod = ${rol === "ajans" ? ajansKod : null}
+      where ref = ${ref} returning ref
+    `;
+    if (!yaziliyor.length) return false;
+    await denetle(sql, b, "rol_atandi", "gonderen", ref, {
+      onceki: onceki.rol,
+      yeni: rol,
+      onceki_ajans: onceki.ajans_kod,
+      yeni_ajans: rol === "ajans" ? ajansKod : null,
+    });
+    return true;
+  });
+}

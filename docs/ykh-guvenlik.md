@@ -58,6 +58,12 @@ yazma sessizce 0 satır etkiler (RLS filtresi), hata fırlatmaz — bu bilinçli
   `degerlendirme_ham_puan_sabit` trigger'ı `puanlar`, `model_snapshot` ve
   `prompt_surum` güncellemesini reddeder — AI provenance'ı korunur.
 - **`belge`** — herkes okur, yalnızca ajans yazar.
+- **`gonderen`** — güncelleme YALNIZCA yönetici. Politika önce
+  `ref = app_ref() or app_rol() = 'yonetici'` diyordu: herkes kendi satırını
+  güncelleyebiliyordu ve `gonderen` yalnızca `rol`/`ajans_kod` taşıdığı için bu,
+  bir yatırımcının **kendini yönetici yapabilmesi** demekti. Rol ataması
+  arayüze eklenene kadar ulaşılabilir yol yoktu; 0014 ile kapatıldı.
+  Rol ataması `rol_atandi` olarak denetime yazılır.
 
 Veritabanı düzeyinde iş kuralları (`check` kısıtları):
 
