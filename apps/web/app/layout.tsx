@@ -113,10 +113,25 @@ export const metadata: Metadata = {
  * Yutma DEĞİL: sebep log'a yazılıyor. Sessizce yutmak, kusuru görünmez
  * yapardı — burada amaç kusuru DOĞRU YERDE göstermek.
  */
+/**
+ * Next KONTROL AKIŞINI hata fırlatarak yürütüyor: `redirect()`, `notFound()`
+ * ve "bu route dinamik" kararı hep birer throw. Bunları yutmak sinyali
+ * öldürür — derleme logunda yakalandı: `/_not-found` statik üretilmeye
+ * çalışılırken `cookies()` bailout'u yutuluyordu.
+ *
+ * Ayırt edici işaret `digest`: Next kendi sinyallerini onunla damgalıyor.
+ * Gerçek hatalarda böyle bir damga yok.
+ */
+function nextSinyali(e: unknown): boolean {
+  const d = (e as { digest?: unknown } | null)?.digest;
+  return typeof d === "string" && (d.startsWith("NEXT_") || d === "DYNAMIC_SERVER_USAGE");
+}
+
 async function paletOku(): Promise<string> {
   try {
     return paletGecerli(await ayarGetir(await baglam(), "palet"));
   } catch (e) {
+    if (nextSinyali(e)) throw e;
     console.error(
       JSON.stringify({
         seviye: "hata",
