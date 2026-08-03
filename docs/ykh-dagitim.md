@@ -226,6 +226,21 @@ eksik olduğunu adıyla yazar. Sessizce yanlış çalışmaz.
 verilmezse WhatsApp, LinkedIn, X ve Facebook paylaşımlarındaki kart `localhost`
 adresine bakar ve **hiçbir yerde görünmez**. Log'a bir kez uyarı düşer.
 
+> ## ⚠ YEREL `.env` DOSYANI BURAYA YAPIŞTIRMA
+>
+> Yaşandı: yerel `.env` içeriği Dokploy'un ortam sekmesine yapıştırıldı ve
+> içindeki `DATABASE_URL=…@localhost:5470/…` satırı üretimi ezdi. Sonuç: her
+> sayfa 500, tarayıcıda yalnızca "A server error occurred", logda
+> `ECONNREFUSED 127.0.0.1:5470` seli.
+>
+> Konteynerin içinde `localhost` **konteynerin kendisidir**; veritabanı orada
+> değil. `DATABASE_URL` ve `DATABASE_URL_OWNER` satırlarını buraya **yazma** —
+> compose adresi `YKH_DB_SUNUCU` ve parolalardan kendisi kurar.
+>
+> Uygulama artık bunu kabul etmiyor: `NODE_ENV=production` altında yerel bir
+> adrese bağlanmayı denerse **açık bir hatayla** duruyor ve ne yapılacağını
+> yazıyor. Ama hatayı hiç görmemek daha iyi.
+
 ### `DATABASE_URL` neden listede "hayır" yazıyor
 
 Yereldeki `.env` dosyanda `DATABASE_URL` ve `DATABASE_URL_OWNER` elle yazılı.
@@ -471,6 +486,9 @@ Son iki blok ölçüm yanlışını da içeriyor:
 | `kurulum`: `getaddrinfo ENOTFOUND` | `YKH_DB_SUNUCU` yanlış ya da ağ bağlı değil | Dokploy'un iç ana makine adını kullan; `docker network ls` ile ağ adını doğrula |
 | `kurulum`: "password authentication failed" | `POSTGRES_PAROLA` Dokploy'daki değerle aynı değil | ekrandan kopyala, boşluk bırakma |
 | `kurulum`: "permission denied to create role" | `YKH_DB_SAHIP` superuser değil | Dokploy'un oluşturduğu kullanıcıyı kullan |
+| Her sayfa 500 · logda `ECONNREFUSED 127.0.0.1:5470` | Ortam sekmesine yerel `.env` yapıştırılmış | `DATABASE_URL` ve `DATABASE_URL_OWNER` satırlarını **sil**, yeniden dağıt |
+| `web`: "üretimde YEREL adrese bakıyor" | aynı sebep, artık açık hatayla | aynı çözüm |
+| `web`: "üretimde tanımlı değil" | `YKH_DB_SUNUCU` vb. eksik | §3'teki tabloya bak |
 | `kurulum`: "YKH_APP_PAROLA varsayılan değerde" | depodaki sabit parola bırakılmış | `openssl rand -hex 24` |
 | `kurulum`: "yalnızca harf, rakam ve . _ ~ - içerebilir" | base64 parola kullanılmış | `openssl rand -hex 24` |
 | `kurulum`: "en az 12 karakter olmalı" | yönetici parolası kısa | uzat |

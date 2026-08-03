@@ -23,6 +23,55 @@ export const ANONIM: Baglam = { gonderenRef: null, rol: "anonim" };
 const varsayilanSahip = "postgres://ykh_owner:ykh_dev_parola@localhost:5470/ykhkdp";
 const varsayilanUygulama = "postgres://ykh_app:ykh_app_parola@localhost:5470/ykhkdp";
 
+const YEREL = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
+
+/**
+ * ÜRETİMDE YEREL ADRESE BAĞLANMAYI REDDEDER.
+ *
+ * Yaşanmış kusur: üretimde her sayfa 500 döndü ve tarayıcıda yalnızca "A
+ * server error occurred" yazdı. Logda `ECONNREFUSED 127.0.0.1:5470` sel gibi
+ * akıyordu ama sebebi hiçbir yerde yazmıyordu. İki yoldan biri olmuştu:
+ *
+ *   1. `DATABASE_URL` hiç verilmemiş → aşağıdaki YEREL VARSAYILAN devreye
+ *      giriyor. Geliştirme için doğru, üretim için sessiz bir felaket.
+ *   2. Dokploy'un ortam sekmesine yerel `.env` içeriği yapıştırılmış ve
+ *      geliştirme adresi üretimi ezmiş.
+ *
+ * İkisi de artık AÇIK BİR HATAYLA duruyor. Yerel adrese bağlanmayı denemek
+ * üretimde hiçbir zaman doğru değil: uygulama ile veritabanı ayrı
+ * konteynerler, `localhost` konteynerin kendisi demek.
+ *
+ * Kural yalnızca `NODE_ENV=production` altında işler; test ve geliştirme
+ * yerel veritabanıyla çalışmaya devam eder.
+ */
+function adresSec(ad: string, varsayilan: string): string {
+  const deger = process.env[ad]?.trim();
+  if (process.env.NODE_ENV !== "production") return deger || varsayilan;
+
+  if (!deger) {
+    throw new Error(
+      `${ad} üretimde tanımlı değil. Koddaki varsayılan yerel geliştirme ` +
+        "adresidir (localhost:5470) ve üretimde kullanılamaz.",
+    );
+  }
+  let sunucu: string;
+  try {
+    sunucu = new URL(deger).hostname;
+  } catch {
+    throw new Error(`${ad} geçerli bir bağlantı adresi değil. Paroladaki '/' veya '@' adresi bozar.`);
+  }
+  if (YEREL.has(sunucu)) {
+    throw new Error(
+      `${ad} üretimde YEREL adrese bakıyor (${sunucu}). Konteynerin içinde ` +
+        "`localhost` konteynerin kendisidir; veritabanı orada değil. En sık " +
+        "sebep: yerel `.env` dosyasının Dokploy ortam sekmesine yapıştırılması. " +
+        "`DATABASE_URL` ve `DATABASE_URL_OWNER` satırlarını oradan SİLİN — " +
+        "compose adresi `YKH_DB_SUNUCU` ve parolalardan kendisi kurar.",
+    );
+  }
+  return deger;
+}
+
 /**
  * Havuzlar `globalThis` üzerinde tutulur.
  *
@@ -38,7 +87,7 @@ const havuz: Havuz = ((globalThis as Record<symbol, unknown>)[HAVUZ] ??= {}) as 
 export function sahip(): postgres.Sql {
   // ponytail: prepare:false — migration/seed sık çalışmaz, ama şema değişince
   // hazırlanmış ifadeler eski tip OID'lerine takılıyor ("cache lookup failed").
-  havuz.sahip ??= postgres(process.env.DATABASE_URL_OWNER ?? varsayilanSahip, {
+  havuz.sahip ??= postgres(adresSec("DATABASE_URL_OWNER", varsayilanSahip), {
     onnotice: () => {},
     max: 5,
     prepare: false,
@@ -47,7 +96,7 @@ export function sahip(): postgres.Sql {
 }
 
 export function uygulama(): postgres.Sql {
-  havuz.uygulama ??= postgres(process.env.DATABASE_URL ?? varsayilanUygulama, {
+  havuz.uygulama ??= postgres(adresSec("DATABASE_URL", varsayilanUygulama), {
     onnotice: () => {},
     max: 10,
     idle_timeout: 30,

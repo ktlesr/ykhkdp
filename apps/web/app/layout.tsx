@@ -99,8 +99,38 @@ export const metadata: Metadata = {
  * Ayar kurumsal olduğu için kullanıcıya göre değişmiyor; sunucu render'ı
  * doğru değeri baştan biliyor.
  */
+/**
+ * Palet okuması SİTEYİ DÜŞÜREMEZ.
+ *
+ * Kök layout her sayfada çalışıyor: burada fırlayan bir hata ana sayfayı da,
+ * `/giris`i de, 404'ü de, hatta Next'in hata sayfasını da 500 yapıyor —
+ * tarayıcıda yalnızca "A server error occurred" kalıyor (yaşandı).
+ *
+ * Palet KOZMETİK bir kurumsal tercih. Veritabanına ulaşılamadığında
+ * varsayılan paletle devam etmek doğru davranış: uygulamanın geri kalanı
+ * kendi hatasını kendi gösterir ve o hata okunabilir olur.
+ *
+ * Yutma DEĞİL: sebep log'a yazılıyor. Sessizce yutmak, kusuru görünmez
+ * yapardı — burada amaç kusuru DOĞRU YERDE göstermek.
+ */
+async function paletOku(): Promise<string> {
+  try {
+    return paletGecerli(await ayarGetir(await baglam(), "palet"));
+  } catch (e) {
+    console.error(
+      JSON.stringify({
+        seviye: "hata",
+        mesaj: "palet_okunamadi",
+        not: "Varsayılan palet uygulanıyor; site ayakta kalıyor.",
+        sebep: e instanceof Error ? e.message : String(e),
+      }),
+    );
+    return paletGecerli(null);
+  }
+}
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const palet = paletGecerli(await ayarGetir(await baglam(), "palet"));
+  const palet = await paletOku();
 
   return (
     <html
