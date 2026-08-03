@@ -174,9 +174,48 @@ Compose dosyasının okuduğu **her** değişken — başka yok:
 Zorunlu olanlardan biri eksikse **kurulum başlamadan durur** ve hangisinin
 eksik olduğunu yazar. Sessizce yanlış çalışmaz.
 
-`DATABASE_URL` ve `DATABASE_URL_OWNER` **elle girilmez** — compose dosyası
-onları yukarıdaki parolalardan kendisi kuruyor. Yerel geliştirmede kullandığın
-`.env` dosyasındaki değerlerle karıştırma; üretimde o dosya yok.
+### `.env` ile bu liste neden farklı
+
+Yereldeki `.env` dosyanda `DATABASE_URL` ve `DATABASE_URL_OWNER` var, yukarıdaki
+listede yok. Eksiklik değil:
+
+| | Postgres nerede | Adresi kim yazıyor |
+|---|---|---|
+| yerel | `localhost:5470` | sen, `.env` içinde |
+| üretim | `postgres` konteyneri | **compose**, iki paroladan |
+
+Compose şunları kendisi kuruyor:
+
+```
+DATABASE_URL       = postgres://ykh_app:${YKH_APP_PAROLA}@postgres:5432/ykhkdp
+DATABASE_URL_OWNER = postgres://ykh_owner:${POSTGRES_PAROLA}@postgres:5432/ykhkdp
+```
+
+> **Dokploy'a `DATABASE_URL` YAZMA.** Compose her servisin `environment:`
+> bloğunu kendisi dolduruyor ve o blok bu dosyadan gelen aynı adlı değişkeni
+> **ezer**. Yazarsan hiçbir şey olmaz — ama "yazdım, neden çalışmıyor" diye
+> saatlerce aranır. Bağlantı adresini gerçekten değiştirmek istersen
+> düzenlenecek yer `docker-compose.production.yml` dosyasıdır.
+
+Yukarıdaki on değişken compose'un okuduğu değişkenlerin **tamamıdır**. Kendin
+doğrulayabilirsin:
+
+```bash
+diff <(grep -oE '\$\{[A-Z_]+' docker-compose.production.yml | tr -d '${' | sort -u)      <(grep -oE '^[A-Z_]+=' .env.production.example | tr -d '=' | sort)
+```
+
+Çıktı boşsa iki liste birebir aynıdır.
+
+### Kodun okuduğu diğer değişkenler
+
+Bunlar compose'un işi değil, bilgi olsun diye:
+
+| Değişken | Nerede | Not |
+|---|---|---|
+| `DATABASE_URL` | web, worker, kurulum | compose kuruyor |
+| `DATABASE_URL_OWNER` | **yalnızca kurulum** | compose kuruyor; web asla almaz |
+| `NODE_ENV` | web | compose `production` yazıyor |
+| `YKH_EVAL_TEKRAR` | `pnpm ai:eval` | yalnızca geliştirme, üretimde kullanılmaz |
 
 **Save** ile kaydet.
 
