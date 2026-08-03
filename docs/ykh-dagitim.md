@@ -532,7 +532,9 @@ Son iki blok ölçüm yanlışını da içeriyor:
 | `web`: "üretimde tanımlı değil" | `YKH_DB_SUNUCU` vb. eksik | §3'teki tabloya bak |
 | `kurulum`: "YKH_APP_PAROLA varsayılan değerde" | depodaki sabit parola bırakılmış | `openssl rand -hex 24` |
 | `kurulum`: "yalnızca harf, rakam ve . _ ~ - içerebilir" | base64 parola kullanılmış | `openssl rand -hex 24` |
-| `worker`: "en az 12 karakter olmalı" | yönetici parolası kısa | uzat |
+| `worker`: "en az 12 karakter olmalı" | `YKH_YONETICI_PAROLA` kısa | 12+ karakter yap |
+| `worker`: "DATABASE_URL içindeki parola YKH_APP_PAROLA ile aynı değil" | aynı sırrın iki kopyası ayrışmış | `DATABASE_URL` satırını **sil**, compose kursun |
+| `web`: `password authentication failed for user "ykh_app"` | aynı sebep — ya parolalar ayrışmış ya kurulum düşmüş | önce **worker** loguna bak |
 | Giriş yapılamıyor, forma geri dönüyor | HTTPS yok | §4 · Let's Encrypt |
 | Sertifika alınamıyor | DNS henüz yayılmamış | A kaydını doğrula, 15 dk sonra tekrar Deploy |
 | `/ayarlar` boş rapor (ajans hesabı) | `gonderen.ajans_kod` atanmamış | §8'deki SQL |

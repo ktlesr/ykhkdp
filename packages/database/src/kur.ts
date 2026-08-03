@@ -67,19 +67,23 @@ export async function kur(): Promise<string> {
   adresiDogrula("DATABASE_URL_OWNER", gerekli("DATABASE_URL_OWNER"));
   adresiDogrula("DATABASE_URL", gerekli("DATABASE_URL"));
 
-  const sql = sahip();
-  const rapor: string[] = [];
+  /**
+   * TÜM YAPILANDIRMA KONTROLLERİ VERİTABANINA DOKUNMADAN ÖNCE.
+   *
+   * Yaşandı: yönetici parolası 12 karakterden kısaydı ve kurulum bunu ANCAK
+   * migration'lar uygulandıktan sonra fark etti. Sonuç yarım bir kurulumdu:
+   * şema vardı, `ykh_app` rolü vardı, yönetici hesabı yoktu ve konteyner
+   * sonsuz yeniden başlıyordu. Yarım durum, hiç başlamamış durumdan kötüdür.
+   */
+  const yoneticiParola = gerekli("YKH_YONETICI_PAROLA");
+  if (yoneticiParola.length < 12) {
+    throw new Error(
+      `YKH_YONETICI_PAROLA en az 12 karakter olmalı (şu an ${yoneticiParola.length}). ` +
+        "Bu, /giris ekranına yazacağınız paroladır; `openssl rand -hex 24` kullanabilirsiniz.",
+    );
+  }
+  gerekli("YKH_YONETICI_EPOSTA");
 
-  // ── 0 · şema ────────────────────────────────────────────────────────────
-  const yeni = await yukari();
-  rapor.push(yeni.length ? `${yeni.length} migration` : "şema güncel");
-
-  // ── 1 · uygulama rolünün parolası ───────────────────────────────────────
-  //
-  // `0002_rls.sql` rolü SABİT bir parolayla açıyor ve o parola herkese açık
-  // depoda yazılı. Migration idempotent olduğu için parolayı bir daha
-  // değiştirmiyor; değiştirmek bu adımın işi. Atlanırsa üretim, kaynağı
-  // yayımlanmış bir parolayla çalışır.
   const appParola = gerekli("YKH_APP_PAROLA");
   if (appParola === "ykh_app_parola") {
     throw new Error("YKH_APP_PAROLA varsayılan değerde. Üretimde depoda yazılı parola kullanılamaz.");
@@ -109,6 +113,55 @@ export async function kur(): Promise<string> {
   // Parola bir SQL literali olmak zorunda: ALTER ROLE parametre kabul etmiyor.
   // Tek tırnak ikileniyor; parola ortam değişkeninden geliyor ve kullanıcı
   // girdisi değil, ama kaçış yine de yapılıyor.
+  /**
+   * `DATABASE_URL` elle verilmişse İÇİNDEKİ PAROLA `YKH_APP_PAROLA` İLE AYNI
+   * OLMAK ZORUNDA.
+   *
+   * Yaşandı: ikisi elle yazıldı ve kopyalarken bir karakter düştü — biri 48,
+   * diğeri 47 karakter. Kurulum rolün parolasını 48'liyle ayarladı, uygulama
+   * 47'liyle bağlanmaya çalıştı ve `password authentication failed for user
+   * "ykh_app"` aldı. Log doğruydu ama iki değerin ayrıştığını söylemiyordu.
+   *
+   * Aynı sırrın iki kopyası varsa er geç ayrışır. En iyisi ikinci kopyayı hiç
+   * tutmamak (`DATABASE_URL`'i Dokploy'a yazmayın, compose kursun); ikinci
+   * kopya varsa da ayrıştığı an burada durur.
+   */
+  const appAdres = process.env.DATABASE_URL?.trim();
+  if (appAdres) {
+    let adresParola: string | null = null;
+    try {
+      adresParola = decodeURIComponent(new URL(appAdres).password);
+    } catch {
+      adresParola = null;
+    }
+    if (adresParola !== null && adresParola !== appParola) {
+      throw new Error(
+        "DATABASE_URL içindeki parola YKH_APP_PAROLA ile aynı değil " +
+          `(${adresParola.length} karakter / ${appParola.length} karakter). ` +
+          "Kurulum `ykh_app` rolünün parolasını YKH_APP_PAROLA ile ayarlıyor; " +
+          "uygulama farklı bir parolayla bağlanmaya çalışırsa hiçbir zaman " +
+          "giremez. EN İYİ ÇÖZÜM: DATABASE_URL satırını ortam ayarlarından " +
+          "SİLİN — compose onu YKH_APP_PAROLA'dan kendisi kurar ve iki kopya " +
+          "hiç oluşmaz.",
+      );
+    }
+  }
+
+
+  const sql = sahip();
+  const rapor: string[] = [];
+
+  // ── 0 · şema ────────────────────────────────────────────────────────────
+  const yeni = await yukari();
+  rapor.push(yeni.length ? `${yeni.length} migration` : "şema güncel");
+
+  // ── 1 · uygulama rolünün parolası ───────────────────────────────────────
+  //
+  // `0002_rls.sql` rolü SABİT bir parolayla açıyor ve o parola herkese açık
+  // depoda yazılı. Migration idempotent olduğu için parolayı bir daha
+  // değiştirmiyor; değiştirmek bu adımın işi. Atlanırsa üretim, kaynağı
+  // yayımlanmış bir parolayla çalışır. Değerin kendisi yukarıda, veritabanına
+  // hiç dokunmadan doğrulandı.
   await sql.unsafe(`alter role ykh_app with password '${appParola.replace(/'/g, "''")}'`);
   rapor.push("ykh_app parolası ayarlandı");
 
@@ -179,8 +232,8 @@ export async function kur(): Promise<string> {
   `;
   let yoneticiRef = varOlan?.ref;
   if (!yoneticiRef) {
-    const parola = gerekli("YKH_YONETICI_PAROLA");
-    if (parola.length < 12) throw new Error("YKH_YONETICI_PAROLA en az 12 karakter olmalı.");
+    // Uzunluk kontrolü en başta yapıldı; buraya gelen değer geçerli.
+    const parola = yoneticiParola;
     const [g] = await sql<{ ref: string }[]>`
       insert into gonderen (rol) values ('yonetici'::rol) returning ref
     `;
