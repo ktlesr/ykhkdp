@@ -433,8 +433,16 @@ export default async function Tanitim() {
               </p>
             </div>
 
-            {/* Geniş içerik kendi kabında kayar; sayfa gövdesi yatay kaymaz. */}
-            <div className="overflow-x-auto">
+            {/*
+              Geniş içerik kendi kabında kayar; sayfa gövdesi yatay kaymaz.
+
+              `min-w-0` ŞART: bu div bir grid öğesi ve grid öğeleri varsayılan
+              olarak `min-width: auto` taşır — içindeki 420px'lik tablonun
+              altına inmezler. Sonuç: dar telefonda grid 420px'e genişliyor ve
+              SAYFA yatay kayıyor (Galaxy S26 Ultra'da ölçüldü). `overflow-x`
+              tek başına yetmiyor.
+            */}
+            <div className="min-w-0 overflow-x-auto">
             <table className="w-full min-w-[420px] border-collapse border border-hairline bg-surface text-left">
               <caption className="sr-only">
                 Kriter gruplarının puandaki payı — TR33-2027-v1 ağırlık seti
@@ -487,7 +495,7 @@ export default async function Tanitim() {
             kaydedilmez; öneri değerlendirilmemiş kalır ve neden reddedildiği denetim kaydına yazılır.
           </p>
 
-          <dl className="mt-10 grid grid-cols-[repeat(auto-fit,minmax(420px,1fr))] gap-x-14">
+          <dl className="mt-10 grid grid-cols-[repeat(auto-fit,minmax(min(420px,100%),1fr))] gap-x-14">
             {SINIRLAR.map((x) => (
               <div key={x.ad} className="border-t border-t-ink py-5">
                 <dt className="text-[15px] font-medium leading-tight">{x.ad}</dt>

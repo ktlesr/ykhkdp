@@ -300,3 +300,43 @@ test("palet yalnızca rengi değiştirir — yarıçap, gölge, animasyon palets
     );
   }
 });
+
+test("yatay kaydırma kabı grid/flex içinde min-w-0 taşır", async () => {
+  /**
+   * `overflow-x: auto` tek başına yetmiyor: grid ve flex öğeleri varsayılan
+   * olarak `min-width: auto` taşır ve içeriğinin min-content genişliğinin
+   * altına inmez. Kap 420px'lik bir tabloyu sarıyorsa grid 420px'e genişler ve
+   * SAYFA yatay kayar — dar telefonda ölçüldü.
+   *
+   * Kural: `overflow-x-auto` yazan her yerde `min-w-0` da olacak.
+   */
+  const dosyalar = [
+    ...(await tsxDosyalari(join(KOK, "app"))),
+    ...(await tsxDosyalari(join(KOK, "components"))),
+  ];
+  const eksik: string[] = [];
+  for (const f of dosyalar) {
+    for (const [i, satir] of (await readFile(f, "utf8")).split("\n").entries()) {
+      if (!satir.includes("overflow-x-auto")) continue;
+      if (!satir.includes("min-w-0")) eksik.push(`${f.split(/[\/]/).pop()}:${i + 1}`);
+    }
+  }
+  assert.deepEqual(eksik, [], `overflow-x-auto var ama min-w-0 yok: ${eksik.join(", ")}`);
+
+  /**
+   * `minmax(420px, 1fr)` dar ekranda 420px'lik bir sütun ZORLAR ve sayfa
+   * yatay kayar. Doğru biçim `minmax(min(420px, 100%), 1fr)`: geniş ekranda
+   * aynı, dar ekranda kaba sığar.
+   */
+  const kati: string[] = [];
+  for (const f of dosyalar) {
+    for (const [i, satir] of (await readFile(f, "utf8")).split(/\r?\n/).entries()) {
+      for (const m of satir.matchAll(/minmax\(\s*(\d+)px/g)) {
+        if (Number(m[1]) > 320 && !satir.includes("min(")) {
+          kati.push(`${f.split(/[\/]/).pop()}:${i + 1} → ${m[0]}`);
+        }
+      }
+    }
+  }
+  assert.deepEqual(kati, [], `minmax katı genişlik taşırır, min(...,100%) kullan: ${kati.join(", ")}`);
+});

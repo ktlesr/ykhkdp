@@ -245,7 +245,14 @@ okuyucu ve tarayıcı içi arama desteği bedava gelir.
 - Dokunma hedefi ≥44px (`min-h-11`).
 - Gövde metni ≥4.5:1, büyük metin ≥3:1.
 - Geniş içerik (tablo) kendi `overflow-x` kabında kayar; sayfa gövdesi yatay
-  kaymaz.
+  kaymaz. **İki tuzak, ikisi de yaşandı** (Galaxy S26 Ultra'da ölçüldü):
+  - `overflow-x-auto` grid/flex öğesindeyse `min-w-0` da ŞART. Öğeler
+    varsayılan `min-width: auto` taşır ve içeriğin min-content genişliğinin
+    altına inmez; 420px'lik bir tablo grid'i 420px'e genişletir.
+  - `minmax(420px, 1fr)` dar ekranda o genişliği ZORLAR. Doğrusu
+    `minmax(min(420px, 100%), 1fr)` — geniş ekranda aynı, darda kaba sığar.
+
+  `lib/tasarim.test.ts` ikisini de denetliyor.
 
 ## Denetim
 
