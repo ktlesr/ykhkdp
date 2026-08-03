@@ -1,8 +1,10 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { illeriListele } from "@ykh/database";
 import { onaylayabilir } from "@ykh/domain";
 import { Bag, Baslik, Bos, Rozet, Sayfa, UstBar } from "@/components/ui.tsx";
 import { baglam, kullanici } from "@/lib/oturum.ts";
+import { KAPALI } from "@/lib/site.ts";
 
 /**
  * İl listesi — 81 il, ajans bölgesine göre katlanır gruplar.
@@ -20,6 +22,16 @@ import { baglam, kullanici } from "@/lib/oturum.ts";
  * seçimi gezinilecek bir sayfada değil, sihirbazın kendi adımında yapılır —
  * yumurta-tavuk buradan çıkıyor: liste bir EKRAN değil, bir SEÇİM ADIMI.
  */
+/**
+ * ARAMA MOTORUNA VE PAYLAŞIM KARTINA KAPALI.
+ *
+ * Bu ekran öneri verisi taşıyor ya da ona götürüyor. Başlık sabit ve
+ * içerikten türemiyor: dinamik bir başlık (ör. önerinin kendi adı) sekme
+ * adında, tarayıcı geçmişinde ve paylaşılan bir bağlantının önizlemesinde
+ * görünürdü — RLS ile kapattığımız şey oradan sızardı.
+ */
+export const metadata: Metadata = { title: "İller", robots: KAPALI };
+
 export default async function Iller() {
   const k = await kullanici();
   if (!k || !onaylayabilir(k.rol)) redirect("/oneri");

@@ -175,7 +175,13 @@ YKH_YONETICI_AD=Ad Soyad
 # İLK kurulumda `evet`. Kurulum bitince `hayir` yapıp yeniden dağıt (§6).
 YKH_KUR_BELGELER=evet
 
-# ══ 5 · YAPAY ZEKÂ ══════════════════════════════════════════════════════════
+# ══ 5 · SİTE ADRESİ ═════════════════════════════════════════════════════════
+# Alan adınız, şema dahil. WhatsApp, LinkedIn, X, Facebook ve Telegram
+# paylaşımlarındaki kart ile sitemap.xml bu adrese göre kuruluyor. Verilmezse
+# kartlar localhost'a bakar ve hiçbir yerde görünmez.
+YKH_SITE_URL=https://ykh.kurumun.gov.tr
+
+# ══ 6 · YAPAY ZEKÂ ══════════════════════════════════════════════════════════
 # BOŞ BIRAKILABİLİR. Anahtar yoksa çevrimdışı deterministik istemci devreye
 # girer: doğrulama zinciri aynen çalışır, puanlar ve NACE eşleşmesi kaba olur.
 OPENAI_API_KEY=
@@ -184,7 +190,7 @@ OPENAI_API_KEY=
 # `latest` YASAK — hem uygulama hem veritabanı kısıtı reddeder.
 YKH_MODEL_SNAPSHOT=
 
-# ══ 6 · WORKER VE LOG ═══════════════════════════════════════════════════════
+# ══ 7 · WORKER VE LOG ═══════════════════════════════════════════════════════
 YKH_WORKER_ARALIK=5000
 YKH_LOG_SEVIYE=info
 ```
@@ -205,6 +211,7 @@ Compose dosyasının okuduğu **her** değişken — başka yok:
 | `YKH_YONETICI_PAROLA` | **evet** | — | sen üretirsin | kurulum |
 | `YKH_YONETICI_AD` | hayır | `Yönetici` | sen | kurulum |
 | `YKH_KUR_BELGELER` | hayır | `hayir` | sen | kurulum |
+| `YKH_SITE_URL` | hayır* | boş | sen | web |
 | `OPENAI_API_KEY` | hayır | boş | OpenAI | web, worker |
 | `YKH_MODEL_SNAPSHOT` | hayır | boş | sen | web, worker |
 | `YKH_WORKER_ARALIK` | hayır | `5000` | sen | worker |
@@ -214,6 +221,10 @@ Compose dosyasının okuduğu **her** değişken — başka yok:
 
 Zorunlu olanlardan biri eksikse **kurulum başlamadan durur** ve hangisinin
 eksik olduğunu adıyla yazar. Sessizce yanlış çalışmaz.
+
+\* `YKH_SITE_URL` teknik olarak zorunlu değil — site onsuz da çalışır. Ama
+verilmezse WhatsApp, LinkedIn, X ve Facebook paylaşımlarındaki kart `localhost`
+adresine bakar ve **hiçbir yerde görünmez**. Log'a bir kez uyarı düşer.
 
 ### `DATABASE_URL` neden listede "hayır" yazıyor
 
@@ -332,6 +343,28 @@ YKH_KUR_BELGELER=hayir
 5. **`/oneri`** → sihirbaz açılmalı; "Kayıt olmadan devam et" çalışmalı.
 6. Çıkış yap, `/iller` adresine tekrar git → **`/oneri`'ye yönlendirilmelisin.**
    Yönlendirilmiyorsan bir şey yanlış.
+7. **Paylaşım kartı.** `https://ykh.kurumun.gov.tr/opengraph-image` açılınca
+   1200×630 bir görsel inmeli: koyu zemin, ölçü cetveli, gerçek sayılar
+   (81 il · 26 ajans · 3190 NACE kodu · belge parçası). Sayılar görünmüyorsa
+   web konteyneri veritabanına ulaşamıyordur.
+8. **Robots.** `https://ykh.kurumun.gov.tr/robots.txt` şunu vermeli:
+
+   ```
+   User-Agent: *
+   Allow: /$
+   Allow: /oneri
+   Allow: /giris
+   Allow: /kayit
+   Disallow: /
+   ```
+
+   `Allow: /` (sondaki `$` olmadan) görürsen **dur** — o kalıp tüm siteyi açar
+   ve gizli ekranlar taranabilir hâle gelir.
+9. Paylaşımı gerçekten sınamak için:
+   [WhatsApp/Facebook](https://developers.facebook.com/tools/debug/) ·
+   [LinkedIn](https://www.linkedin.com/post-inspector/) ·
+   [X](https://cards-dev.twitter.com/validator). Adresi yapıştır, kartı gör.
+   Kart eskiyse bu araçlardan "Scrape again" ile önbelleği tazele.
 
 Hepsi tamamsa dağıtım başarılı.
 

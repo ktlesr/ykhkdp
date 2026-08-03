@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { EylemFormu, Gonder } from "@/components/eylem-formu.tsx";
@@ -7,6 +8,18 @@ import { kullanici } from "@/lib/oturum.ts";
 
 const ETIKET = "mb-1.5 block font-mono text-[9.5px] uppercase tracking-[.13em] text-ink-mute";
 const GIRDI = "min-h-11 w-full border border-hairline bg-alan px-3 py-[11px] text-[14px] text-ink";
+
+export const metadata: Metadata = {
+  title: "Hesap aç",
+  description: "YKH-KDP hesabı açın. Öneri vermek için kayıt zorunlu değildir.",
+  alternates: { canonical: "/kayit" },
+  openGraph: { title: "Hesap aç", description: "YKH-KDP hesabı açın. Öneri vermek için kayıt zorunlu değildir.", url: "/kayit" },
+  // `card` burada TEKRAR yazılıyor: Next sayfa seviyesindeki `twitter`
+  // nesnesini üsttekiyle birleştirmiyor, tamamen eziyor. Ölçüldü — kart
+  // `summary_large_image` yerine `summary` çıkıyordu, yani görsel küçük
+  // küçük bir kutuda görünüyordu.
+  twitter: { card: "summary_large_image", title: "Hesap aç", description: "YKH-KDP hesabı açın. Öneri vermek için kayıt zorunlu değildir." },
+};
 
 export default async function Kayit() {
   if (await kullanici()) redirect("/oneri");

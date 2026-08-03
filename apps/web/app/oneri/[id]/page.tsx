@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { oneriGetir, donemGetir } from "@ykh/database";
 import {
@@ -13,9 +14,20 @@ import { Bag, Baslik, Rozet, Sayfa, UstBar, Uyari } from "@/components/ui.tsx";
 import { OnayKutusu } from "@/components/onay-kutusu.tsx";
 import { DegerlendirmeDurumu } from "@/components/degerlendirme-durumu.tsx";
 import { baglam, kullanici } from "@/lib/oturum.ts";
+import { KAPALI } from "@/lib/site.ts";
 import { cn } from "@/lib/utils.ts";
 
 /** Öneri detayı — AI bu puanı neye dayanarak verdi. */
+/**
+ * ARAMA MOTORUNA VE PAYLAŞIM KARTINA KAPALI.
+ *
+ * Bu ekran öneri verisi taşıyor ya da ona götürüyor. Başlık sabit ve
+ * içerikten türemiyor: dinamik bir başlık (ör. önerinin kendi adı) sekme
+ * adında, tarayıcı geçmişinde ve paylaşılan bir bağlantının önizlemesinde
+ * görünürdü — RLS ile kapattığımız şey oradan sızardı.
+ */
+export const metadata: Metadata = { title: "Öneri kaydı", robots: KAPALI };
+
 export default async function OneriDetay({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const b = await baglam();

@@ -84,3 +84,57 @@ test("yatırımcıya gösterilen hiçbir ekran /iller veya /il/ bağlantısı ta
     );
   }
 });
+
+test("öneri taşıyan hiçbir ekran arama motoruna açık değil", async () => {
+  /**
+   * Bir öneri başlığının paylaşım kartına ya da arama sonucuna düşmesi, RLS ile
+   * kapattığımız gizliliği geri açar. `robots: KAPALI` JSX'te tek satır ve
+   * sessizce silinebilir; hiçbir veri testi kırılmaz.
+   *
+   * Başlığın SABİT olması da ölçülüyor: dinamik bir başlık (önerinin kendi
+   * adı) sekme adında, tarayıcı geçmişinde ve paylaşılan bağlantının
+   * önizlemesinde görünürdü.
+   */
+  const KAPALI_EKRANLAR = [
+    "iller/page.tsx",
+    join("il", "[il]", "page.tsx"),
+    join("oneri", "[id]", "page.tsx"),
+    "onerilerim/page.tsx",
+    "onay/page.tsx",
+    "belgeler/page.tsx",
+    "ayarlar/page.tsx",
+  ];
+
+  for (const ekran of KAPALI_EKRANLAR) {
+    const kaynak = await readFile(join(APP, ekran), "utf8");
+    assert.match(kaynak, /robots: KAPALI/, `${ekran}: arama motoruna açık kalmış`);
+    assert.doesNotMatch(
+      kaynak,
+      /generateMetadata/,
+      `${ekran}: dinamik başlık öneri adını sızdırabilir; sabit başlık kullan`,
+    );
+  }
+});
+
+test("sitemap ve robots yalnızca AÇIK yolları ilan eder", async () => {
+  const { ACIK_YOLLAR } = await import("./site.ts");
+  const yollar = ACIK_YOLLAR.map((x) => x.yol);
+
+  // Öneri kümesinden türeyen hiçbir ekran ilan edilmemeli. Sitemap içeriği
+  // vermese de bir adresin VARLIĞINI ve sayısını sızdırır.
+  for (const gizli of ["/iller", "/il", "/oneri/", "/onerilerim", "/onay", "/belgeler", "/ayarlar", "/rapor"]) {
+    assert.ok(
+      !yollar.some((y) => y === gizli || y.startsWith(`${gizli}/`)),
+      `${gizli} açık yollar listesinde — sitemap ve robots onu ilan eder`,
+    );
+  }
+  assert.deepEqual(yollar, ["/", "/oneri", "/giris", "/kayit"]);
+
+  /**
+   * `Allow: /` kökle başlayan HER ŞEYİ açar ve beyaz listeyi geçersiz kılar.
+   * Ölçüldü: gizli ekranların tamamı taranabilir hâle geliyordu. Kök için
+   * `$` bağlayıcısı şart.
+   */
+  const robots = await readFile(join(APP, "robots.ts"), "utf8");
+  assert.match(robots, /"\/\$"/, 'robots.ts kökü `/$` ile bağlamalı, düz `/` ile değil');
+});

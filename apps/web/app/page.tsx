@@ -20,12 +20,55 @@ import { baglam, kullanici } from "@/lib/oturum.ts";
  * Sayılar veritabanından; "1000+ yatırımcı" gibi bir cümle bu üründe yazılamaz.
  */
 
+const ACIKLAMA =
+  "Yatırım konusu önerileri üst ölçekli plan belgelerine birebir alıntıyla bağlanır, sekiz kriterle " +
+  "puanlanır ve kalkınma ajansı onayından geçer. Yapay zekâ puan üretir, karar vermez.";
+
 export const metadata: Metadata = {
-  title: "YKH-KDP · Yerel Kalkınma Hamlesi karar destek platformu",
-  description:
-    "Yatırım konusu önerileri üst ölçekli plan belgelerine birebir alıntıyla bağlanır, sekiz kriterle " +
-    "puanlanır ve kalkınma ajansı onayından geçer. Yapay zekâ puan üretir, karar vermez.",
+  // `title.absolute`: künye şablonu ("%s · YKH-KDP") burada uygulanmasın,
+  // tanıtım sayfasının başlığı zaten tam künyeyi taşıyor.
+  title: { absolute: "YKH-KDP · Yerel Kalkınma Hamlesi karar destek platformu" },
+  description: ACIKLAMA,
+  alternates: { canonical: "/" },
+  openGraph: { url: "/", description: ACIKLAMA },
+  // `card` burada TEKRAR yazılıyor: Next sayfa seviyesindeki `twitter`
+  // nesnesini üsttekiyle birleştirmiyor, tamamen eziyor. Ölçüldü — kart
+  // `summary_large_image` yerine `summary` çıkıyordu.
+  twitter: { card: "summary_large_image", description: ACIKLAMA },
 };
+
+/**
+ * Yapılandırılmış veri (schema.org).
+ *
+ * `GovernmentService` ya da `GovernmentOrganization` KULLANILMIYOR — bu
+ * platform resmî Portal'ın yerine geçmiyor ve sayfanın kendi metni bunu
+ * yazıyor. Arama sonucunda resmî bir hizmet gibi görünmek, ürünün ilk
+ * cümlesiyle çelişen bir iddia olurdu.
+ *
+ * `WebApplication` doğru sınıf: bir karar HAZIRLIK aracı. `isAccessibleForFree`
+ * doğru çünkü öneri vermek kayıt bile istemiyor.
+ */
+const YAPILANDIRILMIS = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "YKH-KDP",
+  alternateName: "Yerel Kalkınma Hamlesi Karar Destek Platformu",
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  inLanguage: "tr-TR",
+  isAccessibleForFree: true,
+  description: ACIKLAMA,
+  disambiguatingDescription:
+    "Resmî başvuru portalının yerine geçmez; yatırımcı başvuruları başlamadan önceki " +
+    "politika hazırlama katmanıdır.",
+  featureList: [
+    "Üst ölçekli plan belgelerinden birebir alıntıyla gerekçelendirme",
+    "Sekiz kriterli, sürümlü ağırlıklarla puanlama",
+    "Belge dayanağı ölçümü ve dayanaksız kriterin görünür kalması",
+    "Yapay zekânın aynı belgelerle ürettiği karşı görüş",
+    "Kalkınma ajansı onayı zorunlu geçit",
+  ],
+} as const;
 
 /** Landing'de gösterilen alıntı sayısı. Tam kayıt `/oneri/[id]` içinde. */
 const ALINTI_LIMITI = 3;
@@ -124,6 +167,16 @@ export default async function Tanitim() {
 
   return (
     <main>
+      {/*
+        Yapılandırılmış veri. `dangerouslySetInnerHTML` burada meşru: içerik
+        sabit bir nesneden JSON.stringify ile üretiliyor, kullanıcı girdisi
+        yok. Alternatifi (bir <script> içine JSX metin düğümü) React'ın
+        kaçışıyla bozulurdu.
+      */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(YAPILANDIRILMIS) }}
+      />
       {/* ── Hero · ink panel ─────────────────────────────────────────────── */}
       {/*
         Kanıt ağı hero'nun ARKASINDA duruyor (`isolate` + `relative` kabı).

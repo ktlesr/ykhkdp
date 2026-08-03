@@ -1,8 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { onerilerim } from "@ykh/database";
 import { ONERI_DURUM_ACIKLAMA, ONERI_DURUM_ETIKET, onaylayabilir, type OneriDurumu } from "@ykh/domain";
 import { Bag, Baslik, Bos, Rozet, Sayfa, UstBar, Uyari } from "@/components/ui.tsx";
 import { baglam, kullanici } from "@/lib/oturum.ts";
+import { KAPALI } from "@/lib/site.ts";
 
 /**
  * Önerilerim — yatırımcının tek görünümü.
@@ -34,6 +36,16 @@ const DURUM_ISARET: Record<OneriDurumu, string> = {
   degerlendiriliyor: "◌",
   reddedildi: "▼",
 };
+
+/**
+ * ARAMA MOTORUNA VE PAYLAŞIM KARTINA KAPALI.
+ *
+ * Bu ekran öneri verisi taşıyor ya da ona götürüyor. Başlık sabit ve
+ * içerikten türemiyor: dinamik bir başlık (ör. önerinin kendi adı) sekme
+ * adında, tarayıcı geçmişinde ve paylaşılan bir bağlantının önizlemesinde
+ * görünürdü — RLS ile kapattığımız şey oradan sızardı.
+ */
+export const metadata: Metadata = { title: "Önerilerim", robots: KAPALI };
 
 export default async function Onerilerim() {
   const k = await kullanici();

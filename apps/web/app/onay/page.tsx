@@ -1,11 +1,23 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { kuyrukKopyalari, onayKuyrugu } from "@ykh/database";
 import { NACE_KAYNAK_ETIKET, ONERI_DURUM_ETIKET, onaylayabilir } from "@ykh/domain";
 import { Bag, Baslik, Bos, Rozet, Sayfa, UstBar } from "@/components/ui.tsx";
 import { baglam, kullanici } from "@/lib/oturum.ts";
+import { KAPALI } from "@/lib/site.ts";
 
 /** Ajans onay kuyruğu — AI puanladı, onay bekliyor. */
+/**
+ * ARAMA MOTORUNA VE PAYLAŞIM KARTINA KAPALI.
+ *
+ * Bu ekran öneri verisi taşıyor ya da ona götürüyor. Başlık sabit ve
+ * içerikten türemiyor: dinamik bir başlık (ör. önerinin kendi adı) sekme
+ * adında, tarayıcı geçmişinde ve paylaşılan bir bağlantının önizlemesinde
+ * görünürdü — RLS ile kapattığımız şey oradan sızardı.
+ */
+export const metadata: Metadata = { title: "Onay kuyruğu", robots: KAPALI };
+
 export default async function Onay() {
   const k = await kullanici();
   if (!k) redirect("/giris?hedef=%2Fonay");

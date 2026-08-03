@@ -69,6 +69,9 @@ services:
       # Web SAHİP bağlantısını ALMAZ. RLS'in uygulandığı tek yol bu:
       # `ykh_app` superuser değil, tablo sahibi değil, BYPASSRLS taşımıyor.
       <<: *veritabani
+      # Paylaşım kartlarının ve sitemap'in mutlak adresi. Verilmezse kartlar
+      # localhost'a bakar ve WhatsApp/LinkedIn/X hiçbir şey gösteremez.
+      YKH_SITE_URL: ${YKH_SITE_URL:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       YKH_MODEL_SNAPSHOT: ${YKH_MODEL_SNAPSHOT:-}
       YKH_LOG_SEVIYE: ${YKH_LOG_SEVIYE:-info}

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ayarGetir, kayitliKullanicilar, raporSatirlari } from "@ykh/database";
 import { onaylayabilir } from "@ykh/domain";
@@ -6,6 +7,7 @@ import { PaletSecici } from "@/components/palet-secici.tsx";
 import { RaporTablosu } from "@/components/rapor-tablosu.tsx";
 import { Bag, Baslik, Bos, Sayfa, UstBar, Uyari } from "@/components/ui.tsx";
 import { baglam, kullanici } from "@/lib/oturum.ts";
+import { KAPALI } from "@/lib/site.ts";
 import { paletGecerli } from "@/lib/palet.ts";
 
 /**
@@ -21,6 +23,16 @@ import { paletGecerli } from "@/lib/palet.ts";
  * `/il/[il]` sıralama ekranı. Protokol §10 yeni route için gerekçe istiyor ve
  * burada gerekçe yok — mevcut ekranın bölümü olarak duruyor.
  */
+/**
+ * ARAMA MOTORUNA VE PAYLAŞIM KARTINA KAPALI.
+ *
+ * Bu ekran öneri verisi taşıyor ya da ona götürüyor. Başlık sabit ve
+ * içerikten türemiyor: dinamik bir başlık (ör. önerinin kendi adı) sekme
+ * adında, tarayıcı geçmişinde ve paylaşılan bir bağlantının önizlemesinde
+ * görünürdü — RLS ile kapattığımız şey oradan sızardı.
+ */
+export const metadata: Metadata = { title: "Ayarlar", robots: KAPALI };
+
 export default async function Ayarlar() {
   const k = await kullanici();
   if (!k) redirect("/giris?hedef=%2Fayarlar");

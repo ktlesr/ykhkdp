@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { adaylariGetir, donemGetir, ilGetir, konuluYillar, yatirimKonulari } from "@ykh/database";
@@ -5,6 +6,7 @@ import { onaylayabilir, type Sonuc } from "@ykh/domain";
 import { ayardan, grupAgirligi, hesapla } from "@ykh/scoring";
 import { Bag, Baslik, Bos, Rozet, Sayfa, UstBar, Uyari } from "@/components/ui.tsx";
 import { baglam, kullanici } from "@/lib/oturum.ts";
+import { KAPALI } from "@/lib/site.ts";
 import { cn } from "@/lib/utils.ts";
 
 /**
@@ -27,6 +29,16 @@ const SONUC_ROZET: Record<Sonuc, { tur: "yesil" | "notr" | "kirmizi" | "amber" |
   yedek: { tur: "gri", isaret: "·" },
   dayanaksız: { tur: "amber", isaret: "◌" },
 };
+
+/**
+ * ARAMA MOTORUNA VE PAYLAŞIM KARTINA KAPALI.
+ *
+ * Bu ekran öneri verisi taşıyor ya da ona götürüyor. Başlık sabit ve
+ * içerikten türemiyor: dinamik bir başlık (ör. önerinin kendi adı) sekme
+ * adında, tarayıcı geçmişinde ve paylaşılan bir bağlantının önizlemesinde
+ * görünürdü — RLS ile kapattığımız şey oradan sızardı.
+ */
+export const metadata: Metadata = { title: "İl sıralaması", robots: KAPALI };
 
 export default async function IlSiralamasi({ params }: { params: Promise<{ il: string }> }) {
   const { il } = await params;
