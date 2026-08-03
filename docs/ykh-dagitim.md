@@ -320,7 +320,8 @@ alırsan biraz bekleyip **Deploy**'a tekrar bas.
 **Deploy** düğmesine bas. İlk dağıtım **5–10 dakika** sürer — iki Docker imajı
 sıfırdan kuruluyor.
 
-**Logs** sekmesinden `kurulum` servisini izle. Sırayla göreceklerin:
+**Logs** sekmesinden `worker` servisini izle. Şemayı o kuruyor. Sırayla
+göreceklerin:
 
 ```
 > @ykh/database@0.0.0 kur
@@ -333,17 +334,22 @@ yönetici hesabı açıldı · 324 mevcut aday · 594 belge parçası
 
 Bu satırı gördüysen veritabanı hazır.
 
-> `kurulum` konteyneri sonra **kapanır** ve Dokploy'da **"exited"** görünür.
-> **Bu hata değil** — işini bitirdi. Bir kez çalışıp çıkan bir servis.
-
-Ardından `web` ve `worker` başlar. Worker'ın ilk satırı:
+Ardından worker değerlendirme döngüsüne girer:
 
 ```
 {"seviye":"info","mesaj":"worker_basladi","aralik":5000,"maksDeneme":3}
 ```
 
-Üç servisin durumu: `postgres` running · `web` running · `worker` running ·
-`kurulum` exited. Doğru tablo budur.
+İki servis de `running` olmalı.
+
+> **Web ilk saniyelerde hata verebilir.** Şemayı worker kuruyor ve bu ~30
+> saniye sürüyor; o sırada sayfalar 500 döner ve **kendiliğinden düzelir**.
+> Bir dakika sonra hâlâ hata varsa worker loguna bak.
+>
+> Önce ayrı bir `kurulum` servisi vardı ve web onu bekliyordu. Dokploy o
+> servisi çalıştırmadı; sonuç `relation "oneri" does not exist` oldu ve nedeni
+> panelde görünmüyordu. Tek seferlik bir servisin çalıştırılmasına güvenmek bu
+> ortamda yanlış varsayımdı.
 
 ---
 
@@ -503,21 +509,21 @@ Son iki blok ölçüm yanlışını da içeriyor:
 
 | Belirti | Sebep | Çözüm |
 |---|---|---|
-| `kurulum`: "… tanımlı değil" | zorunlu değişken eksik | §3'teki tabloya bak |
-| `kurulum`: "geçerli bir bağlantı adresi değil" | veritabanı parolasında `/` `@` `:` var | Dokploy'un veritabanı ekranından parolayı harf+rakam yap |
-| `kurulum`: `getaddrinfo ENOTFOUND` | `YKH_DB_SUNUCU` yanlış ya da ağ bağlı değil | Dokploy'un iç ana makine adını kullan; `docker network ls` ile ağ adını doğrula |
-| `kurulum`: "password authentication failed" | `POSTGRES_PAROLA` Dokploy'daki değerle aynı değil | ekrandan kopyala, boşluk bırakma |
-| `kurulum`: "permission denied to create role" | `YKH_DB_SAHIP` superuser değil | Dokploy'un oluşturduğu kullanıcıyı kullan |
+| `worker`: "… tanımlı değil" | zorunlu değişken eksik | §3'teki tabloya bak |
+| `worker`: "geçerli bir bağlantı adresi değil" | veritabanı parolasında `/` `@` `:` var | Dokploy'un veritabanı ekranından parolayı harf+rakam yap |
+| `worker`: `getaddrinfo ENOTFOUND` | `YKH_DB_SUNUCU` yanlış ya da ağ bağlı değil | Dokploy'un iç ana makine adını kullan; `docker network ls` ile ağ adını doğrula |
+| `worker`: "password authentication failed" | `POSTGRES_PAROLA` Dokploy'daki değerle aynı değil | ekrandan kopyala, boşluk bırakma |
+| `worker`: "permission denied to create role" | `YKH_DB_SAHIP` superuser değil | Dokploy'un oluşturduğu kullanıcıyı kullan |
 | Her sayfa 500 · logda `ECONNREFUSED 127.0.0.1:5470` | Ortam sekmesine yerel `.env` yapıştırılmış | `DATABASE_URL` ve `DATABASE_URL_OWNER` satırlarını **sil**, yeniden dağıt |
 | `web`: "üretimde YEREL adrese bakıyor" | aynı sebep, artık açık hatayla | aynı çözüm |
 | `web`: "üretimde tanımlı değil" | `YKH_DB_SUNUCU` vb. eksik | §3'teki tabloya bak |
 | `kurulum`: "YKH_APP_PAROLA varsayılan değerde" | depodaki sabit parola bırakılmış | `openssl rand -hex 24` |
 | `kurulum`: "yalnızca harf, rakam ve . _ ~ - içerebilir" | base64 parola kullanılmış | `openssl rand -hex 24` |
-| `kurulum`: "en az 12 karakter olmalı" | yönetici parolası kısa | uzat |
+| `worker`: "en az 12 karakter olmalı" | yönetici parolası kısa | uzat |
 | Giriş yapılamıyor, forma geri dönüyor | HTTPS yok | §4 · Let's Encrypt |
 | Sertifika alınamıyor | DNS henüz yayılmamış | A kaydını doğrula, 15 dk sonra tekrar Deploy |
 | `/ayarlar` boş rapor (ajans hesabı) | `gonderen.ajans_kod` atanmamış | §8'deki SQL |
-| `kurulum` "exited" görünüyor | normal | bir kez çalışıp çıkan servis |
+| `relation "oneri" does not exist` | şema kurulmamış | `worker` loguna bak; kurulum orada çalışıyor |
 | Öneriler `degerlendiriliyor`da takılı | worker durmuş | `worker` loglarına bak, servisi restart et |
 | Tanıtım sayfasında imza bölümü boş | hiçbir resmî konu değerlendirilmemiş | doğru davranış; ajans bir konuyu değerlendirince dolar |
 | Yatırımcı `/iller`'i görebiliyor | dağıtım eski sürümde kalmış | son commit'i çektiğini doğrula |
