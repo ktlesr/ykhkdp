@@ -12,6 +12,18 @@
 const kayitlar = new Map<string, { pencereMs: number; izler: number[] }>();
 let sonTemizlik = 0;
 
+/** Yalnızca SORAR, saymaz: başarısız denemeleri sonradan `sinirSay` ile işaretleyen akışlar için. */
+export function sinirDolu(anahtar: string, limit: number, pencereMs: number, simdi = Date.now()): boolean {
+  return (kayitlar.get(anahtar)?.izler ?? []).filter((t) => simdi - t < pencereMs).length >= limit;
+}
+
+/** Bir denemeyi sayar (ör. başarısız giriş). */
+export function sinirSay(anahtar: string, pencereMs: number, simdi = Date.now()): void {
+  const izler = (kayitlar.get(anahtar)?.izler ?? []).filter((t) => simdi - t < pencereMs);
+  izler.push(simdi);
+  kayitlar.set(anahtar, { pencereMs, izler });
+}
+
 /** true → sınır aşıldı, işlem yapılmamalı. Aşmayan çağrı sayılır. */
 export function sinirAsildi(anahtar: string, limit: number, pencereMs: number, simdi = Date.now()): boolean {
   // Süresi dolan kayıtlar ara ara silinir; harita sınırsız büyümez.
@@ -58,7 +70,9 @@ export function icYol(hedef: string): string | null {
   const KOK = "http://ykh.ic";
   try {
     const u = new URL(hedef, KOK);
-    return u.origin === KOK ? u.pathname + u.search + u.hash : null;
+    // `/.//evil` normalize edilince `//evil` olur: protokole göre yol, dış adres.
+    if (u.origin !== KOK || u.pathname.startsWith("//")) return null;
+    return u.pathname + u.search + u.hash;
   } catch {
     return null;
   }

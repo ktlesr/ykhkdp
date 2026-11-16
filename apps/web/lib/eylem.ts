@@ -13,7 +13,7 @@ import { KRITERLER, type Kriter } from "@ykh/scoring";
 import { degerlendirmeYap, SERVIS } from "@ykh/degerlendirme";
 import { baglam, cerezSil, COOKIE, istemciIp, kullanici, oturumCerezi } from "./oturum.ts";
 import { paletGecerli } from "./palet.ts";
-import { ayar, COK_FAZLA, icYol, sinirAsildi } from "./sinir.ts";
+import { ayar, COK_FAZLA, icYol, sinirAsildi, sinirDolu, sinirSay } from "./sinir.ts";
 
 const DK = 60_000;
 
@@ -22,19 +22,31 @@ export type EylemSonucu = { ok: boolean; mesaj: string };
 // ── kimlik ─────────────────────────────────────────────────────────────────
 
 export async function girisEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
-  // Parola özeti (scrypt) pahalı: IP ve hesap başına ayrı sınır. Hesap anahtarı
-  // tek IP'den yavaş deneme ile dağıtık deneme arasındaki farkı kapatır.
-  const eposta = String(f.get("eposta") ?? "").trim().toLocaleLowerCase("tr-TR");
+  // Parola özeti (scrypt) pahalı: IP başına toplam sınır + hesap başına
+  // BAŞARISIZ deneme sınırı.
+  //
+  // Anahtar veritabanının eşlediği kimlikle AYNI: `kimlik.eposta` citext ve
+  // yerelden bağımsız küçültür. `tr-TR` küçültme (I → ı) farklı anahtar üretip
+  // sınırı atlatmaya izin veriyordu; aynı dizge `girisYap`'a da gider.
+  //
+  // Hesap sınırı yalnızca başarısız denemeyi sayar ve IP ile eşlenir: başkası
+  // adına bilerek yanlış parola girip o hesabı kilitlemek mümkün olmasın.
+  const eposta = String(f.get("eposta") ?? "").trim().toLowerCase();
   const ip = await istemciIp();
+  const hesapAnahtari = `giris-hesap:${eposta}|${ip}`;
+  const HESAP_PENCERE = 15 * DK;
   if (
     sinirAsildi(`giris-ip:${ip}`, ayar("YKH_SINIR_GIRIS_IP", 20), 10 * DK) ||
-    sinirAsildi(`giris-hesap:${eposta}`, ayar("YKH_SINIR_GIRIS_HESAP", 10), 15 * DK)
+    sinirDolu(hesapAnahtari, ayar("YKH_SINIR_GIRIS_HESAP", 10), HESAP_PENCERE)
   ) {
     log.uyari("hiz_siniri", { eylem: "giris" });
     return { ok: false, mesaj: COK_FAZLA };
   }
-  const r = await girisYap(String(f.get("eposta") ?? ""), String(f.get("parola") ?? ""));
-  if (!r.ok) return { ok: false, mesaj: r.hata };
+  const r = await girisYap(eposta, String(f.get("parola") ?? ""));
+  if (!r.ok) {
+    sinirSay(hesapAnahtari, HESAP_PENCERE);
+    return { ok: false, mesaj: r.hata };
+  }
   await oturumCerezi(r.jeton);
   // Yalnızca uygulama içi yol (açık yönlendirmeye karşı, bkz. `icYol`).
   redirect(icYol(String(f.get("hedef") ?? "")) ?? "/iller");

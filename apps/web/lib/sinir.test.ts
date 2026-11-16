@@ -1,10 +1,22 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { icYol, ipSec, sinirAsildi } from "./sinir.ts";
+import { icYol, ipSec, sinirAsildi, sinirDolu, sinirSay } from "./sinir.ts";
+
+test("yalnızca sayılan denemeler sınırı doldurur; sormak saymaz", () => {
+  const k = `say-${Math.random()}`;
+  for (let i = 0; i < 5; i++) assert.equal(sinirDolu(k, 2, 1000, 100 + i), false);
+  sinirSay(k, 1000, 200);
+  sinirSay(k, 1000, 201);
+  assert.equal(sinirDolu(k, 2, 1000, 202), true);
+  assert.equal(sinirDolu(k, 2, 1000, 1300), false, "pencere dolunca açılır");
+});
 
 test("yönlendirme hedefi yalnızca uygulama içi yol olabilir", () => {
   assert.equal(icYol("/oneri/12?a=1"), "/oneri/12?a=1");
-  for (const kotu of ["//evil.example", "/\\evil.example", "/\t/evil.example", "https://evil.example", "", "oneri"]) {
+  for (const kotu of [
+    "//evil.example", "/\\evil.example", "/\t/evil.example", "https://evil.example", "", "oneri",
+    "/.//evil.example", "/%2e//evil.example", "/a/..//evil.example",
+  ]) {
     assert.equal(icYol(kotu), null, JSON.stringify(kotu));
   }
 });
