@@ -24,6 +24,11 @@ export function sinirSay(anahtar: string, pencereMs: number, simdi = Date.now())
   kayitlar.set(anahtar, { pencereMs, izler });
 }
 
+/** `sinirSay` ile sayılmış son denemeyi geri alır (ör. giriş başarılı oldu). */
+export function sinirGeriAl(anahtar: string): void {
+  kayitlar.get(anahtar)?.izler.pop();
+}
+
 /** true → sınır aşıldı, işlem yapılmamalı. Aşmayan çağrı sayılır. */
 export function sinirAsildi(anahtar: string, limit: number, pencereMs: number, simdi = Date.now()): boolean {
   // Süresi dolan kayıtlar ara ara silinir; harita sınırsız büyümez.

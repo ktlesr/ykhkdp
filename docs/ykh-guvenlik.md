@@ -137,6 +137,11 @@ tekil açmak ifşadır.
 
 ## 8. Kimlik doğrulama
 
+- Giriş: IP başına toplam (20/10 dk); hesap+IP başına başarısız deneme (10/15 dk);
+  IP'den bağımsız hesap başına başarısız deneme (50/15 dk, dağıtık tahmine karşı,
+  kilitleme saldırısını zorlaştıracak kadar yüksek). Anahtar citext ile aynı
+  biçimde (yerelden bağımsız) küçültülür; deneme doğrulamadan önce sayılır,
+  başarıda geri alınır.
 - Hız sınırı (`apps/web/lib/sinir.ts`): giriş IP ve hesap başına, kayıt ve
   misafir açma IP başına, öneri IP başına + gönderen başına günlük kota
   (veritabanında, atomik). IP, Traefik'in **eklediği** `x-forwarded-for`

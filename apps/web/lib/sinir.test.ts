@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { icYol, ipSec, sinirAsildi, sinirDolu, sinirSay } from "./sinir.ts";
+import { icYol, ipSec, sinirAsildi, sinirDolu, sinirGeriAl, sinirSay } from "./sinir.ts";
 
 test("yalnızca sayılan denemeler sınırı doldurur; sormak saymaz", () => {
   const k = `say-${Math.random()}`;
@@ -9,6 +9,15 @@ test("yalnızca sayılan denemeler sınırı doldurur; sormak saymaz", () => {
   sinirSay(k, 1000, 201);
   assert.equal(sinirDolu(k, 2, 1000, 202), true);
   assert.equal(sinirDolu(k, 2, 1000, 1300), false, "pencere dolunca açılır");
+});
+
+test("başarılı deneme geri alınır, sayaç dolmaz", () => {
+  const k = `geri-${Math.random()}`;
+  for (let i = 0; i < 5; i++) {
+    sinirSay(k, 1000, 100 + i);
+    sinirGeriAl(k);
+  }
+  assert.equal(sinirDolu(k, 1, 1000, 110), false);
 });
 
 test("yönlendirme hedefi yalnızca uygulama içi yol olabilir", () => {
