@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { icYol, ipSec, sinirAsildi, sinirDolu, sinirGeriAl, sinirSay } from "./sinir.ts";
+import { icYol, ipSec, siraBekle, sinirAsildi, sinirDolu, sinirGeriAl, sinirSay } from "./sinir.ts";
 
 test("yalnızca sayılan denemeler sınırı doldurur; sormak saymaz", () => {
   const k = `say-${Math.random()}`;
@@ -67,4 +67,13 @@ test("kısa pencereli bir sınırın temizliği uzun pencereli sayacı silmez", 
   // 11 dakika sonra 10 dakikalık başka bir sınır temizliği tetikler.
   sinirAsildi(`kisa-${Math.random()}`, 5, 10 * 60_000, t0 + 11 * 60_000);
   assert.equal(sinirAsildi(uzun, 1, 60 * 60_000, t0 + 12 * 60_000), true, "saatlik sayaç hâlâ dolu");
+});
+
+test("sıra eşzamanlı çağrıları ardışık işler, kimseyi reddetmez", async () => {
+  const k = `sira-${Math.random()}`;
+  const t0 = Date.now();
+  const bitis: number[] = [];
+  await Promise.all([1, 2, 3].map(() => siraBekle(k, 40).then(() => bitis.push(Date.now() - t0))));
+  assert.equal(bitis.length, 3, "üç çağrı da tamamlanır");
+  assert.ok(Math.max(...bitis) >= 110, `ardışık: ${bitis.join(",")}`);
 });

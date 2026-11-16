@@ -82,3 +82,24 @@ export function icYol(hedef: string): string | null {
     return null;
   }
 }
+
+/**
+ * Anahtar başına SIRA: çağrılar birbiri ardına, `araMs` aralıkla başlar.
+ *
+ * Paralel uyuyan istekler hiçbir şeyi sınırlamaz; sıra gerçek bir hız
+ * tavanıdır (anahtar başına `araMs`'de bir deneme) ve kimseyi REDDETMEZ —
+ * meşru deneme gecikir ama düşmez. Böylece hesap herkesin dolduracağı bir
+ * kilit anahtarına dönüşmeden dağıtık tahmin yavaşlar.
+ * ponytail: süreç içi; çok kopyada paylaşılan sıra gerekir.
+ */
+const siralar = new Map<string, Promise<void>>();
+export function siraBekle(anahtar: string, araMs: number): Promise<void> {
+  const sira = (siralar.get(anahtar) ?? Promise.resolve()).then(
+    () => new Promise<void>((r) => setTimeout(r, araMs)),
+  );
+  siralar.set(anahtar, sira);
+  void sira.then(() => {
+    if (siralar.get(anahtar) === sira) siralar.delete(anahtar);
+  });
+  return sira;
+}

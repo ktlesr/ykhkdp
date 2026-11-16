@@ -13,7 +13,7 @@ import { KRITERLER, type Kriter } from "@ykh/scoring";
 import { degerlendirmeYap, SERVIS } from "@ykh/degerlendirme";
 import { baglam, cerezSil, COOKIE, istemciIp, kullanici, oturumCerezi } from "./oturum.ts";
 import { paletGecerli } from "./palet.ts";
-import { ayar, COK_FAZLA, icYol, sinirAsildi, sinirDolu, sinirGeriAl, sinirSay } from "./sinir.ts";
+import { ayar, COK_FAZLA, icYol, siraBekle, sinirAsildi, sinirDolu, sinirGeriAl, sinirSay } from "./sinir.ts";
 
 const DK = 60_000;
 
@@ -46,14 +46,19 @@ export async function girisEylemi(_o: EylemSonucu | null, f: FormData): Promise<
     log.uyari("hiz_siniri", { eylem: "giris" });
     return { ok: false, mesaj: COK_FAZLA };
   }
-  // Hesap toplamı (IP'den bağımsız) REDDETMEZ, yavaşlatır: sert engel
-  // kurbanın hesabını herkesin kilitleyebileceği bir anahtar olurdu.
-  if (sinirDolu(hesap, ayar("YKH_SINIR_GIRIS_HESAP_TOPLAM", 30), PENCERE)) {
-    log.uyari("hiz_siniri", { eylem: "giris_yavaslatildi" });
-    await new Promise((r) => setTimeout(r, 3000));
-  }
+  // Sayım kontrolle AYNI eşzamanlı blokta, hiçbir await'ten önce: arada
+  // bekleyen bir istek yokken eşzamanlı denemeler sınırı aşamaz.
+  const yavaslat = sinirDolu(hesap, ayar("YKH_SINIR_GIRIS_HESAP_TOPLAM", 30), PENCERE);
   sinirSay(hesapIp, PENCERE);
   sinirSay(hesap, PENCERE);
+  // Hesap toplamı (IP'den bağımsız) REDDETMEZ, SIRAYA koyar: o hesaba gelen
+  // denemeler tek tek ve 3 sn arayla işlenir. Sert engel kurbanın hesabını
+  // herkesin kilitleyebileceği bir anahtar olurdu; paralel bekleme ise
+  // hiçbir şeyi sınırlamazdı.
+  if (yavaslat) {
+    log.uyari("hiz_siniri", { eylem: "giris_siraya_alindi" });
+    await siraBekle(hesap, 3000);
+  }
   const r = await girisYap(eposta, String(f.get("parola") ?? ""));
   if (!r.ok) return { ok: false, mesaj: r.hata };
   sinirGeriAl(hesapIp);
