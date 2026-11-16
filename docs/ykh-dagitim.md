@@ -229,6 +229,7 @@ Compose dosyasının okuduğu **her** değişken — başka yok:
 | `YKH_SITE_URL` | hayır* | alan adın | web |
 | `OPENAI_API_KEY` | hayır | OpenAI | web, worker |
 | `YKH_MODEL_SNAPSHOT` | hayır | sen | web, worker |
+| `YKH_MODEL_EFOR` | hayır | sen (`low`/`medium`/`high`, boşsa `medium`) | web, worker |
 | `YKH_WORKER_ARALIK` | hayır | sen | worker |
 | `YKH_LOG_SEVIYE` | hayır | sen | hepsi |
 
@@ -411,15 +412,10 @@ Hepsi tamamsa dağıtım başarılı.
 Şu an yalnızca senin yönetici hesabın var. Ajans uzmanları:
 
 1. Uzman `/kayit` adresinden normal hesap açar (rolü `yatirimci` olur).
-2. Sen onu ajansa yükseltirsin. Dokploy → `postgres` servisi → **Terminal**:
-
-```sql
-update gonderen set rol = 'ajans', ajans_kod = 'TR33'
-where ref = (select gonderen_ref from kimlik where eposta = 'uzman@ajans.gov.tr');
-```
-
-`TR33` yerine o ajansın **NUTS-2 kodunu** yaz (`ajans` tablosunda `kod`
-sütunu; ZAFER = TR33, AHİKA = TR71, …).
+2. Sen onu ajansa yükseltirsin: **`/ayarlar` → Kayıtlı kullanıcılar** listesinde
+   rolü `Ajans` yap ve bölgesini (NUTS-2, ör. TR33 · ZAFER) seç. Atama
+   `rol_atandi` olarak denetime yazılır; kimse kendi rolünü değiştiremez.
+   SQL ile elle güncelleme artık gerekmiyor.
 
 > **`ajans_kod` atamayı unutma.** Boş kalırsa o kullanıcı toplu raporda
 > **hiçbir satır göremez**. Bu bilinçli: bölgesi bilinmeyen bir hesaba

@@ -59,9 +59,15 @@ test("globals.css: handoff §2 animasyonları + kapsanmış hero istisnası", as
   // kullanılabilirler. Ürünün geri kalanı §2'de kalır. Kural kalkmadı,
   // kapsamı yazıldı; bir gün bir tablo `heroNabiz` kullanmaya kalkarsa
   // aşağıdaki ikinci assert kırılır.
+  //
+  // İKİNCİ İSTİSNA (2026-11, kullanıcı kararı): değerlendirme koşusu göstergesi.
+  // `analiz` önekli keyframe'ler yalnızca `.analiz-*` seçicilerinde; hareket
+  // sunucudan gelen gerçek aşamayı anlatır (§1.10 durum değişimi).
   const IZINLI = new Set(["sheetIn", "drawerIn", "ledgerIn", "veilIn"]);
+  const KAPSAM: Record<string, RegExp> = { hero: /\.hero-/, analiz: /\.analiz-/ };
   const tanimli = [...css.matchAll(/@keyframes\s+([A-Za-z][\w-]*)/g)].map((m) => m[1]);
-  const fazla = tanimli.filter((a) => !IZINLI.has(a) && !a.startsWith("hero"));
+  const onek = (a: string) => Object.keys(KAPSAM).find((k) => a.startsWith(k));
+  const fazla = tanimli.filter((a) => !IZINLI.has(a) && !onek(a));
 
   assert.deepEqual(
     fazla,
@@ -70,21 +76,33 @@ test("globals.css: handoff §2 animasyonları + kapsanmış hero istisnası", as
       "değişimini anlaşılır kılmak için (§1.10); dekoratif giriş animasyonu yok.",
   );
 
-  // Hero animasyonları hero dışında ÇAĞRILAMAZ.
-  const heroAdlari = tanimli.filter((a) => a.startsWith("hero"));
-  assert.ok(heroAdlari.length > 0, "istisna kullanılmıyorsa kaldırılmalı");
-
-  const kacak: string[] = [];
-  for (const kural of css.split("}")) {
-    const [secici, govde = ""] = kural.split("{");
-    // `String.raw`: düz şablonda `\b` KELİME SINIRI DEĞİL, backspace karakteri
-    // (U+0008) olur ve regex hiçbir zaman eşleşmez — kontrol sessizce hep
-    // geçerdi. Bu dosyanın işi sessiz kırılmayı yakalamak; kendisi sessizce
-    // geçemez.
-    if (!heroAdlari.some((a) => new RegExp(String.raw`animation[^;]*\b${a}\b`).test(govde))) continue;
-    if (!/\.hero-/.test(secici)) kacak.push(secici.trim().slice(0, 60));
+  // Kapsanmış animasyonlar kendi adresleri dışında ÇAĞRILAMAZ.
+  for (const [k, adres] of Object.entries(KAPSAM)) {
+    const adlar = tanimli.filter((a) => a.startsWith(k));
+    assert.ok(adlar.length > 0, `${k} istisnası kullanılmıyorsa kaldırılmalı`);
+    const kacak: string[] = [];
+    for (const kural of css.split("}")) {
+      const [secici, govde = ""] = kural.split("{");
+      // `String.raw`: düz şablonda `\b` KELİME SINIRI DEĞİL, backspace karakteri
+      // (U+0008) olur ve regex hiçbir zaman eşleşmez — kontrol sessizce hep
+      // geçerdi. Bu dosyanın işi sessiz kırılmayı yakalamak; kendisi sessizce
+      // geçemez.
+      if (!adlar.some((a) => new RegExp(String.raw`animation[^;]*\b${a}\b`).test(govde))) continue;
+      if (!adres.test(secici)) kacak.push(secici.trim().slice(0, 60));
+    }
+    assert.deepEqual(kacak, [], `${k} animasyonu kendi kapsamı dışında: ${kacak.join(", ")}`);
   }
-  assert.deepEqual(kacak, [], `Hero animasyonu hero dışında: ${kacak.join(", ")}`);
+});
+
+test("analiz istisnası sızmaz: kapsam dışına enjekte edilen kullanım yakalanır", async () => {
+  // Kapsam testinin kendisini sına: tablo satırına analiz animasyonu eklenmiş bir CSS.
+  const css = (await readFile(CSS, "utf8")) + "\n.tablo-satiri { animation: analizNabiz 1s infinite; }\n";
+  const kacak = css
+    .split("}")
+    .map((k) => k.split("{"))
+    .filter(([, g = ""]) => /animation[^;]*\banaliz\w*/.test(g))
+    .filter(([sec]) => !/\.analiz-/.test(sec));
+  assert.equal(kacak.length, 1, "enjekte edilen kapsam dışı kullanım tam bir kez yakalanmalı");
 });
 
 test("hero istisnası TEK YÜZEYE kapsanmış: glow başka yerde yok", async () => {

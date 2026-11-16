@@ -150,17 +150,34 @@ export const openAiIstemci = (): ModelIstemcisi => ({
           { role: "user", content: istek.kullanici },
         ],
         text: { format: { type: "json_schema", name: istek.semaAdi, strict: true, schema: istek.jsonSema } },
+        // Akıl yürüten modeller (gpt-5.x, o-serisi) için düzey. Verilmezse model
+        // en düşük düzeyde kalıp prompt'taki yerellik tavanını koşudan koşuya
+        // farklı uyguluyordu (eval: yersiz gerekçe 39–78). gpt-4.1 bu alanı kabul
+        // etmez, o yüzden yalnızca akıl yürüten modellere gönderilir.
+        ...(/^(gpt-5|o\d)/.test(istek.modelSnapshot)
+          ? { reasoning: { effort: process.env.YKH_MODEL_EFOR || "medium" } }
+          : {}),
       }),
+      // Askıda kalan çağrı worker'ı süresiz durdurmasın. Zaman aşımı "model"
+      // aşaması hatasıdır: öneri `degerlendiriliyor` kalır, deneme sayılır.
+      signal: AbortSignal.timeout(Number(process.env.YKH_MODEL_ZAMAN_ASIMI_MS) || 180_000),
     });
     if (!yanit.ok) throw new Error(`OpenAI ${yanit.status}: ${await yanit.text()}`);
 
     const j = (await yanit.json()) as {
       output_text?: string;
-      output?: Array<{ content?: Array<{ text?: string }> }>;
+      output?: Array<{ type?: string; content?: Array<{ type?: string; text?: string }> }>;
       usage?: { input_tokens?: number; output_tokens?: number };
     };
+    // Akıl yürüten modellerde (gpt-5.x) ilk çıktı öğesi `reasoning` olabilir;
+    // metin `message` öğesinin `output_text` içeriğindedir. İlk öğeye bakmak
+    // boş metin → "geçerli JSON değil" reddi üretirdi.
+    const mesaj = j.output
+      ?.filter((o) => o.type === "message")
+      .flatMap((o) => o.content ?? [])
+      .find((c) => c.type === "output_text")?.text;
     return {
-      metin: j.output_text ?? j.output?.[0]?.content?.[0]?.text ?? "",
+      metin: j.output_text ?? mesaj ?? "",
       girdiToken: j.usage?.input_tokens ?? 0,
       ciktiToken: j.usage?.output_tokens ?? 0,
     };

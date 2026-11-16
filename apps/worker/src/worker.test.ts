@@ -13,7 +13,7 @@ after(async () => { await kapat(); });
 
 // Bu paket kendi durumunu kurar; başka bir test paketinin bıraktığı duruma bağlı kalmaz.
 before(async () => {
-  await sifirla();
+  await sifirla({ test: true });
   await yukari();
   await seed();
   const [o] = await islem(SERVIS, (sql) =>
@@ -65,10 +65,11 @@ test("değerlendirme: NACE atanır, puan yazılır, durum onay_bekliyor olur", a
   assert.match(mesajlar.at(-1) ?? "", /puan hazır/);
 
   const [sonra] = await islem(SERVIS, (sql) =>
-    sql<{ nace_kod: string | null; nace_kaynagi: string | null; durum: string }[]>`
-      select nace_kod, nace_kaynagi, durum from oneri where id = ${oneriId}
+    sql<{ nace_kod: string | null; nace_kaynagi: string | null; durum: string; asama: string | null }[]>`
+      select nace_kod, nace_kaynagi, durum, asama from oneri where id = ${oneriId}
     `,
   );
+  assert.equal(sonra.asama, null, "başarılı kayıtta aşama sıfırlanır (0016)");
   assert.ok(sonra.nace_kod, "AI NACE atamalı");
   assert.equal(sonra.nace_kaynagi, "ai", "kaynak 'ai' işaretlenmeli");
   assert.equal(sonra.durum, "onay_bekliyor", "puan doğrulanmamış → onay bekler");
@@ -106,6 +107,8 @@ test("reddedilen çıktı kaydedilmez, öneri degerlendiriliyor kalır", async (
     sql<{ n: string }[]>`select count(*) as n from degerlendirme where oneri_id = ${o.id}`,
   );
   assert.equal(Number(d.n), 0, "reddedilen çıktı kaydedilmez");
+  const [a] = await islem(SERVIS, (sql) => sql<{ asama: string | null }[]>`select asama from oneri where id = ${o.id}`);
+  assert.equal(a.asama, "belge", "durduğu aşama görünür kalır");
 });
 
 test("değerlendirme kaydı model künyesi ve dayanak taşır", async () => {
@@ -116,7 +119,7 @@ test("değerlendirme kaydı model künyesi ve dayanak taşır", async () => {
   );
   assert.ok(d, "değerlendirme kaydı olmalı");
   assert.notEqual(d.model_snapshot, "latest");
-  assert.equal(d.prompt_surum, "degerlendirme-v5");
+  assert.equal(d.prompt_surum, "degerlendirme-v6");
   assert.ok(d.dayanak >= 0 && d.dayanak <= 100);
 });
 
@@ -128,7 +131,8 @@ test("AI ham puanı değiştirilemez — trigger reddeder", async () => {
 });
 
 test("değerlendirme sonucu aşama bilgisi taşır", async () => {
+  // oneriId artık onay_bekliyor: kuyruk dışı öneri model çağrılmadan "oneri" döner.
   const s = await degerlendirmeYap(SERVIS, oneriId);
-  assert.ok(["tamam", "model", "belge", "nace"].includes(s.asama));
+  assert.equal(s.asama, "oneri");
   assert.equal(typeof s.mesaj, "string");
 });

@@ -136,7 +136,7 @@ async function birKosu(o: Ornek): Promise<{ olcum: Olcum; ret: string | null }> 
         s.maliyet.girdiToken + s.maliyet.ciktiToken +
         (kg.ok ? kg.maliyet.girdiToken + kg.maliyet.ciktiToken : 0),
       // Şema katmanı sekiz kriteri zorluyor; yine de kontrol edilir.
-      ...(s.veri.puanlar.length === KRITERLER.length ? {} : { eksikKriter: true }),
+      ...(KRITERLER.every((k) => s.veri.puanlar.some((p) => p.kriter === k)) ? {} : { eksikKriter: true }),
     },
   };
 }

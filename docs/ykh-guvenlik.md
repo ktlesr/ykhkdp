@@ -91,6 +91,18 @@ başkasının puanını oku" kapısına dönüşürdü; görünürlük kontrolü
 **içine** alındı ve göremediğin öneri için 0 döner. Kamu artık sıralama
 hesaplamıyor, kapı yalnızca `koken = 'mevcut'` konular için anlamlı kalıyor.
 
+### Bağlamın sınırı
+
+RLS bağlamı (`app.rol`, `app.gonderen_ref`) uygulama tarafından `set_config`
+ile **bildirilir**. Politikalar ve `security definer` içi kontroller
+(`kimlik_pseudonimlestir` 0015 ile yalnızca yönetici) **uygulama hatasına**
+karşı savunmadır; `ykh_app` parolasını ele geçirip ham SQL yazabilen biri
+bağlamı da taklit edebilir. Bu yüzden `oturum` tablosunun koşulsuz politikası
+(`oturum_hepsi`) bu turda değiştirilmedi: daraltmak `hesap_ac`/`misafir_ac`/
+`oturum_coz` fonksiyonlarının sahip rolüyle FORCE RLS'e takılıp takılmadığına
+bağlı ve üretimde sahip rolü superuser olmayabilir. Ayrı plan: fonksiyon
+sahipliğini netleştir, sonra `oturum` politikasını kendi satırıyla sınırla.
+
 ## 6. Maskeleme
 
 Log: `@ykh/observability` `eposta`, `ad_soyad`, `parola`, `jeton`, `token_hash`,
@@ -125,6 +137,14 @@ tekil açmak ifşadır.
 
 ## 8. Kimlik doğrulama
 
+- Hız sınırı (`apps/web/lib/sinir.ts`): giriş IP ve hesap başına, kayıt ve
+  misafir açma IP başına, öneri IP başına + gönderen başına günlük kota
+  (veritabanında, atomik). IP, Traefik'in **eklediği** `x-forwarded-for`
+  değeridir (sondan `YKH_PROXY_SAYISI`, varsayılan 1); istemcinin yazdığı ilk
+  değere güvenilmez. Varsayılanlar kodda; değiştirmek için `YKH_SINIR_*` /
+  `YKH_KOTA_ONERI_GUNLUK` / `YKH_PROXY_SAYISI` üretim compose'una da eklenmeli.
+  Ajans ve yönetici öneri kotasına tabi değildir.
+- Girişten sonraki yönlendirme yalnızca uygulama içi yola yapılır.
 - Parola: `node:crypto` scrypt, N=32768 r=8 p=1, 32 baytlık özet, format
   `scrypt$N$r$p$tuz$ozet` — parametre değişse de eski özetler doğrulanır.
 - Oturum: 32 bayt rastgele jeton; çerezde jetonun kendisi, veritabanında
@@ -147,10 +167,14 @@ tekil açmak ifşadır.
 
 ## 10. Bağımlılık güvenliği
 
-`pnpm-workspace.yaml` içindeki `overrides`, Next 16.2.12'nin getirdiği
-açık CVE'li geçişli bağımlılıkları yamalı sürüme zorlar:
+2026-11-16: Next 16.4.6 (Server Actions DoS ve RCE kayıtları), Zod 4.6.7.
+`pnpm-workspace.yaml` içindeki `overrides` geçişli bağımlılıkları yamalı
+sürüme zorlar:
 
 - `postcss@8.5.24` — GHSA-qx2v-qp2m-jg93 (XSS) + sourceMappingURL path traversal (2 kayıt)
-- `sharp@0.35.3` — libvips CVE-2026-33327/33328/35590/35591
+- `sharp@0.35.5` — libvips, libheif, librsvg kayıtları
+- `nanoid@3.3.20`, `source-map-js@1.2.2` — postcss altında DoS
+- `brace-expansion` 1.x/2.x — exceljs > archiver > minimatch altında DoS
+- `uuid@11.1.1` — exceljs
 
 `pnpm audit --prod` temiz olmadan sürüm çıkılmaz.

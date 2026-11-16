@@ -51,8 +51,9 @@ export async function GET() {
     { header: "NACE kaynağı", key: "nace_kaynagi", width: 16 },
     { header: "Belge dayanağı", key: "dayanak", width: 13 },
     { header: "Doğrulanmış alıntı", key: "alinti", width: 15 },
-    ...KRITERLER.map((kr) => ({ header: KRITER_ETIKET[kr], key: kr, width: 15 })),
+    ...KRITERLER.map((kr) => ({ header: `AI · ${KRITER_ETIKET[kr]}`, key: `ai_${kr}`, width: 15 })),
     { header: "Puan düzeltildi", key: "duzeltildi", width: 14 },
+    ...KRITERLER.map((kr) => ({ header: `Ajans · ${KRITER_ETIKET[kr]}`, key: `ajans_${kr}`, width: 15 })),
     { header: "Yapay zekâ gerekçesi", key: "ai_gerekce", width: 60 },
     { header: "Model künyesi", key: "model_snapshot", width: 26 },
     { header: "Prompt sürümü", key: "prompt_surum", width: 18 },
@@ -63,6 +64,8 @@ export async function GET() {
 
   for (const r of satirlar) {
     const p = r.puanlar ?? {};
+    // Düzeltme yoksa düzeltme sütunları BOŞ kalır; ham puan kopyalanmaz.
+    const dz = r.duzeltilmis_puanlar ?? {};
     s1.addRow({
       ...r,
       ilce: r.ilce ?? "",
@@ -75,7 +78,8 @@ export async function GET() {
       // Değerlendirilmemiş öneride 0 yazmak yanlış olurdu: 0 bir ölçüm,
       // boş ise "henüz ölçülmedi". Excel'de ikisi ayrı kalır.
       dayanak: r.dayanak ?? "",
-      ...Object.fromEntries(KRITERLER.map((kr) => [kr, p[kr] ?? ""])),
+      ...Object.fromEntries(KRITERLER.map((kr) => [`ai_${kr}`, p[kr] ?? ""])),
+      ...Object.fromEntries(KRITERLER.map((kr) => [`ajans_${kr}`, dz[kr] ?? ""])),
       duzeltildi: r.duzeltildi ? "evet" : "",
       ai_gerekce: r.ai_gerekce ?? "",
       model_snapshot: r.model_snapshot ?? "",
@@ -117,7 +121,7 @@ export async function GET() {
     ["Kapsam", k.rol === "yonetici" ? "Tüm bölgeler" : `Yalnızca ${bolgeler.join(", ") || "—"}`],
     ["Öneri satırı", String(satirlar.length)],
     ["Resmî liste satırı", String(resmi.length)],
-    ["Puan kaynağı", "Yapay zekâ ham puanı; ajans düzeltmesi varsa 'Puan düzeltildi' sütunu evet."],
+    ["Puan kaynağı", "'AI ·' sütunları yapay zekânın değişmez ham puanı; 'Ajans ·' sütunları ajans düzeltmesi, düzeltme yoksa boş."],
     ["Uyarı", "Puanlar doğrulanmamış taslaktır. Sıralama karar değildir; ajans onayı zorunlu geçittir."],
     ["Uyarı", "Belge dayanağı boş olan satır henüz değerlendirilmemiştir — 0 ile aynı şey değildir."],
   ]) {

@@ -187,7 +187,7 @@ test("'latest' alias reddedilir", () => {
 test("model snapshot ve prompt sürümü her sonuçta taşınır", async () => {
   const s = await degerlendir(cevrimdisiIstemci(), "claude-opus-5-20260101", GIRDI);
   assert.equal(s.modelSnapshot, "claude-opus-5-20260101");
-  assert.equal(s.promptSurum, "degerlendirme-v5");
+  assert.equal(s.promptSurum, "degerlendirme-v6");
 });
 
 // ── prompt injection ───────────────────────────────────────────────────────

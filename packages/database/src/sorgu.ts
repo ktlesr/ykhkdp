@@ -1,7 +1,8 @@
-import { onaylayabilir, type Aday, type Koken, type NaceKaynagi, type OneriDurumu, type Rol } from "@ykh/domain";
+import { gecisIzinli, onaylayabilir, type Aday, type Koken, type NaceKaynagi, type OneriDurumu, type Rol } from "@ykh/domain";
 import { agirlikSetiGecerli, type AgirlikSeti, type Kriter } from "@ykh/scoring";
 import type postgres from "postgres";
 import { denetle, islem, type Baglam } from "./baglanti.ts";
+import { parcala } from "./belge-yukle.ts";
 import { jetonOzeti, oturumJetonu, parolaDogrula, parolaOzetle } from "./parola.ts";
 
 /**
@@ -528,8 +529,24 @@ export type OneriGirdi = {
   naceKod: string | null;
 };
 
-export async function oneriOlustur(b: Baglam, g: OneriGirdi): Promise<{ id: number }> {
+/** Gönderen kotası aşıldı: öneri ve model işi oluşturulmadı. */
+export class KotaAsildi extends Error {}
+
+/**
+ * `kota` verilirse gönderen başına son 24 saatteki öneri sayısı sınırlanır.
+ * Sayım ve ekleme AYNI transaction'da, gönderene özgü advisory kilitle seri:
+ * düz COUNT + INSERT eşzamanlı iki gönderimde kotayı aşardı.
+ */
+export async function oneriOlustur(b: Baglam, g: OneriGirdi, kota?: number): Promise<{ id: number }> {
   return islem(b, async (sql) => {
+    if (kota !== undefined) {
+      await sql`select pg_advisory_xact_lock(hashtext(${"oneri-kota:" + (b.gonderenRef ?? "")}))`;
+      const [{ n }] = await sql<{ n: number }[]>`
+        select count(*)::int as n from oneri
+        where gonderen_ref = ${b.gonderenRef} and olusturuldu > now() - interval '24 hours'
+      `;
+      if (n >= kota) throw new KotaAsildi(`Son 24 saatte ${n} öneri verildi; sınır ${kota}.`);
+    }
     const [o] = await sql<{ id: number }[]>`
       insert into oneri (donem_id, gonderen_ref, koken, baslik, gerekce, ilce, nace_kod, nace_kaynagi, durum)
       values (${g.donemId}, ${b.gonderenRef}, 'yeni', ${g.baslik}, ${g.gerekce}, ${g.ilce},
@@ -591,17 +608,22 @@ export async function adaylariGetir(b: Baglam, d: DonemKaydi): Promise<Aday[]> {
 export async function onayKuyrugu(b: Baglam, donemId?: number) {
   if (b.rol === "anonim" || !onaylayabilir(b.rol)) return [];
   return islem(b, (sql) =>
-    sql<(ListeSatiri & { il: string; il_kod: string; yil: string })[]>`
+    sql<(ListeSatiri & { il: string; il_kod: string; yil: string; dayanak_esigi: number;
+      asama: string | null; hatali: boolean })[]>`
       select o.id, o.baslik, o.koken, o.gerekce, o.ilce, o.nace_kod, n.tanim as nace_tanim,
              o.nace_kaynagi, o.durum, o.olusturuldu::text,
              coalesce(g.dayanak, 0) as dayanak,
              g.gerekce as ai_gerekce,
              (g.duzeltilmis_puanlar is not null) as duzeltildi,
              0 as taban,
-             i.ad as il, i.kod as il_kod, d.yil
+             i.ad as il, i.kod as il_kod, d.yil,
+             -- Eşik dönemin ağırlık setinden: detay ekranıyla aynı etiket.
+             s.dayanak_esigi,
+             o.asama, (o.son_hata is not null) as hatali
       from oneri o
       join donem d on d.id = o.donem_id
       join il i on i.kod = d.il_kod
+      join agirlik_seti s on s.surum = d.agirlik_seti_surum
       left join degerlendirme g on g.oneri_id = o.id
       left join nace n on n.kod = o.nace_kod
       where o.durum in ('degerlendiriliyor', 'onay_bekliyor')
@@ -711,6 +733,8 @@ export async function oneriGetir(b: Baglam, id: number) {
         donem_id: number; gonderen_ref: string; il: string; il_kod: string; yil: string;
         ret_gerekcesi: string | null; onaylayan: string | null; onay_zamani: string | null;
         deneme: number; son_hata: string | null;
+        /** değerlendirme koşusunun adımı (0016); null = sırada ya da bitti */
+        asama: string | null; asama_zamani: string | null;
         puanlar: Record<Kriter, number> | null;
         alintilar: Array<{ belge_ad: string; bolum: string | null; alinti: string }> | null;
         /** kriter → alintilar dizisindeki sıralar; boş dizi = dayanaksız kriter */
@@ -726,7 +750,9 @@ export async function oneriGetir(b: Baglam, id: number) {
     >`
       select o.id, o.donem_id, o.gonderen_ref, o.baslik, o.koken, o.gerekce, o.ilce,
              o.nace_kod, n.tanim as nace_tanim, o.nace_kaynagi, o.durum, o.ret_gerekcesi,
-             o.deneme, o.son_hata,
+             o.deneme, o.son_hata, o.asama,
+             -- ISO 8601: tarayıcının Date.parse'ı Postgres'in boşluklu biçimini güvenle okumaz.
+             to_json(o.asama_zamani) #>> '{}' as asama_zamani,
              o.olusturuldu::text, o.onay_zamani::text, ki.ad_soyad as onaylayan,
              i.ad as il, i.kod as il_kod, d.yil,
              coalesce(g.dayanak, 0) as dayanak,
@@ -750,8 +776,10 @@ export async function oneriGetir(b: Baglam, id: number) {
 
 export async function onerilerim(b: Baglam) {
   return islem(b, (sql) =>
-    sql<{ id: number; baslik: string; durum: OneriDurumu; il: string; il_kod: string; yil: string; dayanak: number; olusturuldu: string }[]>`
+    sql<{ id: number; baslik: string; durum: OneriDurumu; il: string; il_kod: string; yil: string; dayanak: number;
+      olusturuldu: string; asama: string | null; hatali: boolean }[]>`
       select o.id, o.baslik, o.durum, i.ad as il, i.kod as il_kod, d.yil,
+             o.asama, (o.son_hata is not null) as hatali,
              coalesce(g.dayanak, 0) as dayanak, o.olusturuldu::text
       from oneri o
       join donem d on d.id = o.donem_id
@@ -765,23 +793,42 @@ export async function onerilerim(b: Baglam) {
 
 // ── ajans işlemleri ────────────────────────────────────────────────────────
 
+/**
+ * Durum geçişi. Kural VERİTABANINDAKİ durumla, aynı transaction içinde ve satır
+ * kilidiyle uygulanır. `beklenen` ekranın gördüğü durumdur: farklıysa ekran
+ * eskimiştir ve daha yeni bir kararı ezmek yerine çakışma bildirilir.
+ */
 export async function durumDegistir(
   b: Baglam,
   oneriId: number,
+  beklenen: OneriDurumu,
   yeni: OneriDurumu,
   gerekce: string,
-): Promise<void> {
-  await islem(b, async (sql) => {
-    await sql`
+): Promise<{ ok: true } | { ok: false; mesaj: string }> {
+  const rol = b.rol;
+  if (rol === "anonim") return { ok: false, mesaj: "Yetki yok." };
+  return islem(b, async (sql) => {
+    const [o] = await sql<{ durum: OneriDurumu }[]>`
+      select durum from oneri where id = ${oneriId} for update
+    `;
+    if (!o) return { ok: false as const, mesaj: "Öneri bulunamadı." };
+    if (o.durum !== beklenen) {
+      return { ok: false as const, mesaj: "Öneri bu arada değişti; sayfayı yenileyip yeniden karar verin." };
+    }
+    const izin = gecisIzinli(o.durum, yeni, rol);
+    if (!izin.izinli) return { ok: false as const, mesaj: izin.sebep };
+    const r = await sql`
       update oneri set
         durum = ${yeni}::oneri_durumu,
         ret_gerekcesi = ${yeni === "reddedildi" ? gerekce : null},
         onaylayan_ref = ${yeni === "listede" ? b.gonderenRef : null},
         onay_zamani = ${yeni === "listede" ? sql`now()` : null},
         guncellendi = now()
-      where id = ${oneriId}
+      where id = ${oneriId} and durum = ${o.durum}::oneri_durumu
     `;
-    await denetle(sql, b, `oneri_${yeni}`, "oneri", oneriId, { gerekce });
+    if (!r.count) return { ok: false as const, mesaj: "Öneri güncellenemedi; yetki reddedildi." };
+    await denetle(sql, b, `oneri_${yeni}`, "oneri", oneriId, { gerekce, onceki: o.durum });
+    return { ok: true as const };
   });
 }
 
@@ -791,24 +838,31 @@ export async function puanDuzelt(
   oneriId: number,
   puanlar: Record<Kriter, number>,
   gerekce: string,
-): Promise<void> {
-  await islem(b, async (sql) => {
+): Promise<boolean> {
+  return islem(b, async (sql) => {
     const [onceki] = await sql<{ puanlar: unknown; duzeltilmis_puanlar: unknown }[]>`
       select puanlar, duzeltilmis_puanlar from degerlendirme where oneri_id = ${oneriId}
     `;
-    await sql`
+    const r = await sql`
       update degerlendirme
       set duzeltilmis_puanlar = ${sql.json(puanlar as never)}, duzelten_ref = ${b.gonderenRef}
       where oneri_id = ${oneriId}
     `;
+    // Etkilenen satır yoksa başarı denetimi de yazılmaz.
+    if (!r.count) return false;
     await denetle(sql, b, "puan_duzeltildi", "oneri", oneriId, { gerekce, onceki, yeni: puanlar });
+    return true;
   });
 }
 
-export async function naceDuzelt(b: Baglam, oneriId: number, naceKod: string): Promise<void> {
-  await islem(b, async (sql) => {
-    await sql`update oneri set nace_kod = ${naceKod}, nace_kaynagi = 'ajans', guncellendi = now() where id = ${oneriId}`;
+export async function naceDuzelt(b: Baglam, oneriId: number, naceKod: string): Promise<boolean> {
+  return islem(b, async (sql) => {
+    const r = await sql`
+      update oneri set nace_kod = ${naceKod}, nace_kaynagi = 'ajans', guncellendi = now() where id = ${oneriId}
+    `;
+    if (!r.count) return false;
     await denetle(sql, b, "nace_duzeltildi", "oneri", oneriId, { naceKod });
+    return true;
   });
 }
 
@@ -843,18 +897,39 @@ export async function belgeleriListele(b: Baglam) {
   );
 }
 
+/**
+ * Web'den belge ekler — CLI (`belgeYukle`) ile AYNI parçalayıcıdan geçer.
+ *
+ * Tek satıra yazılan uzun metin paketi şişiriyor ve atıf çıpasını kaybediyordu;
+ * aynı kaynak iki yoldan farklı davranıyordu. Aynı adla belge varsa eklenmez:
+ * parçalar `ad` ile gruplanıyor ve iki kaynak sessizce birleşirdi.
+ */
 export async function belgeEkle(
   b: Baglam,
   g: { ad: string; tur: string; yil: string | null; ajansKod: string | null; ilKod: string | null; metin: string },
-): Promise<{ id: number }> {
+): Promise<{ ok: true; id: number; parca: number } | { ok: false; hata: string }> {
+  const parcalar = parcala(g.metin);
+  if (!parcalar.length) return { ok: false, hata: "Metinden parça çıkarılamadı." };
   return islem(b, async (sql) => {
-    const [x] = await sql<{ id: number }[]>`
-      insert into belge (ad, tur, yil, ajans_kod, il_kod, metin, yukleyen_ref)
-      values (${g.ad}, ${g.tur}::belge_turu, ${g.yil}, ${g.ajansKod}, ${g.ilKod}, ${g.metin}, ${b.gonderenRef})
+    // Ada özgü kilit: iki eşzamanlı yükleme de "yok" görüp ekleyemesin. CLI aynı kilidi alır.
+    await sql`select pg_advisory_xact_lock(hashtext(${"belge:" + g.ad}))`;
+    const [mevcut] = await sql`select 1 from belge where ad = ${g.ad} limit 1`;
+    if (mevcut) return { ok: false as const, hata: `“${g.ad}” adıyla bir belge zaten var; önce silin.` };
+    const satirlar = await sql`
+      insert into belge ${sql(
+        parcalar.map((p) => ({
+          ad: g.ad, bolum: p.bolum, tur: g.tur, yil: g.yil, ajans_kod: g.ajansKod, il_kod: g.ilKod,
+          metin: p.metin, yukleyen_ref: b.gonderenRef,
+        })),
+        "ad", "bolum", "tur", "yil", "ajans_kod", "il_kod", "metin", "yukleyen_ref",
+      )}
       returning id
     `;
-    await denetle(sql, b, "belge_eklendi", "belge", x.id, { ad: g.ad, uzunluk: g.metin.length });
-    return x;
+    const id = Number(satirlar[0].id);
+    await denetle(sql, b, "belge_eklendi", "belge", id, {
+      ad: g.ad, uzunluk: g.metin.length, parca: satirlar.length, ajansKod: g.ajansKod, ilKod: g.ilKod,
+    });
+    return { ok: true as const, id, parca: satirlar.length };
   });
 }
 
@@ -977,7 +1052,10 @@ export type RaporSatiri = {
   nace_kod: string | null;
   nace_tanim: string | null;
   nace_kaynagi: string | null;
+  /** yapay zekânın HAM puanı — değişmez */
   puanlar: Record<string, number> | null;
+  /** ajans düzeltmesi; yoksa null */
+  duzeltilmis_puanlar: Record<string, number> | null;
   duzeltildi: boolean;
   dayanak: number | null;
   ai_gerekce: string | null;
@@ -1013,7 +1091,9 @@ export async function raporSatirlari(b: Baglam) {
       select o.id, i.ad as il, i.kod as il_kod, i.ajans_kod, a.ad as ajans, d.yil,
              o.koken, o.baslik, o.gerekce, o.ilce, o.durum,
              o.nace_kod, n.tanim as nace_tanim, o.nace_kaynagi::text,
-             coalesce(g.duzeltilmis_puanlar, g.puanlar) as puanlar,
+             -- Ham AI puanı ve ajans düzeltmesi AYRI: "bu sayıyı kim koydu"
+             -- dosyada da cevaplanır (brief §2).
+             g.puanlar, g.duzeltilmis_puanlar,
              (g.duzeltilmis_puanlar is not null) as duzeltildi,
              g.dayanak, g.gerekce as ai_gerekce,
              coalesce(jsonb_array_length(g.alintilar), 0) as alinti,

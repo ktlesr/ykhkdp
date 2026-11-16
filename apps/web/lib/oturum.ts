@@ -1,4 +1,5 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { ipSec } from "./sinir.ts";
 import { baglamdan, oturumCoz, type Kullanici } from "@ykh/database";
 import type { Baglam } from "@ykh/database";
 
@@ -26,4 +27,11 @@ export async function oturumCerezi(jeton: string): Promise<void> {
 
 export async function cerezSil(): Promise<void> {
   (await cookies()).delete(COOKIE);
+}
+
+/** İstemci IP'si — hız sınırı anahtarı (bkz. `ipSec`). */
+export async function istemciIp(): Promise<string> {
+  const h = await headers();
+  const xff = h.get("x-forwarded-for");
+  return xff ? ipSec(xff) : (h.get("x-real-ip") ?? "bilinmiyor");
 }

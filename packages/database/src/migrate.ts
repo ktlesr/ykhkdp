@@ -2,7 +2,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import postgres from "postgres";
-import { sahip } from "./baglanti.ts";
+import { sahip, uygulama } from "./baglanti.ts";
 
 /**
  * Migration çalıştırıcı. Numaralı .sql dosyaları, ileri ve geri.
@@ -135,7 +135,33 @@ function yerelMi(adres: string): boolean {
   }
 }
 
-export async function sifirla(): Promise<void> {
+/**
+ * Testler `sifirla({ test: true })` çağırır: hedef veritabanının adı `_test`
+ * ile bitmiyorsa DDL'DEN ÖNCE durur. `.env.test` eksik kalırsa Node `.env`'i
+ * kullanır ve testler geliştirme verisini silerdi — yerel adres tek başına
+ * güvence değil.
+ */
+export async function sifirla(o: { test?: boolean } = {}): Promise<void> {
+  if (o.test) {
+    // Adres değil GERÇEK bağlantı sorulur: süreç ortamı .env.test'i ezebilir.
+    // Test veritabanı henüz yoksa önce oluşturulur (yalnızca adı `_test` ise).
+    const adres = new URL(process.env.DATABASE_URL_OWNER ?? "postgres://x/");
+    if (!adres.pathname.slice(1).endsWith("_test")) {
+      throw new Error(
+        `Testler '_test' ile biten ayrı bir veritabanı ister (DATABASE_URL_OWNER: '${adres.pathname.slice(1) || "tanımsız"}'). ` +
+          ".env.test dosyasını kontrol edin; geliştirme verisi silinmedi.",
+      );
+    }
+    await veritabaniHazirla();
+    const [{ s }] = await sahip()<{ s: string }[]>`select current_database() as s`;
+    const [{ u }] = await uygulama()<{ u: string }[]>`select current_database() as u`;
+    if (!s.endsWith("_test") || s !== u) {
+      throw new Error(
+        `Test hedefi tutarsız: sahip '${s}', uygulama '${u}'. İkisi de aynı '_test' veritabanına bakmalı; ` +
+          "geliştirme verisi silinmedi.",
+      );
+    }
+  }
   const adres = process.env.DATABASE_URL_OWNER ?? "";
   if (adres && !yerelMi(adres) && process.env.YKH_RESET_ONAY !== "evet") {
     throw new Error(

@@ -122,4 +122,4 @@ ama oradaki ekranlar (kanıt bandı, uzman kuyruğu, kurul kilidi) bu üründe y
   zinciri her iki modda aynıdır.
 - Belge yükleme `.txt`/`.md` veya metin yapıştırma. PDF/docx ayrıştırıcı yok.
 - E-posta doğrulama SMTP'ye bağlı değil.
-- Rapor/Excel çıktısı yok.
+- Toplu rapor `/ayarlar` içinde, `.xlsx` olarak `/rapor` ucundan (ajans: kendi bölgesi, yönetici: 81 il).

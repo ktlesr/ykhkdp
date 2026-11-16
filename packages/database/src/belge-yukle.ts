@@ -214,7 +214,17 @@ export async function belgeYukle(g: YuklemeGirdisi): Promise<{ parca: number; ka
   const parcalar = parcala(ham, g.parcaBoyu ?? 2500);
   if (!parcalar.length) throw new Error(`${yol}: ayrıştırılabilir metin bulunamadı.`);
 
-  const sql = sahip();
+  // Tek transaction: ekleme ortasında hata olursa eski kaynak eksiksiz kalır.
+  await sahip().begin(async (sql) => {
+  await sql`select pg_advisory_xact_lock(hashtext(${"belge:" + g.ad}))`;
+  // Aynı ad başka kapsamda ya da başka yılla duruyorsa sessizce silinmez.
+  const [cakisan] = await sql`
+    select 1 from belge where ad = ${g.ad}
+      and (ajans_kod is distinct from ${g.ajansKod ?? null} or il_kod is distinct from ${g.ilKod ?? null}
+           or yil is distinct from ${g.yil ?? null})
+    limit 1
+  `;
+  if (cakisan) throw new Error(`“${g.ad}” başka bir kapsam/yılla zaten yüklü; önce o kaydı silin.`);
   await sql`delete from belge where ad = ${g.ad}`;
 
   for (let i = 0; i < parcalar.length; i += 200) {
@@ -240,6 +250,7 @@ export async function belgeYukle(g: YuklemeGirdisi): Promise<{ parca: number; ka
       )}
     `;
   }
+  });
 
   return { parca: parcalar.length, karakter: parcalar.reduce((t, p) => t + p.metin.length, 0) };
 }

@@ -393,3 +393,101 @@ test("pakette hiç geçmeyen alıntı düzeltilemez, düşer", () => {
   );
   assert.ok(!s.gecerli, "tek alıntının tamamı düştü → uydurma eşiği aşıldı");
 });
+
+// ── İnceleme raporu 2026-11-16 regresyonları ────────────────────────────
+
+test("B02 — gerçek ifadeye eklenmiş kısa uydurma parça alıntıyı düşürür", () => {
+  const s = degerlendirmeyiDogrula(
+    {
+      gerekce: "Uygundur.",
+      alintilar: [{ no: 1, belge_id: 1, alinti: "tekstil ve deri öncelikli imalat ... UYDURMA" }],
+      puanlar: puanSeti({ yerel_potansiyel: [1] }),
+    },
+    PAKET,
+  );
+  assert.equal(s.gecerli, false, "tek alıntı düştü → çoğunluk uydurma → ret");
+});
+
+test("B02 — tamamı kaynakta geçen kısaltılmış alıntı hâlâ geçer", () => {
+  const s = degerlendirmeyiDogrula(
+    {
+      gerekce: "Uygundur.",
+      alintilar: [{ no: 1, belge_id: 1, alinti: "tekstil ve deri öncelikli … katma değeri yükseltecek" }],
+      puanlar: puanSeti({ yerel_potansiyel: [1] }),
+    },
+    PAKET,
+  );
+  assert.equal(s.gecerli, true);
+});
+
+test("B03 — aynı kriter sekiz kez verilirse çıktı reddedilir", () => {
+  const s = degerlendirmeyiDogrula(
+    {
+      gerekce: "Uygundur.",
+      alintilar: [{ no: 1, belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" }],
+      puanlar: KRITERLER.map(() => ({ kriter: "plan_uyumu", puan: 90, alinti_no: [1] })),
+    },
+    PAKET,
+    { plan_uyumu: 0.12, yerel_potansiyel: 0.18 },
+  );
+  assert.equal(s.gecerli, false);
+});
+
+test("B03 — ağırlık setindeki bir kriter eksikse çıktı reddedilir", () => {
+  const s = degerlendirmeyiDogrula(
+    { gerekce: "Uygundur.", alintilar: [], puanlar: puanSeti().slice(1) },
+    PAKET,
+    Object.fromEntries(KRITERLER.map((k) => [k, 0.125])),
+  );
+  assert.equal(s.gecerli, false);
+});
+
+test("B12 — karşı görüş iddiasındaki kaynaksız sayı itirazı düşürür", () => {
+  const s = karsiGorusuDogrula(
+    {
+      gorusler: [
+        { tur: "belgede_risk", iddia: "Belgeye göre 987654321 ton atık işlenemiyor ve risk büyük.", alinti_no: [1] },
+      ],
+      alintilar: [{ no: 1, belge_id: 1, alinti: "tekstil ve deri öncelikli imalat" }],
+    },
+    PAKET,
+  );
+  assert.equal(s.gecerli, true, "ana çıktı geçerli kalır");
+  assert.equal(s.gecerli && s.gorusler.length, 0, "kaynaksız sayılı itiraz düşer");
+});
+
+test("B13 — aynı belgenin parçaları ayrı belge çeşitliliği saymaz", () => {
+  const paket = paketKur("p", [
+    { id: 1, ad: "Plan", metin: "Birinci parça tekstil geri dönüşümü." },
+    { id: 2, ad: "Plan", metin: "İkinci parça deri işleme kümelenmesi." },
+    { id: 3, ad: "Strateji", metin: "Üçüncü kaynak deri işleme kümelenmesi." },
+  ]);
+  const dogrula = (ikinci: string, belge: number) =>
+    degerlendirmeyiDogrula(
+      {
+        gerekce: "Uygundur.",
+        alintilar: [
+          { no: 1, belge_id: 1, alinti: "Birinci parça tekstil geri dönüşümü" },
+          { no: 2, belge_id: belge, alinti: ikinci },
+        ],
+        puanlar: puanSeti({ yerel_potansiyel: [1], plan_uyumu: [2] }),
+      },
+      paket,
+    );
+  const ayniPlan = dogrula("İkinci parça deri işleme kümelenmesi", 2);
+  const ikiPlan = dogrula("Üçüncü kaynak deri işleme kümelenmesi", 3);
+  assert.ok(ayniPlan.gecerli && ikiPlan.gecerli);
+  assert.ok(ayniPlan.gecerli && ikiPlan.gecerli && ayniPlan.dayanak < ikiPlan.dayanak);
+});
+
+test("B02 — kaynakta sırayla geçen kısa parça kısaltılmış alıntıyı düşürmez", () => {
+  const s = degerlendirmeyiDogrula(
+    {
+      gerekce: "Uygundur.",
+      alintilar: [{ no: 1, belge_id: 1, alinti: "tekstil ve deri öncelikli … Tekstil" }],
+      puanlar: puanSeti({ yerel_potansiyel: [1] }),
+    },
+    PAKET,
+  );
+  assert.equal(s.gecerli, true);
+});

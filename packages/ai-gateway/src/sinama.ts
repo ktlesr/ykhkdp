@@ -78,7 +78,7 @@ if (!n.ok) {
     console.log(
       `\n  Model erişimi başarısız. Muhtemel nedenler: anahtar geçersiz, kota yok,\n` +
         `  ya da "${model}" bu hesapta yok. .env'de YKH_MODEL_SNAPSHOT'ı deneyin\n` +
-        `  (varsayılan ${VARSAYILAN_OPENAI_MODEL}; alternatif gpt-4o-2024-11-20).`,
+        `  (varsayılan ${VARSAYILAN_OPENAI_MODEL}; alternatif gpt-4.1-2025-04-14).`,
     );
   }
 } else {

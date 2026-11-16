@@ -62,7 +62,17 @@ export function hesapla(adaylar: readonly Aday[], ayar: Ayar): Hesap {
     sira++;
   }
 
-  for (; i < liste.length; i++) kalan.push({ ...liste[i], dayanaksiz: false });
+  // Aday bitti ama slot kaldıysa: slot sayısı ayardan gelir, aday sayısından değil.
+  while (sira <= slotSayisi) {
+    slots.push({
+      bos: true,
+      sira: sira++,
+      gerekce: "Bu slot için aday kalmadı. Boş slot meşru bir sonuçtur, hata değildir.",
+    });
+  }
+
+  // Slot döngüsünün dışında kalan aday da kendi dayanağıyla etiketlenir.
+  for (; i < liste.length; i++) kalan.push({ ...liste[i], dayanaksiz: liste[i].dayanak < esik });
 
   let s = slotSayisi + 1;
   const kalanlar = kalan

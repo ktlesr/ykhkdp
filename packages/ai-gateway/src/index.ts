@@ -11,7 +11,7 @@ export * from "./istemci.ts";
  * Anahtar yokken çevrimdışı istemci çalışır ve snapshot yalnızca künye olarak
  * kaydedilir. `YKH_MODEL_SNAPSHOT` ikisini de ezer.
  */
-export const VARSAYILAN_OPENAI_MODEL = "gpt-4.1-2025-04-14";
+export const VARSAYILAN_OPENAI_MODEL = "gpt-5.4-mini-2026-03-17";
 export const CEVRIMDISI_KUNYE = "cevrimdisi-2026-07";
 
 export function modelSnapshot(): string {

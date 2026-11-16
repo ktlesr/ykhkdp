@@ -29,7 +29,7 @@ async function girisBaglami(eposta: string, parola = DEMO_PAROLA): Promise<Bagla
 }
 
 before(async () => {
-  await sifirla();
+  await sifirla({ test: true });
   await yukari();
   await seed();
   ajans = await girisBaglami("ajans@ykh.local");
@@ -119,6 +119,37 @@ test("5 · AI NACE atar, puanlar, durum onay_bekliyor olur", async () => {
   assert.ok((k?.alintilar?.length ?? 0) > 0, "belge alıntısı olmalı");
 });
 
+test("5b · aynı öneri için iki eşzamanlı tetik tek model zinciri çalıştırır (B04)", async () => {
+  const d = await donemGetir(yatirimci, "usak");
+  assert.ok(d);
+  const o = await oneriOlustur(yatirimci, {
+    donemId: d.donemId,
+    baslik: "Deri atığından rejenere deri levha üretimi",
+    gerekce:
+      "Uşak deri organize sanayi bölgesinde tabakhane kırpıntısı ilde toplanıyor; bölge planı deri " +
+      "sektörünü öncelikli sayıyor ve hammadde başka ilde bu maliyetle bulunmuyor.",
+    ilce: null,
+    naceKod: "15.11",
+  });
+  const servis = { gonderenRef: null, rol: "yonetici" } as const;
+  const sonuclar = await Promise.all([degerlendirmeYap(servis, o.id), degerlendirmeYap(servis, o.id)]);
+  assert.equal(sonuclar.filter((s) => s.asama === "mesgul").length, 1, "biri meşgul dönmeli");
+});
+
+test("B10 · gönderen kotası aşılınca öneri ve model işi oluşmaz", async () => {
+  const d = await donemGetir(yatirimci, "usak");
+  assert.ok(d);
+  const once = await onerilerim(yatirimci);
+  const girdi = {
+    donemId: d.donemId, baslik: "Kota denemesi öneri başlığı",
+    gerekce: "Bu öneri yalnızca kota sınırını ölçmek için var; uzunluk şartını sağlayan bir gerekçe.",
+    ilce: null, naceKod: null,
+  };
+  const { KotaAsildi } = await import("@ykh/database");
+  await assert.rejects(oneriOlustur(yatirimci, girdi, once.length), KotaAsildi);
+  assert.equal((await onerilerim(yatirimci)).length, once.length, "kota aşımında satır yazılmaz");
+});
+
 test("6 · onay kuyruğunda görünür, yatırımcı kuyruğu göremez", async () => {
   const kuyruk = await onayKuyrugu(ajans);
   assert.ok(kuyruk.some((x) => x.id === oneriId));
@@ -135,7 +166,18 @@ test("7 · yatırımcı kendi önerisini onaylayamaz", async () => {
 });
 
 test("8 · ajans onaylayınca sıralamaya girer", async () => {
-  await durumDegistir(ajans, oneriId, "listede", "");
+  // B06: ekranın gördüğü durum eskiyse geçiş reddedilir — formdaki `mevcut`
+  // alanı değiştirilerek geçiş kuralı atlanamaz.
+  const sahte = await durumDegistir(ajans, oneriId, "reddedildi", "onay_bekliyor", "eski form ile geri alma");
+  assert.equal(sahte.ok, false, "sahte mevcut durum reddedilmeli");
+
+  const r = await durumDegistir(ajans, oneriId, "onay_bekliyor", "listede", "");
+  assert.equal(r.ok, true);
+
+  // Aynı anda açık kalmış ikinci form daha yeni onayı ezemez.
+  const cakisan = await durumDegistir(ajans, oneriId, "onay_bekliyor", "reddedildi", "eski açık formdan ret");
+  assert.equal(cakisan.ok, false, "çakışan karar reddedilmeli");
+
   const d = await donemGetir(ajans, "usak");
   assert.ok(d);
   const adaylar = await adaylariGetir(ajans, d);
@@ -180,6 +222,13 @@ test("10 · ajans puanı düzeltir; AI ham puanı korunur", async () => {
     sql<{ puanlar: Record<string, number> }[]>`select puanlar from degerlendirme where oneri_id = ${oneriId}`,
   );
   assert.deepEqual(sonra.puanlar, ham.puanlar, "AI ham puanı değişmemeli");
+
+  // B18: toplu rapor ham puan ile ajans düzeltmesini ayrı taşır.
+  const { raporSatirlari } = await import("@ykh/database");
+  const satir = (await raporSatirlari(ajans)).find((r) => r.id === oneriId);
+  assert.ok(satir);
+  assert.deepEqual(satir.puanlar, ham.puanlar, "raporda ham puan");
+  assert.deepEqual(satir.duzeltilmis_puanlar, yeni, "raporda düzeltme ayrı");
 });
 
 test("11 · belgesiz il için değerlendirme yapılamaz", async () => {
@@ -208,12 +257,24 @@ test("12 · belge eklenince ajans listesinde görünür", async () => {
     ilKod: "manisa",
     metin,
   });
-  assert.ok(r.id);
+  assert.ok(r.ok);
 
   const [b] = await islem(ajans, (sql) =>
     sql<{ ad: string }[]>`select ad from belge where id = ${r.id}`,
   );
   assert.equal(b.ad, "Manisa Tarım Raporu 2026");
+
+  // B09: aynı ad ikinci kez eklenmez (parçalar adla gruplanıyor).
+  const ikinci = await belgeEkle(ajans, { ad: "Manisa Tarım Raporu 2026", tur: "il_raporu", yil: null, ajansKod: null, ilKod: null, metin });
+  assert.equal(ikinci.ok, false);
+
+  // B09: uzun metin CLI ile aynı parçalayıcıdan geçer ve parçalanır.
+  const uzun = Array.from(
+    { length: 40 },
+    (_, i) => `## Bölüm ${i + 1}\n\n` + "Uşak ilinde tekstil geri dönüşümü öncelikli alandır. ".repeat(4),
+  ).join("\n\n");
+  const u = await belgeEkle(ajans, { ad: "B09 uzun belge", tur: "bolge_plani", yil: "2024", ajansKod: "TR33", ilKod: null, metin: uzun });
+  assert.ok(u.ok && u.parca > 1, "uzun metin parçalanmalı");
 });
 
 test("13 · denetim izi zinciri kaydeder", async () => {
@@ -522,4 +583,27 @@ test("20 · paleti yalnızca yönetici değiştirir; ajans bile değiştiremez",
 
 test("20b · palet kamuya açık okunur — anonim de doğru görünümü alır", async () => {
   assert.ok(await ayarGetir(ANONIM, "palet"), "anonim paleti okuyabilmeli");
+});
+
+test("B05 · belge paketi il → ajans → ulusal sırasıyla kurulur", async () => {
+  const [il] = await sahip()<{ kod: string; ajans_kod: string }[]>`select kod, ajans_kod from il where kod = 'usak'`;
+  const metin = "zirkonyumsentezi kaplama hattı için hammadde ve nitelikli işgücü mevcuttur.";
+  const ulusal = Array.from({ length: 13 }, (_, i) => ({ ad: `B05 ulusal ${i}`, ajans_kod: null, il_kod: null }));
+  const satirlar = [
+    ...ulusal,
+    { ad: "B05 ajans", ajans_kod: il.ajans_kod, il_kod: null },
+    { ad: "B05 il", ajans_kod: il.ajans_kod, il_kod: il.kod },
+  ];
+  for (const s of satirlar) {
+    await sahip()`insert into belge (ad, ajans_kod, il_kod, metin) values (${s.ad}, ${s.ajans_kod}, ${s.il_kod}, ${metin})`;
+  }
+  try {
+    const { belgePaketi } = await import("@ykh/retrieval");
+    const { belgeler } = await belgePaketi(ajans, { ilKod: il.kod, ajansKod: il.ajans_kod, sorgu: "zirkonyumsentezi" });
+    assert.equal(belgeler.length, 12);
+    assert.equal(belgeler[0].ad, "B05 il");
+    assert.equal(belgeler[1].ad, "B05 ajans");
+  } finally {
+    await sahip()`delete from belge where ad like 'B05 %'`;
+  }
 });

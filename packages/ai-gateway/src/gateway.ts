@@ -37,7 +37,9 @@ export type Sonuc<T> =
       dusenler: string[];
       /** atfı düzeltilen alıntılar — denetime yazılır */
       duzeltilenler: string[] } & Meta)
-  | ({ ok: false; asama: "model" | "sema" | "dayanak"; hatalar: string[] } & Meta);
+  | ({ ok: false; asama: "model" | "sema" | "dayanak"; hatalar: string[];
+      /** cevap ALINDIYSA tüketim; ağ hatasında yok. Reddedilen cevap da ücretlidir. */
+      maliyet?: Maliyet } & Meta);
 
 /** `latest` alias üretimde kullanılmaz. */
 export function modelSnapshotDogrula(snapshot: string): void {
@@ -52,7 +54,7 @@ async function cagir<A extends SemaAdi>(
   semaAdi: A,
   kaynakBlogu: string,
   gorev: string,
-): Promise<{ ok: true; veri: z.infer<(typeof SEMALAR)[A]>; maliyet: Maliyet } | { ok: false; asama: "model" | "sema"; hatalar: string[] }> {
+): Promise<{ ok: true; veri: z.infer<(typeof SEMALAR)[A]>; maliyet: Maliyet } | { ok: false; asama: "model" | "sema"; hatalar: string[]; maliyet?: Maliyet }> {
   modelSnapshotDogrula(modelSnapshot);
   const prompt = PROMPTLAR[semaAdi];
 
@@ -69,11 +71,12 @@ async function cagir<A extends SemaAdi>(
     return { ok: false, asama: "model", hatalar: [e instanceof Error ? e.message : String(e)] };
   }
 
+  const maliyet = { girdiToken: cevap.girdiToken, ciktiToken: cevap.ciktiToken, model: modelSnapshot };
   let ham: unknown;
   try {
     ham = JSON.parse(cevap.metin);
   } catch {
-    return { ok: false, asama: "sema", hatalar: ["Çıktı geçerli JSON değil."] };
+    return { ok: false, asama: "sema", hatalar: ["Çıktı geçerli JSON değil."], maliyet };
   }
   const c = SEMALAR[semaAdi].safeParse(ham);
   if (!c.success) {
@@ -81,13 +84,10 @@ async function cagir<A extends SemaAdi>(
       ok: false,
       asama: "sema",
       hatalar: c.error.issues.map((i) => `${i.path.join(".") || "(kök)"}: ${i.message}`),
+      maliyet,
     };
   }
-  return {
-    ok: true,
-    veri: c.data as z.infer<(typeof SEMALAR)[A]>,
-    maliyet: { girdiToken: cevap.girdiToken, ciktiToken: cevap.ciktiToken, model: modelSnapshot },
-  };
+  return { ok: true, veri: c.data as z.infer<(typeof SEMALAR)[A]>, maliyet };
 }
 
 /** Bir öneriyi sekiz kriterle puanlar ve üst ölçekli belgelere bağlar. */
@@ -112,7 +112,7 @@ export async function degerlendir(
 
   const dogrulama = degerlendirmeyiDogrula(r.veri, girdi.paket, girdi.agirliklar ?? {});
   if (!dogrulama.gecerli) {
-    return { ok: false, asama: "dayanak", hatalar: dogrulama.hatalar.map((h) => h.mesaj), ...meta };
+    return { ok: false, asama: "dayanak", hatalar: dogrulama.hatalar.map((h) => h.mesaj), maliyet: r.maliyet, ...meta };
   }
 
   return {
@@ -156,6 +156,7 @@ export async function naceOner(
       ok: false,
       asama: "dayanak",
       hatalar: uydurma.map((a) => `Aday listesinde olmayan NACE kodu önerildi: ${a.kod}`),
+      maliyet: r.maliyet,
       ...meta,
     };
   }
@@ -172,7 +173,7 @@ export async function naceOner(
 export type KarsiGorusCiktisi =
   | ({ ok: true; gorusler: DogrulanmisKarsiGorus[]; dusenler: string[]; duzeltilenler: string[];
       maliyet: Maliyet } & Meta)
-  | ({ ok: false; asama: "model" | "sema" | "dayanak"; hatalar: string[] } & Meta);
+  | ({ ok: false; asama: "model" | "sema" | "dayanak"; hatalar: string[]; maliyet?: Maliyet } & Meta);
 
 export async function karsiGorus(
   istemci: ModelIstemcisi,
@@ -195,7 +196,7 @@ export async function karsiGorus(
 
   const d = karsiGorusuDogrula(r.veri, girdi.paket);
   if (!d.gecerli) {
-    return { ok: false, asama: "dayanak", hatalar: d.hatalar.map((h) => h.mesaj), ...meta };
+    return { ok: false, asama: "dayanak", hatalar: d.hatalar.map((h) => h.mesaj), maliyet: r.maliyet, ...meta };
   }
   return {
     ok: true,

@@ -1,5 +1,5 @@
 import { islem, kapat, type Baglam } from "@ykh/database";
-import { degerlendirmeYap } from "@ykh/degerlendirme";
+import { degerlendirmeYap, KILIT } from "@ykh/degerlendirme";
 import { log } from "@ykh/observability";
 
 /**
@@ -28,6 +28,15 @@ export async function birOneriAl(): Promise<number | null> {
       where id = (
         select id from oneri
         where durum = 'degerlendiriliyor' and deneme < ${MAKS_DENEME}
+          -- Elle tetikle şu an işlenen öneri atlanır; yoksa en eski öneri
+          -- meşgulken arkasındaki bütün kuyruk onu beklerdi.
+          and not exists (
+            select 1 from pg_locks l
+            where l.locktype = 'advisory' and l.objsubid = 2
+              -- pg_locks küme genelidir: yalnızca BU veritabanının kilitleri.
+              and l.database = (select oid from pg_database where datname = current_database())
+              and l.classid::text::int = ${KILIT} and l.objid::text::int = oneri.id
+          )
         -- id ile eşitlik kırılıyor: aynı transaction icinde eklenen öneriler
         -- aynı olusturuldu damgasını taşıyor ve sıra belirsiz kalıyordu.
         order by olusturuldu, id
@@ -50,6 +59,11 @@ async function turAt(): Promise<boolean> {
 
   try {
     const s = await degerlendirmeYap(SERVIS, oneriId);
+    if (s.asama === "mesgul") {
+      // Elle tetik aynı öneriyi işliyor: bu tur deneme sayılmaz, hata yazılmaz.
+      await islem(SERVIS, (sql) => sql`update oneri set deneme = greatest(deneme - 1, 0) where id = ${oneriId}`);
+      return false;
+    }
     log.info("degerlendirme_turu", { oneriId, asama: s.asama, ok: s.ok, mesaj: s.mesaj });
     // Başarısızsa öneri `degerlendiriliyor` kalır ve MAKS_DENEME'ye kadar
     // tekrar denenir; nedeni hem son_hata'da hem denetim izinde durur.

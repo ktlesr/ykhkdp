@@ -151,7 +151,7 @@ function adresSec(ad: string, varsayilan: string): string {
  * (ölçüldü: 97 boşta bağlantı). Global anahtar yenilemeler arasında yaşar.
  */
 const HAVUZ = Symbol.for("ykh.havuz");
-type Havuz = { sahip?: postgres.Sql; uygulama?: postgres.Sql };
+type Havuz = { sahip?: postgres.Sql; uygulama?: postgres.Sql; kilit?: postgres.Sql };
 const havuz: Havuz = ((globalThis as Record<symbol, unknown>)[HAVUZ] ??= {}) as Havuz;
 
 export function sahip(): postgres.Sql {
@@ -180,10 +180,26 @@ export function uygulama(): postgres.Sql {
   return havuz.uygulama;
 }
 
+/**
+ * Değerlendirme kilitleri için AYRI küçük havuz. Kilit, model çağrısı boyunca
+ * ayrılmış bir bağlantıda tutulur; uygulama havuzundan alınsaydı on eşzamanlı
+ * değerlendirme on bağlantıyı da tutar, `islem()` boş bağlantı bekler ve
+ * kilitlenirdi. Bu havuzun boyu aynı zamanda eşzamanlı değerlendirme sınırıdır.
+ */
+export function kilitHavuzu(): postgres.Sql {
+  havuz.kilit ??= postgres(adresSec("DATABASE_URL", varsayilanUygulama), {
+    onnotice: () => {},
+    max: Number(process.env.YKH_DEGERLENDIRME_ESZAMANLI) || 3,
+    prepare: false,
+  });
+  return havuz.kilit;
+}
+
 export async function kapat(): Promise<void> {
-  await Promise.all([havuz.sahip?.end(), havuz.uygulama?.end()]);
+  await Promise.all([havuz.sahip?.end(), havuz.uygulama?.end(), havuz.kilit?.end()]);
   havuz.sahip = undefined;
   havuz.uygulama = undefined;
+  havuz.kilit = undefined;
 }
 
 /**
@@ -197,6 +213,28 @@ export async function islem<T>(baglam: Baglam, isGovde: (sql: postgres.Sql) => P
     await tx`select set_config('app.gonderen_ref', ${baglam.gonderenRef ?? ""}, true)`;
     return isGovde(tx as unknown as postgres.Sql);
   }) as Promise<T>;
+}
+
+/**
+ * `islem` ile aynı bağlam, ama AYRILMIŞ bir bağlantıda (`sql.reserve()`).
+ * Ayrılmış bağlantıda `begin()` yok; transaction aynı oturumda elle açılır.
+ */
+export async function ayrilmisIslem<T>(
+  baglanti: postgres.ReservedSql,
+  baglam: Baglam,
+  isGovde: (sql: postgres.Sql) => Promise<T>,
+): Promise<T> {
+  await baglanti`begin`;
+  try {
+    await baglanti`select set_config('app.rol', ${baglam.rol}, true)`;
+    await baglanti`select set_config('app.gonderen_ref', ${baglam.gonderenRef ?? ""}, true)`;
+    const sonuc = await isGovde(baglanti as unknown as postgres.Sql);
+    await baglanti`commit`;
+    return sonuc;
+  } catch (e) {
+    await baglanti`rollback`.catch(() => {});
+    throw e;
+  }
 }
 
 /** Denetim kaydı — append-only tabloya yazar (brief §4). */

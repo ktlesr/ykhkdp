@@ -5,27 +5,46 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import {
   belgeEkle, belgeSil, cikisYap, donemGetir, girisYap, islem, kayitOl, naceAra, naceDuzelt,
-  ayarYaz, kimlikAc, kimlikSil, misafirAc, oneriOlustur, puanDuzelt, durumDegistir, rolAta,
+  ayarYaz, kimlikAc, kimlikSil, KotaAsildi, misafirAc, oneriOlustur, puanDuzelt, durumDegistir, rolAta,
 } from "@ykh/database";
 import { gecisIzinli, onaylayabilir, ROL_ETIKET, ROLLER, type OneriDurumu, type Rol } from "@ykh/domain";
 import { log } from "@ykh/observability";
 import { KRITERLER, type Kriter } from "@ykh/scoring";
 import { degerlendirmeYap, SERVIS } from "@ykh/degerlendirme";
-import { baglam, cerezSil, COOKIE, kullanici, oturumCerezi } from "./oturum.ts";
+import { baglam, cerezSil, COOKIE, istemciIp, kullanici, oturumCerezi } from "./oturum.ts";
 import { paletGecerli } from "./palet.ts";
+import { ayar, COK_FAZLA, icYol, sinirAsildi } from "./sinir.ts";
+
+const DK = 60_000;
 
 export type EylemSonucu = { ok: boolean; mesaj: string };
 
 // ── kimlik ─────────────────────────────────────────────────────────────────
 
 export async function girisEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
+  // Parola özeti (scrypt) pahalı: IP ve hesap başına ayrı sınır. Hesap anahtarı
+  // tek IP'den yavaş deneme ile dağıtık deneme arasındaki farkı kapatır.
+  const eposta = String(f.get("eposta") ?? "").trim().toLocaleLowerCase("tr-TR");
+  const ip = await istemciIp();
+  if (
+    sinirAsildi(`giris-ip:${ip}`, ayar("YKH_SINIR_GIRIS_IP", 20), 10 * DK) ||
+    sinirAsildi(`giris-hesap:${eposta}`, ayar("YKH_SINIR_GIRIS_HESAP", 10), 15 * DK)
+  ) {
+    log.uyari("hiz_siniri", { eylem: "giris" });
+    return { ok: false, mesaj: COK_FAZLA };
+  }
   const r = await girisYap(String(f.get("eposta") ?? ""), String(f.get("parola") ?? ""));
   if (!r.ok) return { ok: false, mesaj: r.hata };
   await oturumCerezi(r.jeton);
-  redirect(String(f.get("hedef") ?? "/iller"));
+  // Yalnızca uygulama içi yol (açık yönlendirmeye karşı, bkz. `icYol`).
+  redirect(icYol(String(f.get("hedef") ?? "")) ?? "/iller");
 }
 
 export async function kayitEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
+  if (sinirAsildi(`kayit:${await istemciIp()}`, ayar("YKH_SINIR_KAYIT", 5), 60 * DK)) {
+    log.uyari("hiz_siniri", { eylem: "kayit" });
+    return { ok: false, mesaj: COK_FAZLA };
+  }
   const r = await kayitOl(
     String(f.get("eposta") ?? ""),
     String(f.get("parola") ?? ""),
@@ -51,6 +70,11 @@ export async function cikisEylemi(): Promise<void> {
 export async function misafirEylemi(): Promise<EylemSonucu> {
   const k = await kullanici();
   if (k) return { ok: true, mesaj: "Oturum zaten açık." };
+  // Misafir yenilenerek gönderen kotası atlanmasın: misafir açma IP başına sınırlı.
+  if (sinirAsildi(`misafir:${await istemciIp()}`, ayar("YKH_SINIR_MISAFIR", 10), 60 * DK)) {
+    log.uyari("hiz_siniri", { eylem: "misafir" });
+    return { ok: false, mesaj: COK_FAZLA };
+  }
   const { jeton } = await misafirAc();
   await oturumCerezi(jeton);
   log.info("misafir_oturum", {});
@@ -113,11 +137,21 @@ export async function oneriEylemi(_o: EylemSonucu | null, f: FormData): Promise<
   }
   if (!il) return { ok: false, mesaj: "İl seçin." };
 
+  // Her öneri bir model işi doğurur. IP sınırı süreç içi; gönderen kotası
+  // veritabanında ve atomik (`oneriOlustur`).
+  if (sinirAsildi(`oneri-ip:${await istemciIp()}`, ayar("YKH_SINIR_ONERI_IP", 20), 60 * DK)) {
+    log.uyari("hiz_siniri", { eylem: "oneri" });
+    return { ok: false, mesaj: COK_FAZLA };
+  }
+
   const b = await baglam();
   const d = await donemGetir(b, il);
   if (!d) return { ok: false, mesaj: "Bu il için açık bir dönem yok." };
 
-  const o = await oneriOlustur(b, {
+  const kota = onaylayabilir(k.rol) ? undefined : ayar("YKH_KOTA_ONERI_GUNLUK", 10);
+  let o: { id: number };
+  try {
+    o = await oneriOlustur(b, {
     donemId: d.donemId,
     baslik,
     gerekce,
@@ -125,7 +159,11 @@ export async function oneriEylemi(_o: EylemSonucu | null, f: FormData): Promise<
     // Şehzadeler / Yunusemre). Uydurma ilçe adı yazmak yerine boş bırakılıyor.
     ilce: ilce || null,
     naceKod: String(f.get("naceKod") ?? "") || null,
-  });
+  }, kota);
+  } catch (e) {
+    if (!(e instanceof KotaAsildi)) throw e;
+    return { ok: false, mesaj: `Son 24 saatte en fazla ${kota} öneri gönderebilirsiniz. Bu sınıra ulaştınız; daha sonra yeniden deneyin.` };
+  }
   log.info("oneri_olusturuldu", { oneriId: o.id, il });
   redirect(`/oneri/${o.id}`);
 }
@@ -157,6 +195,11 @@ export async function degerlendirEylemi(_o: EylemSonucu | null, f: FormData): Pr
     sql<{ durum: string }[]>`select durum from oneri where id = ${oneriId}`,
   );
   if (!sahip) return { ok: false, mesaj: "Öneri bulunamadı." };
+  // Yalnızca kuyruktaki öneri: onaylanmış ya da reddedilmiş bir kararı elle
+  // tetik sessizce `onay_bekliyor`a çekemez.
+  if (sahip.durum !== "degerlendiriliyor") {
+    return { ok: false, mesaj: "Öneri değerlendirme kuyruğunda değil; sayfayı yenileyin." };
+  }
 
   const s = await degerlendirmeYap(SERVIS, oneriId);
   revalidatePath(`/oneri/${oneriId}`);
@@ -167,6 +210,7 @@ export async function degerlendirEylemi(_o: EylemSonucu | null, f: FormData): Pr
 
 const ASAMA_ETIKET: Record<string, string> = {
   oneri: "Öneri okunamadı",
+  mesgul: "Zaten çalışıyor",
   nace: "NACE adımı",
   belge: "Belge adımı",
   model: "Model adımı",
@@ -184,13 +228,16 @@ export async function durumEylemi(_o: EylemSonucu | null, f: FormData): Promise<
   const yeni = String(f.get("durum")) as OneriDurumu;
   const gerekce = String(f.get("gerekce") ?? "").trim();
 
+  // Formdaki `mevcut` ön kontrol ve "ekran eskidi mi" işaretidir; asıl geçiş
+  // kuralı `durumDegistir` içinde VERİTABANINDAKİ durumla uygulanır.
   const izin = gecisIzinli(mevcut, yeni, k.rol);
   if (!izin.izinli) return { ok: false, mesaj: izin.sebep };
   if (izin.gecis.gerekceZorunlu && gerekce.length < 10) {
     return { ok: false, mesaj: `“${izin.gecis.eylem}” için gerekçe zorunlu (en az 10 karakter).` };
   }
 
-  await durumDegistir(await baglam(), Number(f.get("oneriId")), yeni, gerekce);
+  const r = await durumDegistir(await baglam(), Number(f.get("oneriId")), mevcut, yeni, gerekce);
+  if (!r.ok) return { ok: false, mesaj: r.mesaj };
   revalidatePath("/onay");
   revalidatePath(String(f.get("yol") ?? "/"));
   return {
@@ -213,12 +260,17 @@ export async function puanEylemi(_o: EylemSonucu | null, f: FormData): Promise<E
 
   const puanlar = {} as Record<Kriter, number>;
   for (const kr of KRITERLER) {
-    const v = Number(f.get(kr));
+    // Boş alan 0 DEĞİLDİR: `Number("")` ve `Number(null)` sıfır verir.
+    const ham = f.get(kr);
+    if (typeof ham !== "string" || !ham.trim()) return { ok: false, mesaj: `${kr}: puan boş bırakılamaz.` };
+    const v = Number(ham);
     if (!Number.isInteger(v) || v < 0 || v > 100) return { ok: false, mesaj: `${kr}: 0–100 arası tam sayı girin.` };
     puanlar[kr] = v;
   }
 
-  await puanDuzelt(await baglam(), Number(f.get("oneriId")), puanlar, gerekce);
+  if (!(await puanDuzelt(await baglam(), Number(f.get("oneriId")), puanlar, gerekce))) {
+    return { ok: false, mesaj: "Değerlendirme bulunamadı; puan düzeltilmedi." };
+  }
   revalidatePath(String(f.get("yol") ?? "/onay"));
   return { ok: true, mesaj: "Puan düzeltildi. AI'nin ham puanı kayıtta korunuyor." };
 }
@@ -229,7 +281,9 @@ export async function naceEylemi(_o: EylemSonucu | null, f: FormData): Promise<E
   const kod = String(f.get("naceKod") ?? "").trim();
   if (!kod) return { ok: false, mesaj: "NACE kodu seçin." };
 
-  await naceDuzelt(await baglam(), Number(f.get("oneriId")), kod);
+  if (!(await naceDuzelt(await baglam(), Number(f.get("oneriId")), kod))) {
+    return { ok: false, mesaj: "Öneri bulunamadı; NACE düzeltilmedi." };
+  }
   revalidatePath(String(f.get("yol") ?? "/onay"));
   return { ok: true, mesaj: `NACE ${kod} olarak düzeltildi.` };
 }
@@ -256,16 +310,32 @@ export async function belgeEylemi(_o: EylemSonucu | null, f: FormData): Promise<
     return { ok: false, mesaj: "Belge metni en az 200 karakter olmalı — AI alıntı çıkaramaz." };
   }
 
+  // Kapsam AÇIKÇA seçilir: varsayılan "ulusal" bir bölge planını sessizce
+  // bütün illerin paketine sokuyordu. Biçim: ulusal | ajans:TR33 | il:usak
+  const tur = String(f.get("tur") ?? "");
+  const [kapsamTur, kapsamKod] = String(f.get("kapsam") ?? "").split(":");
+  if (!tur) return { ok: false, mesaj: "Belge türünü seçin." };
+  if (!["ulusal", "ajans", "il"].includes(kapsamTur) || (kapsamTur !== "ulusal" && !kapsamKod)) {
+    return { ok: false, mesaj: "Kapsamı seçin: ulusal, bir ajans bölgesi ya da bir il." };
+  }
+  if (tur === "bolge_plani" && kapsamTur === "ulusal") {
+    return { ok: false, mesaj: "Bölge planı ulusal kapsamda yüklenemez; ajans bölgesini seçin." };
+  }
+
   const r = await belgeEkle(await baglam(), {
     ad,
-    tur: String(f.get("tur") ?? "diger"),
+    tur,
     yil: String(f.get("yil") ?? "") || null,
-    ajansKod: String(f.get("ajansKod") ?? "") || null,
-    ilKod: String(f.get("ilKod") ?? "") || null,
+    ajansKod: kapsamTur === "ajans" ? kapsamKod : null,
+    ilKod: kapsamTur === "il" ? kapsamKod : null,
     metin,
   });
+  if (!r.ok) return { ok: false, mesaj: r.hata };
   revalidatePath("/belgeler");
-  return { ok: true, mesaj: `“${ad}” eklendi (${metin.length} karakter). Yeni öneriler bu belgeye dayanabilir.` };
+  return {
+    ok: true,
+    mesaj: `“${ad}” eklendi (${metin.length} karakter, ${r.parca} parça). Yeni öneriler bu belgeye dayanabilir.`,
+  };
 }
 
 export async function belgeSilEylemi(ad: string): Promise<EylemSonucu> {

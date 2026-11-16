@@ -52,6 +52,7 @@ export type HataKodu =
   | "alinti_eslesmiyor"
   | "kaynaksiz_sayi"
   | "puan_araligi"
+  | "kriter_kumesi"
   | "alinti_no_gecersiz"
   | "alinti_no_tekrar"
   | "alinti_atif_duzeltildi";
@@ -125,8 +126,11 @@ function alintiGeciyor(belgeMetni: string, alinti: string): boolean {
   const parcalar = normalize(alinti.replace(/^[\s"'“”«»]+|[\s"'“”«»]+$/g, ""))
     .split(/…+|\.{3,}/)
     .map((p) => p.trim())
-    .filter((p) => p.length >= 12);
+    .filter(Boolean);
 
+  // Boş olmayan HER parça aranır. Eskiden 12 karakterden kısa parçalar atlanıyor
+  // ve "gerçek ifade … UYDURMA" doğrulanmış sayılıyordu (kayıtta orijinal alıntı
+  // tutulduğu için uydurma ek de kayda giriyordu).
   if (!parcalar.length) return false;
 
   let konum = 0;
@@ -325,6 +329,20 @@ export function degerlendirmeyiDogrula(
     hatalar.push({ kod: "puan_araligi", mesaj: "Kriter puanı 0–100 aralığında tam sayı olmalı." });
   }
 
+  // Sekiz FARKLI kriter: tekrar eden kriter `Object.fromEntries` ile teke iner
+  // ve eksik kriterler normalize edilen payda kaybolur (tek kriterle dayanak 100).
+  const kriterler = cikti.puanlar.map((p) => p.kriter);
+  const beklenen = Object.keys(agirliklar);
+  if (
+    new Set(kriterler).size !== kriterler.length ||
+    (beklenen.length && (kriterler.length !== beklenen.length || beklenen.some((k) => !kriterler.includes(k))))
+  ) {
+    hatalar.push({
+      kod: "kriter_kumesi",
+      mesaj: `Her kriter tam bir kez puanlanmalı; gelen: ${kriterler.join(", ")}.`,
+    });
+  }
+
   const kriterDayanagi: KriterDayanagi = {};
   for (const p of cikti.puanlar) {
     kriterDayanagi[p.kriter] = referanslariCoz(
@@ -420,9 +438,13 @@ export function dayanakPuani(
     0,
   );
 
+  // Çeşitlilik PARÇA değil BELGE sayar: bir planın dört parçası dört ayrı plan
+  // değildir. Belge adı künyedir (`belge.ad`, parçalar aynı adı taşır).
+  const ad = (id: number) => paket.belgeler.find((b) => b.id === id)?.ad;
   const eslenen = new Set(Object.values(kriterDayanagi).flat());
-  const ayriBelge = new Set([...eslenen].map((i) => dogrulanan[i]?.belge_id).filter(Boolean)).size;
-  const cesitlilik = ayriBelge / Math.min(paket.belgeler.length, 4);
+  const ayriBelge = new Set([...eslenen].map((i) => dogrulanan[i] && ad(dogrulanan[i].belge_id)).filter(Boolean)).size;
+  const paketteBelge = new Set(paket.belgeler.map((b) => b.ad)).size;
+  const cesitlilik = ayriBelge / Math.min(paketteBelge, 4);
 
   return Math.max(0, Math.min(100, Math.round(100 * (0.7 * kapsama + 0.3 * cesitlilik))));
 }
@@ -474,8 +496,21 @@ export function karsiGorusuDogrula(
   );
   if (hatalar.length) return { gecerli: false, hatalar };
 
+  const kaynakMetni = normalize(
+    paket.belgeler.filter((b) => b.pakete_dahil).map((b) => b.metin).join(" "),
+  );
   const gorusler: DogrulanmisKarsiGorus[] = [];
   for (const g of cikti.gorusler) {
+    // Ana değerlendirmedeki kural itirazda da geçerli: kaynaksız sayı taşıyan
+    // itiraz DÜŞER (ana puanı engellemez, karşı görüş en iyi çabadır).
+    const kaynaksiz = sayisalTokenlar(g.iddia).find((t) => !kaynakMetni.includes(normalize(t)));
+    if (kaynaksiz) {
+      dusenler.push({
+        kod: "kaynaksiz_sayi",
+        mesaj: `Kaynaksız sayı (“${kaynaksiz}”) taşıyan itiraz düşürüldü: “${g.iddia.slice(0, 80)}”`,
+      });
+      continue;
+    }
     const cozulen = referanslariCoz(`“${g.iddia.slice(0, 40)}…” itirazı`, g.alinti_no ?? [], konum, dusenler);
     if (!cozulen.length) {
       dusenler.push({

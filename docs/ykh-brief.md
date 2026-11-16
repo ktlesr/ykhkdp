@@ -510,6 +510,13 @@ kilidi, künye çekmecesi) bu üründe **yok**.
   zinciri her iki modda aynıdır.
 - Belge yükleme yalnızca `.txt`/`.md` veya metin yapıştırma. PDF/docx ayrıştırıcı yok.
 - E-posta doğrulama SMTP'ye bağlı değil.
-- Rapor/Excel çıktısı yok.
+- Hız sınırı süreç içi (tek web konteyneri varsayımı); birden çok kopyada
+  paylaşılan sayaç gerekir. Öneri kotası veritabanında, kopyadan bağımsız.
+- Belge çeşitliliği `belge.ad` ile sayılır: aynı adlı farklı yıl/kapsam
+  belgeleri tek kaynak görünür. Kalıcı kaynak kimliği ayrı bir şema işidir.
+- Model kriter başına `not` ve `eksik_veri` üretiyor ama saklanmıyor; saklamak
+  şema değişikliği ister, ayrı plan (inceleme raporu §6.2).
+- CI yok. Plan: PostgreSQL 17 servisi, `_test` veritabanı, çevrimdışı istemci,
+  sıralı testler, typecheck, build, `pnpm audit --prod`.
 - Seed'in demo değerlendirmeleri `model_snapshot = 'seed-demo'` künyesi taşır;
   gerçek bir model künyesi uydurulmaz. `/oneri/[id]` künye satırında görünür.

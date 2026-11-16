@@ -53,7 +53,12 @@ export const Degerlendirme = z
           })
           .strict(),
       )
-      .length(8),
+      .length(8)
+      // Sekiz FARKLI kriter. JSON Schema bunu ifade edemiyor (refine dışa
+      // aktarılmaz); Structured Outputs'u bozmadan Zod tarafında kapatılır.
+      .refine((p) => new Set(p.map((x) => x.kriter)).size === p.length, {
+        message: "Her kriter tam bir kez puanlanmalı.",
+      }),
     /** özet gerekçe — yatırımcıya gösterilen metin */
     gerekce: z.string().min(40).max(1200),
     /** üst ölçekli belgelerden alıntılar; boşsa dayanak puanı 0 olur */

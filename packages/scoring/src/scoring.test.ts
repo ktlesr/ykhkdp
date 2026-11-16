@@ -240,3 +240,29 @@ test("adaylariPuanla taban puanı kriterlerden türetir", () => {
   const [x] = adaylariPuanla([{ ...USAK[0], kriterPuanlari: tumu(64) }], TR33_2027_V1);
   assert.equal(x.taban, 64);
 });
+
+// ── İnceleme raporu 2026-11-16 · B07 ───────────────────────────────────────
+
+test("B07 — az adayda boş slotlar ayardaki slot sayısına tamamlanır", () => {
+  const yeterli = (n: number) =>
+    Array.from({ length: n }, (_, i) => a({ id: `y${i}`, taban: 70 - i, dayanak: 90 }));
+  for (const [n, bos] of [[0, 4], [1, 3], [3, 1]] as const) {
+    const h = hesapla(yeterli(n), AYAR);
+    assert.equal(h.ilkDort.length, AYAR.slotSayisi, `${n} aday: toplam slot`);
+    assert.equal(h.ozet.bosSlot, bos, `${n} aday: boş slot`);
+    assert.notEqual(h.ucDurum, null, `${n} aday: uç durum işaretlenir`);
+  }
+});
+
+test("B07 — slot döngüsü dışında kalan eşik altı aday da dayanaksız etiketlenir", () => {
+  const h = hesapla(
+    [
+      ...Array.from({ length: 4 }, (_, i) => a({ id: `y${i}`, taban: 90 - i, dayanak: 90 })),
+      a({ id: "zayif", taban: 50, dayanak: 5 }),
+    ],
+    AYAR,
+  );
+  const zayif = h.kalanlar.find((k) => k.id === "zayif");
+  assert.equal(zayif?.dayanaksiz, true);
+  assert.equal(zayif?.sonuc, "dayanaksız");
+});

@@ -43,9 +43,12 @@ export async function belgePaketi(
              or (il_kod is null and ajans_kod is null))
         -- Parça bazlı arama: alakasız parçayı pakete koymanın maliyeti var.
         and arama @@ websearch_to_tsquery('simple', ${q})
+      -- il → ajans → ulusal. Ulusal parçada il_kod/ajans_kod NULL ve
+      -- karşılaştırma NULL verir; DESC sıralamada NULL ÖNCE gelir; nulls last
+      -- olmadan sıra tam tersine dönüyordu (ulusal paket dolduruyordu).
       order by
-        (il_kod = ${girdi.ilKod}) desc,
-        (ajans_kod = ${girdi.ajansKod}) desc,
+        (il_kod = ${girdi.ilKod}) desc nulls last,
+        (ajans_kod = ${girdi.ajansKod}) desc nulls last,
         ts_rank(arama, websearch_to_tsquery('simple', ${q})) desc,
         id
       limit ${limit}

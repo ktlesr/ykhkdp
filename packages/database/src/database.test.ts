@@ -36,7 +36,7 @@ async function girisBaglami(eposta: string): Promise<Baglam> {
 }
 
 before(async () => {
-  await sifirla();
+  await sifirla({ test: true });
   await yukari();
   await seed();
   ajans = await girisBaglami("ajans@ykh.local");
@@ -253,7 +253,15 @@ test("KVKK: kimlik pseudonimleşir, öneri zinciri korunur", async () => {
   const [{ n: once }] = await sahip()<{ n: string }[]>`
     select count(*) as n from oneri where gonderen_ref = ${g.ref}
   `;
-  await sahip()`select kimlik_pseudonimlestir(${g.ref})`;
+  // B14: yönetici dışındaki her bağlam reddedilir — fonksiyon security definer.
+  for (const rol of ["anonim", "yatirimci", "ajans"]) {
+    await assert.rejects(
+      islem({ gonderenRef: null, rol: rol as never }, (sql) => sql`select kimlik_pseudonimlestir(${g.ref})`),
+      /yalnızca yönetici/,
+      `${rol} kimlik silememeli`,
+    );
+  }
+  await islem({ gonderenRef: null, rol: "yonetici" }, (sql) => sql`select kimlik_pseudonimlestir(${g.ref})`);
 
   const [k] = await sahip()<{ eposta: string | null; pseudonimlestirildi: boolean }[]>`
     select eposta, pseudonimlestirildi from kimlik where gonderen_ref = ${g.ref}
@@ -270,9 +278,9 @@ test("KVKK: kimlik pseudonimleşir, öneri zinciri korunur", async () => {
 // ── migration geri alma ────────────────────────────────────────────────────
 
 test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
-  const geri = await asagi(14);
+  const geri = await asagi(16);
   assert.deepEqual(geri, [
-    "0014_rol_atama", "0013_gonderen_ajans", "0012_oneri_gizlilik", "0011_ulusal_agirlik", "0010_ayar", "0009_yatirim_konusu", "0008_ajans_kisa_ad", "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus",
+    "0016_degerlendirme_asamasi", "0015_kimlik_silme_yetkisi", "0014_rol_atama", "0013_gonderen_ajans", "0012_oneri_gizlilik", "0011_ulusal_agirlik", "0010_ayar", "0009_yatirim_konusu", "0008_ajans_kisa_ad", "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus",
     "0004_kriter_dayanagi", "0003_kurallar", "0002_rls", "0001_sema",
   ]);
   const [{ n }] = await sahip()<{ n: string }[]>`
@@ -283,6 +291,7 @@ test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
   assert.deepEqual(await yukari(), [
     "0001_sema", "0002_rls", "0003_kurallar", "0004_kriter_dayanagi",
     "0005_karsi_gorus", "0006_yakin_kopya", "0007_misafir", "0008_ajans_kisa_ad", "0009_yatirim_konusu", "0010_ayar", "0011_ulusal_agirlik", "0012_oneri_gizlilik", "0013_gonderen_ajans", "0014_rol_atama",
+    "0015_kimlik_silme_yetkisi", "0016_degerlendirme_asamasi",
   ]);
   await seed();
 });

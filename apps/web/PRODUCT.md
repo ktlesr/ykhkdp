@@ -55,5 +55,5 @@ Arayüz bu iddiaların görsel karşılığıdır; tasarım kararları buradan t
 
 ## Kapsam dışı
 
-Resmî başvuru portalının veya E-TUYS'un yerine geçmez. Rapor/Excel çıktısı,
-PDF/docx ayrıştırıcı, e-posta gönderimi yok.
+Resmî başvuru portalının veya E-TUYS'un yerine geçmez. PDF/docx ayrıştırıcı
+ve e-posta gönderimi yok. Toplu rapor ve `.xlsx` çıktısı ajans/yönetici için var.
