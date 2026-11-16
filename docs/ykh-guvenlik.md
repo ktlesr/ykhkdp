@@ -138,8 +138,9 @@ tekil açmak ifşadır.
 ## 8. Kimlik doğrulama
 
 - Giriş: IP başına toplam (20/10 dk); hesap+IP başına başarısız deneme (10/15 dk);
-  IP'den bağımsız hesap başına başarısız deneme (50/15 dk, dağıtık tahmine karşı,
-  kilitleme saldırısını zorlaştıracak kadar yüksek). Anahtar citext ile aynı
+  IP'den bağımsız hesap başına 30 başarısız denemeden sonra her deneme 3 sn
+  yavaşlatılır, reddedilmez (dağıtık tahmine karşı; sert engel hesabı herkesin
+  kilitleyebileceği bir anahtar yapardı). Anahtar citext ile aynı
   biçimde (yerelden bağımsız) küçültülür; deneme doğrulamadan önce sayılır,
   başarıda geri alınır.
 - Hız sınırı (`apps/web/lib/sinir.ts`): giriş IP ve hesap başına, kayıt ve

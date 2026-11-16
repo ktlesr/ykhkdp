@@ -41,11 +41,16 @@ export async function girisEylemi(_o: EylemSonucu | null, f: FormData): Promise<
   const hesap = `giris-hesap:${eposta}`;
   if (
     sinirAsildi(`giris-ip:${ip}`, ayar("YKH_SINIR_GIRIS_IP", 20), 10 * DK) ||
-    sinirDolu(hesapIp, ayar("YKH_SINIR_GIRIS_HESAP", 10), PENCERE) ||
-    sinirDolu(hesap, ayar("YKH_SINIR_GIRIS_HESAP_TOPLAM", 50), PENCERE)
+    sinirDolu(hesapIp, ayar("YKH_SINIR_GIRIS_HESAP", 10), PENCERE)
   ) {
     log.uyari("hiz_siniri", { eylem: "giris" });
     return { ok: false, mesaj: COK_FAZLA };
+  }
+  // Hesap toplamı (IP'den bağımsız) REDDETMEZ, yavaşlatır: sert engel
+  // kurbanın hesabını herkesin kilitleyebileceği bir anahtar olurdu.
+  if (sinirDolu(hesap, ayar("YKH_SINIR_GIRIS_HESAP_TOPLAM", 30), PENCERE)) {
+    log.uyari("hiz_siniri", { eylem: "giris_yavaslatildi" });
+    await new Promise((r) => setTimeout(r, 3000));
   }
   sinirSay(hesapIp, PENCERE);
   sinirSay(hesap, PENCERE);
