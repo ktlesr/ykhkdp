@@ -28,9 +28,12 @@ export function OnayKutusu({
   const gecisler = olasiGecisler(durum, "ajans");
 
   return (
-    <div className="mt-6 border border-ink bg-surface">
-      <div className="panel-koyu px-4 py-2.5 font-mono text-[10px] uppercase tracking-[.12em] text-[#C9CDD3]">
-        Ajans işlemleri
+    <section aria-labelledby={`ajans-karari-${oneriId}`} className="border border-hairline border-t-2 border-t-navy bg-surface">
+      <div className="px-4 pt-4 pb-1">
+        <h2 id={`ajans-karari-${oneriId}`} className="text-[16px] font-semibold tracking-[-.01em] text-ink">
+          Ajans kararı
+        </h2>
+        <p className="mt-0.5 text-[12.5px] text-ink-mute">Onay geri alınabilir; her karar kayda geçer.</p>
       </div>
 
       <div className="px-4 py-4">
@@ -91,7 +94,9 @@ export function OnayKutusu({
                     type="number"
                     min={0}
                     max={100}
-                    defaultValue={puanlar?.[kr] ?? 0}
+                    required
+                    step={1}
+                    defaultValue={puanlar?.[kr]}
                     className="num min-h-11 w-full border border-hairline bg-surface px-3 py-2 text-[13.5px]"
                   />
                 </div>
@@ -124,6 +129,6 @@ export function OnayKutusu({
           </EylemFormu>
         )}
       </div>
-    </div>
+    </section>
   );
 }

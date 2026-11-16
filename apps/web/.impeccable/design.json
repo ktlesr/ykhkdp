@@ -1,0 +1,712 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-16T17:46:38.596Z",
+  "title": "Design System: YKH-KDP",
+  "extensions": {
+    "colorMeta": {
+      "cobalt": {
+        "role": "primary",
+        "displayName": "Kalibrasyon Kobaltı",
+        "canonical": "#1d3fa8",
+        "oklch": "oklch(41.6% 0.173 265.4)",
+        "tonalRamp": [
+          "#0a0053",
+          "#040475",
+          "#123099",
+          "#2d53bd",
+          "#4a75e3",
+          "#6a98ff",
+          "#8ebfff",
+          "#e5efff"
+        ]
+      },
+      "cobalt-tint": {
+        "role": "primary",
+        "displayName": "Kobalt Zemin",
+        "canonical": "#eef1fb",
+        "oklch": "oklch(95.9% 0.014 272.7)",
+        "tonalRamp": [
+          "#090b11",
+          "#22242b",
+          "#3d3f47",
+          "#5b5d66",
+          "#7a7d86",
+          "#9b9ea7",
+          "#c1c4cd",
+          "#ebeef8"
+        ]
+      },
+      "cobalt-line": {
+        "role": "primary",
+        "displayName": "Kobalt Çizgi",
+        "canonical": "#5a72c4",
+        "oklch": "oklch(57.2% 0.130 269.7)",
+        "tonalRamp": [
+          "#050040",
+          "#0f1661",
+          "#263783",
+          "#4157a6",
+          "#5f77ca",
+          "#7f99ef",
+          "#a3c0ff",
+          "#e6eeff"
+        ]
+      },
+      "graphite-ink": {
+        "role": "neutral",
+        "displayName": "Grafit Mürekkep",
+        "canonical": "#16191d",
+        "oklch": "oklch(21.2% 0.009 255.6)",
+        "tonalRamp": [
+          "#090b0f",
+          "#212428",
+          "#3d4045",
+          "#5a5e63",
+          "#7a7e83",
+          "#9b9fa4",
+          "#c0c4ca",
+          "#eaeff5"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "İkincil Mürekkep",
+        "canonical": "#475059",
+        "oklch": "oklch(42.7% 0.019 248.3)",
+        "tonalRamp": [
+          "#050c13",
+          "#1d252d",
+          "#384149",
+          "#565f68",
+          "#757e88",
+          "#96a0aa",
+          "#bbc5d0",
+          "#e5f0fb"
+        ]
+      },
+      "ink-mute": {
+        "role": "neutral",
+        "displayName": "Sessiz Mürekkep",
+        "canonical": "#616a73",
+        "oklch": "oklch(52.0% 0.018 248.2)",
+        "tonalRamp": [
+          "#060c12",
+          "#1d252c",
+          "#384149",
+          "#565f68",
+          "#757e88",
+          "#96a0a9",
+          "#bbc5d0",
+          "#e5f0fa"
+        ]
+      },
+      "report-white": {
+        "role": "neutral",
+        "displayName": "Rapor Beyazı",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#7d7d7d",
+          "#9e9e9e",
+          "#c4c4c4",
+          "#eeeeee"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Kâğıt",
+        "canonical": "#fafaf9",
+        "oklch": "oklch(98.5% 0.001 106.4)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242423",
+          "#40403f",
+          "#5e5e5d",
+          "#7d7d7c",
+          "#9e9e9d",
+          "#c4c4c3",
+          "#eeeeed"
+        ]
+      },
+      "page": {
+        "role": "neutral",
+        "displayName": "Sayfa",
+        "canonical": "#f3f4f2",
+        "oklch": "oklch(96.6% 0.003 128.5)",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#242423",
+          "#3f403e",
+          "#5d5e5c",
+          "#7d7d7c",
+          "#9e9f9d",
+          "#c3c4c2",
+          "#eeefed"
+        ]
+      },
+      "field": {
+        "role": "neutral",
+        "displayName": "Alan",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#7d7d7d",
+          "#9e9e9e",
+          "#c4c4c4",
+          "#eeeeee"
+        ]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Saç Çizgisi",
+        "canonical": "#d3d6d2",
+        "oklch": "oklch(87.3% 0.006 137.8)",
+        "tonalRamp": [
+          "#0a0c09",
+          "#232522",
+          "#3e413d",
+          "#5c5e5b",
+          "#7b7e7a",
+          "#9c9f9c",
+          "#c2c5c1",
+          "#ecefeb"
+        ]
+      },
+      "hairline-soft": {
+        "role": "neutral",
+        "displayName": "İnce Saç Çizgisi",
+        "canonical": "#e6e8e5",
+        "oklch": "oklch(92.9% 0.005 134.9)",
+        "tonalRamp": [
+          "#0a0c0a",
+          "#232422",
+          "#3f403e",
+          "#5c5e5c",
+          "#7c7e7b",
+          "#9d9f9c",
+          "#c3c5c2",
+          "#edefec"
+        ]
+      },
+      "verified": {
+        "role": "epistemic",
+        "displayName": "Doğrulanmış",
+        "canonical": "#1d5b4a",
+        "oklch": "oklch(42.6% 0.069 171.5)",
+        "tonalRamp": [
+          "#001307",
+          "#002e20",
+          "#064b3b",
+          "#2e6a59",
+          "#4f8b78",
+          "#71ad99",
+          "#96d3be",
+          "#dbf5ec"
+        ]
+      },
+      "verified-tint": {
+        "role": "epistemic",
+        "displayName": "Doğrulanmış Zemin",
+        "canonical": "#eaf4f0",
+        "oklch": "oklch(95.9% 0.012 170.3)",
+        "tonalRamp": [
+          "#070d0a",
+          "#1f2623",
+          "#3a423f",
+          "#57605d",
+          "#77807c",
+          "#98a19d",
+          "#bdc7c3",
+          "#e7f1ed"
+        ]
+      },
+      "verified-line": {
+        "role": "epistemic",
+        "displayName": "Doğrulanmış Çizgi",
+        "canonical": "#2c7a64",
+        "oklch": "oklch(52.5% 0.084 171.2)",
+        "tonalRamp": [
+          "#001407",
+          "#00301f",
+          "#004d3a",
+          "#1b6d57",
+          "#418e77",
+          "#64b098",
+          "#8ad6bd",
+          "#dcf5ec"
+        ]
+      },
+      "unverif": {
+        "role": "epistemic",
+        "displayName": "Doğrulanmadı (ochre)",
+        "canonical": "#8a6a1f",
+        "oklch": "oklch(54.3% 0.098 84.4)",
+        "tonalRamp": [
+          "#1d0300",
+          "#391d00",
+          "#583900",
+          "#775800",
+          "#987830",
+          "#bb9953",
+          "#e2bf78",
+          "#f8edd8"
+        ]
+      },
+      "unverif-tint": {
+        "role": "epistemic",
+        "displayName": "Doğrulanmadı Zemin",
+        "canonical": "#fbf4e2",
+        "oklch": "oklch(96.8% 0.025 89.2)",
+        "tonalRamp": [
+          "#0f0b02",
+          "#292416",
+          "#453f31",
+          "#635d4e",
+          "#837d6d",
+          "#a49e8d",
+          "#cac4b2",
+          "#f5eedc"
+        ]
+      },
+      "unverif-line": {
+        "role": "epistemic",
+        "displayName": "Doğrulanmadı Çizgi",
+        "canonical": "#c9a557",
+        "oklch": "oklch(73.8% 0.106 84.9)",
+        "tonalRamp": [
+          "#1e0200",
+          "#3b1c00",
+          "#593900",
+          "#795700",
+          "#9a7826",
+          "#bd994b",
+          "#e4bf71",
+          "#f8edd8"
+        ]
+      },
+      "absent": {
+        "role": "epistemic",
+        "displayName": "Dayanak Yok",
+        "canonical": "#6b6259",
+        "oklch": "oklch(50.2% 0.018 67.4)",
+        "tonalRamp": [
+          "#100a04",
+          "#2a221b",
+          "#463e36",
+          "#655c53",
+          "#857b72",
+          "#a69d93",
+          "#ccc2b8",
+          "#f7ece2"
+        ]
+      },
+      "absent-tint": {
+        "role": "epistemic",
+        "displayName": "Dayanak Yok Zemin",
+        "canonical": "#f1eee7",
+        "oklch": "oklch(95.0% 0.010 87.5)",
+        "tonalRamp": [
+          "#0d0b07",
+          "#26241f",
+          "#423f3a",
+          "#605d57",
+          "#807d77",
+          "#a19e98",
+          "#c7c4bd",
+          "#f1eee7"
+        ]
+      },
+      "conflict": {
+        "role": "epistemic",
+        "displayName": "Çelişki",
+        "canonical": "#8c2f24",
+        "oklch": "oklch(44.1% 0.129 29.8)",
+        "tonalRamp": [
+          "#2f0000",
+          "#520000",
+          "#75180f",
+          "#993b2f",
+          "#be5c4e",
+          "#e37d6e",
+          "#ffa392",
+          "#ffe8e3"
+        ]
+      },
+      "conflict-tint": {
+        "role": "epistemic",
+        "displayName": "Çelişki Zemin",
+        "canonical": "#f7eae8",
+        "oklch": "oklch(94.7% 0.014 28.0)",
+        "tonalRamp": [
+          "#110908",
+          "#2b2120",
+          "#473d3b",
+          "#665b59",
+          "#867a78",
+          "#a79b99",
+          "#cdc1bf",
+          "#f8ebe9"
+        ]
+      },
+      "conflict-line": {
+        "role": "epistemic",
+        "displayName": "Çelişki Çizgi",
+        "canonical": "#b4655b",
+        "oklch": "oklch(59.4% 0.104 28.2)",
+        "tonalRamp": [
+          "#290000",
+          "#4a0202",
+          "#6c241e",
+          "#8f443b",
+          "#b3645a",
+          "#d7857a",
+          "#ffaa9e",
+          "#ffe7e3"
+        ]
+      },
+      "print-panel": {
+        "role": "neutral",
+        "displayName": "Matbu Panel (yalnız tanıtım)",
+        "canonical": "#101419",
+        "oklch": "oklch(18.9% 0.012 254.1)",
+        "tonalRamp": [
+          "#080b10",
+          "#20242a",
+          "#3b4046",
+          "#595e64",
+          "#787e84",
+          "#999fa6",
+          "#bfc5cc",
+          "#e9eff7"
+        ]
+      },
+      "print-panel-text": {
+        "role": "neutral",
+        "displayName": "Panel Metni (yalnız tanıtım)",
+        "canonical": "#ede9e0",
+        "oklch": "oklch(93.5% 0.013 86.8)",
+        "tonalRamp": [
+          "#0d0b06",
+          "#27241d",
+          "#433f38",
+          "#615d56",
+          "#807d75",
+          "#a29e96",
+          "#c8c4bb",
+          "#f2eee5"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Sayfa başlığı",
+        "purpose": "Baslik H1; 720px altında 27px."
+      },
+      "display-cover": {
+        "displayName": "Kapak başlığı",
+        "purpose": "Giriş/kayıt kapağı (KimlikSayfasi); darda 30px."
+      },
+      "headline": {
+        "displayName": "Bölüm başlığı",
+        "purpose": "Rapor bölümü; karar paneli 16px."
+      },
+      "title": {
+        "displayName": "Kutu başlığı",
+        "purpose": "Boş durum ve not başlıkları."
+      },
+      "body": {
+        "displayName": "Gövde",
+        "purpose": "Gövde metni; açıklama maks 68ch."
+      },
+      "body-note": {
+        "displayName": "Not gövdesi",
+        "purpose": "Notlar, açıklamalar, adım açıklaması."
+      },
+      "label": {
+        "displayName": ".etiket",
+        "purpose": "Alan adı, sütun başlığı, künye; sans, büyük harf yok."
+      },
+      "label-l": {
+        "displayName": ".etiket-l",
+        "purpose": "Gezinme ve düğme metni."
+      },
+      "numeric": {
+        "displayName": ".num",
+        "purpose": "Tüm sayılar, kodlar, model künyesi, epistemik glifler (tabular)."
+      },
+      "figure": {
+        "displayName": "Puan rakamı",
+        "purpose": "Karar panelinde stratejik puan ve belge dayanağı."
+      }
+    },
+    "shadows": [
+      {
+        "name": "none",
+        "value": "none",
+        "purpose": "Gölge ölçeğinin tamamı none; yalnızca .hero-* (tanıtım) istisna."
+      }
+    ],
+    "motion": [
+      {
+        "name": "sheetIn",
+        "value": "200ms ease-out, translateY 10px",
+        "purpose": "Handoff §2."
+      },
+      {
+        "name": "drawerIn",
+        "value": "200ms ease-out, translateX 24px",
+        "purpose": "Handoff §2."
+      },
+      {
+        "name": "ledgerIn",
+        "value": "180ms ease-out, translateY 8px",
+        "purpose": "Kayıt satırı girişi."
+      },
+      {
+        "name": "veilIn",
+        "value": "160ms ease-out, opacity",
+        "purpose": "Handoff §2."
+      },
+      {
+        "name": "analizTarama",
+        "value": "1.6s cubic-bezier(.65,0,.35,1) infinite",
+        "purpose": "Yalnız .analiz-*: aktif adımda iş sürüyor; ilerleme oranı değil."
+      },
+      {
+        "name": "analizNabiz",
+        "value": "1.4s ease-in-out infinite",
+        "purpose": "Yalnız .analiz-*: aktif ■/◌ işareti."
+      },
+      {
+        "name": "analizBekle",
+        "value": "0.9s ease-in-out infinite",
+        "purpose": "Yalnız .analiz-*: gönderim bekleyen düğme."
+      },
+      {
+        "name": "analizSatir",
+        "value": "0.5s cubic-bezier(.16,1,.3,1)",
+        "purpose": "Yalnız .analiz-*: tamamlanan adımın tek seferlik oturuşu."
+      },
+      {
+        "name": "hero*",
+        "value": "7–9s infinite",
+        "purpose": "Yalnız .hero-* (tanıtım hero'su, kanıt ağı)."
+      },
+      {
+        "name": "transition-ui",
+        "value": "150ms background-color/border-color/color",
+        "purpose": "Düğme ve gezinme durum geçişi."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "560px"
+      },
+      {
+        "name": "md",
+        "value": "720px"
+      },
+      {
+        "name": "lg",
+        "value": "900px"
+      },
+      {
+        "name": "xl",
+        "value": "1040px"
+      },
+      {
+        "name": "reading",
+        "value": "760px"
+      },
+      {
+        "name": "container",
+        "value": "1180px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Birincil düğme",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Sayfadaki birincil eylem; kobalt zemin.",
+      "html": "<button class=\"ds-btn-dolu\">Onayla</button>",
+      "css": ".ds-btn-dolu{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:9px 16px;border:1px solid;border-radius:2px;font-family:'Schibsted Grotesk',system-ui,sans-serif;font-size:13.5px;font-weight:550;line-height:1.3;cursor:pointer;transition:background-color 150ms,border-color 150ms,color 150ms;background:#1d3fa8;border-color:#1d3fa8;color:#fff}.ds-btn-dolu:hover{background:color-mix(in oklab,#1d3fa8 86%,black)}.ds-btn-dolu:focus-visible{outline:2px solid var(--color-navy,#1d3fa8);outline-offset:2px}"
+    },
+    {
+      "name": "Çizgi düğme",
+      "kind": "button",
+      "refersTo": "button-line",
+      "description": "İkincil eylem; beyaz zemin, saç çizgisi.",
+      "html": "<button class=\"ds-btn-cizgi\">Puanı düzelt</button>",
+      "css": ".ds-btn-cizgi{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:9px 16px;border:1px solid;border-radius:2px;font-family:'Schibsted Grotesk',system-ui,sans-serif;font-size:13.5px;font-weight:550;line-height:1.3;cursor:pointer;transition:background-color 150ms,border-color 150ms,color 150ms;background:#fff;border-color:#d3d6d2;color:#16191d}.ds-btn-cizgi:hover{border-color:#616a73;background:#fafaf9}.ds-btn-cizgi:focus-visible{outline:2px solid var(--color-navy,#1d3fa8);outline-offset:2px}"
+    },
+    {
+      "name": "Ret düğmesi",
+      "kind": "button",
+      "refersTo": "button-conflict",
+      "description": "Reddet; çelişki rengi, beyaz zemin.",
+      "html": "<button class=\"ds-btn-ret\">Reddet</button>",
+      "css": ".ds-btn-ret{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:9px 16px;border:1px solid;border-radius:2px;font-family:'Schibsted Grotesk',system-ui,sans-serif;font-size:13.5px;font-weight:550;line-height:1.3;cursor:pointer;transition:background-color 150ms,border-color 150ms,color 150ms;background:#fff;border-color:#b4655b;color:#8c2f24}.ds-btn-ret:hover{background:#f7eae8}.ds-btn-ret:focus-visible{outline:2px solid var(--color-navy,#1d3fa8);outline-offset:2px}"
+    },
+    {
+      "name": "Girdi",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Etiket üstte (.etiket), 44px alan, odakta kobalt kenar + halka.",
+      "html": "<label class=\"ds-alan\"><span class=\"ds-alan-ad\">Yatırım konusu başlığı</span><input class=\"ds-girdi\" placeholder=\"Örn. Entegre süt işleme tesisi\"></label>",
+      "css": ".ds-alan{display:block;font-family:'Schibsted Grotesk',system-ui,sans-serif}.ds-alan-ad{display:block;margin-bottom:6px;font-size:12.5px;font-weight:500;line-height:1.35;color:#475059}.ds-girdi{box-sizing:border-box;width:100%;min-height:44px;padding:10px 12px;border:1px solid #d3d6d2;border-radius:2px;background:#fff;color:#16191d;font:inherit;font-size:14.5px;transition:border-color 150ms}.ds-girdi::placeholder{color:#616a73}.ds-girdi:hover{border-color:#616a73}.ds-girdi:focus{border-color:#1d3fa8;outline:2px solid rgb(29 63 168 / .25);outline-offset:0}"
+    },
+    {
+      "name": "Üst bar gezinmesi",
+      "kind": "nav",
+      "refersTo": "top-bar",
+      "description": "60px yapışkan bar; aktif öğe 2px kobalt alt çizgi.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-a\" aria-current=\"page\" href=\"#\">Onay</a><a class=\"ds-nav-a\" href=\"#\">İller</a><a class=\"ds-nav-a\" href=\"#\">Belgeler</a><a class=\"ds-nav-a\" href=\"#\">Ayarlar</a></nav>",
+      "css": ".ds-nav{display:flex;height:60px;gap:4px;background:#fff;border-bottom:1px solid #d3d6d2;font-family:'Schibsted Grotesk',system-ui,sans-serif}.ds-nav-a{position:relative;display:flex;align-items:center;padding:0 12px;font-size:13.5px;font-weight:550;color:#616a73;text-decoration:none;transition:color 150ms}.ds-nav-a:hover{color:#16191d}.ds-nav-a[aria-current=page]{color:#16191d}.ds-nav-a[aria-current=page]::after{content:'';position:absolute;left:12px;right:12px;bottom:0;height:2px;background:#1d3fa8}.ds-nav-a:focus-visible{outline:2px solid #1d3fa8;outline-offset:-2px}"
+    },
+    {
+      "name": "Durum rozetleri",
+      "kind": "chip",
+      "refersTo": "badge-verified",
+      "description": "Epistemik dörtlü: renk + glif + metin birlikte.",
+      "html": "<span class=\"ds-rozet ds-r-dog\"><i>■</i>Listede</span> <span class=\"ds-rozet ds-r-tas\"><i>◌</i>Onay bekliyor</span> <span class=\"ds-rozet ds-r-yok\"><i>—</i>Dayanaksız</span> <span class=\"ds-rozet ds-r-ret\"><i>▼</i>Reddedildi</span>",
+      "css": ".ds-rozet{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border:1px solid;border-radius:2px;font-family:'Schibsted Grotesk',system-ui,sans-serif;font-size:12px;font-weight:500;line-height:1.35}.ds-rozet i{font-style:normal;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px}.ds-r-dog{border-color:#2c7a64;background:#eaf4f0;color:#1d5b4a}.ds-r-tas{border-color:#c9a557;background:#fbf4e2;color:#8a6a1f;border-style:dashed}.ds-r-yok{border-color:#d3d6d2;background:#f1eee7;color:#6b6259}.ds-r-ret{border-color:#b4655b;background:#f7eae8;color:#8c2f24}"
+    },
+    {
+      "name": "Epistemik not",
+      "kind": "card",
+      "refersTo": "note-unverif",
+      "description": "3px kesikli ochre sol kenar + doku + işaret + metin: doğrulanmadı.",
+      "html": "<div class=\"ds-not\"><span class=\"ds-not-i\">◌</span><div><div class=\"ds-not-b\">Taslak puan</div>Yapay zekâ puanı doğrulanmamış bir taslaktır; ajans onayı olmadan sıralamaya girmez.</div></div>",
+      "css": ".ds-not{display:flex;gap:12px;padding:14px 16px;border:1px solid #c9a557;border-left:3px dashed #8a6a1f;background:repeating-linear-gradient(135deg,#fff 0 5px,#fbf4e2 5px 10px);font-family:'Schibsted Grotesk',system-ui,sans-serif;font-size:13.5px;line-height:1.55;color:#475059;max-width:60ch}.ds-not-i{font-family:'JetBrains Mono',ui-monospace,monospace;color:#8a6a1f}.ds-not-b{font-size:14px;font-weight:600;color:#16191d;margin-bottom:2px}"
+    },
+    {
+      "name": "Kayıt satırı",
+      "kind": "custom",
+      "refersTo": "toast-saved",
+      "description": "Başarı bildirimi: sessiz, sol alt, yeşil 3px kenar + ■.",
+      "html": "<div class=\"ds-kayit\" role=\"status\"><span class=\"ds-kayit-i\">■</span><div><div class=\"ds-kayit-u\"><b>Kayda geçti</b><span>14:32</span></div>Öneri onaylandı ve il sıralamasına girdi.</div></div>",
+      "css": ".ds-kayit{display:flex;gap:12px;width:420px;max-width:100%;padding:14px 16px;border:1px solid #d3d6d2;border-left:3px solid #1d5b4a;background:#fff;font-family:'Schibsted Grotesk',system-ui,sans-serif;font-size:13.5px;line-height:1.5;color:#475059;animation:ds-ledger 180ms ease-out}.ds-kayit-i{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px;color:#1d5b4a;margin-top:3px}.ds-kayit-u{display:flex;justify-content:space-between;gap:12px}.ds-kayit-u b{font-weight:600;color:#16191d}.ds-kayit-u span{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11.5px;color:#616a73}@keyframes ds-ledger{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@media (prefers-reduced-motion:reduce){.ds-kayit{animation:none}}"
+    },
+    {
+      "name": "Canlı adım listesi",
+      "kind": "custom",
+      "refersTo": "evaluation-step",
+      "description": "Değerlendirme koşusu: aktif adımda kobalt ■ nabız + 2px tarama; yalnızca gerçek sunucu aşamasından.",
+      "html": "<ol class=\"ds-adim\"><li class=\"ds-a-tamam\"><i>■</i><span>Belge paketi</span><em>Tamamlandı</em></li><li class=\"ds-a-aktif\"><i>■</i><span>Puanlama<small>Sekiz kriter puanlanıyor; her alıntı belgede birebir aranıyor.</small></span><em>Sürüyor</em></li><li><i>□</i><span>Karşı görüş</span><em>Sırada</em></li></ol>",
+      "css": ".ds-adim{list-style:none;margin:0;padding:0;border:1px solid #d3d6d2;border-left:3px dashed #8a6a1f;background:#fff;font-family:'Schibsted Grotesk',system-ui,sans-serif}.ds-adim li{position:relative;overflow:hidden;display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;padding:12px 20px 12px 0;border-bottom:1px solid #e6e8e5;font-size:14px;font-weight:500;color:#616a73}.ds-adim li:last-child{border-bottom:0}.ds-adim i{font-style:normal;text-align:center;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px}.ds-adim small{display:block;font-size:12.5px;font-weight:400;color:#475059;margin-top:2px}.ds-adim em{font-style:normal;font-size:12.5px}.ds-adim .ds-a-tamam,.ds-adim .ds-a-aktif{color:#16191d}.ds-a-aktif{background:rgb(238 241 251 / .6)}.ds-a-aktif i,.ds-a-aktif em{color:#1d3fa8}.ds-a-aktif i{animation:ds-nabiz 1.4s ease-in-out infinite}.ds-a-aktif::after{content:'';position:absolute;left:0;bottom:0;height:2px;width:38%;background:#1d3fa8;animation:ds-tarama 1.6s cubic-bezier(.65,0,.35,1) infinite}@keyframes ds-nabiz{50%{opacity:.35}}@keyframes ds-tarama{from{transform:translateX(-100%)}to{transform:translateX(270%)}}@media (prefers-reduced-motion:reduce){.ds-a-aktif i{animation:none}.ds-a-aktif::after{animation:none;width:100%;opacity:.5}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Akredite deney raporu",
+    "overview": "Bir kalkınma ajansı uzmanının günlerce açık tuttuğu bir değerlendirme raporu. AI puanı bir taslaktır, alıntı izlenebilirliktir, ajans onayı karardır; arayüz bu üç statüyü birbirine karıştırmadan gösterir. Soğuk rapor beyazı kâğıt, grafit mürekkep, ince çizgi ve tablo disiplini. Tek kurumsal aksan kobalttır ve yalnızca eylem, seçili durum ve odak taşır. İl sıralaması izlenebilir bir sonuç çizelgesi gibi okunur.\n Reddedilen iki dünya açıkça yazılı: kart-ızgaralı SaaS paneli ve önceki \"kamu tutanağı\" dünyası (krem kâğıt, serif başlık, büyük harfli mono etiket kostümü, siyah matbu şeritler). Yoğunluk orta-yüksek: ekran uzun süre açık kalır, içeriği taranmaz okunur; satır uzunluğu 62–68ch ile sınırlanır.\n Doğruluk iddiası görseldir: renk tek başına anlam taşımaz, her durum kenar karakteri + doku + işaret + metin ile birlikte gelir. Gradyan, gölge, glow, cam efekti ve emoji yok; köşe 2px, tavan 3px.",
+    "keyCharacteristics": [
+      "Soğuk rapor beyazı üç katman (yüzey · kâğıt · sayfa), grafit mürekkep, tek kobalt aksan.",
+      "Tek grotesk aile (Schibsted Grotesk) başlıkta ve arayüzde; mono yalnızca veri.",
+      "Epistemik gramer: 3px solid/dashed/dotted sol kenar + doku + ■ ◌ — + metin.",
+      "Düz yüzey, ince çizgi; derinlik yok, ayrım çizgiyle ve ton katmanıyla.",
+      "Hareket yalnızca gerçek durum değişimi için; iki istisna adresiyle kapsanmış."
+    ],
+    "rules": [
+      {
+        "name": "The Tek Aksan Rule",
+        "body": "Kobalt eylem, seçili durum ve odak içindir; dekoratif vurgu, başlık rengi ya da durum rengi olarak kullanılmaz. Durum dört epistemik renkle söylenir, marka rengiyle değil.",
+        "section": "colors"
+      },
+      {
+        "name": "The Renk Tek Başına Taşımaz Rule",
+        "body": "Hiçbir durum yalnızca renkle ayırt edilmez (handoff §1.2). Siyah-beyaz çıktıda ve renk körlüğünde kenar karakteri, doku, işaret ve metin etiketi aynı bilgiyi verir.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ochre Anlamlıdır Rule",
+        "body": "`unverif` ochre dekoratif aksan değildir; yalnızca ürünün \"doğrulanmadı\" dediği yerde görünür — tanıtım hero'sunda düşen alıntı hattı dahil.",
+        "section": "colors"
+      },
+      {
+        "name": "The Koyu Panel Token Kullanmaz Rule",
+        "body": "Her iki temada koyu kalması gereken alan `bg-ink` ile kurulmaz (koyu temada `--color-ink` açık renge döner). `.panel-koyu` kullanılır. **Sabit açık renk metin (`text-[#EDE9E0]` vb.) yalnızca `.panel-koyu` veya `.dugme-ters` kapsamında meşrudur**; test bunu JSX girintisiyle kapsam takip ederek denetler.",
+        "section": "colors"
+      },
+      {
+        "name": "The Mono Yalnızca Veri Rule",
+        "body": "JetBrains Mono sayı, kod (NACE, NUTS-2), model künyesi ve epistemik glif içindir. Bir alanın adını söylemek için kullanılmaz; alan adı `.etiket` ile sans yazılır.",
+        "section": "typography"
+      },
+      {
+        "name": "The Büyük Harf Yok Rule",
+        "body": "Arayüzde büyük harfli, harf aralığı açılmış etiket yoktur. Hiyerarşi ağırlık ve boyutla kurulur.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tüm Sayılar Tabular Rule",
+        "body": "Her sayı `.num` taşır; sütunlar hizalanır, puanlar yan yana karşılaştırılabilir.",
+        "section": "typography"
+      },
+      {
+        "name": "The Sayfa Gövdesi Yatay Kaymaz Rule",
+        "body": "Geniş içerik (tablo) kendi `overflow-x` kabında kayar. `overflow-x-auto` yazan her yerde `min-w-0` da olur; 320px'ten geniş `minmax` tabanı `minmax(min(420px, 100%), 1fr)` biçiminde yazılır. İkisi de Galaxy S26 Ultra'da yaşandı; `tasarim.test.ts` ikisini de denetler.",
+        "section": "layout"
+      },
+      {
+        "name": "The Gölge Yok Rule",
+        "body": "`box-shadow`, `filter`, `drop-shadow`, `backdrop-filter` yalnızca `.hero-*` seçicilerinde durabilir; başka yerde test kırılır.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Kapsanmış Hero İstisnası Rule",
+        "body": "Tanıtım hero'su (`.hero-*`) handoff §1.8 ve hareket listesinden kullanıcı kararıyla gevşetildi. Buzlu plaka (`.hero-plaka`): canlı kanıt ağının üstünde metnin kendi zemini; yarıçap, gölge ve kenar yok. **Kontrast blur'a bağlı değil:** `backdrop-filter` desteklenmezse tint %86'ya çıkar. En kötü durum ölçümü (parlak hat plakanın tam altında): destek yokken başlık 14,99 · gövde 10,33 · mikro 5,45; destek varken (tint %76) 13,4 · 9,2 · 4,85 — hepsi 4,5:1 üstünde. Kullanılmayan gradyan istisnası kapatıldı: **kullanılmayan istisna kuralda bırakılmaz.**",
+        "section": "elevation"
+      },
+      {
+        "name": "The Hareket Gerçek Durumu Anlatır Rule",
+        "body": "Hareket yalnızca sunucudan gelen bir durum değişimini anlaşılır kılar (handoff §1.10). Sahte ilerleme, uydurma yüzde, tahmini süre yok.",
+        "section": "components"
+      },
+      {
+        "name": "The İstisnanın Adresi Rule",
+        "body": "Bir istisna açıldığında ikinci kullanım \"zaten var\" diye gelir, üçüncüde kural ölür. Her istisna önekli keyframe + kendi seçici adresi + kırılan testle tutulur.",
+        "section": "components"
+      },
+      {
+        "name": "The :where() Rule",
+        "body": "Bileşen sınıfı içindeki eleman seçicisi her zaman `:where()` ile sarılır: `.panel-koyu :where(a)` (0,0,1) yardımcı sınıfa yenilir, `.panel-koyu a` (0,1,1) onu ezer. Yaşandı: landing'in iki birincil düğmesi 1.09:1 kontrastla görünmez kaldı. Test bu biçimi kırar.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "**Do** her doğrulama durumunu kenar karakteri + doku + işaret + metinle birlikte göster; rengi asla tek başına bırakma.",
+      "**Do** kobaltı yalnızca birincil eylem, seçili durum ve odak için kullan.",
+      "**Do** alan adlarını `.etiket` (sans 12.5px / 500) ile, sayıları ve kodları `.num` (JetBrains Mono, tabular) ile yaz.",
+      "**Do** tablo ve form başlık satırında `.serit` kullan (kâğıt zemin, alt saç çizgisi).",
+      "**Do** form hatasını formun içinde \"İşlem tamamlanmadı\" çelişki notuyla, başarıyı sessiz \"Kayda geçti\" kayıt satırıyla bildir.",
+      "**Do** ölçülmemiş değeri boş ya da \"—\" bırak; 0 yalnızca bir ölçümdür.",
+      "**Do** canlı durumu yalnızca `oneri.asama` gibi gerçek sunucu verisinden türet; hata, takılma ve reduced-motion'da hareketi durdur.",
+      "**Do** ızgara şablonlarında `minmax(0,1fr)`, kaydırma kabında `overflow-x-auto` ile birlikte `min-w-0` kullan.",
+      "**Do** dar ekranda gezinmeyi ikinci satıra sar; her etkileşimli öğe ≥44px ve görünür `:focus-visible` (2px kobalt) taşısın.",
+      "**Do** bileşen sınıfı içindeki eleman seçicisini `:where()` ile sar."
+    ],
+    "donts": [
+      "**Don't** gradyan, gölge, glow, cam efekti, emoji veya 3px üstü köşe kullan (tek istisna `.hero-*`, yalnızca `/`).",
+      "**Don't** epistemik durum taşımayan bir öğeye dekoratif 3px sol şerit ekle.",
+      "**Don't** büyük harfli, harf aralığı açılmış mono etiket kostümüne geri dön.",
+      "**Don't** ürün ekranlarına siyah tablo/form başlık şeridi ya da koyu matbu panel koy; `.panel-koyu` yalnızca tanıtım sayfasındadır.",
+      "**Don't** `bg-ink` ile her iki temada koyu kalacak alan kur; sabit açık renk metni `.panel-koyu` / `.dugme-ters` dışında yazma.",
+      "**Don't** `hero` ya da `analiz` önekli bir animasyonu kendi seçici adresi dışında çağır; handoff dördü dışında yeni keyframe ekleme.",
+      "**Don't** canlı göstergeye uydurma yüzde, tahmini süre ya da ilerleme çubuğu koy.",
+      "**Don't** palet bloğuna renk dışı token (yarıçap, gölge, hareket, tipografi) yaz.",
+      "**Don't** ochre `unverif` rengini \"doğrulanmadı\" anlamı dışında aksan olarak kullan.",
+      "**Don't** yuvarlak \"AI asistan\" balonu, avatar ya da dekoratif illüstrasyon ekle."
+    ]
+  }
+}

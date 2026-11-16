@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { EylemFormu, Gonder } from "./eylem-formu.tsx";
-import { NaceSecici } from "./nace-secici.tsx";
+import { NaceSecici, type Kayit } from "./nace-secici.tsx";
 import { ALAN_ETIKET, GIRDI } from "./ui.tsx";
 import { oneriEylemi } from "@/lib/eylem.ts";
 
@@ -13,19 +12,32 @@ import { oneriEylemi } from "@/lib/eylem.ts";
  * Eskiden il seçimi `router.replace` ile sayfayı yeniden yüklüyor ve yazılmış
  * metni riske atıyordu; o yol kalktı.
  */
+export type Taslak = { baslik: string; gerekce: string; ilce: string; nace: Kayit | null };
+
+/**
+ * Taslak üst bileşende (sihirbaz) tutulur: il değiştirmek için geri dönmek bu
+ * formu unmount ediyor ve yerel state yazılmış metni siliyordu.
+ */
 export function OneriFormu({
   il,
   yerellikPayi,
+  taslak,
+  setTaslak,
 }: {
   il: { kod: string; ad: string; ilceler: string[] };
   yerellikPayi: number;
+  taslak: Taslak;
+  setTaslak: (t: Taslak) => void;
 }) {
-  const [baslik, setBaslik] = useState("");
-  const [gerekce, setGerekce] = useState("");
+  const { baslik, gerekce } = taslak;
+  const setBaslik = (v: string) => setTaslak({ ...taslak, baslik: v });
+  const setGerekce = (v: string) => setTaslak({ ...taslak, gerekce: v });
+  // İl değiştiyse önceki ilin ilçesi geçersiz: il düzeyine düşer.
+  const ilce = il.ilceler.includes(taslak.ilce) ? taslak.ilce : "";
 
   return (
     <EylemFormu eylem={oneriEylemi} className="mt-6 border border-ink bg-surface">
-      <div className="panel-koyu flex items-center justify-between px-4 py-2.5 font-mono text-[10px] uppercase tracking-[.12em] text-[#C9CDD3]">
+      <div className="serit flex items-center justify-between px-4 py-2.5 etiket text-ink-soft">
         <span>Öneri formu</span>
         <span>{il.ad}</span>
       </div>
@@ -78,7 +90,16 @@ export function OneriFormu({
             <label className={ALAN_ETIKET} htmlFor="ilce">
               İlçe · {il.ad}
             </label>
-            <select id="ilce" name="ilce" className={GIRDI} defaultValue={il.ilceler[0] ?? ""}>
+            <select
+              id="ilce"
+              name="ilce"
+              className={GIRDI}
+              value={ilce}
+              onChange={(e) => setTaslak({ ...taslak, ilce: e.target.value })}
+            >
+              {/* Bilinçli seçim yoksa öneri il düzeyinde kaydedilir (`ilce` null);
+                  ilk ilçeyi varsayılan yapmak seçilmemiş bir ilçe yazıyordu. */}
+              <option value="">İl düzeyi · ilçe belirtmeden</option>
               {il.ilceler.map((i) => (
                 <option key={i} value={i}>
                   {i}
@@ -94,11 +115,11 @@ export function OneriFormu({
         )}
 
         <div className="mt-5">
-          <NaceSecici />
+          <NaceSecici secili={taslak.nace} degisti={(nace) => setTaslak({ ...taslak, nace })} />
         </div>
 
         <div className="mt-5 border border-hairline-soft bg-paper px-3.5 py-3">
-          <div className="font-mono text-[9.5px] uppercase tracking-[.12em] text-ink-mute">Gizlilik</div>
+          <div className="etiket text-ink-mute">Gizlilik</div>
           <p className="mt-1.5 text-[12.5px] leading-[1.45] text-ink-soft">
             Adınız kamuya açık listede <b>görünmez</b>. Silme talebinizde kimliğiniz silinir, öneriniz takma anahtarla
             kalır.

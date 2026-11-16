@@ -48,7 +48,6 @@ export default async function OneriVer({ searchParams }: { searchParams: Promise
       />
       <Sayfa>
         <Baslik
-          ustEtiket="Yatırım konusu önerisi"
           alt={
             <>
               Yatırım konusunu ve <b>neden bu ilde/ilçede</b> yapılması gerektiğini yazın. Yapay zekâ öneriyi üst

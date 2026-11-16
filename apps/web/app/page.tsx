@@ -193,13 +193,13 @@ export default async function Tanitim() {
             gibi kenar çizgileriyle duruyor.
           */}
           <header className="hero-plaka -mx-5 flex flex-wrap items-baseline gap-x-5 gap-y-2 border-b border-b-[#2A3039] px-5 py-4">
-            <Link href="/" className="border-0 font-mono text-[10.5px] uppercase tracking-[.16em] text-[#EDE9E0]">
+            <Link href="/" className="border-0 etiket-l text-[#EDE9E0]">
               YKH<span className="text-[#8E959F]">·</span>KDP
             </Link>
-            <span className="font-mono text-[9.5px] uppercase tracking-[.14em] text-[#8E959F]">
+            <span className="etiket text-[#8E959F]">
               Yerel Kalkınma Hamlesi · karar destek
             </span>
-            <nav className="ml-auto flex items-center gap-5 font-mono text-[10px] uppercase tracking-[.12em]">
+            <nav className="ml-auto flex items-center gap-5 etiket">
               {ajans && (
                 <>
                   <Link href="/iller" className="border-0 text-[#C9CDD3]">
@@ -249,13 +249,13 @@ export default async function Tanitim() {
               <div className="mt-9 flex flex-wrap items-center gap-3">
                 <Link
                   href="/oneri"
-                  className="dugme-ters inline-flex min-h-12 items-center border px-6 font-mono text-[11px] uppercase tracking-[.13em]"
+                  className="dugme-ters inline-flex min-h-12 items-center border px-6 etiket-l"
                 >
                   Başla
                 </Link>
                 <Link
                   href={k ? "/onerilerim" : "/giris"}
-                  className="inline-flex min-h-12 items-center border border-[#5C6470] px-6 font-mono text-[11px] uppercase tracking-[.13em] text-[#EDE9E0]"
+                  className="inline-flex min-h-12 items-center border border-[#5C6470] px-6 etiket-l text-[#EDE9E0]"
                 >
                   {k ? "Önerilerim" : "Giriş yap"}
                 </Link>
@@ -273,7 +273,7 @@ export default async function Tanitim() {
                   key={x.ad}
                   className="flex items-baseline justify-between gap-4 border-b border-b-[#2A3039] py-2.5"
                 >
-                  <dt className="font-mono text-[10px] uppercase tracking-[.11em] text-[#8E959F]">{x.ad}</dt>
+                  <dt className="etiket text-[#8E959F]">{x.ad}</dt>
                   <dd className="num text-[17px] leading-none text-[#EDE9E0]">{x.deger}</dd>
                 </div>
               ))}
@@ -326,7 +326,7 @@ export default async function Tanitim() {
           ) : (
             <article className="mt-8 border border-ink bg-surface">
               <div className="panel-koyu flex flex-wrap items-baseline gap-x-4 gap-y-1.5 px-5 py-3 text-[#C9CDD3]">
-                <span className="font-mono text-[10px] uppercase tracking-[.13em]">Yürürlükteki resmî konu</span>
+                <span className="etiket">Yürürlükteki resmî konu</span>
                 <span className="num font-mono text-[10px] tracking-[.08em]">
                   {ornek.il}
                   {ornek.ilce ? ` · ${ornek.ilce}` : ""}
@@ -334,7 +334,7 @@ export default async function Tanitim() {
                 {ajans && (
                   <Link
                     href={`/oneri/${ornek.id}`}
-                    className="ml-auto border-0 font-mono text-[10px] uppercase tracking-[.11em] text-[#EDE9E0] underline decoration-[#5C6470] underline-offset-4"
+                    className="ml-auto border-0 etiket text-[#EDE9E0] underline decoration-[#5C6470] underline-offset-4"
                   >
                     Tam kaydı aç
                   </Link>
@@ -344,7 +344,7 @@ export default async function Tanitim() {
               <div className="grid grid-cols-[1fr_auto] items-start gap-x-8 gap-y-4 border-b border-b-hairline-soft px-5 py-5 max-[640px]:grid-cols-1">
                 <h3 className="max-w-[40ch] font-display text-[24px] font-medium leading-[1.15] text-balance">{ornek.baslik}</h3>
                 <div className="text-right max-[640px]:text-left">
-                  <div className="font-mono text-[9.5px] uppercase tracking-[.13em] text-ink-mute">Belge dayanağı</div>
+                  <div className="etiket text-ink-mute">Belge dayanağı</div>
                   <div className="num mt-1 text-[30px] leading-none text-verified">{ornek.dayanak}</div>
                   <div className="font-mono text-[10px] tracking-[.08em] text-ink-mute">
                     /100 · eşik {TR33_2027_V1.dayanakEsigi}
@@ -353,7 +353,7 @@ export default async function Tanitim() {
               </div>
 
               <div className="border-b border-b-hairline-soft px-5 py-5">
-                <div className="font-mono text-[9.5px] uppercase tracking-[.13em] text-ink-mute">
+                <div className="etiket text-ink-mute">
                   Dayandığı belgeler ·{" "}
                   {ornek.alintilar.length > ALINTI_LIMITI
                     ? `${ornek.alintilar.length} doğrulanmış alıntıdan ${ALINTI_LIMITI}'ü`
@@ -364,7 +364,7 @@ export default async function Tanitim() {
                     <blockquote className="font-display text-[16px] leading-[1.5] text-pretty text-ink">
                       “{a.alinti}”
                     </blockquote>
-                    <figcaption className="mt-1.5 font-mono text-[10px] uppercase tracking-[.09em] text-ink-mute">
+                    <figcaption className="mt-1.5 etiket text-ink-mute">
                       {a.belge_ad}
                       {a.bolum && <span className="num"> · {a.bolum}</span>}
                     </figcaption>
@@ -374,7 +374,7 @@ export default async function Tanitim() {
 
               {dayanaksizKriterler.length > 0 && (
                 <div className="tex-unverified border-t border-t-unverif-line px-5 py-5">
-                  <div className="font-mono text-[9.5px] uppercase tracking-[.13em] text-unverif">
+                  <div className="etiket text-unverif">
                     <span aria-hidden>◌</span> Bu kayıtta belgeye bağlanamayan kriterler
                   </div>
                   <p className="mt-2 max-w-[74ch] text-[13.5px] leading-[1.55] text-ink-soft">
@@ -389,12 +389,12 @@ export default async function Tanitim() {
 
               {ornek.karsi_gorus.length > 0 && (
                 <div className="border-t border-t-hairline px-5 py-5">
-                  <div className="font-mono text-[9.5px] uppercase tracking-[.13em] text-ink-mute">
+                  <div className="etiket text-ink-mute">
                     Yapay zekânın aynı belgelerle kurduğu karşı görüş
                   </div>
                   {ornek.karsi_gorus.slice(0, 2).map((g, i) => (
                     <div key={i} className="mt-3">
-                      <span className="font-mono text-[9.5px] uppercase tracking-[.1em] text-unverif">
+                      <span className="etiket text-unverif">
                         {KARSI_GORUS_ETIKET[g.tur as KarsiGorusTuru] ?? g.tur}
                       </span>
                       <p className="mt-1 max-w-[74ch] text-[13.5px] leading-[1.55] text-pretty text-ink-soft">
@@ -449,15 +449,15 @@ export default async function Tanitim() {
               </caption>
               <thead>
                 <tr className="panel-koyu text-[#C9CDD3]">
-                  <th scope="col" className="px-4 py-2.5 font-mono text-[9.5px] font-normal uppercase tracking-[.12em]">
+                  <th scope="col" className="px-4 py-2.5 etiket font-medium">
                     Grup
                   </th>
-                  <th scope="col" className="px-4 py-2.5 font-mono text-[9.5px] font-normal uppercase tracking-[.12em]">
+                  <th scope="col" className="px-4 py-2.5 etiket font-medium">
                     Kriterler
                   </th>
                   <th
                     scope="col"
-                    className="px-4 py-2.5 text-right font-mono text-[9.5px] font-normal uppercase tracking-[.12em]"
+                    className="px-4 py-2.5 text-right etiket font-medium"
                   >
                     Pay
                   </th>
@@ -542,13 +542,13 @@ export default async function Tanitim() {
             <div className="flex flex-wrap items-center gap-3">
               <Link
                 href="/oneri"
-                className="dugme-ters inline-flex min-h-12 items-center border px-6 font-mono text-[11px] uppercase tracking-[.13em]"
+                className="dugme-ters inline-flex min-h-12 items-center border px-6 etiket-l"
               >
                 Öneri sihirbazını başlat
               </Link>
               <Link
                 href={k ? "/onerilerim" : "/giris"}
-                className="inline-flex min-h-12 items-center border border-[#5C6470] px-6 font-mono text-[11px] uppercase tracking-[.13em] text-[#EDE9E0]"
+                className="inline-flex min-h-12 items-center border border-[#5C6470] px-6 etiket-l text-[#EDE9E0]"
               >
                 {k ? "Önerilerime bak" : "Hesabıma gir"}
               </Link>

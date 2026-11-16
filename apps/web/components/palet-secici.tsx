@@ -39,9 +39,9 @@ export function PaletSecici({ secili }: { secili: PaletKimlik }) {
 
   return (
     <div className="mt-6 border border-hairline bg-surface">
-      <div className="panel-koyu flex flex-wrap items-baseline justify-between gap-3 px-4 py-2.5 font-mono text-[10px] uppercase tracking-[.13em]">
+      <div className="serit flex flex-wrap items-baseline justify-between gap-3 px-4 py-2.5 etiket">
         <span>Renk paleti</span>
-        <span className="text-[#C9CDD3]">{bekliyor ? "kaydediliyor" : `${PALETLER.length} set`}</span>
+        <span className="text-ink-mute">{bekliyor ? "kaydediliyor" : `${PALETLER.length} set`}</span>
       </div>
 
       <p className="border-b border-b-hairline-soft px-4 py-2.5 text-[12.5px] leading-[1.45] text-ink-soft">
@@ -76,9 +76,9 @@ export function PaletSecici({ secili }: { secili: PaletKimlik }) {
               <span className="min-w-0 flex-1">
                 <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <span className="text-[15px] font-medium">{p.ad}</span>
-                  <span className="num font-mono text-[10px] uppercase tracking-[.1em] text-ink-mute">{p.id}</span>
+                  <span className="num etiket text-ink-mute">{p.id}</span>
                   {bu && (
-                    <span className="font-mono text-[10px] uppercase tracking-[.1em] text-verified">
+                    <span className="etiket text-verified">
                       <span aria-hidden>■</span> yürürlükte
                     </span>
                   )}

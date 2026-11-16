@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { naceAraEylemi } from "@/lib/eylem.ts";
 import { cn } from "@/lib/utils.ts";
 import { ALAN_ETIKET, GIRDI } from "./ui.tsx";
 
-type Kayit = { kod: string; tanim: string; duzey: string };
+export type Kayit = { kod: string; tanim: string; duzey: string };
 
 /**
  * NACE seçici — yatırımcı biliyorsa girer, bilmiyorsa boş bırakır ve AI atar.
@@ -13,21 +13,39 @@ type Kayit = { kod: string; tanim: string; duzey: string };
  * ponytail: 3190 kodu istemciye göndermek yerine sunucuda arama. Tek eylem
  * çağrısı, kütüphane yok, açılır liste native.
  */
-export function NaceSecici({ ad = "naceKod", secili }: { ad?: string; secili?: Kayit | null }) {
-  const [deger, setDeger] = useState<Kayit | null>(secili ?? null);
+export function NaceSecici({
+  ad = "naceKod",
+  secili,
+  degisti,
+}: {
+  ad?: string;
+  secili?: Kayit | null;
+  /** Seçim üst bileşende de tutulacaksa (sihirbaz taslağı). */
+  degisti?: (k: Kayit | null) => void;
+}) {
+  const [deger, setDegerYerel] = useState<Kayit | null>(secili ?? null);
+  const setDeger = (k: Kayit | null) => {
+    setDegerYerel(k);
+    degisti?.(k);
+  };
   const [sorgu, setSorgu] = useState("");
   const [sonuc, setSonuc] = useState<Kayit[]>([]);
   const [bekliyor, gecis] = useTransition();
   const [acik, setAcik] = useState(false);
+  // Geç dönen eski arama yeni sonucu ezmesin: yalnızca SON sorgunun cevabı yazılır.
+  const son = useRef("");
 
   function ara(q: string) {
     setSorgu(q);
+    son.current = q;
     if (q.trim().length < 2) {
       setSonuc([]);
       return;
     }
     gecis(async () => {
-      setSonuc(await naceAraEylemi(q));
+      const r = await naceAraEylemi(q);
+      if (son.current !== q) return;
+      setSonuc(r);
       setAcik(true);
     });
   }
@@ -55,7 +73,7 @@ export function NaceSecici({ ad = "naceKod", secili }: { ad?: string; secili?: K
               setSonuc([]);
               setSorgu("");
             }}
-            className="cursor-pointer border border-hairline bg-surface px-2 py-1 font-mono text-[10px] uppercase tracking-[.09em] text-ink-mute"
+            className="cursor-pointer border border-hairline bg-surface px-2 py-1 etiket text-ink-mute"
           >
             Kaldır
           </button>
@@ -95,7 +113,7 @@ export function NaceSecici({ ad = "naceKod", secili }: { ad?: string; secili?: K
                     setAcik(false);
                   }}
                   className={cn(
-                    "flex w-full cursor-pointer items-baseline gap-3 border-b border-b-[#E9E5DB] px-3 py-2.5 text-left last:border-b-0",
+                    "flex w-full cursor-pointer items-baseline gap-3 border-b border-b-hairline-soft px-3 py-2.5 text-left last:border-b-0",
                     "hover:bg-paper",
                   )}
                 >

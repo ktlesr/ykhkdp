@@ -4,9 +4,15 @@ import { useActionState, useEffect, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { cn } from "@/lib/utils.ts";
 import { kayitSatiri } from "./kayit-satiri.tsx";
+import { DUGME_STIL, DUGME_TABAN, Uyari } from "./ui.tsx";
 import type { EylemSonucu } from "@/lib/eylem.ts";
 
-/** Sunucu eylemi + hata gösterimi + bildirim. §10: hata ne olduğunu ve nasıl düzeltileceğini söyler. */
+/**
+ * Sunucu eylemi + hata gösterimi + bildirim.
+ *
+ * Hata formun İÇİNDE kalır (toast'ta kaybolmaz): ne olduğunu söyler, düzeltme
+ * yolu mesajın kendisindedir. Başarı ise kayıt bildirimi olarak düşer.
+ */
 export function EylemFormu({
   eylem,
   children,
@@ -30,12 +36,9 @@ export function EylemFormu({
   return (
     <form action={gonder} className={className}>
       {durum && !durum.ok && (
-        <div
-          role="alert"
-          className="mb-3.5 border border-conflict-line border-l-[3px] border-l-conflict bg-conflict-tint px-3.5 py-3 text-[13px] text-ink-soft"
-        >
+        <Uyari tur="kirmizi" baslik="İşlem tamamlanmadı" className="mt-0 mb-4">
           {durum.mesaj}
-        </div>
+        </Uyari>
       )}
       {children}
     </form>
@@ -48,35 +51,38 @@ export function Gonder({
   className,
   name,
   value,
+  bekleme = "Kaydediliyor",
 }: {
   children: ReactNode;
-  varyant?: "dolu" | "cizgi" | "amber" | "kirmizi";
+  varyant?: keyof typeof DUGME_STIL;
   className?: string;
   name?: string;
   value?: string;
+  /** gönderim sürerken düğmede yazan fiil */
+  bekleme?: string;
 }) {
   const { pending } = useFormStatus();
-  const stil = {
-    dolu: "border-ink bg-ink text-paper",
-    cizgi: "border-hairline bg-transparent text-ink",
-    amber: "border-unverif-line bg-unverif-tint text-[#5F4A15]",
-    kirmizi: "border-conflict-line bg-conflict-tint text-conflict",
-  }[varyant];
-
   return (
     <button
       type="submit"
       name={name}
       value={value}
       disabled={pending}
-      className={cn(
-        "min-h-11 cursor-pointer border px-[13px] py-[9px] font-mono text-[10.5px] uppercase tracking-[.1em]",
-        stil,
-        pending && "cursor-progress opacity-60",
-        className,
-      )}
+      aria-busy={pending}
+      className={cn(DUGME_TABAN, DUGME_STIL[varyant], pending && "cursor-progress disabled:opacity-80", className)}
     >
-      {pending ? "Kaydediliyor…" : children}
+      {pending ? (
+        <>
+          <span className="analiz-bekle inline-flex items-center" aria-hidden>
+            <i />
+            <i />
+            <i />
+          </span>
+          {bekleme}
+        </>
+      ) : (
+        children
+      )}
     </button>
   );
 }

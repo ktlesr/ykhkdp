@@ -1,5 +1,7 @@
 "use client";
 
+import { cn } from "@/lib/utils.ts";
+import { DUGME_STIL, DUGME_TABAN } from "./ui.tsx";
 import { useState, useTransition } from "react";
 import { belgeSilEylemi } from "@/lib/eylem.ts";
 
@@ -13,7 +15,7 @@ export function BelgeSil({ ad, parca }: { ad: string; parca: number }) {
   const [bekliyor, basla] = useTransition();
 
   if (hata) {
-    return <span className="font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">{hata}</span>;
+    return <span className="etiket text-ink-mute">{hata}</span>;
   }
 
   if (!emin) {
@@ -21,7 +23,7 @@ export function BelgeSil({ ad, parca }: { ad: string; parca: number }) {
       <button
         type="button"
         onClick={() => setEmin(true)}
-        className="min-h-11 cursor-pointer border border-hairline bg-paper px-[11px] py-[7px] font-mono text-[10px] uppercase tracking-[.1em] text-ink-mute"
+        className="min-h-11 cursor-pointer border border-hairline bg-paper px-[11px] py-[7px] etiket text-ink-mute"
       >
         Sil
       </button>
@@ -30,7 +32,7 @@ export function BelgeSil({ ad, parca }: { ad: string; parca: number }) {
 
   return (
     <span className="flex items-center gap-2">
-      <span className="font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
+      <span className="etiket text-ink-mute">
         {parca} parça silinecek
       </span>
       <button
@@ -42,14 +44,14 @@ export function BelgeSil({ ad, parca }: { ad: string; parca: number }) {
             if (!s.ok) setHata(s.mesaj);
           })
         }
-        className="min-h-11 cursor-pointer border border-ink bg-ink px-[11px] py-[7px] font-mono text-[10px] uppercase tracking-[.1em] text-paper disabled:opacity-50"
+        className={cn(DUGME_TABAN, DUGME_STIL.kirmizi)}
       >
         {bekliyor ? "Siliniyor" : "Onayla"}
       </button>
       <button
         type="button"
         onClick={() => setEmin(false)}
-        className="min-h-11 cursor-pointer border border-hairline bg-paper px-[11px] py-[7px] font-mono text-[10px] uppercase tracking-[.1em] text-ink-mute"
+        className="min-h-11 cursor-pointer border border-hairline bg-paper px-[11px] py-[7px] etiket text-ink-mute"
       >
         Vazgeç
       </button>

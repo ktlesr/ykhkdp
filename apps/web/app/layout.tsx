@@ -1,30 +1,28 @@
 import type { Metadata } from "next";
 import { ayarGetir } from "@ykh/database";
-import { IBM_Plex_Mono, IBM_Plex_Sans, Newsreader } from "next/font/google";
+import { JetBrains_Mono, Schibsted_Grotesk } from "next/font/google";
 import { KayitSatiriAlani } from "@/components/kayit-satiri.tsx";
 import { baglam } from "@/lib/oturum.ts";
 import { paletGecerli } from "@/lib/palet.ts";
 import { siteUrl } from "@/lib/site.ts";
 import "./globals.css";
 
-const newsreader = Newsreader({
+/**
+ * Schibsted Grotesk: başlık ve arayüz. Kurumsal bir haber grotesk'i — kamu
+ * belgesinin ciddiyeti, ekran okunurluğu, Türkçe (latin-ext) eksiksiz.
+ * JetBrains Mono: yalnızca sayı, kod, künye (tabular).
+ */
+const schibsted = Schibsted_Grotesk({
   subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600"],
-  variable: "--font-newsreader",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-schibsted",
   display: "swap",
 });
 
-const plexSans = IBM_Plex_Sans({
+const jetbrains = JetBrains_Mono({
   subsets: ["latin", "latin-ext"],
   weight: ["400", "500", "600"],
-  variable: "--font-plex-sans",
-  display: "swap",
-});
-
-const plexMono = IBM_Plex_Mono({
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600"],
-  variable: "--font-plex-mono",
+  variable: "--font-jetbrains",
   display: "swap",
 });
 
@@ -151,9 +149,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html
       lang="tr"
       data-palet={palet}
-      className={`${newsreader.variable} ${plexSans.variable} ${plexMono.variable}`}
+      className={`${schibsted.variable} ${jetbrains.variable}`}
     >
       <body>
+        {/* Yön sözleşmesi — derlenmiş çıktıda kalsın diye HTML yorumu olarak basılır. */}
+        <div
+          hidden
+          dangerouslySetInnerHTML={{
+            __html: `<!--
+THESIS: Bir değerlendirme raporu. AI puanı bir taslaktır, alıntı izlenebilirliktir, ajans onayı karardır; kart-ızgaralı SaaS paneli ve krem kâğıt-serif "tutanak" reddedilir.
+OWN-WORLD: soğuk rapor beyazı (#FFF/#F3F4F2), grafit mürekkep #16191D, tek aksan kalibrasyon kobaltı #1D3FA8 (eylem/seçili/odak); Schibsted Grotesk + JetBrains Mono (yalnız sayı); ince çizgi, tablo disiplini, 2px yarıçap, gölge yok; epistemik gramer: 3px solid/dashed/dotted kenar + doku + ■ ◌ —.
+STORY: Uzman bir önerinin neye dayandığını, arka plandaki değerlendirmenin hangi adımda olduğunu ve kararın kimde olduğunu bir bakışta görür; onaylar, düzeltir ya da reddeder.
+FIRST VIEWPORT: başlık + künye satırı; solda değerlendirme gövdesi (gerekçe, canlı adım listesi ya da puan ve alıntılar), sağda sabit "Ajans kararı" paneli ve puan özeti.
+FORM: grounded list #3 "akredite deney raporu" (Codex ile birleşik: il sıralaması izlenebilir sonuç çizelgesi); seed 26ad0a00.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+-->`,
+          }}
+        />
         {children}
         <KayitSatiriAlani />
       </body>

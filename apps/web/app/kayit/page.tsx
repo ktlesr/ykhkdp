@@ -2,12 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { EylemFormu, Gonder } from "@/components/eylem-formu.tsx";
-import { UstBar } from "@/components/ui.tsx";
+import { ALAN_ETIKET as ETIKET, GIRDI, KimlikSayfasi, UstBar } from "@/components/ui.tsx";
 import { kayitEylemi } from "@/lib/eylem.ts";
 import { kullanici } from "@/lib/oturum.ts";
 
-const ETIKET = "mb-1.5 block font-mono text-[9.5px] uppercase tracking-[.13em] text-ink-mute";
-const GIRDI = "min-h-11 w-full border border-hairline bg-alan px-3 py-[11px] text-[14px] text-ink";
 
 export const metadata: Metadata = {
   title: "Hesap aç",
@@ -22,21 +20,23 @@ export const metadata: Metadata = {
 };
 
 export default async function Kayit() {
-  if (await kullanici()) redirect("/oneri");
+  // Misafir de hesap açabilir (yeni hesap; misafir önerileri taşınmaz).
+  const k = await kullanici();
+  if (k && !k.misafir) redirect("/oneri");
 
   return (
     <>
       <UstBar />
-      <section className="mx-auto max-w-[420px] px-7 pb-18">
-        <div className="border-b-2 border-b-ink pt-[34px] pb-[18px]">
-          <div className="mb-2.5 font-mono text-[10.5px] uppercase tracking-[.16em] text-ink-mute">Hesap</div>
-          <h1 className="font-display text-[31px] leading-[1.1] font-medium tracking-[-.01em]">Kayıt ol</h1>
-          <p className="mt-2.5 text-[13.5px] text-ink-soft">
-            Kişi olarak kaydolursunuz. Kurum kaydı, kurum doğrulama ve kurum onayı yoktur.
-          </p>
-        </div>
-
-        <EylemFormu eylem={kayitEylemi} className="mt-6 border border-hairline bg-surface p-5">
+      <KimlikSayfasi
+        baslik="Önerinizi verin; gerekçesi belgeyle sınansın."
+        alt="Kişi olarak kaydolursunuz. Kurum kaydı, kurum doğrulama ve kurum onayı yoktur. Önerinizi kayıt olmadan da verebilirsiniz."
+      >
+        <div className="border border-hairline bg-surface">
+          <div className="border-b border-b-hairline-soft px-6 pt-6 pb-4">
+            <h2 className="text-[22px] font-semibold tracking-[-.015em] text-ink">Hesap aç</h2>
+            <p className="mt-1 text-[13.5px] text-ink-soft">Önerilerinize her cihazdan ulaşırsınız.</p>
+          </div>
+        <EylemFormu eylem={kayitEylemi} className="px-6 pt-5 pb-6">
           <label className={ETIKET} htmlFor="adSoyad">
             Ad soyad
           </label>
@@ -61,7 +61,7 @@ export default async function Kayit() {
           />
 
           <div className="mt-4 border border-hairline-soft bg-paper px-3.5 py-3">
-            <div className="font-mono text-[9.5px] uppercase tracking-[.12em] text-ink-mute">
+            <div className="etiket text-ink-mute">
               Kişisel veri ve gizlilik
             </div>
             <p className="mt-1.5 text-[12.5px] leading-[1.45] text-ink-soft">
@@ -71,18 +71,19 @@ export default async function Kayit() {
           </div>
 
           <div className="mt-5">
-            <Gonder className="w-full">Hesap oluştur</Gonder>
+            <Gonder className="w-full" bekleme="Hesap açılıyor">Hesap oluştur</Gonder>
           </div>
         </EylemFormu>
+        </div>
 
-        <p className="mt-4 text-[13px] text-ink-soft">
+        <p className="mt-4 text-[13.5px] text-ink-soft">
           Hesabınız var mı?{" "}
           <Link href="/giris" className="border-b border-b-navy/35">
             Giriş yapın
           </Link>
           .
         </p>
-      </section>
+      </KimlikSayfasi>
     </>
   );
 }

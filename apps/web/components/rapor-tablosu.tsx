@@ -40,10 +40,10 @@ export function RaporTablosu({ satirlar }: { satirlar: RaporSatiri[] }) {
           <details key={g.kod} className="katlanir border-b border-b-hairline last:border-b-0">
             <summary className="flex min-h-11 flex-wrap items-center gap-x-4 gap-y-2 bg-paper px-5 py-3">
               <span aria-hidden className="katlanir-isaret shrink-0 text-[11px] text-ink-mute" />
-              <span className="num shrink-0 font-mono text-[11px] tracking-[.1em] text-ink-mute">{g.ajansKod}</span>
+              <span className="num shrink-0 text-[12px] text-ink-mute">{g.ajansKod}</span>
               <span className="text-[15px] font-medium">{g.il}</span>
               <span className="min-w-0 flex-1 truncate text-[12.5px] text-ink-mute">{g.ajans}</span>
-              <span className="num shrink-0 font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
+              <span className="num shrink-0 etiket text-ink-mute">
                 {g.satirlar.length} kayıt · {degerlendirilen} değerlendirildi
               </span>
             </summary>
@@ -63,7 +63,7 @@ export function RaporTablosu({ satirlar }: { satirlar: RaporSatiri[] }) {
                   </Rozet>
                   {r.misafir && <Rozet tur="gri">misafir</Rozet>}
                   {r.duzeltildi && <Rozet tur="notr">puan ajansça düzeltildi</Rozet>}
-                  <span className="num ml-auto font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
+                  <span className="num ml-auto etiket text-ink-mute">
                     {r.dayanak === null ? (
                       "değerlendirilmedi"
                     ) : (
@@ -75,7 +75,7 @@ export function RaporTablosu({ satirlar }: { satirlar: RaporSatiri[] }) {
                 </div>
 
                 {r.nace_kod && (
-                  <p className="mt-1.5 font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
+                  <p className="mt-1.5 etiket text-ink-mute">
                     <span className="num">NACE {r.nace_kod}</span>
                     {r.nace_tanim && <> · {r.nace_tanim}</>}
                     {r.nace_kaynagi && <> · {NACE_KAYNAK_ETIKET[r.nace_kaynagi as NaceKaynagi]}</>}
@@ -91,11 +91,11 @@ export function RaporTablosu({ satirlar }: { satirlar: RaporSatiri[] }) {
                     {KRITERLER.map((kr) => (
                       <div key={kr} className="flex items-baseline gap-1.5">
                         <dt className="text-[11.5px] text-ink-mute">{KRITER_ETIKET[kr]}</dt>
-                        <dd className="num text-[12.5px] font-medium">{r.puanlar?.[kr] ?? "—"}</dd>
+                        <dd className="num text-[12.5px] font-medium">{(r.duzeltilmis_puanlar ?? r.puanlar)?.[kr] ?? "—"}</dd>
                       </div>
                     ))}
                     {r.model_snapshot && (
-                      <div className="num w-full font-mono text-[9.5px] tracking-[.06em] text-ink-mute">
+                      <div className="num w-full text-[11.5px] text-ink-mute">
                         {r.model_snapshot} · {r.prompt_surum}
                       </div>
                     )}

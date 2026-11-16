@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AsamaRozeti } from "@/components/degerlendirme-durumu.tsx";
 import Link from "next/link";
 import { onerilerim } from "@ykh/database";
 import { ONERI_DURUM_ACIKLAMA, ONERI_DURUM_ETIKET, onaylayabilir, type OneriDurumu } from "@ykh/domain";
@@ -135,10 +136,10 @@ export default async function Onerilerim() {
               <section key={g.kod} className="border-b border-b-hairline last:border-b-0">
                 <h2 className="flex min-h-11 flex-wrap items-center gap-x-4 gap-y-2 border-b border-b-hairline-soft bg-paper px-5 py-3">
                   <span className="text-[15px] font-medium">{g.ad}</span>
-                  <span className="num font-mono text-[10px] uppercase tracking-[.1em] text-ink-mute">
+                  <span className="num etiket text-ink-mute">
                     {g.yil} dönemi
                   </span>
-                  <span className="num ml-auto font-mono text-[10px] uppercase tracking-[.1em] text-ink-mute">
+                  <span className="num ml-auto etiket text-ink-mute">
                     {g.oneriler.length} öneri
                   </span>
                 </h2>
@@ -147,11 +148,11 @@ export default async function Onerilerim() {
                   <Link
                     key={o.id}
                     href={`/oneri/${o.id}`}
-                    className="grid grid-cols-[1fr_96px_150px] items-center gap-x-4 gap-y-1.5 border-b border-b-hairline-soft px-5 py-3.5 last:border-b-0 hover:bg-paper max-[640px]:grid-cols-[1fr_150px]"
+                    className="grid grid-cols-[minmax(0,1fr)_96px_150px] items-center gap-x-4 gap-y-1.5 border-b border-b-hairline-soft px-5 py-3.5 last:border-b-0 hover:bg-paper max-[640px]:grid-cols-[minmax(0,1fr)_150px]"
                   >
                     <div>
                       <div className="text-[14px] font-medium leading-[1.35] text-pretty">{o.baslik}</div>
-                      <div className="num mt-1 font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
+                      <div className="num mt-1 etiket text-ink-mute">
                         {o.olusturuldu.slice(0, 10)}
                       </div>
                     </div>
@@ -166,9 +167,13 @@ export default async function Onerilerim() {
                       )}
                     </div>
                     <div>
-                      <Rozet tur={DURUM_TURU[o.durum]} isaret={DURUM_ISARET[o.durum]}>
-                        {ONERI_DURUM_ETIKET[o.durum]}
-                      </Rozet>
+                      {o.durum === "degerlendiriliyor" ? (
+                        <AsamaRozeti asama={o.asama} hatali={o.hatali} />
+                      ) : (
+                        <Rozet tur={DURUM_TURU[o.durum]} isaret={DURUM_ISARET[o.durum]}>
+                          {ONERI_DURUM_ETIKET[o.durum]}
+                        </Rozet>
+                      )}
                     </div>
                   </Link>
                 ))}

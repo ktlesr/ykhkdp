@@ -1,10 +1,11 @@
 "use client";
 
+import { cn } from "@/lib/utils.ts";
 import { useState, useTransition } from "react";
 import type { Bolge } from "@ykh/database";
 import { misafirEylemi } from "@/lib/eylem.ts";
-import { OneriFormu } from "./oneri-formu.tsx";
-import { Bag } from "./ui.tsx";
+import { OneriFormu, type Taslak } from "./oneri-formu.tsx";
+import { Bag, DUGME_STIL, DUGME_TABAN, Isaret } from "./ui.tsx";
 
 /**
  * Öneri sihirbazı — dört adım, tek ekran.
@@ -55,6 +56,7 @@ export function OneriSihirbazi({
   const [misafirHatasi, setMisafirHatasi] = useState<string | null>(null);
   // Misafir oturumu bu turda açıldıysa sunucudan gelen prop bunu bilmiyor.
   const [misafirOldu, setMisafirOldu] = useState(false);
+  const [taslak, setTaslak] = useState<Taslak>({ baslik: "", gerekce: "", ilce: "", nace: null });
   const [bekliyor, basla] = useTransition();
 
   const bolge = bolgeler.find((x) => x.ajans_kod === bolgeKod) ?? null;
@@ -94,12 +96,12 @@ export function OneriSihirbazi({
                 aria-current={simdi ? "step" : undefined}
                 className={[
                   "flex min-h-11 w-full items-center gap-2 px-3 py-2.5 text-left",
-                  simdi ? "bg-ink text-paper" : gecmis ? "bg-paper text-ink" : "bg-surface text-ink-mute",
+                  simdi ? "bg-navy text-white" : gecmis ? "bg-paper text-ink" : "bg-surface text-ink-mute",
                   tiklanabilir ? "cursor-pointer" : "cursor-default",
                 ].join(" ")}
               >
                 <span className="num text-[10px] opacity-70">{i + 1}</span>
-                <span className="font-mono text-[10px] uppercase tracking-[.1em]">{x.ad}</span>
+                <span className="etiket">{x.ad}</span>
                 {gecmis && (
                   <span aria-hidden className="ml-auto text-[11px]">
                     ■
@@ -125,7 +127,8 @@ export function OneriSihirbazi({
                 tarayıcıdan takip edebilirsiniz.
               </p>
               <p className="mt-2 max-w-[46ch] text-[12.5px] leading-[1.45] text-ink-mute">
-                Tarayıcı verisini silerseniz önerinize erişiminiz biter. Öneri listede kalır.
+                Tarayıcı verisini silerseniz önerinize erişiminiz biter; öneriniz kayıtta kalır. Misafir
+                önerileri sonradan bir hesaba taşınamaz. Kalıcı erişim için öneri vermeden önce hesap açın.
               </p>
               <button
                 type="button"
@@ -141,7 +144,7 @@ export function OneriSihirbazi({
                     setAdim(bolgeKod ? "il" : "bolge");
                   })
                 }
-                className="mt-4 min-h-11 w-full cursor-pointer border border-ink bg-ink px-[13px] py-[9px] font-mono text-[10.5px] uppercase tracking-[.1em] text-paper disabled:opacity-60"
+                className={cn(DUGME_TABAN, DUGME_STIL.dolu, "mt-4 w-full")}
               >
                 {bekliyor ? "Hazırlanıyor" : "Misafir olarak devam et"}
               </button>
@@ -188,23 +191,21 @@ export function OneriSihirbazi({
                       setBolgeKod(x.ajans_kod);
                       setAdim("il");
                     }}
-                    className="flex min-h-11 w-full cursor-pointer items-baseline gap-3 px-5 py-4 text-left hover:bg-paper"
+                    className="flex min-h-11 w-full cursor-pointer flex-wrap items-baseline gap-x-3 gap-y-1 px-5 py-4 text-left transition-colors hover:bg-paper"
                   >
                     <span className="min-w-0 flex-1">
                       <span className="text-[15px] font-medium">{x.ajans}</span>
                       {x.kisa_ad && (
-                        <span className="ml-2 font-mono text-[10px] uppercase tracking-[.1em] text-ink-mute">
+                        <span className="ml-2 etiket text-ink-mute">
                           {x.kisa_ad}
                         </span>
                       )}
                     </span>
-                    <span className="num shrink-0 font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
+                    <span className="num shrink-0 text-[12px] text-ink-mute max-[560px]:order-3 max-[560px]:basis-full">
                       {x.ajans_kod} · {x.iller.length} il
                       {x.iller.some(acik) ? ` · ${x.iller.filter(acik).length} açık dönem` : " · dönem yok"}
                     </span>
-                    <span aria-hidden className="shrink-0 text-[13px] text-ink-mute">
-                      →
-                    </span>
+                    <Isaret ad="ok" className="shrink-0 text-[13px] text-ink-mute" />
                   </button>
                 </li>
               ))}
@@ -252,15 +253,13 @@ export function OneriSihirbazi({
                     </span>
                     {secilebilir ? (
                       <>
-                        <span className="num shrink-0 font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
+                        <span className="num shrink-0 etiket text-ink-mute">
                           {x.yil} dönemi
                         </span>
-                        <span aria-hidden className="shrink-0 text-[13px] text-ink-mute">
-                          →
-                        </span>
+                        <Isaret ad="ok" className="shrink-0 text-[13px] text-ink-mute" />
                       </>
                     ) : (
-                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
+                      <span className="shrink-0 etiket text-ink-mute">
                         Açık dönem yok
                       </span>
                     )}
@@ -276,17 +275,17 @@ export function OneriSihirbazi({
       {adim === "oneri" && bolge && il && (
         <>
           <div className="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-1.5 border border-hairline bg-paper px-4 py-3">
-            <span className="font-mono text-[9.5px] uppercase tracking-[.13em] text-ink-mute">Seçilen</span>
+            <span className="etiket text-ink-mute">Seçilen</span>
             <span className="text-[14px] font-medium">
               {il.ad} · {bolge.ajans}
             </span>
-            <span className="num font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
+            <span className="num etiket text-ink-mute">
               {il.yil} dönemi
             </span>
             <button
               type="button"
               onClick={() => geriDon("il")}
-              className="ml-auto min-h-11 cursor-pointer border-b border-b-navy/40 font-mono text-[10px] uppercase tracking-[.1em] text-ink"
+              className="ml-auto min-h-11 cursor-pointer border-b border-b-navy/40 etiket text-ink"
             >
               Değiştir
             </button>
@@ -294,15 +293,16 @@ export function OneriSihirbazi({
 
           {(misafirMi || misafirOldu) && (
             <p className="mt-3 border border-hairline-soft bg-surface px-4 py-3 text-[12.5px] leading-[1.45] text-ink-soft">
-              Misafir olarak devam ediyorsunuz. Öneriniz bu tarayıcıdan takip edilir; kalıcı erişim için sonradan{" "}
+              Misafir olarak devam ediyorsunuz. Öneriniz yalnızca bu tarayıcıdan takip edilir; tarayıcı verisi
+              silinirse erişim biter ve misafir önerisi sonradan bir hesaba taşınamaz. Kalıcı erişim için önce{" "}
               <a href="/kayit" className="border-b border-b-navy/35">
-                hesap açabilirsiniz
+                hesap açın
               </a>
               .
             </p>
           )}
 
-          <OneriFormu il={il} yerellikPayi={yerellikPayi} />
+          <OneriFormu il={il} yerellikPayi={yerellikPayi} taslak={taslak} setTaslak={setTaslak} />
         </>
       )}
     </div>

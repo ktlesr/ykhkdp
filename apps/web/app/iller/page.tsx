@@ -84,19 +84,19 @@ export default async function Iller() {
                 >
                   <summary className="flex min-h-11 flex-wrap items-center gap-x-4 gap-y-2 bg-paper px-5 py-3.5">
                     <span aria-hidden className="katlanir-isaret shrink-0 text-[11px] text-ink-mute" />
-                    <span className="num shrink-0 font-mono text-[11px] tracking-[.1em] text-ink-mute">
+                    <span className="num shrink-0 text-[12px] text-ink-mute">
                       {b.kod}
                     </span>
                     <span className="min-w-0 flex-1 text-[15px] font-medium">
                       {b.ad}
                       {b.kisaAd && (
-                        <span className="ml-2 font-mono text-[10px] uppercase tracking-[.1em] text-ink-mute">
+                        <span className="ml-2 etiket text-ink-mute">
                           {b.kisaAd}
                         </span>
                       )}
                     </span>
 
-                    <span className="num shrink-0 font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
+                    <span className="num shrink-0 etiket text-ink-mute">
                       {b.iller.length} il
                     </span>
                     {acikDonem > 0 ? (
@@ -140,12 +140,12 @@ export default async function Iller() {
                               )}
                             </>
                           ) : (
-                            <span className="font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
+                            <span className="etiket text-ink-mute">
                               Açık dönem yok
                             </span>
                           )}
                           {x.resmi_konu > 0 && (
-                            <span className="num font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
+                            <span className="num etiket text-ink-mute">
                               {x.resmi_konu} resmî konu
                             </span>
                           )}

@@ -134,7 +134,7 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
                 { e: "Boş slot", v: h.ozet.bosSlot, r: "text-absent" },
               ].map((o, i) => (
                 <div key={o.e} className={cn("px-4 py-3.5", i < 3 && "border-r border-r-hairline-soft")}>
-                  <div className="font-mono text-[9.5px] uppercase tracking-[.14em] text-ink-mute">{o.e}</div>
+                  <div className="etiket text-ink-mute">{o.e}</div>
                   <div className={cn("num mt-1 text-[26px] leading-none", o.r)}>{o.v}</div>
                 </div>
               ))}
@@ -147,7 +147,7 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
             )}
 
             <div className="mt-5 border border-hairline bg-surface">
-              <div className="panel-koyu grid grid-cols-[44px_1fr_86px_92px_120px] px-4 py-2.5 font-mono text-[9.5px] uppercase tracking-[.12em] text-[#C9CDD3] max-[760px]:grid-cols-[44px_1fr_120px]">
+              <div className="serit grid grid-cols-[44px_minmax(0,1fr)_86px_92px_120px] gap-x-4 px-4 py-2.5 etiket text-ink-soft max-[760px]:grid-cols-[44px_minmax(0,1fr)_120px]">
                 <div>Sıra</div>
                 <div>Yatırım konusu</div>
                 <div className="max-[760px]:hidden">Köken</div>
@@ -159,7 +159,7 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
                 s.bos ? (
                   <div
                     key={`bos-${s.sira}`}
-                    className="tex-slot grid grid-cols-[44px_1fr] items-start border-b border-b-[#E9E5DB] border-l-[3px] [border-left-style:dotted] border-l-absent px-4 py-4"
+                    className="tex-slot grid grid-cols-[44px_minmax(0,1fr)] items-start border-b border-b-hairline-soft border-l-[3px] [border-left-style:dotted] border-l-absent px-4 py-4"
                   >
                     <div className="num font-display text-[20px] text-absent">{s.sira}</div>
                     <div>
@@ -176,8 +176,8 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
                     key={s.id}
                     href={`/oneri/${s.id}`}
                     className={cn(
-                      "grid grid-cols-[44px_1fr_86px_92px_120px] items-center border-b border-b-[#E9E5DB] px-4 py-3.5 hover:bg-paper last:border-b-0",
-                      "max-[760px]:grid-cols-[44px_1fr_120px]",
+                      "grid grid-cols-[44px_minmax(0,1fr)_86px_92px_120px] gap-x-4 items-center border-b border-b-hairline-soft px-4 py-3.5 hover:bg-paper last:border-b-0",
+                      "max-[760px]:grid-cols-[44px_minmax(0,1fr)_120px]",
                       i >= h.ilkDort.length ? "bg-[#FDFCFA]" : "bg-surface",
                     )}
                   >
@@ -190,8 +190,8 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
                       {s.sira}
                     </div>
                     <div className="pr-4">
-                      <div className="text-[14px] leading-[1.35] font-medium text-pretty">{s.ad}</div>
-                      <div className="mt-1 flex flex-wrap gap-2.5 font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
+                      <div className="text-[14px] leading-[1.35] font-medium break-words text-pretty [overflow-wrap:anywhere]">{s.ad}</div>
+                      <div className="mt-1 flex flex-wrap gap-2.5 etiket text-ink-mute">
                         {s.nace && <span className="num">NACE {s.nace}</span>}
                         <span>dayanak {s.dayanak}/100</span>
                       </div>
@@ -220,9 +220,9 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
         {/* Yürürlükteki resmî liste ve yıllar arası süreklilik */}
         {resmi.length > 0 && (
           <div className="mt-8 border border-hairline bg-surface">
-            <div className="panel-koyu flex flex-wrap items-baseline gap-x-3 px-4 py-2.5 font-mono text-[10px] uppercase tracking-[.13em]">
+            <div className="serit flex flex-wrap items-baseline gap-x-3 px-4 py-2.5 etiket">
               <span>Yürürlükteki resmî liste</span>
-              <span className="num text-[#C9CDD3]">{resmi[0].kaynak}</span>
+              <span className="num text-ink-mute">{resmi[0].kaynak}</span>
             </div>
             <p className="border-b border-b-hairline-soft px-4 py-2.5 text-[12.5px] leading-[1.45] text-ink-soft">
               Sanayi ve Teknoloji Bakanlığı tebliğiyle ilan edilen dört yatırım konusu.{" "}
@@ -238,7 +238,7 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
               <div key={x.sira} className="border-b border-b-hairline-soft px-4 py-3.5 last:border-b-0">
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5">
                   <span className="num shrink-0 text-[12px] text-ink-mute">{String(x.sira).padStart(2, "0")}</span>
-                  <h3 className="min-w-0 flex-1 text-[14.5px] font-medium leading-[1.35] text-pretty">{x.baslik}</h3>
+                  <h3 className="min-w-0 flex-1 text-[14.5px] font-medium leading-[1.35] text-pretty [overflow-wrap:anywhere]">{x.baslik}</h3>
                   {yillar.length > 1 &&
                     (x.onceki_durum === "aynen" ? (
                       <Rozet tur="yesil" isaret="■">
@@ -257,7 +257,7 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
 
                 {x.onceki_durum === "benzer" && x.onceki_baslik && (
                   <div className="tex-unverified mt-2 ml-[30px] max-w-[78ch] px-3 py-2">
-                    <div className="font-mono text-[9.5px] uppercase tracking-[.12em] text-unverif">
+                    <div className="etiket text-unverif">
                       <span aria-hidden>◌</span> {resmiYil - 1} karşılığı · doğrulanmadı
                     </div>
                     <p className="mt-1 text-[12.5px] leading-[1.45] text-pretty text-ink-soft">{x.onceki_baslik}</p>

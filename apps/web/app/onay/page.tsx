@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AsamaRozeti } from "@/components/degerlendirme-durumu.tsx";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { kuyrukKopyalari, onayKuyrugu } from "@ykh/database";
@@ -39,7 +40,6 @@ export default async function Onay() {
       />
       <Sayfa genis>
         <Baslik
-          ustEtiket="Ajans"
           alt="Yapay zekâ puanladı ama puan doğrulanmadı. Onaylanmadan hiçbir öneri il sıralamasına girmez. Onay geri alınabilir; kilit yoktur."
         >
           Onay kuyruğu
@@ -55,13 +55,13 @@ export default async function Onay() {
         ) : (
           <div className="mt-5 border border-hairline bg-surface">
             {kuyruk.map((o) => (
-              <div key={o.id} className="border-b border-b-[#E9E5DB] px-5 py-4 last:border-b-0">
+              <div key={o.id} className="border-b border-b-hairline-soft px-5 py-4 last:border-b-0">
                 <div className="flex flex-wrap items-start gap-3">
                   <div className="min-w-0 flex-1">
                     <Link href={`/oneri/${o.id}`} className="text-[15px] font-medium text-ink">
                       {o.baslik}
                     </Link>
-                    <div className="mt-1 flex flex-wrap gap-2.5 font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
+                    <div className="mt-1 flex flex-wrap gap-2.5 etiket text-ink-mute">
                       <span>
                         {o.il} · {o.ilce ?? "—"} · {o.yil}
                       </span>
@@ -74,17 +74,33 @@ export default async function Onay() {
                     </div>
                   </div>
                   <div className="flex shrink-0 flex-wrap items-center gap-2.5">
-                    <Rozet tur={o.durum === "onay_bekliyor" ? "amber" : "notr"} isaret="◌">
-                      {ONERI_DURUM_ETIKET[o.durum]}
-                    </Rozet>
-                    <Rozet tur={o.dayanak >= 55 ? "yesil" : "amber"}>dayanak {o.dayanak}/100</Rozet>
+                    {o.durum === "degerlendiriliyor" ? (
+                      <AsamaRozeti asama={o.asama} hatali={o.hatali} />
+                    ) : (
+                      <Rozet tur="amber" isaret="◌">
+                        {ONERI_DURUM_ETIKET[o.durum]}
+                      </Rozet>
+                    )}
+                    {/* Onay bekleyen kayıt YEŞİL olmaz: yeşil doğrulanmış demektir. Eşik
+                        durumu renkle değil sözle söylenir. */}
+                    {/* Değerlendirilmemiş kayıt 0 YAZMAZ: 0 bir ölçümdür, boş "henüz yok" demektir. */}
+                    {o.ai_gerekce === null ? (
+                      <Rozet tur="amber" isaret="◌">
+                        dayanak henüz yok
+                      </Rozet>
+                    ) : (
+                      <Rozet tur={o.dayanak >= o.dayanak_esigi ? "notr" : "amber"}>
+                        dayanak {o.dayanak}/100 · eşik {o.dayanak_esigi} ·{" "}
+                        {o.dayanak >= o.dayanak_esigi ? "eşiği geçti" : "eşik altında"}
+                      </Rozet>
+                    )}
                   </div>
                 </div>
 
                 {/* Yakın kopya — AI yok, trigram benzerliği. Karar değil işaret. */}
                 {(kopyalar.get(Number(o.id)) ?? []).length > 0 && (
-                  <div className="mt-2.5 border-l-[3px] [border-left-style:dashed] border-l-absent pl-3">
-                    <div className="font-mono text-[9.5px] uppercase tracking-[.11em] text-ink-mute">
+                  <div className="mt-2.5 border-l-[3px] [border-left-style:dashed] border-l-unverif pl-3">
+                    <div className="etiket text-ink-mute">
                       Aynı dönemde benzer başlık
                     </div>
                     {(kopyalar.get(Number(o.id)) ?? []).map((y) => (
@@ -103,8 +119,8 @@ export default async function Onay() {
                 <p className="mt-2.5 max-w-[85ch] text-[13px] leading-[1.5] text-ink-soft text-pretty">{o.gerekce}</p>
 
                 {o.ai_gerekce && (
-                  <div className="tex-unverified mt-3 border border-unverif-line border-l-[3px] border-l-unverif px-3.5 py-3">
-                    <div className="font-mono text-[9.5px] uppercase tracking-[.11em] text-unverif">
+                  <div className="tex-unverified mt-3 border border-unverif-line border-l-[3px] border-l-unverif [border-left-style:dashed] px-3.5 py-3">
+                    <div className="etiket text-unverif">
                       <span aria-hidden>◌</span> AI değerlendirmesi · doğrulanmadı
                     </div>
                     <p className="mt-1.5 text-[12.5px] leading-[1.5] text-ink-soft">{o.ai_gerekce}</p>

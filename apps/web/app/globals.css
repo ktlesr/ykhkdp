@@ -1,24 +1,28 @@
 @import "tailwindcss";
 
-/* ── §2 Tasarım token'ları ────────────────────────────────────────────────
-   Tailwind v4 CSS-first. README'nin tailwind.config bloğu birebir aynı
-   değerlerle burada; ayrı bir tailwind.config.ts yok.                      */
+/* ── Tasarım token'ları · "değerlendirme raporu" dünyası (2026-11) ─────────
+   Krem kâğıt + serif + büyük harfli mono etiket ("kamu tutanağı") bırakıldı.
+   Yeni dünya: soğuk rapor beyazı, grafit mürekkep, tek kurumsal aksan
+   (kobalt) ve tablo disiplini. Token ADLARI korunur — sayfalar onlara bağlı;
+   `navy` artık kobalt aksan yuvasıdır (birincil eylem, seçili durum, odak).
+   Epistemik dörtlü (verified · unverif · absent · conflict) DEĞİŞMEDİ:
+   handoff §1.2/§4 ürünün doğruluk iddiasıdır, estetik tercih değil.        */
 
 @theme {
-  --color-ink: #101419;
-  --color-ink-soft: #3c4350;
-  --color-ink-mute: #5c6470;
+  --color-ink: #16191d;
+  --color-ink-soft: #475059;
+  --color-ink-mute: #616a73;
 
-  --color-navy: #1b2a47;
-  --color-navy-tint: #ebeef4;
-  --color-navy-line: #42557a;
+  --color-navy: #1d3fa8;
+  --color-navy-tint: #eef1fb;
+  --color-navy-line: #5a72c4;
 
-  --color-paper: #f6f4ef;
-  --color-page: #eeebe4;
+  --color-paper: #fafaf9;
+  --color-page: #f3f4f2;
   --color-surface: #ffffff;
 
-  --color-hairline: #c9c4b8;
-  --color-hairline-soft: #e2ded4;
+  --color-hairline: #d3d6d2;
+  --color-hairline-soft: #e6e8e5;
 
   /**
    * Form alanı zemini. Handoff §2 token listesinde yok — orada form alanı
@@ -26,7 +30,7 @@
    * isimsizdi. İsimlendirmek koyu tema karşılığını da mümkün kılıyor:
    * isimsiz sabit renk temayla dönmüyor, token dönüyor.
    */
-  --color-alan: #fdfcfa;
+  --color-alan: #ffffff;
 
   --color-verified: #1d5b4a;
   --color-verified-tint: #eaf4f0;
@@ -43,9 +47,11 @@
   --color-conflict-tint: #f7eae8;
   --color-conflict-line: #b4655b;
 
-  --font-display: var(--font-newsreader), Georgia, serif;
-  --font-sans: var(--font-plex-sans), system-ui, sans-serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  /* Tek aile, iki yüz: Schibsted Grotesk başlık ve arayüz, JetBrains Mono
+     yalnızca sayı, kod ve künye (§2 "tüm sayılar tabular"). Serif yok. */
+  --font-display: var(--font-schibsted), system-ui, sans-serif;
+  --font-sans: var(--font-schibsted), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
   /* §1.8 — border-radius > 3px yasak. Ölçek tavana çakılı. */
   --radius-xs: 2px;
@@ -93,15 +99,18 @@
 /* ── Koyu tema ────────────────────────────────────────────────────────────
    @layer theme içindeki :root'u katmansız blok her zaman ezer.             */
 [data-theme="dark"] {
-  --color-ink: #e8e4db;
-  --color-ink-soft: #b8bec7;
-  --color-ink-mute: #8e959f;
-  --color-paper: #12161b;
-  --color-page: #0c0f13;
-  --color-surface: #161b21;
-  --color-hairline: #2a3039;
-  --color-hairline-soft: #1e242b;
-  --color-alan: #1a1f26;
+  --color-ink: #e7e9ec;
+  --color-ink-soft: #b4bbc3;
+  --color-ink-mute: #8f98a2;
+  --color-navy: #9db0f2;
+  --color-navy-tint: #1a2240;
+  --color-navy-line: #4f64b0;
+  --color-paper: #14171b;
+  --color-page: #0e1114;
+  --color-surface: #181c21;
+  --color-hairline: #2c323a;
+  --color-hairline-soft: #20252b;
+  --color-alan: #1b2026;
   --color-verified: #6fbfa3;
   --color-unverif: #d9b25f;
   --color-absent: #9a9186;
@@ -118,7 +127,15 @@
     background: var(--color-page);
     color: var(--color-ink);
     font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
   }
   a {
     color: var(--color-navy);
@@ -130,9 +147,28 @@
   }
   /* §9 — odak halkası her etkileşimli öğede görünür */
   :focus-visible {
-    outline: 2px solid var(--color-unverif);
+    outline: 2px solid var(--color-navy);
     outline-offset: 2px;
   }
+}
+
+/* ── Arayüz dili ─────────────────────────────────────────────────────────
+   Eski 9.5–11px büyük harfli mono etiketlerin yerini alan TEK etiket sınıfı.
+   Mono yalnızca veri içindir; bir alanın adını söylemek için kostüm değil. */
+.etiket {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0.005em;
+}
+/* Gezinme ve düğme metni — etiketten bir basamak büyük, aynı aile. */
+.etiket-l {
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 550;
+  line-height: 1.3;
+  letter-spacing: 0.002em;
 }
 
 /* ── Durum dokuları (§2) ─────────────────────────────────────────────────
@@ -146,19 +182,6 @@
 .tex-slot {
   background: repeating-linear-gradient(135deg, #fff 0 6px, #f1eee7 6px 12px);
 }
-/* Kanıt Bandı hücre dolguları (§3) */
-.cell-hatch {
-  background: repeating-linear-gradient(135deg, #101419 0 1.5px, #fff 1.5px 4px);
-}
-.cell-solid {
-  background: #101419;
-}
-.cell-void {
-  background: repeating-linear-gradient(45deg, #fff 0 3px, #e9e5db 3px 6px);
-}
-.cell-empty {
-  background: #fff;
-}
 
 /* koyu temada dokular ters çevrilir (§2) */
 [data-theme="dark"] .tex-unverified {
@@ -167,18 +190,6 @@
 [data-theme="dark"] .tex-absent,
 [data-theme="dark"] .tex-slot {
   background: repeating-linear-gradient(45deg, #161b21 0 5px, #232a33 5px 10px);
-}
-[data-theme="dark"] .cell-hatch {
-  background: repeating-linear-gradient(135deg, #ede9e0 0 1.5px, #101419 1.5px 4px);
-}
-[data-theme="dark"] .cell-solid {
-  background: #ede9e0;
-}
-[data-theme="dark"] .cell-void {
-  background: repeating-linear-gradient(45deg, #101419 0 3px, #232a33 3px 6px);
-}
-[data-theme="dark"] .cell-empty {
-  background: #1a1f26;
 }
 
 /* §2 — tüm sayılar mono + tabular */
@@ -517,4 +528,94 @@
     animation: none;
     opacity: 0.55;
   }
+}
+
+/* ── Değerlendirme koşusu · analiz göstergesi ───────────────────────────────
+
+   İKİNCİ KAPSANMIŞ İSTİSNA, kullanıcı kararıyla (2026-11): arka planda süren
+   AI değerlendirmesi hareketle anlaşılır olmalı. §1.10 hareketi "durum
+   değişimini anlaşılır kılmak için" meşru sayar; burada durum gerçektir —
+   sunucunun `oneri.asama` kolonundan gelir (migration 0016). Uydurma yüzde,
+   tahmini süre yok.
+
+   Sınır: `analiz` önekli keyframe'ler YALNIZCA `.analiz-*` seçicilerinde.
+   Hata, bekleme ve reduced-motion durumunda hareket durur, bilgi kalır.
+   `lib/tasarim.test.ts` kapsamı ölçer.                                       */
+
+/* Aktif adımın altındaki tarama çizgisi: iş sürüyor demek, ilerleme oranı değil. */
+.analiz-tarama {
+  position: relative;
+  overflow: hidden;
+}
+.analiz-tarama::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 38%;
+  background: var(--color-navy);
+  animation: analizTarama 1.6s cubic-bezier(.65, 0, .35, 1) infinite;
+}
+/* Aktif adım işareti: dolup boşalan kare (■ ailesi; yuvarlak "AI balonu" değil). */
+.analiz-nabiz {
+  animation: analizNabiz 1.4s ease-in-out infinite;
+}
+/* Gönderim bekleniyor: düğme içindeki üç çizgilik sayaç. */
+.analiz-bekle :where(i) {
+  display: inline-block;
+  width: 3px;
+  height: 9px;
+  margin-right: 2px;
+  background: currentColor;
+  animation: analizBekle 0.9s ease-in-out infinite;
+}
+.analiz-bekle :where(i:nth-child(2)) {
+  animation-delay: 0.15s;
+}
+.analiz-bekle :where(i:nth-child(3)) {
+  animation-delay: 0.3s;
+}
+/* Tamamlanan adımın oturuşu — bir kez. */
+.analiz-tamam {
+  animation: analizSatir 0.5s cubic-bezier(.16, 1, .3, 1);
+}
+
+@keyframes analizTarama {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(270%); }
+}
+@keyframes analizNabiz {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+@keyframes analizBekle {
+  0%, 100% { transform: scaleY(0.45); opacity: 0.5; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+@keyframes analizSatir {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .analiz-tarama::after {
+    animation: none;
+    width: 100%;
+    opacity: 0.5;
+  }
+  .analiz-nabiz,
+  .analiz-tamam,
+  .analiz-bekle :where(i) {
+    animation: none;
+  }
+}
+
+/* ── Şerit: tablo ve form başlık satırı ─────────────────────────────────
+   Eski siyah "matbu künye" şeridinin yerine. Rapor dilinde başlık satırı
+   bağırmaz: sayfa tonu zemin, alt ince çizgi, ikincil metin. Temayla döner. */
+.serit {
+  background: var(--color-paper);
+  border-bottom: 1px solid var(--color-hairline);
+  color: var(--color-ink-soft);
 }

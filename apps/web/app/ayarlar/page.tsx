@@ -105,7 +105,7 @@ export default async function Ayarlar() {
           </p>
 
           <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2.5">
-            <span className="num font-mono text-[10px] uppercase tracking-widest text-ink-mute">
+            <span className="num etiket tracking-widest text-ink-mute">
               {satirlar.length} kayıt · {degerlendirilen} değerlendirildi · {raporBolgeleri.length} bölge
             </span>
             {satirlar.length > 0 && (

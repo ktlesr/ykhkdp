@@ -31,7 +31,7 @@ export function KullaniciListesi({
 
   return (
     <div className="mt-5 border border-hairline bg-surface">
-      <div className="panel-koyu grid grid-cols-[1fr_120px_92px_150px] px-4 py-2.5 font-mono text-[9.5px] uppercase tracking-[.12em] text-[#C9CDD3] max-[720px]:grid-cols-[1fr_150px]">
+      <div className="serit grid grid-cols-[minmax(0,1fr)_120px_92px_150px] px-4 py-2.5 etiket text-ink-soft max-[720px]:grid-cols-[minmax(0,1fr)_150px]">
         <div>Hesap</div>
         <div className="max-[720px]:hidden">Rol</div>
         <div className="text-right max-[720px]:hidden">Öneri</div>
@@ -40,12 +40,12 @@ export function KullaniciListesi({
 
       {kullanicilar.map((u) => (
         <div key={u.ref} className="border-b border-b-hairline-soft px-4 py-3.5 last:border-b-0">
-          <div className="grid grid-cols-[1fr_120px_92px_150px] items-center gap-x-4 gap-y-2 max-[720px]:grid-cols-[1fr_150px]">
+          <div className="grid grid-cols-[minmax(0,1fr)_120px_92px_150px] items-center gap-x-4 gap-y-2 max-[720px]:grid-cols-[minmax(0,1fr)_150px]">
             <div>
               <div className="num text-[14px] font-medium">
                 {acilan[u.ref] ?? u.eposta_maske ?? <span className="text-ink-mute">e-posta yok</span>}
               </div>
-              <div className="mt-1 font-mono text-[10px] uppercase tracking-[.08em] text-ink-mute">
+              <div className="mt-1 etiket text-ink-mute">
                 {u.ad_maske ?? "—"}
                 {u.ajans_kod && <span className="num"> · {u.ajans_kod}</span>}
                 {u.misafir && " · misafir"}
@@ -67,7 +67,7 @@ export function KullaniciListesi({
                 <button
                   type="button"
                   onClick={() => setSecili(secili === u.ref ? null : u.ref)}
-                  className="min-h-11 cursor-pointer border border-hairline px-3 py-2 font-mono text-[10px] uppercase tracking-[.1em]"
+                  className="min-h-11 cursor-pointer border border-hairline px-3 py-2 etiket"
                 >
                   {secili === u.ref ? "Kapat" : "Aç · sil"}
                 </button>
@@ -95,7 +95,7 @@ export function KullaniciListesi({
               <EylemFormu eylem={rolAtaEylemi} className="mb-4 flex flex-wrap items-end gap-2.5 border-b border-b-hairline pb-4">
                 <input type="hidden" name="ref" value={u.ref} />
                 <label>
-                  <span className="block font-mono text-[10px] uppercase tracking-[.1em] text-ink-mute">Rol</span>
+                  <span className="block etiket text-ink-mute">Rol</span>
                   <select
                     name="rol"
                     defaultValue={u.rol}
@@ -112,7 +112,7 @@ export function KullaniciListesi({
 
                 {(rol[u.ref] ?? u.rol) === "ajans" && (
                   <label>
-                    <span className="block font-mono text-[10px] uppercase tracking-[.1em] text-ink-mute">
+                    <span className="block etiket text-ink-mute">
                       Ajans bölgesi
                     </span>
                     <select
@@ -140,7 +140,7 @@ export function KullaniciListesi({
               >
                 <input type="hidden" name="ref" value={u.ref} />
                 <label className="flex-1 min-w-[240px]">
-                  <span className="block font-mono text-[10px] uppercase tracking-[.1em] text-ink-mute">
+                  <span className="block etiket text-ink-mute">
                     Erişim gerekçesi
                   </span>
                   <input

@@ -1,8 +1,9 @@
 "use client";
 
+import { cn } from "@/lib/utils.ts";
 import { useState } from "react";
 import { EylemFormu, Gonder } from "./eylem-formu.tsx";
-import { ALAN_ETIKET, GIRDI } from "./ui.tsx";
+import { ALAN_ETIKET, GIRDI, DUGME_STIL, DUGME_TABAN } from "./ui.tsx";
 import { belgeEylemi } from "@/lib/eylem.ts";
 
 const TURLER = [
@@ -20,8 +21,19 @@ const TURLER = [
  * ponytail: PDF/docx ayrıştırıcısı yok — bu ekranda .txt/.md kabul ediliyor,
  * PDF için metni yapıştırma yolu açık. Ayrıştırıcı gerekirse tek eylem değişir.
  */
-export function BelgeFormu({ iller }: { iller: Array<{ kod: string; ad: string }> }) {
+export function BelgeFormu({
+  iller,
+}: {
+  iller: Array<{ kod: string; ad: string; ajansKod: string; ajans: string }>;
+}) {
+  const ajanslar = [...new Map(iller.map((x) => [x.ajansKod, x.ajans])).entries()].sort(([a], [b]) => a.localeCompare(b));
+  const ilSirali = [...iller].sort((a, b) => a.ad.localeCompare(b.ad, "tr"));
   const [acik, setAcik] = useState(false);
+  // Kapsam İKİ ADIMDA: önce tür (ulusal/ajans/il), gerekiyorsa ikinci seçim.
+  // 108 seçenekli tek liste yanlış gruba gitmeyi kolaylaştırıyordu.
+  const [tur, setTur] = useState("");
+  const [kapsamTur, setKapsamTur] = useState("");
+  const [kapsamKod, setKapsamKod] = useState("");
   const [metin, setMetin] = useState("");
 
   if (!acik) {
@@ -30,7 +42,7 @@ export function BelgeFormu({ iller }: { iller: Array<{ kod: string; ad: string }
         <button
           type="button"
           onClick={() => setAcik(true)}
-          className="min-h-11 cursor-pointer border border-ink bg-ink px-[13px] py-[9px] font-mono text-[10.5px] uppercase tracking-[.1em] text-paper"
+          className={cn(DUGME_TABAN, DUGME_STIL.dolu)}
         >
           Belge ekle
         </button>
@@ -49,9 +61,9 @@ export function BelgeFormu({ iller }: { iller: Array<{ kod: string; ad: string }
         }
       }}
     >
-      <div className="panel-koyu flex items-center justify-between px-4 py-2.5 font-mono text-[10px] uppercase tracking-[.12em] text-[#C9CDD3]">
+      <div className="serit flex items-center justify-between px-4 py-2.5 etiket text-ink-soft">
         <span>Yeni belge</span>
-        <button type="button" onClick={() => setAcik(false)} className="cursor-pointer text-[#8E959F]">
+        <button type="button" onClick={() => setAcik(false)} className="cursor-pointer text-ink-mute hover:text-ink">
           Kapat
         </button>
       </div>
@@ -67,7 +79,20 @@ export function BelgeFormu({ iller }: { iller: Array<{ kod: string; ad: string }
             <label className={ALAN_ETIKET} htmlFor="tur">
               Tür
             </label>
-            <select id="tur" name="tur" className={GIRDI} defaultValue="bolge_plani">
+            <select
+              id="tur"
+              name="tur"
+              className={GIRDI}
+              value={tur}
+              onChange={(e) => {
+                setTur(e.target.value);
+                if (e.target.value === "bolge_plani" && kapsamTur === "ulusal") setKapsamTur("");
+              }}
+              required
+            >
+              <option value="" disabled>
+                Tür seçin
+              </option>
               {TURLER.map(([k, v]) => (
                 <option key={k} value={k}>
                   {v}
@@ -82,17 +107,59 @@ export function BelgeFormu({ iller }: { iller: Array<{ kod: string; ad: string }
             <input id="yil" name="yil" className={GIRDI} placeholder="2024" inputMode="numeric" />
           </div>
           <div>
-            <label className={ALAN_ETIKET} htmlFor="ilKod">
+            <label className={ALAN_ETIKET} htmlFor="kapsam-tur">
               Kapsam
             </label>
-            <select id="ilKod" name="ilKod" className={GIRDI} defaultValue="">
-              <option value="">Ulusal / tüm iller</option>
-              {iller.map((x) => (
-                <option key={x.kod} value={x.kod}>
-                  {x.ad} iline özgü
-                </option>
-              ))}
+            {/* Varsayılan YOK: bölge planı yanlışlıkla bütün illere açılmasın. */}
+            <input type="hidden" name="kapsam" value={kapsamTur === "ulusal" ? "ulusal" : `${kapsamTur}:${kapsamKod}`} />
+            <select
+              id="kapsam-tur"
+              className={GIRDI}
+              value={kapsamTur}
+              onChange={(e) => {
+                setKapsamTur(e.target.value);
+                setKapsamKod("");
+              }}
+              required
+            >
+              <option value="" disabled>
+                Kapsam seçin
+              </option>
+              <option value="ulusal" disabled={tur === "bolge_plani"}>
+                Ulusal · tüm iller
+              </option>
+              <option value="ajans">Bir ajans bölgesi</option>
+              <option value="il">Tek bir il</option>
             </select>
+            {(kapsamTur === "ajans" || kapsamTur === "il") && (
+              <>
+                <label className={`${ALAN_ETIKET} mt-3`} htmlFor="kapsam-kod">
+                  {kapsamTur === "ajans" ? "Ajans bölgesi" : "İl"}
+                </label>
+                <select
+                  id="kapsam-kod"
+                  className={GIRDI}
+                  value={kapsamKod}
+                  onChange={(e) => setKapsamKod(e.target.value)}
+                  required
+                >
+                  <option value="" disabled>
+                    Seçin
+                  </option>
+                  {kapsamTur === "ajans"
+                    ? ajanslar.map(([kod, ad]) => (
+                        <option key={kod} value={kod}>
+                          {kod} · {ad}
+                        </option>
+                      ))
+                    : ilSirali.map((x) => (
+                        <option key={x.kod} value={x.kod}>
+                          {x.ad}
+                        </option>
+                      ))}
+                </select>
+              </>
+            )}
           </div>
         </div>
 
@@ -104,7 +171,7 @@ export function BelgeFormu({ iller }: { iller: Array<{ kod: string; ad: string }
           name="dosya"
           type="file"
           accept=".txt,.md,text/plain,text/markdown"
-          className="min-h-11 w-full border border-dashed border-hairline bg-[repeating-linear-gradient(135deg,#FFF_0_6px,#F6F4EF_6px_12px)] px-3 py-2.5 text-[13px]"
+          className="min-h-11 w-full border border-dashed border-hairline bg-paper hover:border-ink-mute px-3 py-2.5 text-[13px]"
         />
 
         <label className={`${ALAN_ETIKET} mt-4`} htmlFor="metin">
