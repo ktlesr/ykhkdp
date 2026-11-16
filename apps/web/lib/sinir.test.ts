@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { icYol, ipSec, siraBekle, sinirAsildi, sinirDolu, sinirGeriAl, sinirSay } from "./sinir.ts";
+import { icYol, ipBilinir, ipKaydet, ipSec, siraBekle, sinirAsildi, sinirDolu, sinirGeriAl, sinirSay } from "./sinir.ts";
 
 test("yalnızca sayılan denemeler sınırı doldurur; sormak saymaz", () => {
   const k = `say-${Math.random()}`;
@@ -76,4 +76,18 @@ test("sıra eşzamanlı çağrıları ardışık işler, kimseyi reddetmez", asy
   await Promise.all([1, 2, 3].map(() => siraBekle(k, 40).then(() => bitis.push(Date.now() - t0))));
   assert.equal(bitis.length, 3, "üç çağrı da tamamlanır");
   assert.ok(Math.max(...bitis) >= 110, `ardışık: ${bitis.join(",")}`);
+});
+
+test("sıra sınırlı: doluysa fazlası reddedilir", async () => {
+  const k = `dolu-${Math.random()}`;
+  const sonuc = await Promise.all([1, 2, 3, 4].map(() => siraBekle(k, 10, 2)));
+  assert.deepEqual(sonuc.filter(Boolean).length, 2, "yalnızca iki bekleyen kabul edilir");
+});
+
+test("başarılı giriş yapılan IP bilinir", () => {
+  const h = `h-${Math.random()}`;
+  assert.equal(ipBilinir(h, "203.0.113.9"), false);
+  ipKaydet(h, "203.0.113.9");
+  assert.equal(ipBilinir(h, "203.0.113.9"), true);
+  assert.equal(ipBilinir(h, "198.51.100.1"), false);
 });

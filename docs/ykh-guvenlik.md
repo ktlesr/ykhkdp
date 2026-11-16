@@ -138,8 +138,12 @@ tekil açmak ifşadır.
 ## 8. Kimlik doğrulama
 
 - Giriş: IP başına toplam (20/10 dk); hesap+IP başına başarısız deneme (10/15 dk);
-  IP'den bağımsız hesap başına 30 başarısız denemeden sonra o hesaba gelen
-  denemeler sıraya alınır (tek tek, 3 sn arayla), reddedilmez (dağıtık tahmine karşı; sert engel hesabı herkesin
+  IP'den bağımsız hesap başına 30 başarısız denemeden sonra o hesaba
+  BİLİNMEYEN IP'den gelen denemeler sıraya alınır (tek tek, 3 sn arayla; en çok
+  10 bekleyen, fazlası reddedilir). O hesapla daha önce başarılı giriş yapılmış
+  IP sıraya girmez. Kalan risk: aktif saldırı sırasında hesabın sahibi YENİ bir
+  cihaz/ağdan giriş yaparken reddedilebilir; tam çözüm CAPTCHA ya da e-posta
+  ile tek kullanımlık bağlantıdır (ürün kararı, henüz yok) (dağıtık tahmine karşı; sert engel hesabı herkesin
   kilitleyebileceği bir anahtar yapardı). Anahtar citext ile aynı
   biçimde (yerelden bağımsız) küçültülür; deneme doğrulamadan önce sayılır,
   başarıda geri alınır.

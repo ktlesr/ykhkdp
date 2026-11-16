@@ -92,14 +92,37 @@ export function icYol(hedef: string): string | null {
  * kilit anahtarına dönüşmeden dağıtık tahmin yavaşlar.
  * ponytail: süreç içi; çok kopyada paylaşılan sıra gerekir.
  */
-const siralar = new Map<string, Promise<void>>();
-export function siraBekle(anahtar: string, araMs: number): Promise<void> {
-  const sira = (siralar.get(anahtar) ?? Promise.resolve()).then(
-    () => new Promise<void>((r) => setTimeout(r, araMs)),
-  );
-  siralar.set(anahtar, sira);
-  void sira.then(() => {
-    if (siralar.get(anahtar) === sira) siralar.delete(anahtar);
-  });
-  return sira;
+const siralar = new Map<string, { son: Promise<void>; bekleyen: number }>();
+
+/**
+ * Sıraya girer. Sıra `enCok` bekleyenle sınırlı: dolu sırada `false` döner
+ * (çağıran reddeder) — sınırsız sıra saldırgan trafiğinin meşru denemeyi
+ * süresiz bekletmesi demekti.
+ */
+export async function siraBekle(anahtar: string, araMs: number, enCok = 10): Promise<boolean> {
+  const k = siralar.get(anahtar) ?? { son: Promise.resolve(), bekleyen: 0 };
+  if (k.bekleyen >= enCok) return false;
+  k.bekleyen++;
+  const sira = k.son.then(() => new Promise<void>((r) => setTimeout(r, araMs)));
+  k.son = sira;
+  siralar.set(anahtar, k);
+  await sira;
+  k.bekleyen--;
+  if (k.bekleyen === 0 && siralar.get(anahtar) === k) siralar.delete(anahtar);
+  return true;
+}
+
+/**
+ * Hesap için başarılı giriş yapılmış IP'ler. Bu IP'ler hesap sırasına girmez:
+ * saldırı altındaki hesabın sahibi alışık olduğu bağlantıdan bekletilmez.
+ * ponytail: süreç içi, dağıtımda sıfırlanır; hesap başına en çok 20 IP.
+ */
+const bilinenIp = new Map<string, string[]>();
+export function ipBilinir(hesap: string, ip: string): boolean {
+  return bilinenIp.get(hesap)?.includes(ip) ?? false;
+}
+export function ipKaydet(hesap: string, ip: string): void {
+  const l = (bilinenIp.get(hesap) ?? []).filter((x) => x !== ip);
+  l.push(ip);
+  bilinenIp.set(hesap, l.slice(-20));
 }

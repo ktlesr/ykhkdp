@@ -13,7 +13,7 @@ import { KRITERLER, type Kriter } from "@ykh/scoring";
 import { degerlendirmeYap, SERVIS } from "@ykh/degerlendirme";
 import { baglam, cerezSil, COOKIE, istemciIp, kullanici, oturumCerezi } from "./oturum.ts";
 import { paletGecerli } from "./palet.ts";
-import { ayar, COK_FAZLA, icYol, siraBekle, sinirAsildi, sinirDolu, sinirGeriAl, sinirSay } from "./sinir.ts";
+import { ayar, COK_FAZLA, icYol, ipBilinir, ipKaydet, siraBekle, sinirAsildi, sinirDolu, sinirGeriAl, sinirSay } from "./sinir.ts";
 
 const DK = 60_000;
 
@@ -55,14 +55,21 @@ export async function girisEylemi(_o: EylemSonucu | null, f: FormData): Promise<
   // denemeler tek tek ve 3 sn arayla işlenir. Sert engel kurbanın hesabını
   // herkesin kilitleyebileceği bir anahtar olurdu; paralel bekleme ise
   // hiçbir şeyi sınırlamazdı.
-  if (yavaslat) {
+  // Bu hesapla daha önce başarılı giriş yapılmış IP sıraya girmez. Sıra
+  // sınırlıdır; doluysa yeni (bilinmeyen) kaynaktan gelen deneme reddedilir.
+  if (yavaslat && !ipBilinir(hesap, ip)) {
     log.uyari("hiz_siniri", { eylem: "giris_siraya_alindi" });
-    await siraBekle(hesap, 3000);
+    if (!(await siraBekle(hesap, 3000))) {
+      sinirGeriAl(hesapIp);
+      sinirGeriAl(hesap);
+      return { ok: false, mesaj: COK_FAZLA };
+    }
   }
   const r = await girisYap(eposta, String(f.get("parola") ?? ""));
   if (!r.ok) return { ok: false, mesaj: r.hata };
   sinirGeriAl(hesapIp);
   sinirGeriAl(hesap);
+  ipKaydet(hesap, ip);
   await oturumCerezi(r.jeton);
   // Yalnızca uygulama içi yol (açık yönlendirmeye karşı, bkz. `icYol`).
   redirect(icYol(String(f.get("hedef") ?? "")) ?? "/iller");
