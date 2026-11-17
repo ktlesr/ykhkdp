@@ -1321,3 +1321,86 @@ export async function ilOnerileri(b: Baglam, d: DonemKaydi): Promise<IlOnerisi[]
   );
   return r.map((x) => ({ ...x, id: Number(x.id) }));
 }
+
+// ── Nihai liste (Excel/Word) ───────────────────────────────────────────────
+
+export type NihaiDetay = {
+  id: number; gerekce: string; ilce: string | null; nace_kod: string | null; nace_tanim: string | null;
+  ai_gerekce: string | null; kesif: boolean; resmi_yillar: string | null;
+  onay_tarihi: string | null; model_snapshot: string | null;
+};
+
+export type NihaiIl = {
+  il: string; ilKod: string; ajans: string; ajansKod: string;
+  donem: DonemKaydi | null;
+  adaylar: Aday[];
+  detay: Map<string, NihaiDetay>;
+  /** listeye henüz girmemiş öneriler — dosya bunu SÖYLER, gizlemez */
+  bekleyen: number;
+};
+
+/**
+ * Nihai liste verisi — il, bölge ya da tümü.
+ *
+ * Kapsam VERİTABANINDA: `app_il_kapsaminda` — yönetici 81 il, ajans yalnızca
+ * kendi bölgesi; bölgesi atanmamış ajans hiçbir il görmez (fail-closed,
+ * toplu raporla aynı kural). Yalnızca ONAYLANMIŞ öneriler sıralamaya girer;
+ * onay bekleyenlerin sayısı ayrıca döner.
+ */
+export async function nihaiListeVerisi(b: Baglam, suzgec: { il?: string; bolge?: string }): Promise<NihaiIl[]> {
+  if (b.rol === "anonim" || !onaylayabilir(b.rol)) return [];
+  const iller = await islem(b, (sql) =>
+    sql<{ kod: string; ad: string; ajans_kod: string; ajans: string }[]>`
+      select i.kod, i.ad, i.ajans_kod, a.ad as ajans
+      from il i join ajans a on a.kod = i.ajans_kod
+      where app_il_kapsaminda(i.kod)
+        ${suzgec.il ? sql`and i.kod = ${suzgec.il}` : sql``}
+        ${suzgec.bolge ? sql`and i.ajans_kod = ${suzgec.bolge}` : sql``}
+      order by a.ad, i.ad
+    `,
+  );
+
+  const sonuc: NihaiIl[] = [];
+  // ponytail: il başına birkaç sorgu, 8'li gruplar hâlinde. 81 il için birkaç
+  // saniye; indirme ucu için yeterli. Yavaşlarsa tek toplu sorguya çevrilir.
+  for (let i = 0; i < iller.length; i += 8) {
+    const parca = await Promise.all(
+      iller.slice(i, i + 8).map(async (x): Promise<NihaiIl> => {
+        const donem = await donemGetir(b, x.kod);
+        if (!donem) return { il: x.ad, ilKod: x.kod, ajans: x.ajans, ajansKod: x.ajans_kod, donem: null, adaylar: [], detay: new Map(), bekleyen: 0 };
+        const adaylar = await adaylariGetir(b, donem);
+        const [detaylar, [{ n }]] = await Promise.all([
+          adaylar.length
+            ? islem(b, (sql) =>
+                sql<NihaiDetay[]>`
+                  select o.id, o.gerekce, o.ilce, o.nace_kod, n.tanim as nace_tanim, g.gerekce as ai_gerekce,
+                         (o.kesif_id is not null) as kesif,
+                         (select string_agg(distinct y.yil::text, ', ' order by y.yil::text) from yatirim_konusu y
+                           where y.il_kod = ${x.kod} and lower(trim(y.baslik)) = lower(trim(o.baslik))) as resmi_yillar,
+                         to_char(o.onay_zamani at time zone 'Europe/Istanbul', 'DD.MM.YYYY') as onay_tarihi,
+                         g.model_snapshot
+                  from oneri o
+                  left join degerlendirme g on g.oneri_id = o.id
+                  left join nace n on n.kod = o.nace_kod
+                  where o.id in ${sql(adaylar.map((a) => Number(a.id)))}
+                `,
+              )
+            : Promise.resolve([] as NihaiDetay[]),
+          islem(b, (sql) =>
+            sql<{ n: string }[]>`
+              select count(*) as n from oneri
+              where donem_id = ${donem.donemId} and durum in ('degerlendiriliyor', 'onay_bekliyor')
+            `,
+          ),
+        ]);
+        return {
+          il: x.ad, ilKod: x.kod, ajans: x.ajans, ajansKod: x.ajans_kod, donem, adaylar,
+          detay: new Map(detaylar.map((d) => [String(d.id), { ...d, id: Number(d.id) }])),
+          bekleyen: Number(n),
+        };
+      }),
+    );
+    sonuc.push(...parca);
+  }
+  return sonuc;
+}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { illeriListele } from "@ykh/database";
 import { onaylayabilir } from "@ykh/domain";
+import { NihaiIndir } from "@/components/nihai-indir.tsx";
 import { TopluKesif } from "@/components/toplu-kesif.tsx";
 import { Bag, Baslik, Bos, Rozet, Sayfa, UstBar } from "@/components/ui.tsx";
 import { baglam, kullanici } from "@/lib/oturum.ts";
@@ -70,6 +71,12 @@ export default async function Iller() {
 
         <TopluKesif yonetici={k.rol === "yonetici"} />
 
+        {/* Nihai liste: asıl + yedek, yalnızca onaylı öneriler; il il, bölge bölge, tümü */}
+        <NihaiIndir
+          className="mt-3 border border-hairline bg-surface px-4 py-3"
+          etiket={k.rol === "yonetici" ? "Nihai liste · tüm iller" : "Nihai liste · bölgemdeki iller"}
+        />
+
         {bolgeler.length === 0 ? (
           <Bos baslik="Henüz ajans kaydı yok.">Ajanslar yüklendiğinde iller burada listelenir.</Bos>
         ) : (
@@ -120,6 +127,13 @@ export default async function Iller() {
                   </summary>
 
                   <div className="border-t border-t-hairline-soft">
+                    {acikDonem > 0 && (
+                      <NihaiIndir
+                        suzgec={{ bolge: b.kod }}
+                        etiket={`${b.ad} nihai listesi`}
+                        className="border-b border-b-hairline-soft px-5 py-2.5 pl-11 max-[560px]:pl-5"
+                      />
+                    )}
                     {b.iller.map((x) => (
                       <div
                         key={x.il_kod}

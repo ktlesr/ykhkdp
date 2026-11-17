@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
-import { raporResmiListe, raporSatirlari } from "@ykh/database";
+import { nihaiListeVerisi, raporResmiListe, raporSatirlari } from "@ykh/database";
+import { nihaiExcel, nihaiWord } from "@/lib/nihai-liste.ts";
 import { NACE_KAYNAK_ETIKET, ONERI_DURUM_ETIKET, onaylayabilir } from "@ykh/domain";
 import { KRITERLER, KRITER_ETIKET } from "@ykh/scoring";
 import { baglam, kullanici } from "@/lib/oturum.ts";
@@ -21,13 +22,45 @@ import { baglam, kullanici } from "@/lib/oturum.ts";
 /** Excel'de tarih yerine metin: saat dilimi kayması bir kayıt hatasıdır. */
 const gun = (t: string | null) => (t ? t.slice(0, 10) : "");
 
-export async function GET() {
+export async function GET(istek: Request) {
   const k = await kullanici();
   if (!k || !onaylayabilir(k.rol)) {
     return new Response("Bu rapora yalnızca ajans ve yönetici erişebilir.", { status: 403 });
   }
 
   const b = await baglam();
+
+  /**
+   * Nihai liste: `?tur=nihai&bicim=xlsx|docx[&il=kod][&bolge=TR33]`.
+   * Kapsam yine veritabanında (`app_il_kapsaminda`): ajans başka bölgenin
+   * ilini istese boş döner, bölgesiz ajans hiçbir il almaz.
+   */
+  const q = new URL(istek.url).searchParams;
+  if (q.get("tur") === "nihai") {
+    const il = q.get("il")?.trim() || undefined;
+    const bolge = q.get("bolge")?.trim() || undefined;
+    const bicim = q.get("bicim") === "docx" ? "docx" : "xlsx";
+    // Yalnızca beklenen biçimde kodlar: dosya adına ve sorguya serbest metin girmesin.
+    if ((il && !/^[a-z]{2,20}$/.test(il)) || (bolge && !/^TR[0-9A-C]{2}$/.test(bolge))) {
+      return new Response("Geçersiz il ya da bölge kodu.", { status: 400 });
+    }
+    const iller = await nihaiListeVerisi(b, { il, bolge });
+    if (!iller.length) return new Response("Bu kapsamda erişebileceğiniz il yok.", { status: 404 });
+    const kapsam = il ? iller[0].il : bolge ? `${iller[0].ajans} (${bolge})` : "Tüm iller";
+    const dosyaAdi = `ykh-nihai-${il ?? bolge?.toLowerCase() ?? "tumu"}-${new Date().toISOString().slice(0, 10)}.${bicim}`;
+    const icerik = bicim === "docx" ? await nihaiWord(iller, kapsam) : await nihaiExcel(iller, kapsam);
+    return new Response(new Uint8Array(icerik), {
+      headers: {
+        "content-type":
+          bicim === "docx"
+            ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "content-disposition": `attachment; filename="${dosyaAdi}"`,
+        "cache-control": "no-store",
+      },
+    });
+  }
+
   const [satirlar, resmi] = await Promise.all([raporSatirlari(b), raporResmiListe(b)]);
 
   const wb = new ExcelJS.Workbook();

@@ -18,6 +18,7 @@ import { ayardan, grupAgirligi, hesapla } from "@ykh/scoring";
 import { AsamaRozeti } from "@/components/degerlendirme-durumu.tsx";
 import { EylemFormu, Gonder } from "@/components/eylem-formu.tsx";
 import { KesifPaneli, KonuPuanla } from "@/components/kesif-paneli.tsx";
+import { NihaiIndir } from "@/components/nihai-indir.tsx";
 import { Bag, Baslik, Rozet, Sayfa, UstBar, Uyari } from "@/components/ui.tsx";
 import { resmiDegerlendirEylemi } from "@/lib/eylem.ts";
 import { baglam, kullanici } from "@/lib/oturum.ts";
@@ -412,6 +413,11 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
               Puanlar yapay zekâ tarafından üretilir ve ajans onayından geçer. Belgelere bağlanamayan aday, puanı yüksek
               olsa da slot dolduramaz. Sıralama karar değildir.
             </p>
+            <NihaiIndir
+              suzgec={{ il }}
+              etiket={`${ilKaydi.ad} nihai listesi (asıl + yedek, yalnızca onaylı)`}
+              className="mt-4 border border-hairline bg-surface px-4 py-3"
+            />
           </div>
         )}
 

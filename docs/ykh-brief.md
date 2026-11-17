@@ -34,7 +34,7 @@ Platform resmî Portal veya E-TUYS'un yerine geçmez; yatırımcı başvuruları
 | `/iller` | **ajans** | il listesi, ajans bölgesine göre katlanır; sayılar öneri kümesinden türer |
 | `/il/[il]` | **ajans** | sıralama, slotlar, yürürlükteki resmî liste ve yıllar arası süreklilik |
 | `/ayarlar` | ajans + **yönetici** | toplu rapor (+ Excel); yönetici ayrıca kayıtlı kullanıcılar ve palet |
-| `/rapor` | ajans + yönetici | ekran değil, `.xlsx` indirme ucu |
+| `/rapor` | ajans + yönetici | ekran değil, indirme ucu: toplu rapor `.xlsx`; `?tur=nihai&bicim=xlsx\|docx[&il=][&bolge=]` nihai liste |
 | `/onay` | ajans | AI puanladı, onay bekliyor: onayla · puanı düzelt · NACE'yi düzelt · reddet · yakın kopya işareti |
 | `/belgeler` | ajans | üst ölçekli belge yükleme + il bazlı kapsama — AI'nin dayanağı |
 
@@ -56,6 +56,17 @@ Tanıtım sayfası tek bir örneği kendi içinde açar — gezinilecek bir küm
 `/onerilerim` bu kapatmanın doğurduğu ekrandır: yatırımcının kendi önerilerine
 ulaşabileceği tek yer. Protokol §10 altıncı ekran için gerekçe ister; gerekçe
 gizliliği kapatan değişikliğin kendisidir.
+
+### Nihai liste (Excel · Word)
+
+İl il (`/il/[il]`), bölge bölge ve tümü (`/iller`) indirilir. İçerik ekrandaki
+hesabın AYNISI (`hesapla`): yalnızca onaylanmış öneriler, en çok slot kadar
+asıl + slot kadar yedek; liste dışı ve dayanaksız girmez. Dosya eksiğini
+söyler: boş slot, açık dönemi olmayan il ve "N öneri onay sürecinde, listede
+değil" yazılır. Excel: Nihai liste · Özet · Künye; Word: bölge → il
+başlıkları, asıl/yedek tabloları, gerekçeler. Kapsam veritabanında
+(`app_il_kapsaminda`): ajans yalnızca kendi bölgesi; başka bölgeyi isteyen
+404, bölgesiz ajans hiçbir il almaz.
 
 ### Toplu rapor ve kapsam
 
