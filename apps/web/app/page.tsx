@@ -4,6 +4,7 @@ import { ornekDegerlendirme, platformOzeti } from "@ykh/database";
 import { KARSI_GORUS_ETIKET, type KarsiGorusTuru, onaylayabilir } from "@ykh/domain";
 import { GRUP_ETIKET, gruplaraGore, KRITER_ETIKET, TR33_2027_V1, type Kriter } from "@ykh/scoring";
 import { KanitAgi } from "@/components/kanit-agi.tsx";
+import { Bag, UstBar } from "@/components/ui.tsx";
 import { baglam, kullanici } from "@/lib/oturum.ts";
 
 /**
@@ -142,6 +143,12 @@ const ROLLER = [
   { rol: "Yönetici", yapar: "Ajansın yaptığı her şey, ayrıca denetim izi ve kişisel veri erişimi." },
 ];
 
+/** Uygulama üst çubuğuyla aynı genişlik ve kenar boşluğu. */
+const KAP = "mx-auto w-full max-w-[1180px] px-6 max-[720px]:px-4";
+/** Bölüm başlığı — `Baslik` ölçeğinin bir basamak altı, aynı yüz. */
+const H2 =
+  "max-w-[30ch] font-display text-[27px] leading-[1.14] font-semibold tracking-[-.02em] text-balance text-ink max-[720px]:text-[22px]";
+
 export default async function Tanitim() {
   const b = await baglam();
   const k = await kullanici();
@@ -149,6 +156,14 @@ export default async function Tanitim() {
   // İl listesi ve sıralama ajans görünümü; tanıtım sayfası yatırımcıyı
   // sihirbaza, ajansı kendi ekranlarına yollar.
   const ajans = Boolean(k && onaylayabilir(k.rol));
+  const nav = ajans
+    ? [
+        { ad: "İller", yol: "/iller" },
+        { ad: "Onay", yol: "/onay" },
+        { ad: "Belgeler", yol: "/belgeler" },
+        { ad: "Ayarlar", yol: "/ayarlar" },
+      ]
+    : [{ ad: "Öneri ver", yol: "/oneri" }, ...(k ? [{ ad: "Önerilerim", yol: "/onerilerim" }] : [])];
 
   const sayi = (n: number) => n.toLocaleString("tr-TR");
   const raf = [
@@ -166,265 +181,229 @@ export default async function Tanitim() {
     : [];
 
   return (
-    <main>
-      {/*
-        Yapılandırılmış veri. `dangerouslySetInnerHTML` burada meşru: içerik
-        sabit bir nesneden JSON.stringify ile üretiliyor, kullanıcı girdisi
-        yok. Alternatifi (bir <script> içine JSX metin düğümü) React'ın
-        kaçışıyla bozulurdu.
-      */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(YAPILANDIRILMIS) }}
-      />
-      {/* ── Hero · ink panel ─────────────────────────────────────────────── */}
-      {/*
-        Kanıt ağı hero'nun ARKASINDA duruyor (`isolate` + `relative` kabı).
-        Metin kendi katmanında; ağın opaklığı okunabilirliği düşürmesin diye
-        düşük tutuldu ve cetvel dokusu korunuyor — marka dokusu kaybolmadı.
-      */}
-      <section className="panel-koyu tex-cetvel relative isolate overflow-hidden">
-        <KanitAgi />
-        <div className="relative mx-auto w-full max-w-[1120px] px-6 max-[560px]:px-4">
-          {/*
-            Üç plaka: künye şeridi, metin sütunu, ölçü rafı. Aralarındaki ve
-            çevrelerindeki boşlukta ağ tam güçte akıyor. Plaka bir KART değil —
-            yarıçapı, gölgesi ve kutusu yok; kâğıda konmuş bir baskı plakası
-            gibi kenar çizgileriyle duruyor.
-          */}
-          <header className="hero-plaka -mx-5 flex flex-wrap items-baseline gap-x-5 gap-y-2 border-b border-b-[#2A3039] px-5 py-4">
-            <Link href="/" className="border-0 etiket-l text-[#EDE9E0]">
-              YKH<span className="text-[#8E959F]">·</span>KDP
-            </Link>
-            <span className="etiket text-[#8E959F]">
-              Yerel Kalkınma Hamlesi · karar destek
-            </span>
-            <nav className="ml-auto flex items-center gap-5 etiket">
-              {ajans && (
-                <>
-                  <Link href="/iller" className="border-0 text-[#C9CDD3]">
-                    İller
-                  </Link>
-                  <Link href="/ayarlar" className="border-0 text-[#C9CDD3]">
-                    Ayarlar
-                  </Link>
-                </>
-              )}
-              <Link href="/oneri" className="border-0 text-[#C9CDD3]">
-                Öneri ver
-              </Link>
-              {k ? (
-                <Link href="/onerilerim" className="border-0 text-[#C9CDD3]">
-                  Önerilerim
-                </Link>
-              ) : (
-                <Link href="/giris" className="border-0 text-[#C9CDD3]">
-                  Giriş yap
-                </Link>
-              )}
-            </nav>
-          </header>
+    <>
+      <UstBar kullanici={k} nav={nav} />
+      <main>
+        {/*
+          Yapılandırılmış veri. `dangerouslySetInnerHTML` burada meşru: içerik
+          sabit bir nesneden JSON.stringify ile üretiliyor, kullanıcı girdisi
+          yok. Alternatifi (bir <script> içine JSX metin düğümü) React'ın
+          kaçışıyla bozulurdu.
+        */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(YAPILANDIRILMIS) }}
+        />
 
-          <div className="grid grid-cols-[1.35fr_1fr] gap-x-12 gap-y-10 pt-16 pb-14 max-[900px]:grid-cols-1 max-[900px]:pt-12">
-            <div className="hero-plaka -mx-5 border-y border-y-[#242B34] px-5 py-9">
-              <h1
-                className="max-w-[26ch] font-display text-[clamp(1.9rem,4.6vw,2.5rem)] font-medium leading-[1.06] tracking-[-0.01em] text-balance text-[#F6F4EF]"
-              >
+        {/* ── Kapak ─────────────────────────────────────────────────────── */}
+        <section className="border-b border-b-hairline bg-surface">
+          <div
+            className={`${KAP} grid grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] items-center gap-14 pt-16 pb-14 max-[900px]:grid-cols-1 max-[900px]:gap-10 max-[720px]:pt-10`}
+          >
+            <div>
+              <div className="etiket text-navy">Yerel Kalkınma Hamlesi · karar destek</div>
+              <h1 className="mt-3 max-w-[17ch] font-display text-[40px] leading-[1.05] font-semibold tracking-[-.025em] text-ink max-[720px]:text-[30px]">
                 Dört yatırım konusu, gerekçesi gösterilebilir olsun.
               </h1>
-              <p
-                className="mt-6 max-w-[62ch] text-[16px] leading-[1.5] text-pretty text-[#C9CDD3]"
-              >
-                Yerel Kalkınma Hamlesi kapsamında her il için dört yatırım konusu belirleniyor. Bu platform o kararın
-                hazırlık katmanı: öneriler üst ölçekli plan belgelerine <b className="font-medium text-[#EDE9E0]">birebir
-                alıntıyla</b> bağlanır, sekiz kriterle puanlanır ve ajans onayından geçer.
+              <p className="mt-5 max-w-[58ch] text-[15.5px] leading-[1.6] text-pretty text-ink-soft">
+                Her il için dört yatırım konusu belirleniyor. Bu platform o kararın hazırlık katmanı: öneriler üst
+                ölçekli plan belgelerine <b className="font-semibold text-ink">birebir alıntıyla</b> bağlanır, sekiz
+                kriterle puanlanır ve kalkınma ajansı onayından geçer.
               </p>
-              <p
-                className="mt-4 max-w-[62ch] text-[13.5px] leading-[1.5] text-[#8E959F]"
-              >
+              <p className="mt-3 max-w-[58ch] text-[13.5px] leading-[1.55] text-ink-mute">
                 Resmî başvuru portalının yerine geçmez. Yatırımcı başvuruları başlamadan önceki politika hazırlama
                 aşamasıdır.
               </p>
-
-              <div className="mt-9 flex flex-wrap items-center gap-3">
-                <Link
-                  href="/oneri"
-                  className="dugme-ters inline-flex min-h-12 items-center border px-6 etiket-l"
-                >
-                  Başla
-                </Link>
-                <Link
-                  href={k ? "/onerilerim" : "/giris"}
-                  className="inline-flex min-h-12 items-center border border-[#5C6470] px-6 etiket-l text-[#EDE9E0]"
-                >
-                  {k ? "Önerilerim" : "Giriş yap"}
-                </Link>
-              </div>
-            </div>
-
-            {/* Ölçü rafı: gerçek sayılar, mono ve tabular. Büyük-rakam
-                şablonu değil — cetvel gibi okunuyor. */}
-            <dl
-              className="hero-plaka -mx-5 self-end border-y border-y-[#242B34] px-5 py-3"
-              aria-label="Platformdaki veri"
-            >
-              {raf.map((x) => (
-                <div
-                  key={x.ad}
-                  className="flex items-baseline justify-between gap-4 border-b border-b-[#2A3039] py-2.5"
-                >
-                  <dt className="etiket text-[#8E959F]">{x.ad}</dt>
-                  <dd className="num text-[17px] leading-none text-[#EDE9E0]">{x.deger}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Zincir ───────────────────────────────────────────────────────── */}
-      <section className="border-b border-b-hairline bg-page">
-        <div className="mx-auto w-full max-w-[1120px] px-6 py-16 max-[560px]:px-4 max-[560px]:py-12">
-          <h2 className="max-w-[32ch] font-display text-[clamp(1.5rem,2.8vw,1.9375rem)] font-medium leading-[1.12] tracking-[-0.01em] text-balance">
-            Bir öneri sıralamaya girene kadar dört kapıdan geçer.
-          </h2>
-
-          <ol className="mt-10">
-            {ZINCIR.map((x, i) => (
-              <li
-                key={x.ad}
-                className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 border-t border-t-hairline py-6 last:border-b last:border-b-hairline max-[640px]:gap-x-4"
-                style={{ paddingLeft: `calc(${i} * clamp(0px, 2.2vw, 34px))` }}
-              >
-                <span className="num pt-1 text-[13px] text-ink-mute">{String(i + 1).padStart(2, "0")}</span>
-                <div>
-                  <h3 className="text-[17px] font-medium leading-tight">{x.ad}</h3>
-                  <p className="mt-2 max-w-[70ch] text-[14px] leading-[1.6] text-pretty text-ink-soft">{x.metin}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      {/* ── Kanıt · imza anı ─────────────────────────────────────────────── */}
-      <section className="border-b border-b-hairline bg-paper">
-        <div className="mx-auto w-full max-w-[1120px] px-6 py-16 max-[560px]:px-4 max-[560px]:py-12">
-          <h2 className="max-w-[36ch] font-display text-[clamp(1.5rem,2.8vw,1.9375rem)] font-medium leading-[1.12] tracking-[-0.01em] text-balance">
-            Anlatmıyoruz. Platformdaki gerçek bir kayıt şöyle görünüyor.
-          </h2>
-
-          {!ornek ? (
-            <div className="tex-absent mt-8 border border-hairline px-5 py-6">
-              <h3 className="text-[15px] font-medium">Henüz değerlendirilmiş bir resmî konu yok.</h3>
-              <p className="mt-2 max-w-[70ch] text-[14px] leading-[1.55] text-ink-soft">
-                Bu bölüm veritabanındaki gerçek kayıtları gösterir ve yalnızca <b className="font-medium">yürürlükteki
-                resmî yatırım konularını</b> açar — yatırımcıların gönderdiği öneriler sahibi ve ajans dışında
-                kimseye görünmez. Ajans resmî listeyi değerlendirdiğinde kayıt burada belirir. Örnek uydurulmaz.
-              </p>
-            </div>
-          ) : (
-            <article className="mt-8 border border-ink bg-surface">
-              <div className="panel-koyu flex flex-wrap items-baseline gap-x-4 gap-y-1.5 px-5 py-3 text-[#C9CDD3]">
-                <span className="etiket">Yürürlükteki resmî konu</span>
-                <span className="num font-mono text-[10px] tracking-[.08em]">
-                  {ornek.il}
-                  {ornek.ilce ? ` · ${ornek.ilce}` : ""}
-                </span>
-                {ajans && (
-                  <Link
-                    href={`/oneri/${ornek.id}`}
-                    className="ml-auto border-0 etiket text-[#EDE9E0] underline decoration-[#5C6470] underline-offset-4"
-                  >
-                    Tam kaydı aç
-                  </Link>
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                {ajans ? (
+                  <>
+                    <Bag varyant="dolu" href="/onay">
+                      Onay kuyruğuna git
+                    </Bag>
+                    <Bag href="/iller">İl sıralamaları</Bag>
+                  </>
+                ) : (
+                  <>
+                    <Bag varyant="dolu" href="/oneri">
+                      Öneri vermeye başla
+                    </Bag>
+                    <Bag href={k ? "/onerilerim" : "/giris"}>{k ? "Önerilerim" : "Giriş yap"}</Bag>
+                  </>
                 )}
               </div>
+            </div>
 
-              <div className="grid grid-cols-[1fr_auto] items-start gap-x-8 gap-y-4 border-b border-b-hairline-soft px-5 py-5 max-[640px]:grid-cols-1">
-                <h3 className="max-w-[40ch] font-display text-[24px] font-medium leading-[1.15] text-balance">{ornek.baslik}</h3>
-                <div className="text-right max-[640px]:text-left">
-                  <div className="etiket text-ink-mute">Belge dayanağı</div>
-                  <div className="num mt-1 text-[30px] leading-none text-verified">{ornek.dayanak}</div>
-                  <div className="font-mono text-[10px] tracking-[.08em] text-ink-mute">
-                    /100 · eşik {TR33_2027_V1.dayanakEsigi}
+            {/* Kanıt ağı rapordaki bir şekil: çerçeveli, başlıklı, açıklamalı. */}
+            <figure className="border border-hairline bg-paper">
+              <div className="serit flex items-baseline justify-between gap-4 px-4 py-2.5">
+                <span className="etiket">Şekil 1 · Alıntı hatları</span>
+                <span className="num text-[11px] text-ink-mute">belge → öneri</span>
+              </div>
+              <div className="relative aspect-[2/1]">
+                <KanitAgi />
+              </div>
+              <figcaption className="flex flex-wrap gap-x-5 gap-y-1.5 border-t border-t-hairline-soft px-4 py-3 text-[12.5px] leading-[1.45] text-ink-soft">
+                <span className="flex items-center gap-2">
+                  <span aria-hidden className="h-0 w-5 border-t-2 border-t-navy" />
+                  Alıntı belgede birebir bulundu
+                </span>
+                <span className="flex items-center gap-2">
+                  <span aria-hidden className="h-0 w-5 border-t-2 border-dashed border-t-unverif" />
+                  Bulunamadı, kayda girmeden düşer
+                </span>
+              </figcaption>
+            </figure>
+          </div>
+
+          {/* Ölçü rafı: gerçek sayılar, veritabanından. */}
+          <dl
+            className={`${KAP} grid grid-cols-5 border-t border-t-hairline-soft max-[900px]:grid-cols-2`}
+            aria-label="Platformdaki veri"
+          >
+            {raf.map((x, i) => (
+              <div
+                key={x.ad}
+                className={`flex flex-col-reverse justify-end py-5 pr-4 max-[900px]:border-b max-[900px]:border-b-hairline-soft ${
+                  i ? "border-l border-l-hairline-soft pl-5 max-[900px]:odd:border-l-0 max-[900px]:odd:pl-0" : ""
+                }`}
+              >
+                <dt className="etiket mt-2 text-ink-mute">{x.ad}</dt>
+                <dd className="num text-[22px] leading-none text-ink">{x.deger}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+
+        {/* ── Zincir ────────────────────────────────────────────────────── */}
+        <section className="border-b border-b-hairline">
+          <div className={`${KAP} py-16 max-[720px]:py-12`}>
+            <h2 className={H2}>Bir öneri sıralamaya girene kadar dört kapıdan geçer.</h2>
+            <ol className="mt-8 border-t border-t-hairline">
+              {ZINCIR.map((x, i) => (
+                <li
+                  key={x.ad}
+                  className="grid grid-cols-[40px_220px_minmax(0,1fr)] items-baseline gap-3 border-b border-b-hairline-soft py-4 max-[720px]:grid-cols-[32px_minmax(0,1fr)]"
+                >
+                  <span className="num text-[12px] text-ink-mute">{String(i + 1).padStart(2, "0")}</span>
+                  <h3 className="text-[15.5px] font-semibold text-ink">{x.ad}</h3>
+                  <p className="max-w-[72ch] text-[14px] leading-[1.55] text-pretty text-ink-soft max-[720px]:col-start-2">
+                    {x.metin}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* ── Kanıt · imza anı ──────────────────────────────────────────── */}
+        <section className="border-b border-b-hairline bg-surface">
+          <div className={`${KAP} py-16 max-[720px]:py-12`}>
+            <h2 className={H2}>Anlatmıyoruz. Platformdaki gerçek bir kayıt şöyle görünüyor.</h2>
+
+            {!ornek ? (
+              <div className="tex-absent mt-8 border border-hairline-soft border-l-[3px] [border-left-style:dotted] border-l-absent px-5 py-5">
+                <h3 className="text-[15px] font-semibold">Henüz değerlendirilmiş bir resmî konu yok.</h3>
+                <p className="mt-2 max-w-[70ch] text-[13.5px] leading-[1.55] text-ink-soft">
+                  Bu bölüm veritabanındaki gerçek kayıtları gösterir ve yalnızca{" "}
+                  <b className="font-semibold">yürürlükteki resmî yatırım konularını</b> açar — yatırımcıların
+                  gönderdiği öneriler sahibi ve ajans dışında kimseye görünmez. Ajans resmî listeyi değerlendirdiğinde
+                  kayıt burada belirir. Örnek uydurulmaz.
+                </p>
+              </div>
+            ) : (
+              <article className="mt-8 border border-hairline bg-surface">
+                <div className="serit flex flex-wrap items-baseline gap-x-4 gap-y-1.5 px-5 py-2.5">
+                  <span className="etiket">Yürürlükteki resmî konu</span>
+                  <span className="num text-[11px] text-ink-mute">
+                    {ornek.il}
+                    {ornek.ilce ? ` · ${ornek.ilce}` : ""}
+                  </span>
+                  {ajans && (
+                    <Link href={`/oneri/${ornek.id}`} className="etiket ml-auto text-navy hover:underline">
+                      Tam kaydı aç
+                    </Link>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-[1fr_auto] items-start gap-x-8 gap-y-4 border-b border-b-hairline-soft px-5 py-5 max-[640px]:grid-cols-1">
+                  <h3 className="max-w-[40ch] font-display text-[23px] leading-[1.18] font-semibold tracking-[-.015em]">
+                    {ornek.baslik}
+                  </h3>
+                  <div className="text-right max-[640px]:text-left">
+                    <div className="etiket text-ink-mute">Belge dayanağı</div>
+                    <div className="num mt-1 text-[30px] leading-none text-verified">{ornek.dayanak}</div>
+                    <div className="num text-[11px] text-ink-mute">/100 · eşik {TR33_2027_V1.dayanakEsigi}</div>
                   </div>
                 </div>
-              </div>
 
-              <div className="border-b border-b-hairline-soft px-5 py-5">
-                <div className="etiket text-ink-mute">
-                  Dayandığı belgeler ·{" "}
-                  {ornek.alintilar.length > ALINTI_LIMITI
-                    ? `${ornek.alintilar.length} doğrulanmış alıntıdan ${ALINTI_LIMITI}'ü`
-                    : "alıntılar birebir doğrulandı"}
-                </div>
-                {ornek.alintilar.slice(0, ALINTI_LIMITI).map((a, i) => (
-                  <figure key={i} className="mt-4 first:mt-3">
-                    <blockquote className="font-display text-[16px] leading-[1.5] text-pretty text-ink">
-                      “{a.alinti}”
-                    </blockquote>
-                    <figcaption className="mt-1.5 etiket text-ink-mute">
-                      {a.belge_ad}
-                      {a.bolum && <span className="num"> · {a.bolum}</span>}
-                    </figcaption>
-                  </figure>
-                ))}
-              </div>
-
-              {dayanaksizKriterler.length > 0 && (
-                <div className="tex-unverified border-t border-t-unverif-line px-5 py-5">
-                  <div className="etiket text-unverif">
-                    <span aria-hidden>◌</span> Bu kayıtta belgeye bağlanamayan kriterler
-                  </div>
-                  <p className="mt-2 max-w-[74ch] text-[13.5px] leading-[1.55] text-ink-soft">
-                    {dayanaksizKriterler.map((kr) => KRITER_ETIKET[kr]).join(" · ")}
-                  </p>
-                  <p className="mt-2 max-w-[74ch] text-[12.5px] leading-[1.5] text-ink-mute">
-                    Eksik dayanak gizlenmez. Kriterin puanı yine sayılır ama belge dayanağını düşürür; ajans neyi
-                    onayladığını bilerek onaylar.
-                  </p>
-                </div>
-              )}
-
-              {ornek.karsi_gorus.length > 0 && (
-                <div className="border-t border-t-hairline px-5 py-5">
+                <div className="px-5 py-5">
                   <div className="etiket text-ink-mute">
-                    Yapay zekânın aynı belgelerle kurduğu karşı görüş
+                    Dayandığı belgeler ·{" "}
+                    {ornek.alintilar.length > ALINTI_LIMITI
+                      ? `${ornek.alintilar.length} doğrulanmış alıntıdan ${ALINTI_LIMITI}'ü`
+                      : "alıntılar birebir doğrulandı"}
                   </div>
-                  {ornek.karsi_gorus.slice(0, 2).map((g, i) => (
-                    <div key={i} className="mt-3">
-                      <span className="etiket text-unverif">
-                        {KARSI_GORUS_ETIKET[g.tur as KarsiGorusTuru] ?? g.tur}
-                      </span>
-                      <p className="mt-1 max-w-[74ch] text-[13.5px] leading-[1.55] text-pretty text-ink-soft">
-                        {g.iddia}
-                      </p>
-                    </div>
+                  {ornek.alintilar.slice(0, ALINTI_LIMITI).map((a, i) => (
+                    <figure key={i} className="mt-4 border-l-[3px] border-l-verified pl-4 first:mt-3">
+                      <blockquote className="text-[15px] leading-[1.55] text-pretty text-ink">“{a.alinti}”</blockquote>
+                      <figcaption className="etiket mt-1.5 text-ink-mute">
+                        {a.belge_ad}
+                        {a.bolum && <span className="num"> · {a.bolum}</span>}
+                      </figcaption>
+                    </figure>
                   ))}
                 </div>
-              )}
 
-              <div className="num border-t border-t-hairline bg-page px-5 py-2.5 font-mono text-[10px] tracking-[.06em] text-ink-mute">
-                {ornek.model_snapshot} · {ornek.prompt_surum}
-              </div>
-            </article>
-          )}
-        </div>
-      </section>
+                {dayanaksizKriterler.length > 0 && (
+                  <div className="tex-unverified border-t border-t-unverif-line px-5 py-5">
+                    <div className="etiket text-unverif">
+                      <span aria-hidden>◌</span> Bu kayıtta belgeye bağlanamayan kriterler
+                    </div>
+                    <p className="mt-2 max-w-[74ch] text-[13.5px] leading-[1.55] text-ink-soft">
+                      {dayanaksizKriterler.map((kr) => KRITER_ETIKET[kr]).join(" · ")}
+                    </p>
+                    <p className="mt-2 max-w-[74ch] text-[12.5px] leading-[1.5] text-ink-mute">
+                      Eksik dayanak gizlenmez. Kriterin puanı yine sayılır ama belge dayanağını düşürür; ajans neyi
+                      onayladığını bilerek onaylar.
+                    </p>
+                  </div>
+                )}
 
-      {/* ── Kriter ağırlıkları ───────────────────────────────────────────── */}
-      <section className="border-b border-b-hairline bg-page">
-        <div className="mx-auto w-full max-w-[1120px] px-6 py-16 max-[560px]:px-4 max-[560px]:py-12">
-          <div className="grid grid-cols-[1fr_1.15fr] items-start gap-x-12 gap-y-8 max-[820px]:grid-cols-1">
+                {ornek.karsi_gorus.length > 0 && (
+                  <div className="border-t border-t-hairline-soft px-5 py-5">
+                    <div className="etiket text-ink-mute">Yapay zekânın aynı belgelerle kurduğu karşı görüş</div>
+                    {ornek.karsi_gorus.slice(0, 2).map((g, i) => (
+                      <div key={i} className="mt-3">
+                        <span className="etiket text-unverif">
+                          {KARSI_GORUS_ETIKET[g.tur as KarsiGorusTuru] ?? g.tur}
+                        </span>
+                        <p className="mt-1 max-w-[74ch] text-[13.5px] leading-[1.55] text-pretty text-ink-soft">
+                          {g.iddia}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="num border-t border-t-hairline-soft bg-paper px-5 py-2.5 text-[11px] text-ink-mute">
+                  {ornek.model_snapshot} · {ornek.prompt_surum}
+                </div>
+              </article>
+            )}
+          </div>
+        </section>
+
+        {/* ── Kriter ağırlıkları ────────────────────────────────────────── */}
+        <section className="border-b border-b-hairline">
+          <div
+            className={`${KAP} grid grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] items-start gap-x-14 gap-y-8 py-16 max-[820px]:grid-cols-1 max-[720px]:py-12`}
+          >
             <div>
-              <h2 className="max-w-[28ch] font-display text-[clamp(1.5rem,2.8vw,1.9375rem)] font-medium leading-[1.12] tracking-[-0.01em] text-balance">
-                En büyük pay “neden burada?” sorusunda.
-              </h2>
+              <h2 className={H2}>En büyük pay “neden burada?” sorusunda.</h2>
               <p className="mt-5 max-w-[54ch] text-[14.5px] leading-[1.6] text-pretty text-ink-soft">
-                Programın adı <b className="font-medium">Yerel</b> Kalkınma Hamlesi. Bir yatırım konusunun asıl
-                gerekçesi, o konuyu neden bu ilde ve ilçede yaptığımızdır. Aynı konu başka bir ilde de aynı şekilde
-                yapılabiliyorsa bu üç kriter düşük kalır.
+                Programın adı <b className="font-semibold text-ink">Yerel</b> Kalkınma Hamlesi. Bir yatırım konusunun
+                asıl gerekçesi, o konuyu neden bu ilde ve ilçede yaptığımızdır. Aynı konu başka bir ilde de aynı
+                şekilde yapılabiliyorsa bu üç kriter düşük kalır.
               </p>
               <p className="mt-4 max-w-[54ch] text-[13px] leading-[1.55] text-ink-mute">
                 Yerellik grubunun payı hiçbir ajans veya dönem setinde %40’ın altına indirilemez ve her zaman en büyük
@@ -434,132 +413,110 @@ export default async function Tanitim() {
             </div>
 
             {/*
-              Geniş içerik kendi kabında kayar; sayfa gövdesi yatay kaymaz.
-
-              `min-w-0` ŞART: bu div bir grid öğesi ve grid öğeleri varsayılan
-              olarak `min-width: auto` taşır — içindeki 420px'lik tablonun
-              altına inmezler. Sonuç: dar telefonda grid 420px'e genişliyor ve
-              SAYFA yatay kayıyor (Galaxy S26 Ultra'da ölçüldü). `overflow-x`
-              tek başına yetmiyor.
+              `min-w-0` ŞART: grid öğesi varsayılan `min-width: auto` taşır ve
+              420px'lik tablonun altına inmez; dar telefonda SAYFA yatay kayardı.
             */}
             <div className="min-w-0 overflow-x-auto">
-            <table className="w-full min-w-[420px] border-collapse border border-hairline bg-surface text-left">
-              <caption className="sr-only">
-                Kriter gruplarının puandaki payı — TR33-2027-v1 ağırlık seti
-              </caption>
-              <thead>
-                <tr className="panel-koyu text-[#C9CDD3]">
-                  <th scope="col" className="px-4 py-2.5 etiket font-medium">
-                    Grup
-                  </th>
-                  <th scope="col" className="px-4 py-2.5 etiket font-medium">
-                    Kriterler
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-4 py-2.5 text-right etiket font-medium"
-                  >
-                    Pay
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {gruplaraGore(TR33_2027_V1.agirliklar).map(({ grup, agirlik, kriterler }) => (
-                  <tr key={grup} className="border-t border-t-hairline-soft align-top">
-                    <th scope="row" className="px-4 py-3 text-[13.5px] font-medium">
-                      {GRUP_ETIKET[grup]}
+              <table className="w-full min-w-[420px] border-collapse border border-hairline bg-surface text-left">
+                <caption className="sr-only">Kriter gruplarının puandaki payı — TR33-2027-v1 ağırlık seti</caption>
+                <thead>
+                  <tr className="serit">
+                    <th scope="col" className="etiket px-4 py-2.5">
+                      Grup
                     </th>
-                    <td className="px-4 py-3 text-[12.5px] leading-[1.45] text-ink-soft">
-                      {kriterler.map((kr) => KRITER_ETIKET[kr]).join(" · ")}
-                    </td>
-                    <td className="num px-4 py-3 text-right text-[15px] whitespace-nowrap">
-                      %{Math.round(agirlik * 100)}
-                    </td>
+                    <th scope="col" className="etiket px-4 py-2.5">
+                      Kriterler
+                    </th>
+                    <th scope="col" className="etiket px-4 py-2.5 text-right">
+                      Pay
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {gruplaraGore(TR33_2027_V1.agirliklar).map(({ grup, agirlik, kriterler }) => (
+                    <tr key={grup} className="border-t border-t-hairline-soft align-top">
+                      <th scope="row" className="px-4 py-3 text-[13.5px] font-semibold">
+                        {GRUP_ETIKET[grup]}
+                      </th>
+                      <td className="px-4 py-3 text-[12.5px] leading-[1.45] text-ink-soft">
+                        {kriterler.map((kr) => KRITER_ETIKET[kr]).join(" · ")}
+                      </td>
+                      <td className="num px-4 py-3 text-right text-[15px] whitespace-nowrap">
+                        %{Math.round(agirlik * 100)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── Sınırlar ─────────────────────────────────────────────────────── */}
-      <section className="border-b border-b-hairline bg-paper">
-        <div className="mx-auto w-full max-w-[1120px] px-6 py-16 max-[560px]:px-4 max-[560px]:py-12">
-          <h2 className="max-w-[34ch] font-display text-[clamp(1.5rem,2.8vw,1.9375rem)] font-medium leading-[1.12] tracking-[-0.01em] text-balance">
-            Yapay zekânın burada yapamadıkları.
-          </h2>
-          <p className="mt-4 max-w-[68ch] text-[14.5px] leading-[1.6] text-pretty text-ink-soft">
-            Bu kontroller “iyi niyetli tavsiye” değil. Her biri kod içinde uygulanır ve ihlal edildiğinde çıktı
-            kaydedilmez; öneri değerlendirilmemiş kalır ve neden reddedildiği denetim kaydına yazılır.
-          </p>
+        {/* ── Sınırlar ──────────────────────────────────────────────────── */}
+        <section className="border-b border-b-hairline bg-surface">
+          <div className={`${KAP} py-16 max-[720px]:py-12`}>
+            <h2 className={H2}>Yapay zekânın burada yapamadıkları.</h2>
+            <p className="mt-4 max-w-[68ch] text-[14.5px] leading-[1.6] text-pretty text-ink-soft">
+              Bu kontroller “iyi niyetli tavsiye” değil. Her biri kod içinde uygulanır ve ihlal edildiğinde çıktı
+              kaydedilmez; öneri değerlendirilmemiş kalır ve neden reddedildiği denetim kaydına yazılır.
+            </p>
+            <dl className="mt-8 grid grid-cols-[repeat(auto-fit,minmax(min(420px,100%),1fr))] gap-x-14">
+              {SINIRLAR.map((x) => (
+                <div key={x.ad} className="border-t border-t-hairline py-5">
+                  <dt className="text-[15px] leading-tight font-semibold">{x.ad}</dt>
+                  <dd className="mt-2 max-w-[48ch] text-[13.5px] leading-[1.55] text-pretty text-ink-soft">{x.metin}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </section>
 
-          <dl className="mt-10 grid grid-cols-[repeat(auto-fit,minmax(min(420px,100%),1fr))] gap-x-14">
-            {SINIRLAR.map((x) => (
-              <div key={x.ad} className="border-t border-t-ink py-5">
-                <dt className="text-[15px] font-medium leading-tight">{x.ad}</dt>
-                <dd className="mt-2 max-w-[46ch] text-[13.5px] leading-[1.55] text-pretty text-ink-soft">{x.metin}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-      </section>
-
-      {/* ── Roller ───────────────────────────────────────────────────────── */}
-      <section className="border-b border-b-hairline bg-page">
-        <div className="mx-auto w-full max-w-[1120px] px-6 py-16 max-[560px]:px-4 max-[560px]:py-12">
-          <div className="grid grid-cols-[1fr_1.3fr] items-start gap-x-12 gap-y-8 max-[820px]:grid-cols-1">
-            <h2 className="max-w-[24ch] font-display text-[clamp(1.5rem,2.8vw,1.9375rem)] font-medium leading-[1.12] tracking-[-0.01em] text-balance">
-              Üç rol. Kurum kaydı ve kurum onayı istenmez.
-            </h2>
-            <dl>
+        {/* ── Roller ────────────────────────────────────────────────────── */}
+        <section className="border-b border-b-hairline">
+          <div
+            className={`${KAP} grid grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] items-start gap-x-14 gap-y-8 py-16 max-[820px]:grid-cols-1 max-[720px]:py-12`}
+          >
+            <h2 className={H2}>Üç rol. Kurum kaydı ve kurum onayı istenmez.</h2>
+            <dl className="border-t border-t-hairline">
               {ROLLER.map((x) => (
-                <div key={x.rol} className="grid grid-cols-[minmax(140px,180px)_1fr] gap-x-6 gap-y-1 border-t border-t-hairline py-4 last:border-b last:border-b-hairline max-[560px]:grid-cols-1">
-                  <dt className="text-[14.5px] font-medium">{x.rol}</dt>
+                <div
+                  key={x.rol}
+                  className="grid grid-cols-[minmax(140px,180px)_minmax(0,1fr)] gap-x-6 gap-y-1 border-b border-b-hairline-soft py-4 max-[560px]:grid-cols-1"
+                >
+                  <dt className="text-[14.5px] font-semibold">{x.rol}</dt>
                   <dd className="max-w-[58ch] text-[13.5px] leading-[1.55] text-pretty text-ink-soft">{x.yapar}</dd>
                 </div>
               ))}
             </dl>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── Kapanış ──────────────────────────────────────────────────────── */}
-      <section className="panel-koyu tex-cetvel">
-        <div className="mx-auto w-full max-w-[1120px] px-6 py-16 max-[560px]:px-4 max-[560px]:py-12">
-          <div className="flex flex-wrap items-end justify-between gap-x-12 gap-y-8">
-            <div>
-              <h2 className="max-w-[28ch] font-display text-[clamp(1.6rem,3vw,2.125rem)] font-medium leading-[1.1] tracking-[-0.01em] text-balance text-[#F6F4EF]">
-                İlinizde hangi konu neden öne çıkıyor?
-              </h2>
-              <p className="mt-4 max-w-[56ch] text-[14.5px] leading-[1.6] text-pretty text-[#C9CDD3]">
-                Sihirbaz sırayla soruyor: ajans bölgesi, il, sonra öneriniz. Kayıt zorunlu değil — kayıt olmadan
-                devam edebilir, sonradan hesap açabilirsiniz. Verdiğiniz öneri size ve ajansa görünür, başka
-                kimseye görünmez.
-              </p>
+        {/* ── Kapanış ───────────────────────────────────────────────────── */}
+        <section className="bg-surface">
+          <div className={`${KAP} py-16 max-[720px]:py-12`}>
+            <div className="flex flex-wrap items-end justify-between gap-x-12 gap-y-8 border-l-[3px] border-l-navy pl-6 max-[560px]:pl-4">
+              <div>
+                <h2 className={H2}>İlinizde hangi konu neden öne çıkıyor?</h2>
+                <p className="mt-4 max-w-[56ch] text-[14.5px] leading-[1.6] text-pretty text-ink-soft">
+                  Sihirbaz sırayla soruyor: ajans bölgesi, il, sonra öneriniz. Kayıt zorunlu değil — kayıt olmadan
+                  devam edebilir, sonradan hesap açabilirsiniz. Verdiğiniz öneri size ve ajansa görünür, başka kimseye
+                  görünmez.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <Bag varyant="dolu" href="/oneri">
+                  Öneri sihirbazını başlat
+                </Bag>
+                <Bag href={k ? "/onerilerim" : "/giris"}>{k ? "Önerilerime bak" : "Hesabıma gir"}</Bag>
+              </div>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <Link
-                href="/oneri"
-                className="dugme-ters inline-flex min-h-12 items-center border px-6 etiket-l"
-              >
-                Öneri sihirbazını başlat
-              </Link>
-              <Link
-                href={k ? "/onerilerim" : "/giris"}
-                className="inline-flex min-h-12 items-center border border-[#5C6470] px-6 etiket-l text-[#EDE9E0]"
-              >
-                {k ? "Önerilerime bak" : "Hesabıma gir"}
-              </Link>
-            </div>
+            <p className="etiket mt-12 border-t border-t-hairline pt-4 text-ink-mute">
+              Yerel Kalkınma Hamlesi · karar destek platformu. Sıralama bir karar değildir; ajans onayı zorunlu
+              geçittir.
+            </p>
           </div>
-
-          <p className="mt-12 border-t border-t-[#2A3039] pt-4 font-mono text-[10px] leading-[1.6] tracking-[.06em] text-[#8E959F]">
-            Yerel Kalkınma Hamlesi · karar destek platformu. Sıralama bir karar değildir; ajans onayı zorunlu geçittir.
-          </p>
-        </div>
-      </section>
-    </main>
+        </section>
+      </main>
+    </>
   );
 }

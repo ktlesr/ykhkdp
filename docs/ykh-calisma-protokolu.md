@@ -35,9 +35,10 @@
     §1 değişmez kurallar, §2 token ve animasyon listesi, §4 epistemik gramer
     bağlayıcıdır. Uygulanmış hâli ve bu ürüne özgü kararlar:
     `apps/web/DESIGN.md`. Makineyle denetlenen kısmı `lib/tasarim.test.ts`.
-14. **Koyu panel token kullanmaz.** `bg-ink` koyu temada açık renge döner;
-    matbu künye alanları `.panel-koyu` ile her iki temada koyu kalır. Sabit
-    açık renk metin yalnızca o kapsamda meşrudur.
+14. **Tanıtım sayfası ürünle aynı dünyadadır.** Koyu matbu panel
+    (`.panel-koyu`) 2026-11'de kaldırıldı: tanıtım ile sihirbaz iki ayrı site
+    gibi duruyordu. Tanıtım `UstBar`, `Bag`, `.serit` ve `Baslik` ölçeğini
+    kullanır; kanıt ağı çerçeveli bir şekildir.
 15. **CSS'te bileşen sınıfı içindeki eleman seçicisi `:where()` ile sarılır.**
     `.sinif eleman` (0,1,1) yardımcı sınıfı (0,1,0) ezer ve sessiz kırılma
     üretir; ölçüldü: iki birincil düğme 1.09:1 kontrastla görünmez kaldı.

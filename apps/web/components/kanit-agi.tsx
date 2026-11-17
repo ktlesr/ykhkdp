@@ -2,7 +2,7 @@
  * Kanıt ağı — tanıtım sayfasının hero görseli.
  *
  * NE ANLATIYOR. Üç üst ölçekli belgeden önerilere alıntı hatları çiziliyor.
- * Çoğu tutuyor (jade, düz çizgi, ucu parlıyor); bir kısmı çizilip DÜŞÜYOR
+ * Çoğu tutuyor (kobalt, düz çizgi); bir kısmı çizilip DÜŞÜYOR
  * (ochre, kesikli, soluyor) — pakette birebir bulunamayan alıntı. Ürünün tek
  * pazarlıksız kuralı ekranda hareket hâlinde: alıntı doğrulanmazsa düşer.
  *
@@ -93,16 +93,7 @@ const HATLAR = BELGELER.flatMap((b, bi) =>
 export function KanitAgi() {
   return (
     <div className="hero-ag" aria-hidden="true">
-      <svg viewBox={`0 0 ${G} ${Y}`} preserveAspectRatio="xMidYMid slice" role="presentation">
-        <defs>
-          <filter id="hero-parla" x="-60%" y="-60%" width="220%" height="220%">
-            <feGaussianBlur stdDeviation="3.2" result="b" />
-            <feMerge>
-              <feMergeNode in="b" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+      <svg viewBox={`0 0 ${G} ${Y}`} preserveAspectRatio="xMinYMid slice" role="presentation">
 
         {/* Öneri düğümleri — sessiz alan */}
         <g className="hero-dugumler">
@@ -127,7 +118,7 @@ export function KanitAgi() {
         </g>
 
         {/* Belge düğümleri — künye çubukları, ağın kaynağı */}
-        <g className="hero-belgeler" filter="url(#hero-parla)">
+        <g className="hero-belgeler">
           {BELGELER.map((b, i) => (
             <g key={b.ad} style={{ animationDelay: `${i * 1.1}s` }}>
               <rect x={b.x - 1.5} y={b.y - 26} width="3" height="52" />

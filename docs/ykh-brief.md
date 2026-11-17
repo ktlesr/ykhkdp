@@ -104,8 +104,9 @@ kendi önerisini yeniden değerlendirtemez. Otomatik akış değişmedi: worker
 `degerlendiriliyor` durumundaki öneriyi kendisi alır.
 
 **Tanıtım sayfası** platformun başlangıç ekranıdır ve pazarlama yüzeyi olarak
-farklı kurallarla çalışır: ink panel + ölçü cetveli dokusu, ochre yalnızca
-"doğrulanmadı" anlamında. Sayılar veritabanından gelir; uydurma metrik yazılamaz.
+ürünle AYNI görsel dünyada durur (üst çubuk, başlık ölçeği, düğmeler,
+şerit başlıklı tablo); kanıt ağı çerçeveli bir şekil olarak tek hareket
+istisnasıdır. Ochre yalnızca "doğrulanmadı" anlamında. Sayılar veritabanından gelir; uydurma metrik yazılamaz.
 İmza bölümü mekanizmayı anlatmaz, **çalıştığını gösterir** — gerçek bir kaydın
 alıntılarını, atıf çıpalarını, model künyesini ve **belgeye bağlanamayan
 kriterini** açar. Onaylanmış kayıt yoksa örnek uydurulmaz, bölüm boş görünür.

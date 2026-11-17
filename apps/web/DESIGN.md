@@ -243,13 +243,6 @@ ve dokunulmamış dört epistemik renk.
 - **Dayanak yok** (`absent`, tint): boş slot, dayanaksız kriter, boş durum.
 - **Çelişki** (`conflict`, tint, line): ret, hata, tamamlanmayan işlem.
 
-### Matbu panel (yalnızca tanıtım sayfası)
-- **Matbu Panel** (`print-panel`) ve **Panel Metni** (`print-panel-text`):
-  `.panel-koyu` — her iki temada koyu kalan alan. Bugün yalnızca tanıtım
-  sayfasında (hero, imza bölümündeki künye şeridi ve tablo başlığı, kapanış
-  bölümü) ve onun üzerindeki ters düğmede (`.dugme-ters`) kullanılır. Ürün
-  ekranlarında koyu şerit yoktur.
-
 ### Named Rules
 **The Tek Aksan Rule.** Kobalt eylem, seçili durum ve odak içindir; dekoratif
 vurgu, başlık rengi ya da durum rengi olarak kullanılmaz. Durum dört epistemik
@@ -263,11 +256,9 @@ doku, işaret ve metin etiketi aynı bilgiyi verir.
 yalnızca ürünün "doğrulanmadı" dediği yerde görünür — tanıtım hero'sunda düşen
 alıntı hattı dahil.
 
-**The Koyu Panel Token Kullanmaz Rule.** Her iki temada koyu kalması gereken
-alan `bg-ink` ile kurulmaz (koyu temada `--color-ink` açık renge döner).
-`.panel-koyu` kullanılır. **Sabit açık renk metin (`text-[#EDE9E0]` vb.)
-yalnızca `.panel-koyu` veya `.dugme-ters` kapsamında meşrudur**; test bunu JSX
-girintisiyle kapsam takip ederek denetler.
+**The Koyu Panel Yok Rule.** Matbu koyu panel (`.panel-koyu`) 2026-11'de
+kaldırıldı; tanıtım sayfası dahil hiçbir yüzeyde her iki temada koyu kalan
+alan yok. Sabit açık renk metin yazılmaz (test denetler).
 
 ### Palet varyasyonları
 
@@ -380,8 +371,7 @@ katmanıyla (sayfa `page` → yüzey `report-white` → şerit `paper`) ve saç
 paneli bile yalnızca çizgiyle ayrılır.
 
 Atmosfer gerektiğinde **doku** kullanılır, gölge değil: durum dokuları
-(`tex-unverified` 135°, `tex-absent` 45°, `tex-slot` 135°/12px), tanıtım
-sayfasında ölçü cetveli (`tex-cetvel`, 48px aralıklı 1px çizgi). Hepsi
+(`tex-unverified` 135°, `tex-absent` 45°, `tex-slot` 135°/12px). Hepsi
 `repeating-linear-gradient`; düz `linear-gradient` testle yasaktır.
 
 ### Named Rules
@@ -389,14 +379,10 @@ sayfasında ölçü cetveli (`tex-cetvel`, 48px aralıklı 1px çizgi). Hepsi
 `backdrop-filter` yalnızca `.hero-*` seçicilerinde durabilir; başka yerde
 test kırılır.
 
-**The Kapsanmış Hero İstisnası Rule.** Tanıtım hero'su (`.hero-*`) handoff
-§1.8 ve hareket listesinden kullanıcı kararıyla gevşetildi. Buzlu plaka
-(`.hero-plaka`): canlı kanıt ağının üstünde metnin kendi zemini; yarıçap,
-gölge ve kenar yok. **Kontrast blur'a bağlı değil:** `backdrop-filter`
-desteklenmezse tint %86'ya çıkar. En kötü durum ölçümü (parlak hat plakanın
-tam altında): destek yokken başlık 14,99 · gövde 10,33 · mikro 5,45; destek
-varken (tint %76) 13,4 · 9,2 · 4,85 — hepsi 4,5:1 üstünde. Kullanılmayan
-gradyan istisnası kapatıldı: **kullanılmayan istisna kuralda bırakılmaz.**
+**The Kapsanmış Hero İstisnası Rule.** Tanıtım sayfasındaki kanıt ağı
+(`.hero-*`) handoff hareket listesinden kullanıcı kararıyla gevşetildi. Ağ
+artık açık zeminde, çerçeveli bir **şekildir** (serit başlık + açıklama);
+metnin arkasında durmaz, buzlu plaka ve glow kaldırıldı.
 
 ## Shapes
 
@@ -540,8 +526,9 @@ veriden türer (`/iller`'de açık dönemi olan bölgeler açık).
 PRODUCT.md'ye göre `/` brand register'da konuşur ama §1 kuralları ve token'lar
 orada da bağlar.
 
-- Hero ve kapanış bölümü matbu panel üzerindedir (`.panel-koyu` +
-  `.tex-cetvel`); ara bölümler `page` / `paper` arasında değişir.
+- Ürünle aynı kabuk: `UstBar`, `Bag` düğmeleri, `.serit` başlıklı tablo ve
+  kayıt, `Baslik`/`KimlikSayfasi` başlık ölçeği (40/27px). Bölümler `surface`
+  / `page` arasında değişir; koyu panel yok.
 - **Kanıt ağı** (`components/kanit-agi.tsx`): üç belge düğümünden öneri
   düğümlerine alıntı hatları; azınlığı kesikli ochre çizilip **düşer** —
   pakette birebir bulunamayan alıntı. Hareket ürünün tek pazarlıksız kuralını
@@ -607,8 +594,8 @@ seçici adresi + kırılan testle tutulur.
 - **Don't** gradyan, gölge, glow, cam efekti, emoji veya 3px üstü köşe kullan (tek istisna `.hero-*`, yalnızca `/`).
 - **Don't** epistemik durum taşımayan bir öğeye dekoratif 3px sol şerit ekle.
 - **Don't** büyük harfli, harf aralığı açılmış mono etiket kostümüne geri dön.
-- **Don't** ürün ekranlarına siyah tablo/form başlık şeridi ya da koyu matbu panel koy; `.panel-koyu` yalnızca tanıtım sayfasındadır.
-- **Don't** `bg-ink` ile her iki temada koyu kalacak alan kur; sabit açık renk metni `.panel-koyu` / `.dugme-ters` dışında yazma.
+- **Don't** ürün ekranlarına siyah tablo/form başlık şeridi ya da koyu matbu panel koy; tanıtım sayfası dahil.
+- **Don't** `bg-ink` ile her iki temada koyu kalacak alan kur; sabit açık renk metin yazma.
 - **Don't** `hero` ya da `analiz` önekli bir animasyonu kendi seçici adresi dışında çağır; handoff dördü dışında yeni keyframe ekleme.
 - **Don't** canlı göstergeye uydurma yüzde, tahmini süre ya da ilerleme çubuğu koy.
 - **Don't** palet bloğuna renk dışı token (yarıçap, gölge, hareket, tipografi) yaz.
