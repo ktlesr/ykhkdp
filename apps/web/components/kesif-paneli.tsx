@@ -61,7 +61,9 @@ export function KesifPaneli({ il, kesif }: { il: string; kesif: KesifDurumu | nu
               : kesif.durum === "calisiyor"
                 ? "Belgeler taranıyor"
                 : kesif.durum === "tamam"
-                  ? "Son keşif tamamlandı"
+                  ? kesif.taranamayan > 0
+                    ? "Son keşif tamamlandı · kapsam eksik"
+                    : "Son keşif tamamlandı"
                   : "Son keşif tamamlanmadı"}
         </h2>
         <p aria-live="polite" className="mt-1 max-w-[68ch] text-[13px] leading-[1.55] text-ink-soft text-pretty">
@@ -116,7 +118,7 @@ export function KesifPaneli({ il, kesif }: { il: string; kesif: KesifDurumu | nu
         {kesif && !surer && kesif.toplam_parca > 0 && (
           <dl className="mt-4 grid grid-cols-4 border border-hairline-soft max-[640px]:grid-cols-2">
             {[
-              { e: "Taranan parça", v: `${kesif.taranan_parca}/${kesif.toplam_parca}` },
+              { e: kesif.taranamayan ? `Taranan · ${kesif.taranamayan} okunamadı` : "Taranan parça", v: `${kesif.toplam_parca - kesif.taranamayan}/${kesif.toplam_parca}` },
               { e: "Doğrulanmış kanıt", v: kesif.kanit_sayisi },
               { e: "Bu ile özgü", v: kesif.yerel_kanit },
               { e: "Aday", v: kesif.aday_sayisi },

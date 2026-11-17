@@ -137,7 +137,9 @@ export const KanitCikarimi = z
           })
           .strict(),
       )
-      .max(12),
+      // Yoğun bir parça 12'yi aşabiliyor ve şema reddi bütün parçayı
+      // taranmamış bırakıyordu; sınır prompt'ta 12, şemada pay bırakıldı.
+      .max(24),
   })
   .strict();
 

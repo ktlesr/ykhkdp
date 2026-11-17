@@ -1185,7 +1185,7 @@ export async function rolAta(b: Baglam, ref: string, rol: Rol, ajansKod: string 
 export type KesifDurumu = {
   id: number; durum: "bekliyor" | "calisiyor" | "tamam" | "hata"; asama: string | null;
   toplam_parca: number; taranan_parca: number; kanit_sayisi: number; yerel_kanit: number;
-  aday_sayisi: number; mesaj: string | null; model_snapshot: string | null; guncellendi: string;
+  aday_sayisi: number; taranamayan: number; mesaj: string | null; model_snapshot: string | null; guncellendi: string;
   tarih: string;
 };
 
@@ -1194,7 +1194,7 @@ export async function sonKesif(b: Baglam, donemId: number): Promise<KesifDurumu 
   if (b.rol === "anonim" || !onaylayabilir(b.rol)) return null;
   const [r] = await islem(b, (sql) =>
     sql<KesifDurumu[]>`
-      select id, durum, asama, toplam_parca, taranan_parca, kanit_sayisi, yerel_kanit, aday_sayisi,
+      select id, durum, asama, toplam_parca, taranan_parca, kanit_sayisi, yerel_kanit, aday_sayisi, taranamayan,
              mesaj, model_snapshot, guncellendi::text,
              to_char(olusturuldu at time zone 'Europe/Istanbul', 'DD.MM.YYYY HH24:MI') as tarih
       from kesif where donem_id = ${donemId} order by id desc limit 1

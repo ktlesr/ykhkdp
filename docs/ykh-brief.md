@@ -313,8 +313,16 @@ Uydurmasızlık kuralları — hepsi mekanik, modelin beyanı değil:
   doğru cümleyi düşürebilir, fail-closed yönde.
 - **Kaynaksız sayı** başlıkta veya gerekçede aday düşürür.
 - Kurallar **aday başına**: kötü aday iyileri batırmaz, iyiler kötüyü örtmez.
-- **Tarama eksikse aday üretilmez**: "bütün belgeler dikkate alındı"
-  denemeyen koşu tamamlanmış görünmez; yeniden başlatınca önbellekten sürer.
+- **Okunamayan parça keşfi kilitlemez, gizlenmez de.** Önceki kural ("tarama
+  eksikse aday üretilmez") canlıda bir ili kalıcı olarak kilitledi: 922
+  parçanın 24'ü her denemede reddediliyordu. Şimdi ret nedeniyle
+  `kanit_tarama`ya (`durum = 'reddedildi'`, `neden`) yazılır, keşif kalan
+  parçalarla tamamlanır ve ekranda "kapsam eksik · N okunamadı" yazar.
+  Reddedilen parça her keşifte bir kez daha denenir; ön tarama onu atlar.
+  Ret nedenleri de azaltıldı: 429/5xx için geri çekilmeli yeniden deneme,
+  tablo ayracı (`|`) eşleşmede boşluk sayılır, taramada çağrı ancak HİÇBİR
+  pasaj doğrulanamazsa reddedilir (her pasaj zaten tek tek doğrulanıyor;
+  puan yok, "yarısı düşerse hepsi" kuralı burada doğru pasajları da atıyordu).
 - **Yakın kopya elenmez, işaretlenir** (`/onay`); yalnızca birebir başlık atlanır.
 - **Resmî konuyu yeniden önermek meşrudur** — yürürlükteki liste gelecek yıl
   "önceki" olur. Model yürürlükteki ve önceki yılların resmî konularını

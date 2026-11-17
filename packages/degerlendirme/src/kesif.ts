@@ -101,7 +101,7 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
       await islem(SERVIS, (sql) =>
         sql<{ belge_id: string }[]>`
           select belge_id from kanit_tarama
-          where prompt_surum = ${taramaSurum} and model_snapshot = ${model}
+          where prompt_surum = ${taramaSurum} and model_snapshot = ${model} and durum = 'tamam'
             and belge_id in ${sql(parcalar.map((p) => p.id))}
         `,
       )
@@ -111,13 +111,22 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
 
   // ── 2. Tarama · önbellekte olmayan parçalar (eşzamanlı) ──────────────────
   const bekleyen = parcalar.filter((p) => !taranmis.has(p.id));
-  const { basarisiz } = await parcalariTara(bekleyen, {
+  const { basarisiz, basarisizIdler } = await parcalariTara(bekleyen, {
     kesifId: k.id,
     ilerleme: (n) => durumYaz(k.id, { taranan_parca: taranmis.size + n }),
   });
-  if (basarisiz) {
-    return bitir(false, `${parcalar.length} parçanın ${basarisiz} tanesi taranamadı; tarama tamamlanmadan aday üretilmez. Yeniden başlatınca kalan parçalardan devam eder.`);
-  }
+  /**
+   * Okunamayan parça keşfi KİLİTLEMEZ ama GİZLENMEZ de: sayısı ve belgeleri
+   * sonuç mesajında yazar, nedeni `kanit_tarama.neden`de durur. Önceki kural
+   * ("tarama tamamlanmadan aday üretilmez") her yeniden başlatmada aynı
+   * parçaya takılıyor ve il hiç aday üretemiyordu.
+   */
+  await durumYaz(k.id, { taranamayan: basarisiz });
+  const okunamayan = basarisiz
+    ? ` ${basarisiz} parça okunamadı ve kapsam dışında kaldı (${[
+        ...new Set(basarisizIdler.map((id) => parcalar.find((p) => p.id === id)?.ad).filter(Boolean)),
+      ].slice(0, 3).join(", ")}).`
+    : "";
 
   // ── 3. Kanıt defteri ─────────────────────────────────────────────────────
   const [ilceler, kanitlar] = await Promise.all([
@@ -145,7 +154,7 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
   const yerel = defterHam.filter((d) => d.yerel).slice(0, YEREL_SINIR);
   await durumYaz(k.id, { asama: "aday", kanit_sayisi: defterHam.length, yerel_kanit: yerel.length });
   if (!yerel.length) {
-    return bitir(true, `${parcalar.length} parça tarandı, ${defterHam.length} kanıt bulundu ama hiçbiri bu ile özgü değil; "neden burada?" sorusuna dayanak olmadan aday üretilmez.`);
+    return bitir(true, `${parcalar.length - basarisiz} parça tarandı, ${defterHam.length} kanıt bulundu ama hiçbiri bu ile özgü değil; "neden burada?" sorusuna dayanak olmadan aday üretilmez.${okunamayan}`);
   }
 
   // Yerel olmayan kanıt (ulusal öncelik, kısıt) yerel konularla örtüştüğü ölçüde girer.
@@ -257,11 +266,12 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
   await durumYaz(k.id, { aday_sayisi: yazilan });
 
   const ozet =
-    `${parcalar.length} parça tarandı, ${defterHam.length} kanıt (${yerel.length} yerel). ` +
+    `${parcalar.length - basarisiz} parça tarandı, ${defterHam.length} kanıt (${yerel.length} yerel). ` +
     (yazilan ? `${yazilan} aday değerlendirmeye alındı.` : "Kanıtlara dayanan aday çıkmadı.") +
     (a.dusenler.length ? ` ${a.dusenler.length} aday kanıt kuralına takılıp düştü.` : "") +
     (desteklenen.length ? ` ${desteklenen.length} yürürlükteki resmî konu belgelerle desteklendi.` : "") +
-    (atlananlar.length ? ` ${atlananlar.length} aday zaten öneriliydi.` : "");
+    (atlananlar.length ? ` ${atlananlar.length} aday zaten öneriliydi.` : "") +
+    okunamayan;
   return bitir(true, ozet, yazilan);
 }
 
@@ -285,7 +295,7 @@ export async function parcalariTara(
   const taramaSurum = PROMPTLAR.kanit_cikarimi.surum;
   const nesneId = o.kesifId ?? "on_tarama";
 
-  const tara = async (grup: Parca[]): Promise<boolean> => {
+  const tara = async (grup: Parca[]): Promise<{ ok: true } | { ok: false; neden: string }> => {
     // Uzun parça PENCERELERE bölünür: model `MODEL_METIN_SINIRI` karakter
     // görüyor ve tek pencere parçanın kuyruğunu hiç taramadan "taranmış"
     // sayıyordu. Pencereler aynı belge kimliğini taşır ve örtüşür ki bir
@@ -299,7 +309,7 @@ export async function parcalariTara(
       await islem(SERVIS, (sql) =>
         denetle(sql, SERVIS, "kanit_cikarimi_reddedildi", "kesif", nesneId, { parcalar: grup.map((p) => p.id), asama: r.asama, hatalar: r.hatalar.slice(0, 5) }),
       );
-      return false;
+      return { ok: false, neden: `${r.asama}: ${(r.hatalar[0] ?? "").slice(0, 300)}` };
     }
     await islem(SERVIS, async (sql) => {
       for (const x of r.kanitlar) {
@@ -313,15 +323,25 @@ export async function parcalariTara(
         await sql`
           insert into kanit_tarama (belge_id, prompt_surum, model_snapshot, kanit_sayisi)
           values (${p.id}, ${taramaSurum}, ${model}, ${r.kanitlar.filter((x) => x.belge_id === p.id).length})
-          on conflict do nothing
+          on conflict (belge_id, prompt_surum, model_snapshot) do update
+            set durum = 'tamam', neden = null, kanit_sayisi = excluded.kanit_sayisi, tarandi = now()
         `;
       }
       if (r.dusenler.length) {
         await denetle(sql, SERVIS, "kanit_dusuruldu", "kesif", nesneId, { parcalar: grup.map((p) => p.id), dusenler: r.dusenler.slice(0, 10) });
       }
     });
-    return true;
+    return { ok: true };
   };
+
+  /** Tek başına da okunamayan parça nedeniyle kayda geçer; keşfi kilitlemez. */
+  const reddiYaz = (p: Parca, neden: string) =>
+    islem(SERVIS, (sql) => sql`
+      insert into kanit_tarama (belge_id, prompt_surum, model_snapshot, kanit_sayisi, durum, neden)
+      values (${p.id}, ${taramaSurum}, ${model}, 0, 'reddedildi', ${neden})
+      on conflict (belge_id, prompt_surum, model_snapshot) do update
+        set durum = 'reddedildi', neden = excluded.neden, tarandi = now()
+    `);
 
   // Grup PENCERE sayısıyla kurulur: tek uzun parça tek başına bir çağrı olabilir.
   const gruplar: Parca[][] = [];
@@ -339,18 +359,22 @@ export async function parcalariTara(
   const isci = async () => {
     while (sira < gruplar.length) {
       const grup = gruplar[sira++];
-      if (await tara(grup)) {
+      const r = await tara(grup);
+      if (r.ok) {
         taranan += grup.length;
-      } else if (grup.length > 1) {
+      } else {
         // Grup reddedildiyse parçalar tek tek denenir: bir parçanın kusuru
         // komşularını taranmamış bırakmasın.
         for (const p of grup) {
-          if (await tara([p])) taranan++;
-          else (basarisiz++, basarisizIdler.push(p.id));
+          const t = grup.length > 1 ? await tara([p]) : r;
+          if (t.ok) {
+            taranan++;
+          } else {
+            basarisiz++;
+            basarisizIdler.push(p.id);
+            await reddiYaz(p, t.neden);
+          }
         }
-      } else {
-        basarisiz++;
-        basarisizIdler.push(grup[0].id);
       }
       await o.ilerleme?.(taranan);
     }
@@ -364,17 +388,15 @@ export async function parcalariTara(
  * başlatıldığında tarama büyük ölçüde hazır olur. Tur başına sınırlı iş:
  * yeni gelen bir öneri değerlendirmesi dakikalarca beklemesin.
  */
-// ponytail: süreç içi; worker yeniden başlayınca bir kez daha denenir.
-const onTaramaReddi = new Set<number>();
-
 export async function onTarama(enCok = ESZAMANLI * TARAMA_GRUBU): Promise<number> {
   const model = modelSnapshot();
   const parcalar = (
     await islem(SERVIS, (sql) =>
       sql<Parca[]>`
         select b.id, b.ad, b.bolum, b.tur::text, b.yil, b.metin, b.il_kod from belge b
-        where not (b.id = any(${[...onTaramaReddi]}::bigint[]))
-          and not exists (
+        -- Reddedilmiş parça da kayıtlıdır: ön tarama onu yeniden denemez
+        -- (maliyet döngüsü olmasın); keşif bir kez daha dener.
+        where not exists (
           select 1 from kanit_tarama t
           where t.belge_id = b.id and t.prompt_surum = ${PROMPTLAR.kanit_cikarimi.surum} and t.model_snapshot = ${model}
         )
@@ -384,10 +406,7 @@ export async function onTarama(enCok = ESZAMANLI * TARAMA_GRUBU): Promise<number
     )
   ).map((p) => ({ ...p, id: Number(p.id) }));
   if (!parcalar.length) return 0;
-  const { taranan, basarisiz, basarisizIdler } = await parcalariTara(parcalar, { kesifId: null });
-  // Hep reddedilen parça ön taramayı sonsuz döngüye (ve maliyete) sokmasın:
-  // keşif onu yine dener ve "taranamadı" diye raporlar.
-  for (const id of basarisizIdler) onTaramaReddi.add(id);
+  const { taranan, basarisiz } = await parcalariTara(parcalar, { kesifId: null });
   log.info("on_tarama", { taranan, basarisiz });
   return taranan + basarisiz;
 }

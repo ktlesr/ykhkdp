@@ -254,3 +254,29 @@ test("uzun parça örtüşen pencerelerle eksiksiz taranır", async () => {
   assert.ok(p.at(-1)!.endsWith("cümle 899."), "kuyruk taranır");
   assert.deepEqual(pencerele("kısa"), ["kısa"]);
 });
+
+test("reddedilmiş parça keşfi kilitlemez; keşif onu bir kez daha dener", async () => {
+  const { birKesifAl, kesifYap, onTarama } = await import("@ykh/degerlendirme");
+  // Sürüm ve model künyesi önceki testlerin taramasından (paket bağımlılığı yok).
+  const [kunye] = await islem(SERVIS, (sql) => sql<{ prompt_surum: string; model_snapshot: string }[]>`
+    select prompt_surum, model_snapshot from kanit_tarama limit 1`);
+  const ajans: Baglam = { gonderenRef: await ref("ajans@ykh.local"), rol: "ajans" };
+  const [p] = await islem(SERVIS, (sql) => sql<{ id: string }[]>`select id from belge where il_kod = 'kutahya' order by id limit 1`);
+  // Önceki bir koşuda okunamamış gibi işaretle.
+  await islem(SERVIS, (sql) => sql`
+    insert into kanit_tarama (belge_id, prompt_surum, model_snapshot, kanit_sayisi, durum, neden)
+    values (${p.id}, ${kunye.prompt_surum}, ${kunye.model_snapshot}, 0, 'reddedildi', 'model: zaman aşımı')
+    on conflict (belge_id, prompt_surum, model_snapshot) do update set durum = 'reddedildi', neden = excluded.neden`);
+  // Ön tarama reddedilmiş parçayı yeniden denemez (maliyet döngüsü yok).
+  await onTarama();
+  const [{ durum: once }] = await islem(SERVIS, (sql) => sql<{ durum: string }[]>`select durum from kanit_tarama where belge_id = ${p.id}`);
+  assert.equal(once, "reddedildi");
+
+  await islem(ajans, async (sql) => sql`insert into kesif (donem_id, tetikleyen_ref) values (${await donem("kutahya")}, ${ajans.gonderenRef})`);
+  const id = await birKesifAl();
+  assert.ok(id);
+  const s = await kesifYap(id);
+  assert.ok(s.ok, s.mesaj);
+  const [{ durum }] = await islem(SERVIS, (sql) => sql<{ durum: string }[]>`select durum from kanit_tarama where belge_id = ${p.id}`);
+  assert.equal(durum, "tamam", "keşif reddedilmiş parçayı yeniden denedi");
+});

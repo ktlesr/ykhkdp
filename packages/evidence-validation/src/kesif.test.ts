@@ -48,8 +48,8 @@ test("kanıt doğru parçaya atfedilir ve özgün metinle kaydedilir", () => {
   assert.equal(s.kanitlar[0].alinti, "Uşak’ta tekstil geri dönüşümü sektöründe");
 });
 
-test("kanıtların yarısından fazlası uydurmaysa çağrı reddedilir", () => {
-  const s = kanitlariDogrula(
+test("taramada doğrulanan kanıt tutulur, uydurma düşer; hiçbiri doğrulanmazsa parça okunamadı", () => {
+  const karisik = kanitlariDogrula(
     [
       { belge_id: 1, tur: "firsat", konu: "Geri dönüşüm", alinti: "Uşak’ta tekstil geri dönüşümü sektöründe" },
       { belge_id: 1, tur: "firsat", konu: "Uydurma", alinti: "Uşak organize sanayi bölgesinde yeni bir lif fabrikası kurulacak" },
@@ -57,7 +57,21 @@ test("kanıtların yarısından fazlası uydurmaysa çağrı reddedilir", () => 
     ],
     PAKET,
   );
-  assert.equal(s.gecerli, false);
+  assert.ok(karisik.gecerli);
+  assert.equal(karisik.kanitlar.length, 1, "yalnızca kaynakta birebir geçen kaydedilir");
+  assert.equal(karisik.dusenler.length, 2);
+
+  const hepsiUydurma = kanitlariDogrula(
+    [{ belge_id: 1, tur: "firsat", konu: "Uydurma", alinti: "Uşak organize sanayi bölgesinde yeni bir lif fabrikası kurulacak" }],
+    PAKET,
+  );
+  assert.equal(hepsiUydurma.gecerli, false);
+});
+
+test("tablo satırı ayraçsız alıntılanabilir; kayda kaynaktaki satır girer", () => {
+  const tablo = ["| İlçe | Tesis sayısı |", "| --- | --- |", "| Banaz | 14 tekstil işletmesi |"].join("\n");
+  assert.equal(kaynaktanCikar(tablo, "Banaz 14 tekstil işletmesi"), "Banaz | 14 tekstil işletmesi");
+  assert.ok(paketteGeciyor(paketKur("t", [{ id: 1, ad: "T", metin: tablo }]), "Banaz 14 tekstil işletmesi"));
 });
 
 test("konu adında kaynaksız sayı taşıyan kanıt düşer", () => {

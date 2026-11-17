@@ -181,7 +181,7 @@ export const openAiIstemci = (): ModelIstemcisi => ({
     const anahtar = process.env.OPENAI_API_KEY;
     if (!anahtar) throw new Error("OPENAI_API_KEY tanımlı değil.");
 
-    const yanit = await fetch("https://api.openai.com/v1/responses", {
+    const govde = {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${anahtar}` },
       body: JSON.stringify({
@@ -201,8 +201,13 @@ export const openAiIstemci = (): ModelIstemcisi => ({
       }),
       // Askıda kalan çağrı worker'ı süresiz durdurmasın. Zaman aşımı "model"
       // aşaması hatasıdır: öneri `degerlendiriliyor` kalır, deneme sayılır.
-      signal: AbortSignal.timeout(Number(process.env.YKH_MODEL_ZAMAN_ASIMI_MS) || 180_000),
-    });
+    };
+    const yanit = await yenidenDene(() =>
+      fetch("https://api.openai.com/v1/responses", {
+        ...govde,
+        signal: AbortSignal.timeout(Number(process.env.YKH_MODEL_ZAMAN_ASIMI_MS) || 180_000),
+      }),
+    );
     if (!yanit.ok) throw new Error(`OpenAI ${yanit.status}: ${await yanit.text()}`);
 
     const j = (await yanit.json()) as {
@@ -235,4 +240,26 @@ export const openAiIstemci = (): ModelIstemcisi => ({
 function eforSec(sema: string): string {
   if (sema === "kanit_cikarimi") return process.env.YKH_TARAMA_EFOR || "low";
   return process.env.YKH_MODEL_EFOR || "medium";
+}
+
+/**
+ * Geçici hatalarda yeniden dener: 429 (hız sınırı), 5xx, ağ hatası.
+ *
+ * Tarama 6 eşzamanlı çağrı yapıyor; hız sınırına takılan çağrı yeniden
+ * denenmeden "parça taranamadı" sayılıyordu (canlıda 922 parçanın 24'ü).
+ * `retry-after` varsa ona uyulur. Kalıcı hata (400, 401) hemen döner.
+ */
+async function yenidenDene(cagri: () => Promise<Response>, deneme = 4): Promise<Response> {
+  for (let i = 1; ; i++) {
+    try {
+      const r = await cagri();
+      if (i >= deneme || !(r.status === 429 || r.status >= 500)) return r;
+      const bekle = Number(r.headers.get("retry-after")) * 1000 || 2000 * 2 ** (i - 1);
+      await r.body?.cancel();
+      await new Promise((ok) => setTimeout(ok, Math.min(bekle, 30_000)));
+    } catch (e) {
+      if (i >= deneme) throw e;
+      await new Promise((ok) => setTimeout(ok, 2000 * 2 ** (i - 1)));
+    }
+  }
 }

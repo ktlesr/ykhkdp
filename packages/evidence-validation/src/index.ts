@@ -122,6 +122,8 @@ export function sayisalTokenlar(metin: string): string[] {
  *
  * Modelin ürettiği kesme işareti ve tire karakterleri belgedekilerden farklı
  * olabiliyor (’ vs ' , – vs -). Bunlar anlamı değiştirmediği için eşitlenir;
+ * Markdown tablo ayracı (|) boşluk sayılır: model tablo satırını ayraçsız
+ * alıntılıyor ve hücre metni birebir olduğu hâlde eşleşmiyordu.
  * aksi hâlde birebir doğru alıntılar sırf tipografi yüzünden reddedilir.
  */
 function normalize(s: string): string {
@@ -130,7 +132,7 @@ function normalize(s: string): string {
     .replace(/[’‘`´ʼ]/g, "'")
     .replace(/[–—−]/g, "-")
     .replace(/["“”«»]/g, '"')
-    .replace(/[\s ]+/g, " ")
+    .replace(/[\s |]+/g, " ")
     .trim();
 }
 
@@ -590,7 +592,7 @@ export function kaynaktanCikar(metin: string, alinti: string): string | null {
   const kaynak: number[] = [];
   let bosluk = false;
   for (let i = 0; i < metin.length; i++) {
-    if (/[\s ]/.test(metin[i])) {
+    if (/[\s |]/.test(metin[i])) {
       if (!bosluk && n.length) {
         n += " ";
         kaynak.push(i);
@@ -735,13 +737,23 @@ export function kanitlariDogrula(
     sonuc.push({ belge_id: bulunan.belge.id, tur: k.tur, konu: k.konu.trim(), alinti: bulunan.metin });
   }
 
-  if (kanitlar.length && dusenler.length / kanitlar.length > UYDURMA_ESIGI) {
+  /**
+   * Taramada çağrı ancak HİÇBİR kanıt doğrulanamazsa reddedilir.
+   *
+   * Değerlendirmedeki "yarısından fazlası düşerse hepsi reddedilir" kuralı bir
+   * PUANI korur: uyduran modelin sayısına güvenilmez. Kanıt defterinde puan
+   * yok; her pasaj kendi başına kaynakta doğrulanır, düşen kaydedilmez. Kural
+   * burada yalnızca doğru pasajları da çöpe atıyor ve parçayı "taranamadı"
+   * bırakıyordu (canlıda 922 parçanın 24'ü). Hiçbiri doğrulanamazsa parça
+   * gerçekten okunamamıştır: ret, nedeniyle birlikte kayda geçer.
+   */
+  if (kanitlar.length && !sonuc.length && dusenler.length) {
     return {
       gecerli: false,
       hatalar: [
         {
           kod: "alinti_eslesmiyor",
-          mesaj: `${kanitlar.length} kanıtın ${dusenler.length} tanesi doğrulanamadı; çıktı reddedildi.`,
+          mesaj: `${kanitlar.length} kanıtın hiçbiri kaynakta birebir bulunamadı; parça okunamadı.`,
         },
         ...dusenler,
       ],
