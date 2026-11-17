@@ -164,7 +164,22 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
   const defter = [...yerel, ...diger].map((d, i) => ({ ...d, no: i + 1 }));
 
   // ── 4. Aday üretimi ──────────────────────────────────────────────────────
-  const a = await adayKesfet(istemci, model, { il: k.il, ilceler: ilceAdlari, defter });
+  // Önceki resmî listeler: model bunları BAĞLAM olarak görür (kanıt değil).
+  // Yürürlükteki listedeki konular zaten aday; listeden düşmüş bir konu ise
+  // kanıtlar destekliyorsa başlığı değiştirilmeden yeniden önerilebilir.
+  const resmi = await islem(SERVIS, (sql) =>
+    sql<{ yil: number; baslik: string }[]>`
+      select yil, baslik from yatirim_konusu where il_kod = ${k.il_kod} order by yil desc, sira
+    `,
+  );
+  const sonYil = Math.max(0, ...resmi.map((r) => r.yil));
+  const a = await adayKesfet(istemci, model, {
+    il: k.il,
+    ilceler: ilceAdlari,
+    defter,
+    yururlukte: resmi.filter((r) => r.yil === sonYil).map((r) => r.baslik),
+    onceki: resmi.filter((r) => r.yil < sonYil).map((r) => ({ yil: r.yil, baslik: r.baslik })),
+  });
   maliyetYaz(a.maliyet, PROMPTLAR.aday_kesfi.surum, a.ok);
   if (!a.ok) {
     await islem(SERVIS, (sql) => denetle(sql, SERVIS, "aday_kesfi_reddedildi", "kesif", k.id, { asama: a.asama, hatalar: a.hatalar.slice(0, 5) }));
@@ -177,24 +192,52 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
   const kanitHaritasi = new Map(defter.map((d) => [d.kanitId, d]));
   const sinir = k.slot_sayisi * 2;
   const atlananlar: string[] = [];
+  const desteklenen: string[] = [];
   let yazilan = 0;
   await islem(tetikleyen, async (sql) => {
-    const mevcut = new Set(
-      (await sql<{ b: string }[]>`select lower(trim(baslik)) as b from oneri where donem_id = ${k.donem_id}`).map((r) => r.b),
-    );
+    const donemdekiler = await sql<{ id: string; b: string; koken: string; durum: string; puanli: boolean }[]>`
+      select o.id, lower(trim(o.baslik)) as b, o.koken::text, o.durum::text,
+             exists (select 1 from degerlendirme g where g.oneri_id = o.id) as puanli
+      from oneri o where o.donem_id = ${k.donem_id}
+    `;
+    const mevcut = new Set(donemdekiler.map((r) => r.b));
     for (const aday of a.adaylar) {
       if (yazilan >= sinir) break;
-      // Yalnızca BİREBİR tekrar atlanır; yakın kopya bir karar değil işaret —
-      // onay kuyruğunda "aynı dönemde benzer başlık" olarak görünür.
-      if (mevcut.has(aday.baslik.toLocaleLowerCase("tr-TR").trim())) {
-        atlananlar.push(aday.baslik);
-        continue;
-      }
+      const anahtar = aday.baslik.toLocaleLowerCase("tr-TR").trim();
       const kanit = aday.kanitIdleri.map((id) => {
         const d = kanitHaritasi.get(id)!;
         const p = parcaHaritasi.get(d.belgeId)!;
         return { kanit_id: id, belge_id: p.id, belge_ad: p.ad, bolum: p.bolum, tur: d.tur, konu: d.konu, alinti: d.metin, yerel: d.yerel };
       });
+      /**
+       * Yürürlükteki resmî konu OLDUĞU GİBİ önerildiyse kopya açılmaz: kanıtlar
+       * o konunun kaydına eklenir (yürürlükteki liste gelecek yıl "önceki"
+       * olacak; keşif onun devamını belgeyle destekleyebilmeli). Henüz
+       * puanlanmamışsa değerlendirmeye alınır — başlık ve tebliğ gerekçesi
+       * değişmez, puanlayıcı keşif kanıtlarını zorunlu görür.
+       */
+      const resmi = donemdekiler.find((r) => r.b === anahtar && r.koken === "mevcut");
+      if (resmi) {
+        await sql`update oneri set kesif_id = ${k.id}, kesif_kanit = ${sql.json(kanit as never)}, guncellendi = now() where id = ${resmi.id}`;
+        if (resmi.durum === "listede" && !resmi.puanli) {
+          await sql`
+            update oneri set durum = 'degerlendiriliyor', onaylayan_ref = null, onay_zamani = null,
+              deneme = 0, asama = null, son_hata = null, guncellendi = now()
+            where id = ${resmi.id} and durum = 'listede'
+          `;
+          await denetle(sql, tetikleyen, "oneri_degerlendiriliyor", "oneri", resmi.id, {
+            onceki: "listede", gerekce: "Keşif yürürlükteki resmî konuyu belgelerle destekledi; belgelere göre değerlendirmeye alındı.",
+          });
+        }
+        desteklenen.push(aday.baslik);
+        continue;
+      }
+      // Yalnızca BİREBİR tekrar atlanır; yakın kopya bir karar değil işaret —
+      // onay kuyruğunda "aynı dönemde benzer başlık" olarak görünür.
+      if (mevcut.has(anahtar)) {
+        atlananlar.push(aday.baslik);
+        continue;
+      }
       const r = await sql`
         insert into oneri (donem_id, gonderen_ref, koken, baslik, gerekce, durum, kesif_id, kesif_kanit)
         values (${k.donem_id}, ${k.tetikleyen_ref}, 'yeni', ${aday.baslik}, ${aday.gerekce},
@@ -207,7 +250,7 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
       }
     }
     await denetle(sql, tetikleyen, "kesif_adaylari_yazildi", "kesif", k.id, {
-      yazilan, atlananlar, dusenler: a.dusenler.slice(0, 10), model: a.modelSnapshot, promptSurum: a.promptSurum,
+      yazilan, atlananlar, desteklenen, dusenler: a.dusenler.slice(0, 10), model: a.modelSnapshot, promptSurum: a.promptSurum,
       not: "Adaylar doğrulanmamış; her biri ayrıca puanlanır ve ajans onayı bekler.",
     });
   });
@@ -217,6 +260,7 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
     `${parcalar.length} parça tarandı, ${defterHam.length} kanıt (${yerel.length} yerel). ` +
     (yazilan ? `${yazilan} aday değerlendirmeye alındı.` : "Kanıtlara dayanan aday çıkmadı.") +
     (a.dusenler.length ? ` ${a.dusenler.length} aday kanıt kuralına takılıp düştü.` : "") +
+    (desteklenen.length ? ` ${desteklenen.length} yürürlükteki resmî konu belgelerle desteklendi.` : "") +
     (atlananlar.length ? ` ${atlananlar.length} aday zaten öneriliydi.` : "");
   return bitir(true, ozet, yazilan);
 }

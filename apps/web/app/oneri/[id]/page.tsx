@@ -76,7 +76,7 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
         <div className="mt-8 grid grid-cols-[minmax(0,1fr)_340px] items-start gap-10 max-[1040px]:grid-cols-1 max-[1040px]:gap-6">
         <div className="min-w-0">
 
-        {(puanlar || o.durum !== "degerlendiriliyor" || o.nace_kod || o.duzeltildi) && (
+        {(puanlar || o.durum !== "degerlendiriliyor" || o.nace_kod || o.duzeltildi || o.resmi_yillar) && (
         <div className="mb-3 flex flex-wrap items-center gap-2.5">
           {/* Değerlendirme sürerken durumu TEK yer söyler: aşağıdaki canlı panel. */}
           {(puanlar || o.durum !== "degerlendiriliyor") && (
@@ -90,6 +90,7 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
             </Rozet>
           )}
           {o.duzeltildi && <Rozet tur="notr">Puan ajans tarafından düzeltildi</Rozet>}
+          {o.resmi_yillar && <Rozet tur="notr" isaret="■">Resmî listede: {o.resmi_yillar}</Rozet>}
         </div>
         )}
 
@@ -112,7 +113,11 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
         {/* Gerekçe — kimin yazdığı açıkça: yatırımcı mı, belgelerden keşif mi */}
         <div className="mt-6 border border-hairline bg-surface first:mt-0">
           <div className="serit px-4 py-3 etiket text-ink">
-            {o.kesif_id ? "Neden burada? · belgelerden keşif, yapay zekâ yazdı" : "Neden burada? · yatırımcının gerekçesi"}
+            {o.koken === "mevcut"
+              ? "Neden burada? · resmî tebliğ gerekçesi, olduğu gibi"
+              : o.kesif_id
+                ? "Neden burada? · belgelerden keşif, yapay zekâ yazdı"
+                : "Neden burada? · yatırımcının gerekçesi"}
           </div>
           <p className="px-4 py-4 text-[13.5px] leading-[1.6] text-ink text-pretty">{o.gerekce}</p>
           {o.kesif_kanit && (

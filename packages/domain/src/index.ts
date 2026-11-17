@@ -70,6 +70,12 @@ export const GECISLER: readonly Gecis[] = [
   { from: "onay_bekliyor", to: "reddedildi", roller: ONAYLAYAN, eylem: "Reddet", gerekceZorunlu: true },
   { from: "listede", to: "onay_bekliyor", roller: ONAYLAYAN, eylem: "Onayı geri al", gerekceZorunlu: true },
   { from: "reddedildi", to: "onay_bekliyor", roller: ONAYLAYAN, eylem: "Yeniden değerlendir", gerekceZorunlu: true },
+  /**
+   * Resmî listedeki konuyu belgelere göre yeniden değerlendirmeye sokar.
+   * Mevcut konular tebliğden türer ve hiç puanlanmamıştır (dayanak 0);
+   * "korunuyor" demek için onlar da aynı hattan geçip yeniden onaylanmalı.
+   */
+  { from: "listede", to: "degerlendiriliyor", roller: ONAYLAYAN, eylem: "Belgelere göre yeniden değerlendir", gerekceZorunlu: false },
 ];
 
 export type GecisSonuc = { izinli: true; gecis: Gecis } | { izinli: false; sebep: string };
@@ -109,7 +115,12 @@ export const NACE_KAYNAK_ETIKET: Record<NaceKaynagi, string> = {
 // ── karar modeli ───────────────────────────────────────────────────────────
 
 export type Koken = "mevcut" | "yeni";
-export type Sonuc = "korunuyor" | "ekleniyor" | "çıkıyor" | "yedek" | "dayanaksız";
+/**
+ * "liste dışı": eşiği geçen ama yedek sınırının (slot sayısı kadar) ötesinde
+ * kalan yeni öneri. Platformun çıktısı en çok slot kadar asıl + slot kadar
+ * yedektir; sıralama geri kalanı gizlemez, adıyla söyler.
+ */
+export type Sonuc = "korunuyor" | "ekleniyor" | "çıkıyor" | "yedek" | "liste dışı" | "dayanaksız";
 
 /**
  * Sıralamaya giren aday.
@@ -135,6 +146,8 @@ export type DoluSatir = Aday & {
   sonuc: Sonuc;
   esikDevri: boolean;
   dayanaksiz: boolean;
+  /** ilk dörtte değil ama yedek sırasında (en çok slot sayısı kadar) */
+  yedekte?: boolean;
 };
 
 export type BosSatir = { bos: true; sira: number; gerekce: string };

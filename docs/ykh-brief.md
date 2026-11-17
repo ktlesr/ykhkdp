@@ -177,6 +177,20 @@ Bir (il, dönem) için:
     eşik altı           → dayanaksız     doldurulamayan    → boş slot
 ```
 
+**Asıl + yedek.** Platformun çıktısı en çok `slot_sayisi` asıl ve
+`slot_sayisi` yedektir (TR33: 4 + 4). Yedek sırası eşiği geçen adaylardan,
+puan sırasıyla dolar ve asılların hemen ardından numaralanır. Ötesindeki yeni
+öneri **liste dışı** etiketini alır — gizlenmez, adıyla söylenir. Mevcut konu
+yedekte de olsa dışarıda da olsa **çıkıyor**dur. Sınır sabit değil, ağırlık
+setinden gelir.
+
+**Resmî konular da yarışır.** Tebliğden türeyen mevcut konular puanlanmadan
+"dayanaksız" kalıyordu — gerçek puanla yarışmıyorlardı. `/il/[il]` "Belgelere
+göre değerlendir" ile onları aynı hatta sokar (`listede → degerlendiriliyor`):
+başlık ve tebliğ gerekçesi OLDUĞU GİBİ kalır, puan ve dayanak belgelerden
+gelir, devamlılık payı eklenir, ajans yeniden onaylar. Yalnızca hiç
+puanlanmamış olanlar; onaylanmış bir değerlendirme ezilmez.
+
 Değişmez kurallar:
 
 - **Sabit koruma tabanı yoktur.** Dört konunun tamamı korunabilir veya değişebilir.
@@ -302,6 +316,13 @@ Uydurmasızlık kuralları — hepsi mekanik, modelin beyanı değil:
 - **Tarama eksikse aday üretilmez**: "bütün belgeler dikkate alındı"
   denemeyen koşu tamamlanmış görünmez; yeniden başlatınca önbellekten sürer.
 - **Yakın kopya elenmez, işaretlenir** (`/onay`); yalnızca birebir başlık atlanır.
+- **Resmî konuyu yeniden önermek meşrudur** — yürürlükteki liste gelecek yıl
+  "önceki" olur. Model yürürlükteki ve önceki yılların resmî konularını
+  bağlam olarak görür (kanıt değil); başlığı harfi harfine aynı yazarsa:
+  yürürlükteki konuysa kopya açılmaz, keşif kanıtları o konunun kaydına
+  eklenir ve puanlanmamışsa değerlendirmeye alınır; önceki yıl konusuysa
+  yeni aday olur. "Resmî listede: 2025" rozeti modelin beyanından değil
+  başlığın birebir eşleşmesinden gelir.
 - Değerlendirme paketi adayı doğuran parçaları **zorunlu** taşır
   (`belgePaketi({ zorunlu })`).
 

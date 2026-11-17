@@ -703,3 +703,26 @@ test("yükleyici fail-closed: eksik il varsa hiç yazmaz", async () => {
   assert.equal(sonra, once, "reddedilen dosyadan tek satır bile yazılmaz");
   await rm(yol, { force: true });
 });
+
+test("resmî konular belgelere göre yeniden değerlendirmeye alınır; yatırımcı alamaz", async () => {
+  const { resmiKonulariDegerlendir } = await import("./sorgu.ts");
+  const sistem = { gonderenRef: null, rol: "yonetici" as const };
+  const [aj] = await islem(sistem, (sql) => sql<{ gonderen_ref: string }[]>`select gonderen_ref from kimlik where eposta = 'ajans@ykh.local'`);
+  const [d] = await islem(sistem, (sql) => sql<{ donem_id: string }[]>`
+    select o.donem_id from oneri o
+    where o.koken = 'mevcut' and o.durum = 'listede'
+      and not exists (select 1 from degerlendirme g where g.oneri_id = o.id)
+    limit 1`);
+  assert.ok(d, "seed puanlanmamış resmî konu içermeli");
+  const donemId = Number(d.donem_id);
+
+  assert.equal(await resmiKonulariDegerlendir({ gonderenRef: aj.gonderen_ref, rol: "yatirimci" }, donemId), 0);
+  const n = await resmiKonulariDegerlendir({ gonderenRef: aj.gonderen_ref, rol: "ajans" }, donemId);
+  assert.ok(n > 0);
+  const satirlar = await islem(sistem, (sql) => sql<{ durum: string; deneme: number; baslik: string }[]>`
+    select durum::text, deneme, baslik from oneri where donem_id = ${donemId} and koken = 'mevcut'
+      and not exists (select 1 from degerlendirme g where g.oneri_id = oneri.id)`);
+  assert.ok(satirlar.every((x) => x.durum === "degerlendiriliyor" && x.deneme === 0), "kuyruğa sıfır denemeyle döner");
+  // Başlık olduğu gibi kalır; ikinci çağrı aynı konuları yeniden kuyruğa sokmaz.
+  assert.equal(await resmiKonulariDegerlendir({ gonderenRef: aj.gonderen_ref, rol: "ajans" }, donemId), 0);
+});

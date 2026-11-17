@@ -609,8 +609,10 @@ export async function onayKuyrugu(b: Baglam, donemId?: number) {
   if (b.rol === "anonim" || !onaylayabilir(b.rol)) return [];
   return islem(b, (sql) =>
     sql<(ListeSatiri & { il: string; il_kod: string; yil: string; dayanak_esigi: number;
-      asama: string | null; hatali: boolean; gonderildi: string; kesif_id: number | null })[]>`
-      select o.id, o.baslik, o.kesif_id, o.koken, o.gerekce, o.ilce, o.nace_kod, n.tanim as nace_tanim,
+      asama: string | null; hatali: boolean; gonderildi: string; kesif_id: number | null; resmi_yillar: string | null })[]>`
+      select o.id, o.baslik, o.kesif_id,
+             (select string_agg(distinct y.yil::text, ', ' order by y.yil::text) from yatirim_konusu y
+               where y.il_kod = i.kod and lower(trim(y.baslik)) = lower(trim(o.baslik))) as resmi_yillar, o.koken, o.gerekce, o.ilce, o.nace_kod, n.tanim as nace_tanim,
              o.nace_kaynagi, o.durum, o.olusturuldu::text,
              -- Ekran saati: ürün Türkiye'de, oturum saat diliminden bağımsız.
              to_char(o.olusturuldu at time zone 'Europe/Istanbul', 'DD.MM.YYYY HH24:MI') as gonderildi,
@@ -750,10 +752,14 @@ export async function oneriGetir(b: Baglam, id: number) {
         model_snapshot: string | null; prompt_surum: string | null;
         /** aday keşfinden geldiyse: adayı doğuran doğrulanmış kanıtlar */
         kesif_id: number | null;
+        /** başlık bu ilin resmî listesinde BİREBİR geçtiği yıllar (mekanik eşleşme) */
+        resmi_yillar: string | null;
         kesif_kanit: Array<{ belge_ad: string; bolum: string | null; tur: string; konu: string; alinti: string; yerel: boolean }> | null;
       })[]
     >`
       select o.id, o.donem_id, o.gonderen_ref, o.baslik, o.koken, o.gerekce, o.ilce, o.kesif_id, o.kesif_kanit,
+             (select string_agg(distinct y.yil::text, ', ' order by y.yil::text) from yatirim_konusu y
+               where y.il_kod = i.kod and lower(trim(y.baslik)) = lower(trim(o.baslik))) as resmi_yillar,
              o.nace_kod, n.tanim as nace_tanim, o.nace_kaynagi, o.durum, o.ret_gerekcesi,
              o.deneme, o.son_hata, o.asama,
              -- ISO 8601: tarayıcının Date.parse'ı Postgres'in boşluklu biçimini güvenle okumaz.
@@ -828,6 +834,9 @@ export async function durumDegistir(
         ret_gerekcesi = ${yeni === "reddedildi" ? gerekce : null},
         onaylayan_ref = ${yeni === "listede" ? b.gonderenRef : null},
         onay_zamani = ${yeni === "listede" ? sql`now()` : null},
+        -- Kuyruğa dönen öneri sıfırdan başlar: eski deneme sayacı worker'ın
+        -- onu almasını engellerdi (deneme < 3).
+        ${yeni === "degerlendiriliyor" ? sql`deneme = 0, asama = null, son_hata = null,` : sql``}
         guncellendi = now()
       where id = ${oneriId} and durum = ${o.durum}::oneri_durumu
     `;
@@ -1227,4 +1236,32 @@ export async function kesifDonemleri(b: Baglam): Promise<number[]> {
     `,
   );
   return r.map((x) => Number(x.id));
+}
+
+/**
+ * Resmî listedeki konuları belgelere göre yeniden değerlendirmeye sokar.
+ *
+ * Mevcut konular tebliğden türer ve hiç puanlanmamıştır: dayanakları 0,
+ * sıralamada "dayanaksız". Bir konuyu "korunuyor" saymak için o da yeni
+ * öneriyle AYNI hattan geçmeli: başlığı ve tebliğ gerekçesi OLDUĞU GİBİ
+ * kalır, puan ve dayanak belgelerden gelir, devamlılık payı ilan edilmiş
+ * parametre olarak eklenir, ajans yeniden onaylar. Yalnızca hiç
+ * değerlendirilmemiş olanlar: onaylanmış bir değerlendirme ezilmez.
+ */
+export async function resmiKonulariDegerlendir(b: Baglam, donemId: number): Promise<number> {
+  if (b.rol === "anonim" || !onaylayabilir(b.rol)) return 0;
+  const idler = await islem(b, (sql) =>
+    sql<{ id: string }[]>`
+      select o.id from oneri o
+      where o.donem_id = ${donemId} and o.koken = 'mevcut' and o.durum = 'listede'
+        and not exists (select 1 from degerlendirme g where g.oneri_id = o.id)
+      order by o.id
+    `,
+  );
+  let n = 0;
+  for (const { id } of idler) {
+    const r = await durumDegistir(b, Number(id), "listede", "degerlendiriliyor", "Resmî konu belgelere göre yeniden değerlendirmeye alındı.");
+    if (r.ok) n++;
+  }
+  return n;
 }

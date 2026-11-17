@@ -75,7 +75,8 @@ en büyük gruptur. `agirlikSetiGecerli()` reddeder, `donemGetir()` hata fırlat
 | korunuyor | mevcut konu ilk dörtte |
 | ekleniyor | yeni öneri ilk dörtte |
 | çıkıyor | mevcut konu ilk dört dışında |
-| yedek | yeni öneri ilk dört dışında |
+| yedek | yeni öneri ilk dört dışında, yedek sırasında (en çok slot sayısı kadar) |
+| liste dışı | eşiği geçen ama yedek sınırının ötesindeki yeni öneri |
 | dayanaksız | dayanak eşiğini geçemeyen aday |
 | boş slot | yeterince gerekçelendirilebilir aday yok |
 

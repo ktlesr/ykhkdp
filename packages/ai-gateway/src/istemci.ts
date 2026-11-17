@@ -108,6 +108,10 @@ function uret(istek: ModelIstegi): unknown {
         const gerekce = `${y.metin} ${es.metin}`.slice(0, 1200);
         return gerekce.length >= 40 ? [{ baslik: `${y.konu} yatırımı`.slice(0, 140).padEnd(8, "."), gerekce, kanit_no: [y.no, es.no] }] : [];
       });
+    // Yürürlükteki ilk resmî konuyu OLDUĞU GİBİ yeniden önerir: "resmî konuyu
+    // destekle" yolu çevrimdışı da çalışsın (kopya açılmamalı).
+    const resmi = gorev.match(/Yürürlükteki resmî liste: (.+)/)?.[1]?.split(" | ")[0]?.trim();
+    if (resmi && adaylar[0]) adaylar.push({ ...adaylar[0], baslik: resmi.slice(0, 140) });
     return { adaylar };
   }
 

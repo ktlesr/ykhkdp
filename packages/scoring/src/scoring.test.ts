@@ -266,3 +266,24 @@ test("B07 — slot döngüsü dışında kalan eşik altı aday da dayanaksız e
   assert.equal(zayif?.dayanaksiz, true);
   assert.equal(zayif?.sonuc, "dayanaksız");
 });
+
+test("çıktı en çok slot kadar asıl + slot kadar yedektir; ötesi 'liste dışı'", () => {
+  const adaylar: Aday[] = Array.from({ length: 11 }, (_, i) => ({
+    id: `y${String(i).padStart(2, "0")}`, ad: `Yeni ${i}`, koken: "yeni" as const,
+    taban: 90 - i, dayanak: 80, nace: null,
+  }));
+  // Puanı yüksek ama dayanaksız bir aday yedek sırasını işgal etmez.
+  adaylar.push({ id: "d", ad: "Dayanaksız", koken: "yeni", taban: 85, dayanak: 0, nace: null });
+  // Yedek sınırının ötesine düşen mevcut konu yine "çıkıyor"dur.
+  adaylar.push({ id: "m", ad: "Mevcut", koken: "mevcut", taban: 40, dayanak: 80, nace: null });
+
+  const h = hesapla(adaylar, AYAR);
+  const yedekler = h.kalanlar.filter((x) => x.yedekte);
+  assert.equal(yedekler.length, AYAR.slotSayisi);
+  assert.ok(yedekler.every((x) => x.sonuc === "yedek"));
+  assert.deepEqual(yedekler.map((x) => x.sira), [5, 6, 7, 8], "yedekler asılların hemen ardından");
+  const disari = h.kalanlar.filter((x) => !x.yedekte);
+  assert.equal(disari.find((x) => x.id === "d")?.sonuc, "dayanaksız");
+  assert.equal(disari.find((x) => x.id === "m")?.sonuc, "çıkıyor");
+  assert.ok(disari.filter((x) => x.koken === "yeni" && !x.dayanaksiz).every((x) => x.sonuc === "liste dışı"));
+});

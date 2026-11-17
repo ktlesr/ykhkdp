@@ -245,12 +245,22 @@ export async function adayKesfet(
     il: string;
     ilceler: readonly string[];
     defter: ReadonlyArray<DefterKaydi & { tur: string; konu: string; kaynak: string }>;
+    /** yürürlükteki resmî liste — zaten aday, yeniden önerilmez */
+    yururlukte?: readonly string[];
+    /** önceki yılların resmî konuları — kanıt destekliyorsa başlığı değişmeden yeniden önerilebilir */
+    onceki?: ReadonlyArray<{ yil: number; baslik: string }>;
   },
 ): Promise<({ ok: true; adaylar: DogrulanmisAday[]; dusenler: string[]; maliyet: Maliyet } & Meta) | Hatali> {
   const meta = { modelSnapshot, promptSurum: PROMPTLAR.aday_kesfi.surum };
   const gorev =
     `İl: ${girdi.il}\n` +
     `İlçeler: ${girdi.ilceler.length ? girdi.ilceler.join(", ") : "yüklenmedi"}\n` +
+    (girdi.yururlukte?.length
+      ? `Yürürlükteki resmî liste: ${girdi.yururlukte.join(" | ")}\n`
+      : "") +
+    (girdi.onceki?.length
+      ? `Önceki yılların resmî konuları: ${girdi.onceki.map((o) => `${o.yil}: ${o.baslik}`).join(" | ")}\n`
+      : "") +
     "Bu ilin yerel kanıtlarına dayanan yatırım konusu adaylarını çıkar.";
   const r = await cagir(istemci, modelSnapshot, "aday_kesfi", defterBloguKur(girdi.defter), gorev);
   if (!r.ok) return { ...r, ...meta };

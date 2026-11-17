@@ -83,6 +83,11 @@ export default async function Onay() {
                     </div>
                   </div>
                   <div className="flex shrink-0 flex-wrap items-center gap-2.5 max-[720px]:basis-full max-[720px]:pl-11">
+                    {o.resmi_yillar && (
+                      <Rozet tur="notr" isaret="■">
+                        resmî listede: {o.resmi_yillar}
+                      </Rozet>
+                    )}
                     {o.kesif_id && (
                       <Rozet tur="notr" isaret="◇">
                         belgelerden keşif

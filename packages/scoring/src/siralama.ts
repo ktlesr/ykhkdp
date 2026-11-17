@@ -74,10 +74,23 @@ export function hesapla(adaylar: readonly Aday[], ayar: Ayar): Hesap {
   // Slot döngüsünün dışında kalan aday da kendi dayanağıyla etiketlenir.
   for (; i < liste.length; i++) kalan.push({ ...liste[i], dayanaksiz: liste[i].dayanak < esik });
 
+  /**
+   * Asıl + yedek: çıktı en çok `slotSayisi` asıl ve `slotSayisi` yedektir.
+   * Yedek sırası eşiği geçen adaylardan dolar; ötesindeki yeni öneri
+   * "liste dışı" olur. Mevcut konu yedekte de olsa dışarıda da olsa
+   * "çıkıyor"dur — listeden çıkıyor olması değişmez.
+   */
+  const puanSirasi = kalan.sort((a, b) => b.puan - a.puan || a.id.localeCompare(b.id, "tr"));
+  const yedek = puanSirasi.filter((k) => !k.dayanaksiz).slice(0, slotSayisi);
+  const disarida = puanSirasi.filter((k) => !yedek.includes(k));
   let s = slotSayisi + 1;
-  const kalanlar = kalan
-    .sort((a, b) => b.puan - a.puan || a.id.localeCompare(b.id, "tr"))
-    .map((k) => satir(k, s++, false, false, k.dayanaksiz));
+  const kalanlar = [
+    ...yedek.map((k) => ({ ...satir(k, s++, false, false, false), yedekte: true })),
+    ...disarida.map((k) => {
+      const r = satir(k, s++, false, false, k.dayanaksiz);
+      return { ...r, yedekte: false, sonuc: !k.dayanaksiz && k.koken === "yeni" ? ("liste dışı" as const) : r.sonuc };
+    }),
+  ];
 
   const dolular = slots.filter((x): x is DoluSatir => !x.bos);
   const ozet: Ozet = {

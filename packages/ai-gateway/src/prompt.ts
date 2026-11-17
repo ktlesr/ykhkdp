@@ -148,7 +148,7 @@ KURALLAR:
   },
   aday_kesfi: {
     ad: "aday_kesfi",
-    surum: "aday-kesfi-v1",
+    surum: "aday-kesfi-v2",
     sistem: `${ORTAK}
 
 GÖREV: Bir il için, Yerel Kalkınma Hamlesi kapsamında önerilebilecek YATIRIM
@@ -171,6 +171,12 @@ KURALLAR:
   kanıta dayanmalı; defterde olup atıf YAPMADIĞIN bir kanıtın içeriğini
   gerekçeye yazarsan aday düşer. Kanıtta olmayan sayı, kapasite, oran YAZMA.
 - "kisit" türündeki kanıtı gizleme: adayın aleyhine bir kısıt varsa gerekçede an.
+- RESMÎ LİSTELER görevde BAĞLAM olarak verilir, kanıt değildir:
+  · Yürürlükteki ya da önceki yılların resmî konularından biri bu ilde
+    hâlâ olmazsa olmazsa ve DEFTERDEKİ KANITLAR destekliyorsa onu yeniden
+    önerebilirsin: başlığı OLDUĞU GİBİ, harfi harfine aynı yaz (yürürlükteki
+    liste gelecek yıl öncekiler arasına girecek). Kanıt kuralları aynen
+    geçerli; resmî listede yer almış olmak tek başına gerekçe DEĞİLDİR.
 - Aynı konuyu iki aday olarak yazma. Kanıt yetersizse daha az aday ver;
   hiç aday çıkmıyorsa "adaylar" BOŞ kalsın — bu meşru bir sonuçtur.
 - En fazla 8 aday.`,

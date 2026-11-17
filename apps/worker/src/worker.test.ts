@@ -186,7 +186,7 @@ test("keşif: bütün parçaları tarar, adayları yerel kanıtla ve kaynaktan b
   if (!process.env.OPENAI_API_KEY) assert.ok(k.aday_sayisi > 0, "çevrimdışı istemci en az bir aday üretmeli");
 
   const adaylar = await islem(SERVIS, (sql) => sql<{ durum: string; koken: string; gonderen_ref: string; kesif_kanit: Array<{ belge_id: number; alinti: string; yerel: boolean }> }[]>`
-    select durum::text, koken::text, gonderen_ref, kesif_kanit from oneri where kesif_id = ${id}`);
+    select durum::text, koken::text, gonderen_ref, kesif_kanit from oneri where kesif_id = ${id} and koken = 'yeni'`);
   assert.equal(adaylar.length, k.aday_sayisi);
   for (const a of adaylar) {
     assert.equal(a.durum, "degerlendiriliyor", "aday onaysız; mevcut değerlendirme hattına girer");
@@ -199,6 +199,20 @@ test("keşif: bütün parçaları tarar, adayları yerel kanıtla ve kaynaktan b
       const [b] = await islem(SERVIS, (sql) => sql<{ metin: string }[]>`select metin from belge where id = ${x.belge_id}`);
       assert.ok(b.metin.includes(x.alinti), `pasaj kaynakta birebir yok: ${x.alinti}`);
     }
+  }
+
+  // Yürürlükteki resmî konu olduğu gibi önerilirse KOPYA AÇILMAZ; kanıt o
+  // konunun kaydına eklenir. (Çevrimdışı istemci bunu her koşuda dener.)
+  const [{ n: resmiKopya }] = await islem(SERVIS, (sql) => sql<{ n: string }[]>`
+    select count(*) as n from oneri y join oneri m
+      on m.donem_id = y.donem_id and lower(trim(m.baslik)) = lower(trim(y.baslik)) and m.koken = 'mevcut'
+    where y.kesif_id = ${id} and y.koken = 'yeni'`);
+  assert.equal(Number(resmiKopya), 0, "resmî konunun kopyası açılmaz");
+  if (!process.env.OPENAI_API_KEY) {
+    const destek = await islem(SERVIS, (sql) => sql<{ durum: string; kesif_kanit: unknown[] }[]>`
+      select durum::text, kesif_kanit from oneri where donem_id = ${d} and koken = 'mevcut' and kesif_id = ${id}`);
+    assert.equal(destek.length, 1, "kanıt resmî konunun kaydına eklenir");
+    assert.ok(destek[0].kesif_kanit.length >= 2);
   }
 
   // İkinci koşu önbellekten: hiçbir parça yeniden taranmaz.

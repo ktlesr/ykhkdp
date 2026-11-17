@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Fragment } from "react";
 import { notFound, redirect } from "next/navigation";
 import { adaylariGetir, bolgeler, donemGetir, ilGetir, konuluYillar, sonKesif, yatirimKonulari } from "@ykh/database";
 import { onaylayabilir, type Sonuc } from "@ykh/domain";
 import { ayardan, grupAgirligi, hesapla } from "@ykh/scoring";
+import { EylemFormu, Gonder } from "@/components/eylem-formu.tsx";
 import { KesifPaneli, KonuPuanla } from "@/components/kesif-paneli.tsx";
+import { resmiDegerlendirEylemi } from "@/lib/eylem.ts";
 import { Bag, Baslik, Bos, Rozet, Sayfa, UstBar, Uyari } from "@/components/ui.tsx";
 import { baglam, kullanici } from "@/lib/oturum.ts";
 import { KAPALI } from "@/lib/site.ts";
@@ -28,6 +31,7 @@ const SONUC_ROZET: Record<Sonuc, { tur: "yesil" | "notr" | "kirmizi" | "amber" |
   ekleniyor: { tur: "notr", isaret: "▲" },
   çıkıyor: { tur: "kirmizi", isaret: "▼" },
   yedek: { tur: "gri", isaret: "·" },
+  "liste dışı": { tur: "gri", isaret: "—" },
   dayanaksız: { tur: "amber", isaret: "◌" },
 };
 
@@ -147,6 +151,23 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
               ))}
             </div>
 
+            {(() => {
+              // Tebliğden türeyen ve hiç puanlanmamış konu: dayanak 0, dayanaksız görünür.
+              const puansiz = adaylar.filter((a) => a.koken === "mevcut" && a.dayanak === 0).length;
+              return puansiz > 0 ? (
+                <Uyari baslik={`Resmî listedeki ${puansiz} konu henüz belgelere göre puanlanmadı`}>
+                  Bu konular tebliğden geldi ve sıralamada dayanaksız görünüyor; gerçek bir puanla yarışmıyorlar.
+                  Değerlendirmeye alınırsa başlık ve tebliğ gerekçesi olduğu gibi kalır, puan ve belge dayanağı
+                  yüklü belgelerden hesaplanır, <b className="num">+{h.pay}</b> devamlılık payı eklenir. Puan hazır
+                  olunca onayınızla yeniden sıralamaya girerler; değerlendirme sürerken sıralamada görünmezler.
+                  <EylemFormu eylem={resmiDegerlendirEylemi} className="mt-3">
+                    <input type="hidden" name="il" value={il} />
+                    <Gonder varyant="amber" bekleme="Kuyruğa alınıyor">Belgelere göre değerlendir</Gonder>
+                  </EylemFormu>
+                </Uyari>
+              ) : null;
+            })()}
+
             {h.ucDurum && (
               <Uyari>
                 <b className="font-semibold text-[#5F4A15]">Uç durum: {h.ucDurum.baslik}.</b> {h.ucDurum.metin}
@@ -162,8 +183,16 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
                 <div>Sonuç</div>
               </div>
 
-              {[...h.ilkDort, ...h.kalanlar].map((s, i) =>
-                s.bos ? (
+              {[...h.ilkDort, ...h.kalanlar].map((s, i) => (
+                <Fragment key={s.bos ? `bos-${s.sira}` : s.id}>
+                {/* Asıl → yedek → liste dışı: çıktının sınırı satırla değil ayraçla söylenir. */}
+                {i === h.ilkDort.length && !s.bos && s.yedekte && (
+                  <div className="serit px-4 py-2 etiket text-ink-soft">Yedek · en çok {d.set.slotSayisi}</div>
+                )}
+                {i === h.ilkDort.length + h.kalanlar.filter((x) => x.yedekte).length && (
+                  <div className="serit px-4 py-2 etiket text-ink-soft">Liste dışı · yedek sınırının ötesinde ya da dayanaksız</div>
+                )}
+                {s.bos ? (
                   <div
                     key={`bos-${s.sira}`}
                     className="tex-slot grid grid-cols-[44px_minmax(0,1fr)] items-start border-b border-b-hairline-soft border-l-[3px] [border-left-style:dotted] border-l-absent px-4 py-4"
@@ -213,8 +242,9 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
                       </Rozet>
                     </div>
                   </Link>
-                ),
-              )}
+                )}
+                </Fragment>
+              ))}
             </div>
 
             <p className="mt-4 text-[12.5px] leading-[1.5] text-ink-mute">

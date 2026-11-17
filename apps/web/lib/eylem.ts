@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 import {
   belgeEkle, belgeSil, cikisYap, donemGetir, girisYap, islem, kayitOl, naceAra, naceDuzelt,
   ayarYaz, kimlikAc, kimlikSil, KotaAsildi, misafirAc, oneriOlustur, puanDuzelt, durumDegistir, rolAta,
-  kesifAc, kesifDonemleri, KesifZatenAcik,
+  kesifAc, kesifDonemleri, KesifZatenAcik, resmiKonulariDegerlendir,
 } from "@ykh/database";
 import { gecisIzinli, onaylayabilir, ROL_ETIKET, ROLLER, type OneriDurumu, type Rol } from "@ykh/domain";
 import { log } from "@ykh/observability";
@@ -490,4 +490,19 @@ export async function kesifEylemi(_o: EylemSonucu | null, f: FormData): Promise<
     }
     throw e;
   }
+}
+
+/** Resmî listedeki (puanlanmamış) konuları değerlendirme kuyruğuna alır. */
+export async function resmiDegerlendirEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
+  const k = await kullanici();
+  if (!k || !onaylayabilir(k.rol)) return { ok: false, mesaj: "Bu işlem yalnızca ajans ve yönetici içindir." };
+  const il = String(f.get("il") ?? "");
+  const b = await baglam();
+  const d = await donemGetir(b, il);
+  if (!d) return { ok: false, mesaj: "Bu il için açık bir dönem yok." };
+  const n = await resmiKonulariDegerlendir(b, d.donemId);
+  revalidatePath(`/il/${il}`);
+  revalidatePath("/onay");
+  if (!n) return { ok: false, mesaj: "Değerlendirilmemiş resmî konu yok; hepsi zaten puanlanmış." };
+  return { ok: true, mesaj: `${n} resmî konu değerlendirmeye alındı. Puanlar hazır olunca onay kuyruğuna düşer.` };
 }
