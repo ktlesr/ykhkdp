@@ -1,6 +1,10 @@
 import type { MetadataRoute } from "next";
 import { ACIK_YOLLAR, siteUrl } from "@/lib/site.ts";
 
+/** Derleme anında değil istekte üretilir: `YKH_SITE_URL` yalnızca çalışma ortamında var;
+ *  statik üretimde adres localhost kalıyordu (canlıda ölçüldü). */
+export const dynamic = "force-dynamic";
+
 /**
  * sitemap.xml — yalnızca herkese açık yollar.
  *
