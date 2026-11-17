@@ -85,11 +85,19 @@ en büyük gruptur. `agirlikSetiGecerli()` reddeder, `donemGetir()` hata fırlat
 | Değer | UI etiketi | Ne demek |
 |---|---|---|
 | `kullanici` | "Yatırımcı girdi" | yatırımcı kodu biliyordu |
-| `ai` | "AI atadı · doğrulanmadı" | kullanıcı boş bıraktı, AI atadı |
+| `ai` | "AI önerdi · ajans onayı bekliyor" | kullanıcı boş bıraktı, AI atadı |
 | `ajans` | "Ajans düzeltti" | ajans elle düzeltti |
 
 `nace_kod` varsa `nace_kaynagi` de zorunludur (veritabanı kısıtı) — kodu kimin
 koyduğu asla kaybolmaz.
+
+## "Doğrulanmadı" yasak bir etiket
+
+Ekranda "doğrulanmadı" iki farklı şeyi anlatıyordu ve kullanıcı onu "olgular
+doğrulanmadı" diye okudu — oysa alıntılar belgede birebir doğrulanır. Etiket
+ne kastettiğini söyler: AI puanı ve yorumu için **"taslak, ajans onayı
+bekliyor"** (onaydan sonra "ajans onayladı"), yıllar arası benzer başlık için
+**"eşleşme kesin değil"**. Turuncu/kesikli epistemik görsel dil aynen kalır.
 
 ## Yasak eşlemeler
 

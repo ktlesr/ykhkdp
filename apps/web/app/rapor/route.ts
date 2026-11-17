@@ -155,7 +155,7 @@ export async function GET(istek: Request) {
     ["Öneri satırı", String(satirlar.length)],
     ["Resmî liste satırı", String(resmi.length)],
     ["Puan kaynağı", "'AI ·' sütunları yapay zekânın değişmez ham puanı; 'Ajans ·' sütunları ajans düzeltmesi, düzeltme yoksa boş."],
-    ["Uyarı", "Puanlar doğrulanmamış taslaktır. Sıralama karar değildir; ajans onayı zorunlu geçittir."],
+    ["Uyarı", "Alıntılar belgede birebir doğrulandı; puanlar ise ajans onaylayana kadar taslaktır. Sıralama karar değildir; ajans onayı zorunlu geçittir."],
     ["Uyarı", "Belge dayanağı boş olan satır henüz değerlendirilmemiştir — 0 ile aynı şey değildir."],
   ]) {
     s3.addRow({ a, d });

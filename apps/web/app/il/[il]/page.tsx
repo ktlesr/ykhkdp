@@ -430,7 +430,7 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
           <h2 className="text-[27px] max-[720px]:text-[22px] font-semibold tracking-[-.015em] text-ink">Resmî yatırım konuları</h2>
           <p className="mt-1 max-w-[78ch] text-[13.5px] leading-[1.55] text-ink-soft">
             Sanayi ve Teknoloji Bakanlığı tebliğleriyle ilan edilen konular, en yeni yıl önce. Yalnızca başlığı birebir
-            aynı olan konu “aynen korundu” sayılır; yakın ama yeniden yazılmış başlık doğrulanmamış eşleşmedir.
+            aynı olan konu “aynen korundu” sayılır; yakın ama yeniden yazılmış başlık için eşleşme kesin değildir, iki başlık yan yana gösterilir.
           </p>
           {resmiListeler.length === 0 ? (
             <Bosluk>Bu il için yüklenmiş resmî liste yok.</Bosluk>
@@ -460,7 +460,7 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
                               </Rozet>
                             ) : x.onceki_durum === "benzer" ? (
                               <Rozet tur="amber" isaret="◌">
-                                {yil - 1}’de benzeri · %{Math.round((x.onceki_benzerlik ?? 0) * 100)} · doğrulanmadı
+                                {yil - 1}’de benzeri · %{Math.round((x.onceki_benzerlik ?? 0) * 100)} · eşleşme kesin değil
                               </Rozet>
                             ) : (
                               <Rozet tur="notr" isaret="▲">

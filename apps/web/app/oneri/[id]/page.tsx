@@ -132,7 +132,7 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
               <li key={n.kod} className="text-[12.5px] leading-[1.45] text-ink-mute">
                 <span className="num">{n.kod}</span> — {n.tanim}
                 <span className="text-ink-soft"> · {n.urun_grubu}</span>
-                <span className={n.kaynak === "ai" ? "text-unverif" : ""}> · {n.kaynak === "ai" ? "AI atadı · doğrulanmadı" : "ajans"}</span>
+                <span className={n.kaynak === "ai" ? "text-unverif" : ""}> · {n.kaynak === "ai" ? "AI önerdi · ajans onayı bekliyor" : "ajans"}</span>
               </li>
             ))}
           </ul>
@@ -211,11 +211,19 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
             {/* AI gerekçesi */}
             {o.ai_gerekce && (
               <div className="tex-unverified mt-6 border border-unverif-line border-l-[3px] border-l-unverif [border-left-style:dashed] px-4 py-3.5">
+                {/* "doğrulanmadı" yanlış okunuyordu: alıntılar belgede birebir
+                    doğrulandı; onay bekleyen, puan ve yorumun KENDİSİ. */}
                 <div className="etiket text-unverif">
                   <span aria-hidden>◌</span> Yapay zekâ değerlendirmesi
-                  {o.durum !== "listede" && " · doğrulanmadı"}
+                  {o.durum === "listede" ? " · ajans onayladı" : " · taslak, ajans onayı bekliyor"}
                 </div>
                 <p className="mt-2 text-[13px] leading-[1.55] text-ink-soft text-pretty">{o.ai_gerekce}</p>
+                {o.durum !== "listede" && (
+                  <p className="mt-2 text-[12.5px] leading-[1.45] text-ink-mute">
+                    Aşağıdaki alıntıların her biri belgede birebir doğrulandı; doğrulanamayan alıntı kaydedilmez. Puan
+                    ve bu yorum ise yapay zekânın yargısıdır: ajans onaylayana kadar taslaktır, sıralamaya girmez.
+                  </p>
+                )}
                 {o.model_snapshot && (
                   <div className="num mt-2 text-[10px] text-ink-mute">
                     {o.model_snapshot} · {o.prompt_surum}

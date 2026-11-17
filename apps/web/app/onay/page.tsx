@@ -93,7 +93,7 @@ export default async function Onay({ searchParams }: { searchParams: Promise<{ b
         ]}
       />
       <Sayfa genis>
-        <Baslik alt="Yapay zekâ puanladı, puan doğrulanmadı. Her ilde en iyisi en üstte: soldaki sayı, öneri onaylanırsa il listesinde gireceği yer (asıl ya da yedek). Onaylanmadan hiçbir öneri sıralamaya girmez; onay geri alınabilir.">
+        <Baslik alt="Yapay zekâ puanladı; alıntılar belgede birebir doğrulandı, puanlar ise ajans onaylayana kadar taslaktır. Her ilde en iyisi en üstte: soldaki sayı, öneri onaylanırsa il listesinde gireceği yer (asıl ya da yedek). Onaylanmadan hiçbir öneri sıralamaya girmez; onay geri alınabilir.">
           Onay kuyruğu
         </Baslik>
 

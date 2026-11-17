@@ -90,7 +90,7 @@ const ZINCIR = [
   {
     ad: "Ajans onaylar",
     metin:
-      "Puan doğrulanmamış bir taslaktır. Ajans onaylar, puanı düzeltir veya reddeder. Düzeltme ayrı " +
+      "Puan, ajans onaylayana kadar taslaktır. Ajans onaylar, puanı düzeltir veya reddeder. Düzeltme ayrı " +
       "kolona yazılır; yapay zekânın ham puanı hiç değişmez.",
   },
   {

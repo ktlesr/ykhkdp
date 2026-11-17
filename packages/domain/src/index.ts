@@ -55,7 +55,7 @@ export const ONERI_DURUM_ETIKET: Record<OneriDurumu, string> = {
 
 export const ONERI_DURUM_ACIKLAMA: Record<OneriDurumu, string> = {
   degerlendiriliyor: "Yapay zekâ öneriyi üst ölçekli belgelere ve sekiz kritere göre puanlıyor.",
-  onay_bekliyor: "Puan hazır ama doğrulanmadı. Ajans onaylamadan sıralamaya girmez.",
+  onay_bekliyor: "Puan hazır; ajans onayı bekliyor. Onaylanmadan sıralamaya girmez.",
   listede: "Ajans onayladı; öneri il sıralamasında yer alıyor.",
   reddedildi: "Ajans reddetti. Gerekçe önerinin sayfasında görünür.",
 };
@@ -108,7 +108,7 @@ export type NaceKaynagi = (typeof NACE_KAYNAKLARI)[number];
 
 export const NACE_KAYNAK_ETIKET: Record<NaceKaynagi, string> = {
   kullanici: "Yatırımcı girdi",
-  ai: "AI atadı · doğrulanmadı",
+  ai: "AI önerdi · ajans onayı bekliyor",
   ajans: "Ajans düzeltti",
 };
 

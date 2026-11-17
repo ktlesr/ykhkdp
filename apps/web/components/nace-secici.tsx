@@ -91,7 +91,7 @@ export function NaceSecici({
           />
           <p className="mt-1.5 text-[12px] leading-[1.45] text-ink-soft">
             Bilmiyorsanız <b>boş bırakın</b> — yapay zekâ öneri metninizden en uygun kodu atar ve
-            “doğrulanmadı” olarak işaretler. Ajans düzeltebilir.
+            “ajans onayı bekliyor” olarak işaretler. Ajans düzeltebilir.
           </p>
 
           {(bekliyor || (acik && sorgu.trim().length >= 2)) && (

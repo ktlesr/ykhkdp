@@ -146,7 +146,7 @@ export default async function Ayarlar() {
                 göstermek yerine hiçbirini göstermek doğru davranıştır.
               </>
             )}{" "}
-            Puanlar <b className="font-medium">doğrulanmamış taslaktır</b>; ajans onayı zorunlu geçittir.
+            Puanlar <b className="font-medium">ajans onaylayana kadar taslaktır</b>; ajans onayı zorunlu geçittir.
           </p>
 
           <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2.5">
