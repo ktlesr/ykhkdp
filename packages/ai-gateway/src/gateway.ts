@@ -10,7 +10,7 @@ import {
   type Paket,
 } from "@ykh/evidence-validation";
 import type { z } from "zod";
-import { defterBloguKur, kaynakBloguKur, naceBloguKur, PROMPTLAR, type BelgeSatiri } from "./prompt.ts";
+import { defterBloguKur, kaynakBloguKur, naceBloguKur, oneriBloguKur, PROMPTLAR, type BelgeSatiri } from "./prompt.ts";
 import { jsonSema, SEMALAR, type SemaAdi } from "./sema.ts";
 
 /**
@@ -272,11 +272,13 @@ export async function adayKesfet(
     (girdi.onceki?.length
       ? `Önceki yılların resmî konuları: ${girdi.onceki.map((o) => `${o.yil}: ${o.baslik}`).join(" | ")}\n`
       : "") +
-    (girdi.oneriler?.length
-      ? `Bu dönemde ZATEN ÖNERİLMİŞ konular (bunları ve eşdeğerlerini YENİDEN ÖNERME): ${girdi.oneriler.join(" | ")}\n`
-      : "") +
     "Bu ilin yerel kanıtlarına dayanan yatırım konusu adaylarını çıkar.";
-  const r = await cagir(istemci, modelSnapshot, "aday_kesfi", defterBloguKur(girdi.defter), gorev);
+  // Önceki öneri başlıkları kullanıcı yazısıdır: görev metnine değil,
+  // güvenilmeyen veri bloğuna (kaçışlı) girer.
+  const kaynak = girdi.oneriler?.length
+    ? `${defterBloguKur(girdi.defter)}${SATIR_SONU}${oneriBloguKur(girdi.oneriler)}`
+    : defterBloguKur(girdi.defter);
+  const r = await cagir(istemci, modelSnapshot, "aday_kesfi", kaynak, gorev);
   if (r.maliyet) meta.modelSnapshot = r.maliyet.model;
   if (!r.ok) return { ...r, ...meta };
   const d = adaylariDogrula(r.veri.adaylar, girdi.defter);
@@ -296,3 +298,5 @@ export async function adayKesfet(
 function yereleCevir<T extends { id: number }>(belgeler: readonly T[]): T[] {
   return belgeler.map((b, i) => ({ ...b, id: i + 1 }));
 }
+
+const SATIR_SONU = String.fromCharCode(10);
