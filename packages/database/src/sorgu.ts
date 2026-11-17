@@ -609,8 +609,11 @@ export async function onayKuyrugu(b: Baglam, donemId?: number) {
   if (b.rol === "anonim" || !onaylayabilir(b.rol)) return [];
   return islem(b, (sql) =>
     sql<(ListeSatiri & { il: string; il_kod: string; yil: string; dayanak_esigi: number;
-      asama: string | null; hatali: boolean; gonderildi: string; kesif_id: number | null; resmi_yillar: string | null })[]>`
+      asama: string | null; hatali: boolean; gonderildi: string; kesif_id: number | null; resmi_yillar: string | null;
+      ajans_kod: string; ajans: string; kisa_ad: string | null; gonderen_rol: string; misafir: boolean })[]>`
       select o.id, o.baslik, o.kesif_id,
+             i.ajans_kod, a.ad as ajans, a.kisa_ad, coalesce(gg.rol::text, 'bilinmiyor') as gonderen_rol,
+             coalesce(gg.misafir, false) as misafir,
              (select string_agg(distinct y.yil::text, ', ' order by y.yil::text) from yatirim_konusu y
                where y.il_kod = i.kod and lower(trim(y.baslik)) = lower(trim(o.baslik))) as resmi_yillar, o.koken, o.gerekce, o.ilce, o.nace_kod, n.tanim as nace_tanim,
              o.nace_kaynagi, o.durum, o.olusturuldu::text,
@@ -628,11 +631,16 @@ export async function onayKuyrugu(b: Baglam, donemId?: number) {
       join donem d on d.id = o.donem_id
       join il i on i.kod = d.il_kod
       join agirlik_seti s on s.surum = d.agirlik_seti_surum
+      join ajans a on a.kod = i.ajans_kod
+      -- Önerinin YOLU (yatırımcı, misafir, ajans) gönderen kaydından; ajans görür.
+      -- left: RLS bir gönderen satırını gizlerse öneri kuyruktan SESSİZCE düşmesin.
+      left join gonderen gg on gg.ref = o.gonderen_ref
       left join degerlendirme g on g.oneri_id = o.id
       left join nace n on n.kod = o.nace_kod
       where o.durum in ('degerlendiriliyor', 'onay_bekliyor')
         ${donemId ? sql`and o.donem_id = ${donemId}` : sql``}
-      order by o.olusturuldu
+      -- Bölge → il → geliş sırası: ekran bu sırayla gruplar.
+      order by a.ad, i.ad, o.olusturuldu, o.id
     `,
   );
 }
@@ -1264,4 +1272,50 @@ export async function resmiKonulariDegerlendir(b: Baglam, donemId: number): Prom
     if (r.ok) n++;
   }
   return n;
+}
+
+// ── İl ekranı: dönemin bütün önerileri ─────────────────────────────────────
+
+export type IlOnerisi = {
+  id: number;
+  baslik: string;
+  koken: Koken;
+  durum: OneriDurumu;
+  /** belgelerden keşif adayı mı */
+  kesif: boolean;
+  /** değerlendirme varsa; yoksa null — 0 yazılmaz */
+  dayanak: number | null;
+  taban: number | null;
+  asama: string | null;
+  hatali: boolean;
+  ret_gerekcesi: string | null;
+  gonderildi: string;
+  /** başlık bu ilin resmî listesinde birebir geçtiği yıllar */
+  resmi_yillar: string | null;
+};
+
+/**
+ * Bir dönemin BÜTÜN önerileri — il ekranı onları karar durumuna göre
+ * kategorilere ayırır. Yalnızca ajans ve yönetici: satırlar başkalarının
+ * önerileridir. Kapsam tek dönem = tek il; başka ilin önerisi gelmez.
+ */
+export async function ilOnerileri(b: Baglam, d: DonemKaydi): Promise<IlOnerisi[]> {
+  if (b.rol === "anonim" || !onaylayabilir(b.rol)) return [];
+  const r = await islem(b, (sql) =>
+    sql<IlOnerisi[]>`
+      select o.id, o.baslik, o.koken, o.durum, (o.kesif_id is not null) as kesif,
+             g.dayanak,
+             case when g.oneri_id is null then null
+                  else oneri_taban_puani(o.id, ${sql.json(d.set.agirliklar as never)}) end as taban,
+             o.asama, (o.son_hata is not null) as hatali, o.ret_gerekcesi,
+             to_char(o.olusturuldu at time zone 'Europe/Istanbul', 'DD.MM.YYYY HH24:MI') as gonderildi,
+             (select string_agg(distinct y.yil::text, ', ' order by y.yil::text) from yatirim_konusu y
+               where y.il_kod = ${d.ilKod} and lower(trim(y.baslik)) = lower(trim(o.baslik))) as resmi_yillar
+      from oneri o
+      left join degerlendirme g on g.oneri_id = o.id
+      where o.donem_id = ${d.donemId}
+      order by o.olusturuldu, o.id
+    `,
+  );
+  return r.map((x) => ({ ...x, id: Number(x.id) }));
 }
