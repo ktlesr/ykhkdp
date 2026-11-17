@@ -1,4 +1,5 @@
 import { adayKesfet, kanitCikar, modelSnapshot, PROMPTLAR, type Maliyet } from "@ykh/ai-gateway";
+import { icerikDegil } from "./icerik-degil.ts";
 import { modelSec } from "./model-secimi.ts";
 import { denetle, islem, type Baglam } from "@ykh/database";
 import { MODEL_METIN_SINIRI, paketKur, yerelMi } from "@ykh/evidence-validation";
@@ -404,16 +405,34 @@ export async function parcalariTara(
         set durum = 'reddedildi', neden = excluded.neden, tarandi = now()
     `);
 
+  /**
+   * İçerik olmayan parça (kaynakça, şekil/tablo listesi, künye) modele
+   * GİTMEZ: taranmış sayılır, kanıt 0, neden kayıtta. Ölçüldü: bir sektör
+   * raporunda 66 parçanın 6'sı; üç plan belgesinin 594 parçasında 1.
+   */
+  const taranacak: Parca[] = [];
+  let atlanan = 0;
+  for (const p of bekleyen) {
+    const neden = icerikDegil(p.metin);
+    if (!neden) { taranacak.push(p); continue; }
+    atlanan++;
+    await islem(SERVIS, (sql) => sql`
+      insert into kanit_tarama (belge_id, prompt_surum, model_snapshot, kanit_sayisi, durum, neden)
+      values (${p.id}, ${taramaSurum}, ${model}, 0, 'tamam', ${"içerik değil: " + neden})
+      on conflict (belge_id, prompt_surum, model_snapshot) do nothing
+    `);
+  }
+
   // Grup PENCERE sayısıyla kurulur: tek uzun parça tek başına bir çağrı olabilir.
   const gruplar: Parca[][] = [];
-  for (const p of bekleyen) {
+  for (const p of taranacak) {
     const son = gruplar.at(-1);
     const dolu = son ? son.reduce((t, x) => t + pencerele(x.metin).length, 0) : TARAMA_GRUBU;
     if (son && dolu + pencerele(p.metin).length <= TARAMA_GRUBU) son.push(p);
     else gruplar.push([p]);
   }
 
-  let taranan = 0;
+  let taranan = atlanan;
   let basarisiz = 0;
   const basarisizIdler: number[] = [];
   let sira = 0;

@@ -312,3 +312,20 @@ test("ürün gruplu öneri: ek NACE gruplara bağlanır, kapsam notu yazılır, 
   assert.equal(r.gecersiz, 0, "ek kod ana kodla aynı olamaz");
   if (!process.env.OPENAI_API_KEY) assert.ok(r.ek >= 1, "çevrimdışı istemci en az bir ek kod eşler");
 });
+
+test("içerik olmayan parça (kaynakça, tablo listesi) taramaya girmez; plan metni girer", async () => {
+  const { icerikDegil } = await import("@ykh/degerlendirme");
+  const kaynakca = [
+    "Akman, M. K. (2020). Defence Management and PESTLE Analysis. Journal of Defence, 12(3), ss. 45-67.",
+    "Kocaeli Sanayi Odası. (2021). Sektör Raporu. https://kosano.org.tr/rapor adresinden alındı.",
+    "Savunma Sanayii Başkanlığı. (2023). EYDEP Sertifikalı Firmalar. Erişim tarihi: 3.03.2023.",
+    "TÜİK. (2022). Dış Ticaret İstatistikleri. https://data.tuik.gov.tr",
+  ].join("\n\n");
+  assert.equal(icerikDegil(kaynakca), "kaynakça");
+  const liste = Array.from({ length: 6 }, (_, i) => `Tablo ${i + 1}: Kırıkkale savunma sanayii göstergeleri`).join("\n\n");
+  assert.equal(icerikDegil(liste), "şekil/tablo listesi");
+  // İçerik: yıl ve kurum adı geçse de kanıt taşıyan plan metni taranır.
+  assert.equal(icerikDegil("Uşak'ta tekstil geri dönüşümü sektöründe 2023 yılında 120 işletme faaliyet göstermektedir.\n\nBölgede deri ihtisas OSB altyapısı mevcuttur."), null);
+  // İstatistik tablosu içeriktir.
+  assert.equal(icerikDegil("| İlçe | Tesis |\n| --- | --- |\n| Banaz | 14 |\n\nTablo 3: İlçelere göre tesis sayısı (2022)"), null);
+});
