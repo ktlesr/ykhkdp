@@ -189,3 +189,54 @@ test("alıntının kesin maddesi: aralık değil, alıntının geçtiği madde",
   assert.equal(alintininMaddesi(parca, "önceki maddeden taşan cümle burada sürüyor"), null);
   assert.equal(alintininMaddesi(parca, "bu metin parçada hiç geçmiyor ve bulunamaz"), null);
 });
+
+// ── Ürün grupları: her grup kendi kanıtına dayanır ─────────────────────────
+
+test("ürün grubu kendi kanıtında geçmeli; şemsiye kelime ve genel kök yetmez", () => {
+  const defter = [
+    { no: 1, kanitId: 11, yerel: true, metin: "Aksaray'da otomotiv yan sanayinde emniyet kemeri ve hava yastığı üretimi gelişmiştir." },
+    { no: 2, kanitId: 12, yerel: false, metin: "Batarya, algılayıcı, elektronik kontrol üniteleri ve elektrikli motor sistemleri gibi alanlarda kabiliyet geliştirilecektir." },
+    { no: 3, kanitId: 13, yerel: false, metin: "Otomotiv sanayiinin ihtiyaç duyduğu araç hafifletmeye yönelik malzemelerin yerli üretimi sağlanacaktır." },
+  ];
+  const s = adaylariDogrula(
+    [
+      {
+        baslik: "Otomotiv yan sanayi ileri teknoloji bileşenleri",
+        gerekce: "Aksaray'da otomotiv yan sanayinde emniyet kemeri ve hava yastığı üretimi gelişmiştir.",
+        kanit_no: [1, 2, 3],
+        urun_gruplari: [
+          { ad: "Emniyet sistemleri (emniyet kemeri, hava yastığı)", kanit_no: [1] },
+          { ad: "Elektrik motorları ve elektronik kontrol üniteleri", kanit_no: [2] },
+          { ad: "Hafif yapısal bileşenler", kanit_no: [3] },
+          { ad: "Otomotiv yan sanayi ürünleri", kanit_no: [1] },
+          { ad: "Akıllı üstyapılar", kanit_no: [2] },
+          { ad: "Hayalet grup", kanit_no: [9] },
+        ],
+      },
+    ],
+    defter,
+  );
+  assert.equal(s.adaylar.length, 1, "grup düşmesi adayı düşürmez");
+  const gruplar = s.adaylar[0].urunGruplari;
+  assert.deepEqual(gruplar.map((g) => g.ad), [
+    "Emniyet sistemleri (emniyet kemeri, hava yastığı)",
+    "Elektrik motorları ve elektronik kontrol üniteleri",
+    "Hafif yapısal bileşenler",
+  ]);
+  assert.equal(gruplar[0].yerel, true, "ilin kendi kabiliyeti");
+  assert.equal(gruplar[1].yerel, false, "ulusal öncelik — ayrıca görünür");
+  // Şemsiye kelimeden ibaret grup, kanıtsız grup ve kanıtı olmayan grup düşer.
+  assert.equal(s.dusenler.filter((d) => /Ürün grubu/.test(d.mesaj)).length, 3);
+});
+
+test("ürün grubu olmayan dar konu meşrudur", () => {
+  const s = adaylariDogrula(
+    [{ baslik: "Hava yastığı üretimi", gerekce: "Aksaray'da hava yastığı üretimi gelişmiştir.", kanit_no: [1, 2] }],
+    [
+      { no: 1, kanitId: 1, yerel: true, metin: "Aksaray'da hava yastığı üretimi gelişmiştir." },
+      { no: 2, kanitId: 2, yerel: false, metin: "Otomotiv yan sanayiinde küresel marka oluşması desteklenecektir." },
+    ],
+  );
+  assert.equal(s.adaylar.length, 1);
+  assert.deepEqual(s.adaylar[0].urunGruplari, []);
+});

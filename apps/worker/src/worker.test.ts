@@ -119,7 +119,7 @@ test("değerlendirme kaydı model künyesi ve dayanak taşır", async () => {
   );
   assert.ok(d, "değerlendirme kaydı olmalı");
   assert.notEqual(d.model_snapshot, "latest");
-  assert.equal(d.prompt_surum, "degerlendirme-v7");
+  assert.equal(d.prompt_surum, "degerlendirme-v8");
   assert.ok(d.dayanak >= 0 && d.dayanak <= 100);
 });
 
@@ -286,4 +286,29 @@ test("reddedilmiş parça keşfi kilitlemez; keşif onu bir kez daha dener", asy
   assert.ok(s.ok, s.mesaj);
   const [{ durum }] = await islem(SERVIS, (sql) => sql<{ durum: string }[]>`select durum from kanit_tarama where belge_id = ${p.id}`);
   assert.equal(durum, "tamam", "keşif reddedilmiş parçayı yeniden denedi");
+});
+
+test("ürün gruplu öneri: ek NACE gruplara bağlanır, kapsam notu yazılır, kullanıcının ana kodu korunur", async () => {
+  const { degerlendirmeYap } = await import("@ykh/degerlendirme");
+  const ajans: Baglam = { gonderenRef: await ref("ajans@ykh.local"), rol: "ajans" };
+  const d = await donem("usak");
+  const [o] = await islem(ajans, (sql) => sql<{ id: string }[]>`
+    insert into oneri (donem_id, gonderen_ref, koken, baslik, gerekce, nace_kod, nace_kaynagi, kapsam, durum)
+    values (${d}, ${ajans.gonderenRef}, 'yeni', 'Tekstil geri dönüşümüne dayalı ürün ailesi',
+            'Uşak imalat sanayiinde tekstil ürünleri imalatı istihdamda ilk sıradadır; kırpık atığı önemli hacimdedir.',
+            '13.10', 'kullanici',
+            ${sql.json([{ ad: "Geri dönüştürülmüş elyaf", kanit_id: [] }, { ad: "Battaniye ve ev tekstili", kanit_id: [] }] as never)},
+            'degerlendiriliyor')
+    returning id`);
+  const s = await degerlendirmeYap(SERVIS, Number(o.id));
+  assert.ok(s.ok, s.mesaj);
+  const [r] = await islem(SERVIS, (sql) => sql<{ nace_kod: string; kapsam_notu: unknown; ek: number; gecersiz: number }[]>`
+    select o.nace_kod, g.kapsam_notu,
+           (select count(*)::int from oneri_nace x where x.oneri_id = o.id) as ek,
+           (select count(*)::int from oneri_nace x where x.oneri_id = o.id and x.nace_kod = o.nace_kod) as gecersiz
+    from oneri o join degerlendirme g on g.oneri_id = o.id where o.id = ${o.id}`);
+  assert.equal(r.nace_kod, "13.10", "kullanıcının ana kodu ezilmez");
+  assert.ok(r.kapsam_notu, "kapsam notu kaydedilir (puana etki etmez)");
+  assert.equal(r.gecersiz, 0, "ek kod ana kodla aynı olamaz");
+  if (!process.env.OPENAI_API_KEY) assert.ok(r.ek >= 1, "çevrimdışı istemci en az bir ek kod eşler");
 });

@@ -278,9 +278,9 @@ test("KVKK: kimlik pseudonimleşir, öneri zinciri korunur", async () => {
 // ── migration geri alma ────────────────────────────────────────────────────
 
 test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
-  const geri = await asagi(19);
+  const geri = await asagi(20);
   assert.deepEqual(geri, [
-    "0019_model_ayari", "0018_tarama_reddi", "0017_aday_kesfi", "0016_degerlendirme_asamasi", "0015_kimlik_silme_yetkisi", "0014_rol_atama", "0013_gonderen_ajans", "0012_oneri_gizlilik", "0011_ulusal_agirlik", "0010_ayar", "0009_yatirim_konusu", "0008_ajans_kisa_ad", "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus",
+    "0020_kapsam_coklu_nace", "0019_model_ayari", "0018_tarama_reddi", "0017_aday_kesfi", "0016_degerlendirme_asamasi", "0015_kimlik_silme_yetkisi", "0014_rol_atama", "0013_gonderen_ajans", "0012_oneri_gizlilik", "0011_ulusal_agirlik", "0010_ayar", "0009_yatirim_konusu", "0008_ajans_kisa_ad", "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus",
     "0004_kriter_dayanagi", "0003_kurallar", "0002_rls", "0001_sema",
   ]);
   const [{ n }] = await sahip()<{ n: string }[]>`
@@ -291,7 +291,7 @@ test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
   assert.deepEqual(await yukari(), [
     "0001_sema", "0002_rls", "0003_kurallar", "0004_kriter_dayanagi",
     "0005_karsi_gorus", "0006_yakin_kopya", "0007_misafir", "0008_ajans_kisa_ad", "0009_yatirim_konusu", "0010_ayar", "0011_ulusal_agirlik", "0012_oneri_gizlilik", "0013_gonderen_ajans", "0014_rol_atama",
-    "0015_kimlik_silme_yetkisi", "0016_degerlendirme_asamasi", "0017_aday_kesfi", "0018_tarama_reddi", "0019_model_ayari",
+    "0015_kimlik_silme_yetkisi", "0016_degerlendirme_asamasi", "0017_aday_kesfi", "0018_tarama_reddi", "0019_model_ayari", "0020_kapsam_coklu_nace",
   ]);
   await seed();
 });

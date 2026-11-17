@@ -99,3 +99,32 @@ test("önceki öneri başlıkları güvenilmeyen veri bloğuna kaçışlı girer
   assert.ok(!/YENİ SATIR/.test(b.split("\n").find((l) => l.includes("Tekstil")) ?? "") || true);
   assert.ok(b.split("\n").every((l) => l.length < 400), "başlık başına sınır");
 });
+
+// ── Ek NACE: her kod kendi ürün grubunun listesinden ───────────────────────
+
+test("ek NACE: kod yalnızca kendi grubunun listesinden; uydurma grup, tekrar ve ana kod düşer", async () => {
+  const { naceKapsami } = await import("./gateway.ts");
+  const cevap = {
+    kodlar: [
+      { urun_grubu: "Elektrik motorları", kod: "27.11", gerekce: "Doğrudan karşılık.", guven: "yuksek" },
+      { urun_grubu: "Emniyet sistemleri", kod: "27.11", gerekce: "Tekrar eden kod.", guven: "dusuk" },
+      { urun_grubu: "Emniyet sistemleri", kod: "28.11", gerekce: "Başka grubun listesinden.", guven: "dusuk" },
+      { urun_grubu: "Emniyet sistemleri", kod: "29.32", gerekce: "Taşıt parçası.", guven: "orta" },
+      { urun_grubu: "Uydurma grup", kod: "29.32", gerekce: "Verilmemiş grup.", guven: "orta" },
+      { urun_grubu: "Hafif bileşenler", kod: "29.10", gerekce: "Ana kodla aynı.", guven: "orta" },
+    ],
+  };
+  const istemci = { ad: "sahte", cagir: async () => ({ metin: JSON.stringify(cevap), girdiToken: 1, ciktiToken: 1 }) };
+  const r = await naceKapsami(istemci, "sahte-model", {
+    baslik: "Motorlu kara taşıtları için ileri teknoloji bileşenleri",
+    anaKod: "29.10",
+    gruplar: [
+      { ad: "Elektrik motorları", adaylar: [{ kod: "27.11", tanim: "Elektrik motorları imalatı" }, { kod: "28.11", tanim: "Motor ve türbin imalatı" }] },
+      { ad: "Emniyet sistemleri", adaylar: [{ kod: "29.32", tanim: "Motorlu kara taşıtları için diğer parça" }, { kod: "27.11", tanim: "Elektrik motorları" }] },
+      { ad: "Hafif bileşenler", adaylar: [{ kod: "29.10", tanim: "Motorlu kara taşıtları imalatı" }] },
+    ],
+  });
+  assert.ok(r.ok);
+  assert.deepEqual(r.kodlar.map((k) => `${k.urunGrubu}:${k.kod}`), ["Elektrik motorları:27.11", "Emniyet sistemleri:29.32"]);
+  assert.equal(r.dusenler.length, 4);
+});

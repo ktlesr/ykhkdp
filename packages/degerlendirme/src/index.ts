@@ -1,4 +1,4 @@
-import { degerlendir, istemciSec, karsiGorus, modelSnapshot, naceOner } from "@ykh/ai-gateway";
+import { degerlendir, istemciSec, karsiGorus, modelSnapshot, naceKapsami, naceOner } from "@ykh/ai-gateway";
 import { ayrilmisIslem, denetle, islem, kilitHavuzu, type Baglam } from "@ykh/database";
 import { aiMaliyeti, log } from "@ykh/observability";
 import { belgePaketi, naceAdaylari } from "@ykh/retrieval";
@@ -94,9 +94,10 @@ async function calistir(b: Baglam, oneriId: number, yaz: Yaz): Promise<Sonuc> {
     sql<
       { id: number; baslik: string; gerekce: string; ilce: string | null; nace_kod: string | null;
         il: string; il_kod: string; ajans_kod: string; agirliklar: Record<string, number>; durum: string;
-        kesif_kanit: Array<{ belge_id: number }> | null }[]
+        kesif_kanit: Array<{ belge_id: number }> | null;
+        kapsam: Array<{ ad: string }> | null }[]
     >`
-      select o.id, o.baslik, o.gerekce, o.ilce, o.nace_kod, o.durum::text as durum, o.kesif_kanit,
+      select o.id, o.baslik, o.gerekce, o.ilce, o.nace_kod, o.durum::text as durum, o.kesif_kanit, o.kapsam,
              i.ad as il, i.kod as il_kod, i.ajans_kod,
              -- Dayanak kapsaması kriter payıyla çarpılır: "neden burada?"
              -- dayanaksız kalmak, küçük paylı bir kriterin dayanaksız
@@ -116,6 +117,9 @@ async function calistir(b: Baglam, oneriId: number, yaz: Yaz): Promise<Sonuc> {
   }
 
   await asama("alindi");
+  // Ürün grupları: puanlayıcı, karşı görüş ve belge araması AYNI konuyu görür.
+  const kapsam = (o.kapsam ?? []).map((g) => g.ad).filter(Boolean);
+  const kapsamMetni = kapsam.length ? ` ${kapsam.join(" ")}` : "";
   const { istemci, model } = await modelSec();
   const notlar: string[] = [];
   let naceKod = o.nace_kod ?? undefined;
@@ -169,12 +173,56 @@ async function calistir(b: Baglam, oneriId: number, yaz: Yaz): Promise<Sonuc> {
     }
   }
 
+  // ── 1b. Ek NACE · ürün grupları varsa — EN İYİ ÇABA ─────────────────────
+  //
+  // Her ürün grubu kendi aday listesinden en çok bir kod alır. Kullanıcı ana
+  // kodu kendisi girmiş olsa da çalışır (ana kod ezilmez). Başarısızlık
+  // değerlendirmeyi engellemez; denetime yazılır. Ajansın elle düzelttiği
+  // kodlara dokunulmaz, yalnızca önceki AI ataması yenilenir.
+  if (kapsam.length) {
+    // İki arama birleşir: grubun KENDİ adıyla (27.11 "elektrik motorları"
+    // gibi doğrudan karşılık) ve başlıkla birlikte (29.32 "motorlu kara
+    // taşıtları için parça" gibi şemsiye karşılık). Yalnız başlıkla aramak her
+    // grubun listesini aynılaştırıyordu. Uygun olmayanı model atlar.
+    const gruplar = await Promise.all(
+      kapsam.map(async (ad) => {
+        const [dar, genis] = await Promise.all([naceAdaylari(b, ad, 8), naceAdaylari(b, `${o.baslik} ${ad}`, 8)]);
+        return { ad, adaylar: [...new Map([...dar, ...genis].map((x) => [x.kod, x])).values()].slice(0, 14) };
+      }),
+    );
+    const e = await naceKapsami(istemci, model, { baslik: o.baslik, anaKod: naceKod ?? null, gruplar });
+    aiMaliyeti({ model, girdiToken: e.maliyet?.girdiToken ?? 0, ciktiToken: e.maliyet?.ciktiToken ?? 0, promptSurum: e.promptSurum, sonuc: e.ok ? "ok" : "red" });
+    if (e.ok) {
+      await yaz(async (sql) => {
+        const [hala] = await sql<{ id: string }[]>`select id from oneri where id = ${oneriId} and durum = 'degerlendiriliyor'`;
+        if (!hala) return;
+        await sql`delete from oneri_nace where oneri_id = ${oneriId} and kaynak = 'ai'`;
+        let sira = 1;
+        for (const k of e.kodlar) {
+          await sql`
+            insert into oneri_nace (oneri_id, nace_kod, urun_grubu, gerekce, guven, kaynak, sira)
+            values (${oneriId}, ${k.kod}, ${k.urunGrubu}, ${k.gerekce}, ${k.guven}, 'ai', ${sira++})
+            on conflict (oneri_id, nace_kod) do nothing
+          `;
+        }
+        await denetle(sql, b, "ek_nace_ai_atandi", "oneri", oneriId, {
+          kodlar: e.kodlar, dusenler: e.dusenler.slice(0, 10), model: e.modelSnapshot, promptSurum: e.promptSurum,
+          not: "Doğrulanmamış atama — ajans düzeltebilir.",
+        });
+      });
+      notlar.push(e.kodlar.length ? `${e.kodlar.length} ek NACE` : "ürün grupları için uygun ek NACE yok");
+    } else {
+      await islem(b, (sql) => denetle(sql, b, "ek_nace_ai_reddedildi", "oneri", oneriId, { asama: e.asama, hatalar: e.hatalar.slice(0, 5) }));
+      notlar.push("ek NACE atanamadı");
+    }
+  }
+
   // ── 2. Belge paketi ──────────────────────────────────────────────────────
   await asama("belge");
   const { paket, belgeler } = await belgePaketi(b, {
     ilKod: o.il_kod,
     ajansKod: o.ajans_kod,
-    sorgu: `${o.baslik} ${o.gerekce}`,
+    sorgu: `${o.baslik}${kapsamMetni} ${o.gerekce}`,
     zorunlu: (o.kesif_kanit ?? []).map((x) => Number(x.belge_id)),
   });
   if (!belgeler.length) {
@@ -199,6 +247,7 @@ async function calistir(b: Baglam, oneriId: number, yaz: Yaz): Promise<Sonuc> {
     belgeler,
     paket,
     agirliklar: o.agirliklar,
+    kapsam,
   });
   aiMaliyeti({
     model,
@@ -253,6 +302,7 @@ async function calistir(b: Baglam, oneriId: number, yaz: Yaz): Promise<Sonuc> {
     ilce: o.ilce,
     belgeler,
     paket,
+    kapsam,
   });
   aiMaliyeti({
     model,
@@ -308,11 +358,11 @@ async function calistir(b: Baglam, oneriId: number, yaz: Yaz): Promise<Sonuc> {
     await sql`
       insert into degerlendirme
         (oneri_id, puanlar, kriter_dayanagi, dayanak, gerekce, alintilar,
-         karsi_gorus, karsi_gorus_surum, model_snapshot, prompt_surum)
+         karsi_gorus, karsi_gorus_surum, model_snapshot, prompt_surum, kapsam_notu)
       values (${oneriId}, ${sql.json(puanlar as never)}, ${sql.json(s.kriterDayanagi as never)},
               ${s.dayanak}, ${s.veri.gerekce}, ${sql.json(alintiKaydi as never)},
               ${sql.json(karsiGorusKaydi as never)}, ${k.ok ? k.promptSurum : null},
-              ${s.modelSnapshot}, ${s.promptSurum})
+              ${s.modelSnapshot}, ${s.promptSurum}, ${sql.json(s.veri.kapsam as never)})
     `;
     // Puan hazır ama DOĞRULANMADI → ajans onayı bekler.
     await sql`

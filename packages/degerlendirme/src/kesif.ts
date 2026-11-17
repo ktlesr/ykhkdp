@@ -300,9 +300,10 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
         continue;
       }
       const r = await sql`
-        insert into oneri (donem_id, gonderen_ref, koken, baslik, gerekce, durum, kesif_id, kesif_kanit)
+        insert into oneri (donem_id, gonderen_ref, koken, baslik, gerekce, durum, kesif_id, kesif_kanit, kapsam)
         values (${k.donem_id}, ${k.tetikleyen_ref}, 'yeni', ${aday.baslik}, ${aday.gerekce},
-                'degerlendiriliyor', ${k.id}, ${sql.json(kanit as never)})
+                'degerlendiriliyor', ${k.id}, ${sql.json(kanit as never)},
+                ${aday.urunGruplari.length ? sql.json(aday.urunGruplari.map((g) => ({ ad: g.ad, kanit_id: g.kanitIdleri, yerel: g.yerel })) as never) : null})
         on conflict do nothing
       `;
       if (r.count) {

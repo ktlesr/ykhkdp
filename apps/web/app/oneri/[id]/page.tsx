@@ -122,6 +122,18 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
             <span className="num">{o.nace_kod}</span> — {o.nace_tanim}
           </p>
         )}
+        {/* Ek NACE: her biri bir ürün grubuna bağlı; ana kod yukarıda */}
+        {o.ek_nace?.length ? (
+          <ul className="mt-1.5 flex flex-col gap-1">
+            {o.ek_nace.map((n) => (
+              <li key={n.kod} className="text-[12.5px] leading-[1.45] text-ink-mute">
+                <span className="num">{n.kod}</span> — {n.tanim}
+                <span className="text-ink-soft"> · {n.urun_grubu}</span>
+                <span className={n.kaynak === "ai" ? "text-unverif" : ""}> · {n.kaynak === "ai" ? "AI atadı · doğrulanmadı" : "ajans"}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
 
         {o.durum === "reddedildi" && o.ret_gerekcesi && (
           <Uyari tur="kirmizi">
@@ -158,6 +170,37 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
             </div>
           )}
         </div>
+
+        {/* Kapsam — ürün grupları ve puan dışı ölçek notu */}
+        {(o.kapsam?.length || o.kapsam_notu) && (
+          <div className="mt-5 border border-hairline bg-surface">
+            <div className="serit px-4 py-3 etiket text-ink">Kapsam · ürün grupları</div>
+            {o.kapsam?.length ? (
+              <ul className="px-4 py-3">
+                {o.kapsam.map((g, i) => (
+                  <li key={i} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-b-hairline-soft py-2 last:border-b-0">
+                    <span className="min-w-0 flex-1 text-[13.5px] text-ink">{g.ad}</span>
+                    <span className={cn("etiket", g.kanit_id.length ? (g.yerel ? "text-verified" : "text-ink-soft") : "text-unverif")}>
+                      {g.kanit_id.length ? (g.yerel ? "kanıtlı · ilin kabiliyeti" : "kanıtlı · ulusal öncelik") : "◌ yazıldı · belgeye bağlanmadı"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="px-4 py-3 text-[13px] text-ink-mute">Ürün grubu yok — konu tek bir ürün ya da faaliyet.</p>
+            )}
+            {o.kapsam_notu && (
+              <div className="border-t border-t-hairline-soft px-4 py-3">
+                <div className="etiket text-ink-mute">
+                  Konu ölçeği ·{" "}
+                  {{ dar: "dar", urun_ailesi: "ürün ailesi", asiri_genis: "aşırı geniş", kanit_yetersiz: "kanıt yetersiz" }[o.kapsam_notu.tur]}{" "}
+                  · yapay zekâ notu, puana etki etmez
+                </div>
+                <p className="mt-1 text-[13px] leading-[1.5] text-ink-soft text-pretty">{o.kapsam_notu.aciklama}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Puan */}
         {puanlar ? (

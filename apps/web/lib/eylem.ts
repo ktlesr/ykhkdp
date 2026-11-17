@@ -196,6 +196,8 @@ export async function oneriEylemi(_o: EylemSonucu | null, f: FormData): Promise<
     // Şehzadeler / Yunusemre). Uydurma ilçe adı yazmak yerine boş bırakılıyor.
     ilce: ilce || null,
     naceKod: String(f.get("naceKod") ?? "") || null,
+    // Ürün grupları: satır satır, en çok 8, her biri en çok 120 karakter.
+    kapsam: [...new Set(String(f.get("kapsam") ?? "").split(/\r?\n/).map((x) => x.trim().slice(0, 120)).filter((x) => x.length >= 2))].slice(0, 8),
   }, kota);
   } catch (e) {
     if (!(e instanceof KotaAsildi)) throw e;

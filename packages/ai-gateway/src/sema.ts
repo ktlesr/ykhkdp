@@ -67,6 +67,16 @@ export const Degerlendirme = z
     /** üst ölçekli belgelerden alıntılar; boşsa dayanak puanı 0 olur */
     alintilar: z.array(Alinti).max(8),
     eksik_veri: z.array(z.string().max(200)).max(6),
+    /**
+     * Konu ölçeği — PUANA ETKİ ETMEZ. Kapsamın genişliği talep kanıtı
+     * değildir; bu not ajansın kararına girer, sıralamaya girmez.
+     */
+    kapsam: z
+      .object({
+        tur: z.enum(["dar", "urun_ailesi", "asiri_genis", "kanit_yetersiz"]),
+        aciklama: z.string().min(10).max(400),
+      })
+      .strict(),
   })
   .strict();
 
@@ -159,6 +169,42 @@ export const AdayKesfi = z
             /** "neden bu ilde?" — yalnızca atıf yapılan kanıtlarda yazanla */
             gerekce: z.string().min(40).max(1200),
             kanit_no: z.array(z.number().int().min(1).max(200)).min(2).max(8),
+            /**
+             * Ürün grupları — her grup KENDİ kanıtına (`kanit_no`) dayanır.
+             * Boş liste meşrudur: dar ama güçlü dayanaklı konu da konu.
+             */
+            urun_gruplari: z
+              .array(
+                z
+                  .object({
+                    ad: z.string().min(2).max(120),
+                    kanit_no: z.array(z.number().int().min(1).max(200)).min(1).max(4),
+                  })
+                  .strict(),
+              )
+              .max(8),
+          })
+          .strict(),
+      )
+      .max(8),
+  })
+  .strict();
+
+/**
+ * Ek NACE kodları — her ürün grubu için o grubun aday listesinden EN ÇOK bir
+ * kod. Ana kodun alternatifleri DEĞİL: her kod bir ürün grubuna bağlı.
+ * Uygun kod yoksa grup atlanır; boş liste meşrudur.
+ */
+export const NaceKapsami = z
+  .object({
+    kodlar: z
+      .array(
+        z
+          .object({
+            urun_grubu: z.string().min(2).max(120),
+            kod: z.string().regex(/^\d{2}\.\d{2}(\.\d{2})?$/, "NACE biçimi: 13.10 veya 13.10.03"),
+            gerekce: z.string().min(5).max(300),
+            guven: z.enum(["dusuk", "orta", "yuksek"]),
           })
           .strict(),
       )
@@ -172,6 +218,7 @@ export const SEMALAR = {
   karsi_gorus: KarsiGorus,
   kanit_cikarimi: KanitCikarimi,
   aday_kesfi: AdayKesfi,
+  nace_kapsami: NaceKapsami,
 } as const;
 
 export type SemaAdi = keyof typeof SEMALAR;

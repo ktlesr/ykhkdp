@@ -527,6 +527,8 @@ export type OneriGirdi = {
   gerekce: string;
   ilce: string | null;
   naceKod: string | null;
+  /** ürün grupları — kullanıcı yazdı, kanıta bağlı değil (ekranda "doğrulanmadı") */
+  kapsam?: string[];
 };
 
 /** Gönderen kotası aşıldı: öneri ve model işi oluşturulmadı. */
@@ -548,8 +550,9 @@ export async function oneriOlustur(b: Baglam, g: OneriGirdi, kota?: number): Pro
       if (n >= kota) throw new KotaAsildi(`Son 24 saatte ${n} öneri verildi; sınır ${kota}.`);
     }
     const [o] = await sql<{ id: number }[]>`
-      insert into oneri (donem_id, gonderen_ref, koken, baslik, gerekce, ilce, nace_kod, nace_kaynagi, durum)
+      insert into oneri (donem_id, gonderen_ref, koken, baslik, gerekce, ilce, kapsam, nace_kod, nace_kaynagi, durum)
       values (${g.donemId}, ${b.gonderenRef}, 'yeni', ${g.baslik}, ${g.gerekce}, ${g.ilce},
+              ${g.kapsam?.length ? sql.json(g.kapsam.map((ad) => ({ ad, kanit_id: [] })) as never) : null},
               ${g.naceKod}, ${g.naceKod ? "kullanici" : null}::nace_kaynagi, 'degerlendiriliyor')
       returning id
     `;
@@ -765,9 +768,19 @@ export async function oneriGetir(b: Baglam, id: number) {
         /** başlık bu ilin resmî listesinde BİREBİR geçtiği yıllar (mekanik eşleşme) */
         resmi_yillar: string | null;
         kesif_kanit: Array<{ belge_ad: string; bolum: string | null; tur: string; konu: string; alinti: string; yerel: boolean }> | null;
+        /** ürün grupları; keşifte her biri kendi kanıtına bağlı, kullanıcı yazdıysa kanit_id boş */
+        kapsam: Array<{ ad: string; kanit_id: number[]; yerel?: boolean }> | null;
+        /** ek NACE kodları — her biri bir ürün grubuna bağlı; ana kod nace_kod */
+        ek_nace: Array<{ kod: string; tanim: string; urun_grubu: string; kaynak: string; guven: string | null }> | null;
+        /** konu ölçeği notu — PUANA ETKİ ETMEZ */
+        kapsam_notu: { tur: "dar" | "urun_ailesi" | "asiri_genis" | "kanit_yetersiz"; aciklama: string } | null;
       })[]
     >`
       select o.id, o.donem_id, o.gonderen_ref, o.baslik, o.koken, o.gerekce, o.ilce, o.kesif_id, o.kesif_kanit,
+             o.kapsam, g.kapsam_notu,
+             (select json_agg(json_build_object('kod', x.nace_kod, 'tanim', n2.tanim, 'urun_grubu', x.urun_grubu,
+                                                'kaynak', x.kaynak, 'guven', x.guven) order by x.sira)
+                from oneri_nace x join nace n2 on n2.kod = x.nace_kod where x.oneri_id = o.id) as ek_nace,
              (select string_agg(distinct y.yil::text, ', ' order by y.yil::text) from yatirim_konusu y
                where y.il_kod = i.kod and lower(trim(y.baslik)) = lower(trim(o.baslik))) as resmi_yillar,
              o.nace_kod, n.tanim as nace_tanim, o.nace_kaynagi, o.durum, o.ret_gerekcesi,
@@ -1328,6 +1341,10 @@ export type NihaiDetay = {
   id: number; gerekce: string; ilce: string | null; nace_kod: string | null; nace_tanim: string | null;
   ai_gerekce: string | null; kesif: boolean; resmi_yillar: string | null;
   onay_tarihi: string | null; model_snapshot: string | null;
+  /** "27.11 · Elektrik motorları" biçiminde, ürün grubuyla */
+  ek_nace: string | null;
+  /** ürün grupları, "; " ile */
+  kapsam: string | null;
 };
 
 export type NihaiIl = {
@@ -1378,7 +1395,10 @@ export async function nihaiListeVerisi(b: Baglam, suzgec: { il?: string; bolge?:
                          (select string_agg(distinct y.yil::text, ', ' order by y.yil::text) from yatirim_konusu y
                            where y.il_kod = ${x.kod} and lower(trim(y.baslik)) = lower(trim(o.baslik))) as resmi_yillar,
                          to_char(o.onay_zamani at time zone 'Europe/Istanbul', 'DD.MM.YYYY') as onay_tarihi,
-                         g.model_snapshot
+                         g.model_snapshot,
+                         (select string_agg(x.nace_kod || ' (' || x.urun_grubu || ')', '; ' order by x.sira)
+                            from oneri_nace x where x.oneri_id = o.id) as ek_nace,
+                         (select string_agg(e->>'ad', '; ') from jsonb_array_elements(o.kapsam) e) as kapsam
                   from oneri o
                   left join degerlendirme g on g.oneri_id = o.id
                   left join nace n on n.kod = o.nace_kod

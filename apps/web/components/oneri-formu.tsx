@@ -12,7 +12,7 @@ import { oneriEylemi } from "@/lib/eylem.ts";
  * Eskiden il seçimi `router.replace` ile sayfayı yeniden yüklüyor ve yazılmış
  * metni riske atıyordu; o yol kalktı.
  */
-export type Taslak = { baslik: string; gerekce: string; ilce: string; nace: Kayit | null };
+export type Taslak = { baslik: string; gerekce: string; ilce: string; nace: Kayit | null; kapsam?: string };
 
 /**
  * Taslak üst bileşende (sihirbaz) tutulur: il değiştirmek için geri dönmek bu
@@ -118,6 +118,27 @@ export function OneriFormu({
             &ldquo;neden burada?&rdquo; gerekçesinde yazabilirsiniz.
           </p>
         )}
+
+        {/* Ürün grupları — isteğe bağlı. Konu bir ürün ailesiyse gruplar burada;
+            dar ama güçlü dayanaklı konu için boş bırakılır. */}
+        <div className="mt-5">
+          <label className={ALAN_ETIKET} htmlFor="kapsam">
+            Ürün grupları · isteğe bağlı
+          </label>
+          <textarea
+            id="kapsam"
+            name="kapsam"
+            rows={3}
+            value={taslak.kapsam ?? ""}
+            onChange={(e) => setTaslak({ ...taslak, kapsam: e.target.value })}
+            placeholder={"Her satıra bir grup, en çok 8. Örnek:\nEmniyet sistemleri (emniyet kemeri, hava yastığı)\nHafif yapısal bileşenler"}
+            className="w-full resize-y border border-ink bg-alan px-3 py-[11px] text-[13.5px] leading-[1.5] text-ink"
+          />
+          <p className="mt-1.5 max-w-[62ch] text-[12.5px] leading-[1.45] text-ink-soft">
+            Konu tek bir ürün değil de ilin kabiliyetine dayanan bir ürün ailesiyse ürün gruplarını yazın. Grup sayısı puanı
+            kendiliğinden artırmaz; puanı gerekçe ve belge dayanağı belirler.
+          </p>
+        </div>
 
         <div className="mt-5">
           <NaceSecici secili={taslak.nace} degisti={(nace) => setTaslak({ ...taslak, nace })} />

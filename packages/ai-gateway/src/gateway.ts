@@ -10,7 +10,7 @@ import {
   type Paket,
 } from "@ykh/evidence-validation";
 import type { z } from "zod";
-import { defterBloguKur, kaynakBloguKur, naceBloguKur, oneriBloguKur, PROMPTLAR, type BelgeSatiri } from "./prompt.ts";
+import { defterBloguKur, kaynakBloguKur, naceBloguKur, naceKapsamBloguKur, oneriBloguKur, PROMPTLAR, type BelgeSatiri } from "./prompt.ts";
 import { jsonSema, SEMALAR, type SemaAdi } from "./sema.ts";
 
 /**
@@ -105,6 +105,8 @@ export async function degerlendir(
   istemci: ModelIstemcisi,
   modelSnapshot: string,
   girdi: { baslik: string; gerekce: string; il: string; ilce: string | null; nace: string | null; belgeler: readonly BelgeSatiri[]; paket: Paket;
+    /** ürün grupları (kapsam) — varsa puanlayıcı aynı konuyu görür */
+    kapsam?: readonly string[];
     /** kriter → puandaki pay; dayanak kapsamasını ağırlıklandırır */
     agirliklar?: Readonly<Record<string, number>> },
 ): Promise<Sonuc<z.infer<typeof SEMALAR.degerlendirme>>> {
@@ -115,6 +117,7 @@ export async function degerlendir(
     `İlçe: ${girdi.ilce ?? "belirtilmedi"}\n` +
     `NACE: ${girdi.nace ?? "belirtilmedi"}\n` +
     `Yatırım konusu: ${girdi.baslik}\n` +
+    (girdi.kapsam?.length ? `Kapsam (ürün grupları): ${girdi.kapsam.join("; ")}\n` : "") +
     `Neden burada (yatırımcının gerekçesi): ${girdi.gerekce}`;
 
   const r = await cagir(istemci, modelSnapshot, "degerlendirme", kaynakBloguKur(yereleCevir(girdi.belgeler)), gorev);
@@ -193,6 +196,7 @@ export async function karsiGorus(
   girdi: {
     baslik: string; gerekce: string; il: string; ilce: string | null;
     belgeler: readonly BelgeSatiri[]; paket: Paket;
+    kapsam?: readonly string[];
   },
 ): Promise<KarsiGorusCiktisi> {
   const meta = { modelSnapshot, promptSurum: PROMPTLAR.karsi_gorus.surum };
@@ -201,6 +205,7 @@ export async function karsiGorus(
     `İl: ${girdi.il}\n` +
     `İlçe: ${girdi.ilce ?? "belirtilmedi"}\n` +
     `Yatırım konusu: ${girdi.baslik}\n` +
+    (girdi.kapsam?.length ? `Kapsam (ürün grupları): ${girdi.kapsam.join("; ")}\n` : "") +
     `Yatırımcının gerekçesi: ${girdi.gerekce}`;
 
   const r = await cagir(istemci, modelSnapshot, "karsi_gorus", kaynakBloguKur(yereleCevir(girdi.belgeler)), gorev);
@@ -300,3 +305,52 @@ function yereleCevir<T extends { id: number }>(belgeler: readonly T[]): T[] {
 }
 
 const SATIR_SONU = String.fromCharCode(10);
+
+export type EkNace = { urunGrubu: string; kod: string; gerekce: string; guven: "dusuk" | "orta" | "yuksek" };
+
+/**
+ * Ürün gruplarına ek NACE kodu. FAIL-CLOSED üyelik: kod YALNIZCA kendi grubunun
+ * aday listesinden; grup adı verilen gruplardan biri; aynı kod iki kez ya da
+ * ana kodla aynı olamaz. Kurala uymayan eşleme düşer (çıktının geri kalanı
+ * ayakta kalır); hiç geçerli eşleme yoksa boş liste — meşru.
+ */
+export async function naceKapsami(
+  istemci: ModelIstemcisi,
+  modelSnapshot: string,
+  girdi: {
+    baslik: string;
+    anaKod: string | null;
+    gruplar: ReadonlyArray<{ ad: string; adaylar: readonly { kod: string; tanim: string }[] }>;
+  },
+): Promise<({ ok: true; kodlar: EkNace[]; dusenler: string[]; maliyet: Maliyet } & Meta) | Hatali> {
+  const meta = { modelSnapshot, promptSurum: PROMPTLAR.nace_kapsami.surum };
+  const gruplar = girdi.gruplar.filter((g) => g.adaylar.length);
+  if (!gruplar.length) return { ok: false, asama: "dayanak", hatalar: ["Ürün grupları için aday NACE kodu bulunamadı."], ...meta };
+  const r = await cagir(
+    istemci,
+    modelSnapshot,
+    "nace_kapsami",
+    naceKapsamBloguKur(gruplar),
+    `Yatırım konusu: ${girdi.baslik}\nAna kod: ${girdi.anaKod ?? "belirlenmedi"}`,
+  );
+  if (r.maliyet) meta.modelSnapshot = r.maliyet.model;
+  if (!r.ok) return { ...r, ...meta };
+
+  const izin = new Map(gruplar.map((g) => [g.ad.trim().toLocaleLowerCase("tr-TR"), new Set(g.adaylar.map((a) => a.kod))]));
+  const kodlar: EkNace[] = [];
+  const dusenler: string[] = [];
+  const kullanilan = new Set(girdi.anaKod ? [girdi.anaKod] : []);
+  const grupKullanildi = new Set<string>();
+  for (const k of r.veri.kodlar) {
+    const anahtar = k.urun_grubu.trim().toLocaleLowerCase("tr-TR");
+    const liste = izin.get(anahtar);
+    if (!liste) { dusenler.push(`“${k.urun_grubu}” verilen ürün gruplarından biri değil.`); continue; }
+    if (!liste.has(k.kod)) { dusenler.push(`${k.kod}, “${k.urun_grubu}” grubunun aday listesinde yok.`); continue; }
+    if (kullanilan.has(k.kod)) { dusenler.push(`${k.kod} tekrar ediyor ya da ana kodla aynı.`); continue; }
+    if (grupKullanildi.has(anahtar)) { dusenler.push(`“${k.urun_grubu}” için birden çok kod.`); continue; }
+    kullanilan.add(k.kod);
+    grupKullanildi.add(anahtar);
+    kodlar.push({ urunGrubu: gruplar.find((g) => g.ad.trim().toLocaleLowerCase("tr-TR") === anahtar)!.ad, kod: k.kod, gerekce: k.gerekce, guven: k.guven });
+  }
+  return { ok: true, kodlar, dusenler, maliyet: r.maliyet, ...meta };
+}

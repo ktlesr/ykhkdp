@@ -400,6 +400,36 @@ hızlandırmaz, yalnızca bazı parçaları atlatır.
 Bölge: ajans yalnızca kendi bölgesinin illerinde keşif açar (`kesif_ac` RLS,
 `app_il_kapsaminda`). Aynı dönemde tek aktif koşu.
 
+### Konu kapsamı ve çoklu NACE
+
+Tek ürün ("hava yastığı") yatırımcı havuzunu daraltabilir; çıplak sektör adı
+("otomotiv") "neden burada?" sorusunu cevaplamaz. İyi konu çoğu zaman ilin
+kanıtlı kabiliyetine dayanan bir ürün AİLESİDİR — ama her sektörde değil:
+dar ve güçlü dayanaklı konu da meşrudur. (Ajans uzmanının Aksaray örneği:
+"Motorlu kara taşıtlarına yönelik ileri teknoloji bileşenleri ve üstyapı
+sistemleri" + ürün grupları.) Tasarım Codex incelemesiyle düzeltildi:
+
+- **Ürün grupları** `oneri.kapsam` [{ad, kanit_id[]}]. Keşifte her grup KENDİ
+  kanıtına dayanır; grubun ayırt edici kökü (başlıktaki şemsiye kelimeler ve
+  "sanayi, üretim…" gibi genel kökler hariç) kendi kanıtında geçmeli, geçmeyen
+  grup düşer (aday düşmez). Grup "ilin kabiliyeti" ya da "ulusal öncelik"
+  olarak işaretlenir. Kullanıcı yazdıysa "belgeye bağlanmadı" görünür.
+- **Genişlik puan değildir.** Kriter seti ve ağırlıklar değişmedi. Puanlayıcı
+  `degerlendirme.kapsam_notu` üretir — dar / ürün ailesi / aşırı geniş /
+  kanıt yetersiz — PUANA VE SIRALAMAYA ETKİ ETMEZ, ajansın kararına girer.
+  Prompt açıkça: ürün grubu sayısı hiçbir kriteri kendiliğinden yükseltmez.
+  Canlı sınama (tek koşu, Sonnet): hava yastığı tek başına → "dar"; ilgisiz 8
+  grupla şişirilmiş konu → "aşırı geniş", yatırımcı ilgisi en düşük.
+- **Çoklu NACE.** Ana kod `oneri.nace_kod` kalır (sıralama, rapor değişmez).
+  Ek kodlar `oneri_nace`: her biri bir ürün grubuna bağlı, o grubun KENDİ aday
+  listesinden (grup adıyla + başlıkla iki arama birleşir); uydurma grup, başka
+  grubun kodu, tekrar ve ana kodla aynı kod düşer. Kullanıcı ana kodu girmiş
+  olsa da çalışır; en iyi çaba, değerlendirmeyi engellemez. Ajansın düzelttiği
+  kodlar ezilmez.
+- Eval geçti (Sonnet): yerel/genel 77/38, belgeli/belgesiz 81/8 — önceki turla
+  aynı. Eksik: dar ↔ aile ↔ şişirme çiftlerini Aksaray belgeleriyle eval'e
+  eklemek.
+
 ### Konu puanla
 
 Ajans `/il/[il]` içinde başlık ve "neden burada?" açıklaması girer; konu

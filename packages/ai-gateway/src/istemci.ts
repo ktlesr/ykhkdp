@@ -118,13 +118,27 @@ function uret(istek: ModelIstegi): unknown {
         const es = kayitlar.find((k) => k.no !== y.no);
         if (!es) return [];
         const gerekce = `${y.metin} ${es.metin}`.slice(0, 1200);
-        return gerekce.length >= 40 ? [{ baslik: `${y.konu} yatırımı`.slice(0, 140).padEnd(8, "."), gerekce, kanit_no: [y.no, es.no] }] : [];
+        return gerekce.length >= 40
+          ? [{ baslik: `${y.konu} yatırımı`.slice(0, 140).padEnd(8, "."), gerekce, kanit_no: [y.no, es.no], urun_gruplari: [] }]
+          : [];
       });
     // Yürürlükteki ilk resmî konuyu OLDUĞU GİBİ yeniden önerir: "resmî konuyu
     // destekle" yolu çevrimdışı da çalışsın (kopya açılmamalı).
     const resmi = gorev.match(/Yürürlükteki resmî liste: (.+)/)?.[1]?.split(" | ")[0]?.trim();
     if (resmi && adaylar[0]) adaylar.push({ ...adaylar[0], baslik: resmi.slice(0, 140) });
     return { adaylar };
+  }
+
+  if (istek.semaAdi === "nace_kapsami") {
+    // Her grubun listesindeki ilk kod; aynı kod ikinci kez verilmez.
+    const kullanilan = new Set<string>();
+    const kodlar = [...istek.kullanici.matchAll(/<grup ad="([^"]*)"[^>]*>([\s\S]*?)<\/grup>/g)].flatMap((m) => {
+      const kod = [...m[2].matchAll(/<kod deger="([^"]+)">/g)].map((x) => x[1]).find((x) => !kullanilan.has(x));
+      if (!kod) return [];
+      kullanilan.add(kod);
+      return [{ urun_grubu: coz(m[1]), kod, gerekce: "Çevrimdışı eşleme: grubun ilk aday kodu.", guven: "dusuk" }];
+    });
+    return { kodlar };
   }
 
   if (istek.semaAdi === "karsi_gorus") {
@@ -183,6 +197,7 @@ function uret(istek: ModelIstegi): unknown {
         "dayanak puanı sıfır kalıyor. Gerçek puanlama için OPENAI_API_KEY tanımlanmalıdır.",
     alintilar,
     eksik_veri: alintilar.length ? [] : ["Belgelerde öneriyle eşleşen ifade bulunamadı."],
+    kapsam: { tur: "kanit_yetersiz", aciklama: "Çevrimdışı değerlendirme konu ölçeğini yorumlamaz." },
   };
 }
 

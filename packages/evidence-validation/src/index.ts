@@ -765,8 +765,65 @@ export function kanitlariDogrula(
 /** Aday üretiminde modele verilen defter satırı; `no` pakete yerel (1…n). */
 export type DefterKaydi = { no: number; kanitId: number; yerel: boolean; metin: string };
 
-export type HamAday = { baslik: string; gerekce: string; kanit_no: readonly number[] };
-export type DogrulanmisAday = { baslik: string; gerekce: string; kanitIdleri: number[] };
+export type HamUrunGrubu = { ad: string; kanit_no: readonly number[] };
+export type HamAday = { baslik: string; gerekce: string; kanit_no: readonly number[]; urun_gruplari?: readonly HamUrunGrubu[] };
+/** Doğrulanmış ürün grubu: kendi kanıtına bağlı; `yerel` = kanıtlarından biri bu ile özgü. */
+export type UrunGrubu = { ad: string; kanitIdleri: number[]; yerel: boolean };
+export type DogrulanmisAday = { baslik: string; gerekce: string; kanitIdleri: number[]; urunGruplari: UrunGrubu[] };
+
+/**
+ * Ürün grubunda ayırt edici sayılmayan genel kökler — "otomotiv sanayi"
+ * ortaklığı sensör ya da elektrik motoru kabiliyetini kanıtlamaz.
+ */
+const GENEL_KOKLER = new Set(["sanay", "sektö", "üreti", "yatır", "tekno", "siste", "gelis", "geliş", "katma", "değer"]);
+
+/**
+ * Ürün gruplarını doğrular — her grup KENDİ kanıtına dayanmalı.
+ *
+ * Grup yalnızca adayın doğrulanmış kanıtlarına atıf yapabilir. Grubun
+ * AYIRT EDİCİ kökü (başlıktaki şemsiye kelimeler ve genel kökler hariç) kendi
+ * kanıt metninde geçmeli. Geçmeyen grup düşer, aday düşmez: dar ama güçlü
+ * dayanaklı konu da meşrudur. 0 grup geçerli bir sonuçtur.
+ *
+ * ponytail: sözcüksel kontrol, anlamsal değil — "elektrik motorları" grubunu
+ * "elektrikli motor sistemleri" pasajına bağlar, ama pasajın gerçekten o
+ * kabiliyeti anlattığını ajans tartar.
+ */
+function urunGruplariniDogrula(
+  baslik: string,
+  gruplar: readonly HamUrunGrubu[],
+  cozulen: readonly DefterKaydi[],
+  numara: Map<number, DefterKaydi>,
+  dusenler: Hata[],
+): UrunGrubu[] {
+  const izinli = new Set(cozulen.map((d) => d.kanitId));
+  const baslikKokleri = new Set(kokler(baslik));
+  const gorulen = new Set<string>();
+  const sonuc: UrunGrubu[] = [];
+  for (const g of gruplar.slice(0, 8)) {
+    const ad = g.ad.trim();
+    const anahtar = normalize(ad);
+    if (!ad || gorulen.has(anahtar)) continue;
+    const kanit = [...new Set(g.kanit_no)].map((n) => numara.get(n)).filter((d): d is DefterKaydi => Boolean(d) && izinli.has(d!.kanitId));
+    const ayirt = kokler(ad).filter((k) => !baslikKokleri.has(k) && !GENEL_KOKLER.has(k));
+    if (!kanit.length) {
+      dusenler.push({ kod: "alinti_no_gecersiz", mesaj: `Ürün grubu “${ad}” adayın doğrulanmış bir kanıtına dayanmıyor; düşürüldü.` });
+      continue;
+    }
+    if (!ayirt.length) {
+      dusenler.push({ kod: "belge_yok", mesaj: `Ürün grubu “${ad}” yalnızca genel kelimelerden oluşuyor; düşürüldü.` });
+      continue;
+    }
+    const kaynak = new Set(kokler(kanit.map((d) => d.metin).join(" ")));
+    if (!ayirt.some((k) => kaynak.has(k))) {
+      dusenler.push({ kod: "alinti_eslesmiyor", mesaj: `Ürün grubu “${ad}” atıf yaptığı kanıtlarda karşılık bulmuyor; düşürüldü.` });
+      continue;
+    }
+    gorulen.add(anahtar);
+    sonuc.push({ ad: ad.slice(0, 120), kanitIdleri: kanit.map((d) => d.kanitId), yerel: kanit.some((d) => d.yerel) });
+  }
+  return sonuc;
+}
 
 /**
  * Aday üretimini doğrular. Model yeni alıntı YAZAMAZ; yalnızca defterdeki
@@ -820,7 +877,12 @@ export function adaylariDogrula(
       dusenler.push({ kod: "alinti_eslesmiyor", mesaj: `${ad} gerekçesindeki “${desteksiz.slice(0, 80)}” cümlesi atıf yapılan kanıtlarda karşılık bulmuyor; düşürüldü.` });
       continue;
     }
-    sonuc.push({ baslik: a.baslik.trim(), gerekce: a.gerekce.trim(), kanitIdleri: cozulen.map((d) => d.kanitId) });
+    sonuc.push({
+      baslik: a.baslik.trim(),
+      gerekce: a.gerekce.trim(),
+      kanitIdleri: cozulen.map((d) => d.kanitId),
+      urunGruplari: urunGruplariniDogrula(a.baslik, a.urun_gruplari ?? [], cozulen, numara, dusenler),
+    });
   }
   return { adaylar: sonuc, dusenler };
 }

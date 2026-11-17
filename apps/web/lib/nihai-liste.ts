@@ -30,7 +30,7 @@ import { ayardan, hesapla } from "@ykh/scoring";
 export type NihaiSatir = {
   bolgeKod: string; bolge: string; il: string; yil: string;
   bolum: "Asıl" | "Yedek" | "Boş slot";
-  sira: number; baslik: string; kaynak: string; nace: string; puan: number | null; dayanak: number | null;
+  sira: number; baslik: string; kaynak: string; nace: string; ekNace: string; kapsam: string; puan: number | null; dayanak: number | null;
   sonuc: string; gerekce: string; aiGerekce: string; onayTarihi: string; model: string;
 };
 
@@ -62,6 +62,8 @@ export function nihaiHesapla(iller: readonly NihaiIl[]): { satirlar: NihaiSatir[
       return {
         ...ortak, bolum, sira: s.sira, baslik: s.ad, kaynak: kaynak(d, s.koken),
         nace: d?.nace_kod ? `${d.nace_kod}${d.nace_tanim ? ` · ${d.nace_tanim}` : ""}` : "",
+        ekNace: d?.ek_nace ?? "",
+        kapsam: d?.kapsam ?? "",
         puan: s.puan, dayanak: s.dayanak, sonuc: s.sonuc,
         gerekce: d?.gerekce ?? "", aiGerekce: d?.ai_gerekce ?? "", onayTarihi: d?.onay_tarihi ?? "", model: d?.model_snapshot ?? "",
       };
@@ -72,7 +74,7 @@ export function nihaiHesapla(iller: readonly NihaiIl[]): { satirlar: NihaiSatir[
         bos++;
         satirlar.push({
           ...ortak, bolum: "Boş slot", sira: s.sira, baslik: "Slot boş — yeterince gerekçelendirilebilir aday yok", kaynak: "",
-          nace: "", puan: null, dayanak: null, sonuc: "boş slot", gerekce: s.gerekce, aiGerekce: "", onayTarihi: "", model: "",
+          nace: "", ekNace: "", kapsam: "", puan: null, dayanak: null, sonuc: "boş slot", gerekce: s.gerekce, aiGerekce: "", onayTarihi: "", model: "",
         });
       } else satirlar.push(satir("Asıl", s));
     }
@@ -109,7 +111,9 @@ export async function nihaiExcel(iller: readonly NihaiIl[], kapsam: string): Pro
     { header: "Sıra", key: "sira", width: 6 },
     { header: "Yatırım konusu", key: "baslik", width: 50 },
     { header: "Kaynak", key: "kaynak", width: 24 },
-    { header: "NACE", key: "nace", width: 34 },
+    { header: "Ürün grupları", key: "kapsam", width: 46 },
+    { header: "Ana NACE", key: "nace", width: 34 },
+    { header: "Ek NACE (ürün grubu)", key: "ekNace", width: 46 },
     { header: "Stratejik puan (devamlılık dahil)", key: "puan", width: 14 },
     { header: "Belge dayanağı", key: "dayanak", width: 12 },
     { header: "Sonuç", key: "sonuc", width: 12 },

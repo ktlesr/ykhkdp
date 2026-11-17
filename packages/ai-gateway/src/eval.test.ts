@@ -48,6 +48,7 @@ test("EVAL 1 — kaynaksız sayı reddedilir", async () => {
       gerekce: "İlde tekstil sektöründe 12.400 kişi istihdam edilmektedir ve bu konu önceliklidir.",
       alintilar: [],
       eksik_veri: [],
+      kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
     }),
     "claude-opus-5-20260101",
     GIRDI,
@@ -66,6 +67,7 @@ test("EVAL 2 — belgede geçmeyen alıntı reddedilir", async () => {
       gerekce: "Öneri bölge planındaki önceliklerle uyumludur ve yerel girdiye dayanmaktadır.",
       alintilar: [{ no: 1, belge_id: 1, alinti: "Bu cümle belgede kesinlikle yok ve uydurulmuştur." }],
       eksik_veri: [],
+      kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
     }),
     "claude-opus-5-20260101",
     GIRDI,
@@ -81,6 +83,7 @@ test("EVAL 3 — paket dışı numara adres hatasıdır, metin bulunursa atıf d
       gerekce: "Öneri bölge planındaki önceliklerle uyumludur ve yerel girdiye dayanmaktadır.",
       alintilar: [{ no: 1, belge_id: 9, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek" }],
       eksik_veri: [],
+      kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
     }),
     "claude-opus-5-20260101",
     GIRDI,
@@ -97,6 +100,7 @@ test("EVAL 3b — adresi ve metni birlikte uydurulmuş alıntı reddedilir", asy
       gerekce: "Öneri bölge planındaki önceliklerle uyumludur ve yerel girdiye dayanmaktadır.",
       alintilar: [{ no: 1, belge_id: 9, alinti: "Bu cümle hiçbir belgede geçmiyor ve uydurulmuştur." }],
       eksik_veri: [],
+      kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
     }),
     "claude-opus-5-20260101",
     GIRDI,
@@ -111,6 +115,7 @@ test("birebir alıntı kabul edilir ve dayanak puanı üretir", async () => {
       gerekce: "Öneri bölge planındaki önceliklerle uyumludur ve yerel girdiye dayanmaktadır.",
       alintilar: [{ no: 1, belge_id: 1, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek dönüşüm alanı" }],
       eksik_veri: [],
+      kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
     }),
     "claude-opus-5-20260101",
     GIRDI,
@@ -127,6 +132,7 @@ test("alıntısız çıktı geçerli ama dayanak 0 — slot dolduramaz", async (
       gerekce: "Öneri güçlü görünüyor fakat belgelerde dayanak bulunamadı, bu yüzden alıntı yok.",
       alintilar: [],
       eksik_veri: ["Belgelerde eşleşme yok."],
+      kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
     }),
     "claude-opus-5-20260101",
     GIRDI,
@@ -143,6 +149,7 @@ test("sekiz kriterden azı şema katmanında düşer", () => {
     gerekce: "Yeterince uzun bir gerekçe metni buraya yazılmıştır ve kırk karakteri geçer.",
     alintilar: [],
     eksik_veri: [],
+    kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
   });
   assert.equal(r.success, false);
 });
@@ -154,6 +161,7 @@ test("şema dışı alan reddedilir (strict)", async () => {
       gerekce: "Yeterince uzun bir gerekçe metni buraya yazılmıştır ve kırk karakteri geçer.",
       alintilar: [],
       eksik_veri: [],
+      kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
       fazladan: 1,
     }),
     "claude-opus-5-20260101",
@@ -187,7 +195,7 @@ test("'latest' alias reddedilir", () => {
 test("model snapshot ve prompt sürümü her sonuçta taşınır", async () => {
   const s = await degerlendir(cevrimdisiIstemci(), "claude-opus-5-20260101", GIRDI);
   assert.equal(s.modelSnapshot, "claude-opus-5-20260101");
-  assert.equal(s.promptSurum, "degerlendirme-v7");
+  assert.equal(s.promptSurum, "degerlendirme-v8");
 });
 
 // ── prompt injection ───────────────────────────────────────────────────────
@@ -248,6 +256,7 @@ test("EVAL 4 — çözülemeyen alıntı numarası eşlemeden düşer, çıktı 
       gerekce: "Öneri bölge planındaki önceliklerle uyumludur ve yerel girdiye dayanmaktadır.",
       alintilar: [{ no: 1, belge_id: 1, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek dönüşüm alanı" }],
       eksik_veri: [],
+      kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
     }),
     "claude-opus-5-20260101",
     GIRDI,
@@ -269,6 +278,7 @@ test("kriter payı dayanağa yansır — yerellik boşluğu daha pahalı", async
       gerekce: "Öneri bölge planındaki önceliklerle uyumludur ve yerel girdiye dayanmaktadır.",
       alintilar: [{ no: 1, belge_id: 1, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek dönüşüm alanı" }],
       eksik_veri: [],
+      kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
     });
   const girdi = { ...GIRDI, agirliklar: AGIRLIKLAR };
 
