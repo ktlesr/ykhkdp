@@ -1441,3 +1441,76 @@ export async function parcaMetinleri(b: Baglam, cipalar: ReadonlyArray<{ ad: str
   );
   return new Map(r.map((x) => [`${x.ad}|${x.bolum}`, x.metin]));
 }
+
+// ── Yönetici: kuyruktaki öneriyi sil / güncelle ────────────────────────────
+
+const KUYRUK_DURUMLARI = ["degerlendiriliyor", "onay_bekliyor"] as const;
+
+/**
+ * Kuyruktaki öneriyi KALICI olarak siler — yalnızca yönetici, gerekçeyle.
+ *
+ * Silmeden önce kaydın tam görüntüsü (öneri + değerlendirme + ek NACE)
+ * değiştirilemez `denetim`e yazılır; ikisi aynı transaction'da. Kişisel veri
+ * görüntüye girmez: öneri kimliğe değil `gonderen_ref`e bağlı. RLS
+ * (`oneri_sil`) ikinci katman: yönetici olmayan ya da kuyruk dışı öneri
+ * için silme 0 satır etkiler.
+ */
+export async function oneriSil(b: Baglam, id: number, gerekce: string): Promise<{ ok: true } | { ok: false; mesaj: string }> {
+  if (b.rol !== "yonetici") return { ok: false, mesaj: "Öneriyi yalnızca yönetici silebilir." };
+  if (gerekce.trim().length < 10) return { ok: false, mesaj: "Silme gerekçesi en az 10 karakter olmalı." };
+  return islem(b, async (sql) => {
+    const [kayit] = await sql<Record<string, unknown>[]>`
+      select to_jsonb(o) - 'arama' as oneri, to_jsonb(g) as degerlendirme,
+             (select jsonb_agg(to_jsonb(x)) from oneri_nace x where x.oneri_id = o.id) as ek_nace
+      from oneri o left join degerlendirme g on g.oneri_id = o.id
+      where o.id = ${id} and o.durum in ${sql(KUYRUK_DURUMLARI)}
+      for update of o
+    `;
+    if (!kayit) return { ok: false as const, mesaj: "Öneri bulunamadı ya da kuyrukta değil; sayfayı yenileyin." };
+    await denetle(sql, b, "oneri_silindi", "oneri", id, { gerekce: gerekce.trim(), kayit });
+    const r = await sql`delete from oneri where id = ${id}`;
+    if (!r.count) throw new Error("Öneri silinemedi; yetki reddedildi.");
+    return { ok: true as const };
+  });
+}
+
+export type OneriDuzeltme = { baslik: string; gerekce: string; ilce: string | null; kapsam: string[] };
+
+/**
+ * Kuyruktaki önerinin metnini düzeltir — yalnızca yönetici, gerekçeyle.
+ *
+ * Metin değişince eski AI puanı artık bu metne ait değildir: önceki
+ * değerlendirme denetime yazılıp silinir, AI'nin atadığı ek NACE kodları
+ * temizlenir ve öneri `degerlendiriliyor`a döner (deneme sıfırlanır).
+ * Önceki ve yeni metin denetimde yan yana durur.
+ */
+export async function oneriGuncelle(b: Baglam, id: number, yeni: OneriDuzeltme, neden: string): Promise<{ ok: true } | { ok: false; mesaj: string }> {
+  if (b.rol !== "yonetici") return { ok: false, mesaj: "Öneriyi yalnızca yönetici düzeltebilir." };
+  if (neden.trim().length < 10) return { ok: false, mesaj: "Düzeltme gerekçesi en az 10 karakter olmalı." };
+  if (yeni.baslik.trim().length < 8) return { ok: false, mesaj: "Başlık en az 8 karakter olmalı." };
+  if (yeni.gerekce.trim().length < 40) return { ok: false, mesaj: "“Neden burada?” gerekçesi en az 40 karakter olmalı." };
+  return islem(b, async (sql) => {
+    const [onceki] = await sql<{ baslik: string; gerekce: string; ilce: string | null; kapsam: unknown; durum: string }[]>`
+      select baslik, gerekce, ilce, kapsam, durum::text from oneri
+      where id = ${id} and durum in ${sql(KUYRUK_DURUMLARI)} for update
+    `;
+    if (!onceki) return { ok: false as const, mesaj: "Öneri bulunamadı ya da kuyrukta değil; sayfayı yenileyin." };
+    const [eskiDeg] = await sql<Record<string, unknown>[]>`delete from degerlendirme where oneri_id = ${id} returning *`;
+    await sql`delete from oneri_nace where oneri_id = ${id} and kaynak = 'ai'`;
+    const kapsam = yeni.kapsam.length ? sql.json(yeni.kapsam.map((ad) => ({ ad, kanit_id: [] })) as never) : null;
+    await sql`
+      update oneri set baslik = ${yeni.baslik.trim()}, gerekce = ${yeni.gerekce.trim()}, ilce = ${yeni.ilce},
+        kapsam = ${kapsam}, durum = 'degerlendiriliyor', deneme = 0, asama = null, son_hata = null,
+        guncellendi = now()
+      where id = ${id}
+    `;
+    await denetle(sql, b, "oneri_duzeltildi", "oneri", id, {
+      neden: neden.trim(),
+      onceki: { baslik: onceki.baslik, gerekce: onceki.gerekce, ilce: onceki.ilce, kapsam: onceki.kapsam, durum: onceki.durum },
+      yeni,
+      eskiDegerlendirme: eskiDeg ?? null,
+      not: "Metin değişti; eski AI puanı bu metne ait değil, yeniden değerlendirilecek.",
+    });
+    return { ok: true as const };
+  });
+}

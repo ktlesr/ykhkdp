@@ -5,6 +5,7 @@ import { adaylariGetir, donemGetir, kuyrukKopyalari, onayKuyrugu } from "@ykh/da
 import { konumaGore, onaylanirsa, type Konum } from "@/lib/projeksiyon.ts";
 import { onaylayabilir } from "@ykh/domain";
 import { AsamaRozeti } from "@/components/degerlendirme-durumu.tsx";
+import { SatirIslemleri } from "@/components/satir-islemleri.tsx";
 import { Bag, Baslik, Bos, Rozet, Sayfa, UstBar } from "@/components/ui.tsx";
 import { baglam, kullanici } from "@/lib/oturum.ts";
 import { KAPALI } from "@/lib/site.ts";
@@ -40,6 +41,8 @@ export default async function Onay({ searchParams }: { searchParams: Promise<{ b
   if (!k) redirect("/giris?hedef=%2Fonay");
   if (!onaylayabilir(k.rol)) redirect("/oneri");
   const { bolge, il } = await searchParams;
+  // Silme ve düzeltme yalnızca yöneticide (RLS `oneri_sil` ikinci katman).
+  const yonetici = k.rol === "yonetici";
 
   const b = await baglam();
   const [tumu, kopyalar] = await Promise.all([onayKuyrugu(b), kuyrukKopyalari(b)]);
@@ -171,10 +174,14 @@ export default async function Onay({ searchParams }: { searchParams: Promise<{ b
                     const benzer = kopyalar.get(Number(o.id)) ?? [];
                     const konum = konumlar.get(String(o.id));
                     return (
-                      <Link
+                      // Satırın tamamı bağlantı değil: işlem düğmeleri bağlantının içinde
+                      // olamaz. Başlık kayda gider; işlemler kendi sütununda.
+                      <div
                         key={o.id}
-                        href={`/oneri/${o.id}`}
-                        className="grid grid-cols-[56px_minmax(0,1fr)_150px_160px] items-start gap-x-4 gap-y-2 border-b border-b-hairline-soft px-4 py-3.5 last:border-b-0 hover:bg-paper max-[860px]:grid-cols-[minmax(0,1fr)]"
+                        className={cn(
+                          "grid items-start gap-x-4 gap-y-2 border-b border-b-hairline-soft px-4 py-3.5 last:border-b-0 hover:bg-paper max-[860px]:grid-cols-[minmax(0,1fr)]",
+                          yonetici ? "grid-cols-[56px_minmax(0,1fr)_150px_160px_auto]" : "grid-cols-[56px_minmax(0,1fr)_150px_160px]",
+                        )}
                       >
                         {/* Öngörülen yer: onaylanırsa il listesinde kaçıncı, asıl mı yedek mi */}
                         <span className="pt-0.5 max-[860px]:hidden">
@@ -188,9 +195,12 @@ export default async function Onay({ searchParams }: { searchParams: Promise<{ b
                           )}
                         </span>
                         <span className="min-w-0">
-                          <span className="block text-[15px] font-medium leading-[1.35] text-ink text-pretty [overflow-wrap:anywhere]">
+                          <Link
+                            href={`/oneri/${o.id}`}
+                            className="block text-[15px] font-medium leading-[1.35] text-ink text-pretty [overflow-wrap:anywhere] hover:underline hover:decoration-hairline hover:underline-offset-2"
+                          >
                             {o.baslik}
-                          </span>
+                          </Link>
                           <span className="mt-1 flex flex-wrap gap-x-2.5 gap-y-1 etiket text-ink-mute">
                             {konum && (
                               <span className={cn("min-[861px]:hidden", konum.tur === "asıl" ? "text-navy" : "text-ink-soft")}>
@@ -232,7 +242,12 @@ export default async function Onay({ searchParams }: { searchParams: Promise<{ b
                             </Rozet>
                           )}
                         </span>
-                      </Link>
+                        {yonetici && (
+                          <span className="flex justify-end max-[860px]:justify-start">
+                            <SatirIslemleri oneriId={Number(o.id)} />
+                          </span>
+                        )}
+                      </div>
                     );
                   })}
                 </div>

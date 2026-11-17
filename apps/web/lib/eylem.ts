@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 import {
   belgeEkle, belgeSil, cikisYap, donemGetir, girisYap, islem, kayitOl, naceAra, naceDuzelt,
   ayarYaz, kimlikAc, kimlikSil, KotaAsildi, misafirAc, oneriOlustur, puanDuzelt, durumDegistir, rolAta,
-  kesifAc, kesifDonemleri, KesifZatenAcik, resmiKonulariDegerlendir,
+  kesifAc, kesifDonemleri, KesifZatenAcik, resmiKonulariDegerlendir, oneriGuncelle, oneriSil,
 } from "@ykh/database";
 import { gecisIzinli, onaylayabilir, ROL_ETIKET, ROLLER, type OneriDurumu, type Rol } from "@ykh/domain";
 import { log } from "@ykh/observability";
@@ -529,4 +529,41 @@ export async function modelEylemi(gorev: "yargi" | "tarama", id: string): Promis
   log.info("model_degistirildi", { gorev, model: id });
   revalidatePath("/ayarlar");
   return { ok: true, mesaj: "Model değiştirildi." };
+}
+
+// ── Yönetici: kuyruktaki öneriyi sil / düzelt ──────────────────────────────
+
+export async function oneriSilEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
+  const k = await kullanici();
+  if (!k || k.rol !== "yonetici") return { ok: false, mesaj: "Öneriyi yalnızca yönetici silebilir." };
+  const id = Number(f.get("oneriId"));
+  if (!Number.isInteger(id) || id <= 0) return { ok: false, mesaj: "Geçersiz öneri." };
+  const s = await oneriSil(await baglam(), id, String(f.get("gerekce") ?? ""));
+  if (!s.ok) return s;
+  log.info("oneri_silindi", { oneriId: id });
+  revalidatePath("/onay");
+  return { ok: true, mesaj: `#${id} kalıcı olarak silindi; kaydı denetimde.` };
+}
+
+export async function oneriDuzeltEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
+  const k = await kullanici();
+  if (!k || k.rol !== "yonetici") return { ok: false, mesaj: "Öneriyi yalnızca yönetici düzeltebilir." };
+  const id = Number(f.get("oneriId"));
+  if (!Number.isInteger(id) || id <= 0) return { ok: false, mesaj: "Geçersiz öneri." };
+  const s = await oneriGuncelle(
+    await baglam(),
+    id,
+    {
+      baslik: String(f.get("baslik") ?? ""),
+      gerekce: String(f.get("gerekce") ?? ""),
+      ilce: String(f.get("ilce") ?? "").trim() || null,
+      kapsam: [...new Set(String(f.get("kapsam") ?? "").split(/\r?\n/).map((x) => x.trim().slice(0, 120)).filter((x) => x.length >= 2))].slice(0, 8),
+    },
+    String(f.get("neden") ?? ""),
+  );
+  if (!s.ok) return s;
+  log.info("oneri_duzeltildi", { oneriId: id });
+  revalidatePath(`/oneri/${id}`);
+  revalidatePath("/onay");
+  redirect(`/oneri/${id}`);
 }

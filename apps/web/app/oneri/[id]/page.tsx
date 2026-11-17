@@ -13,6 +13,9 @@ import {
 import { GRUP_ACIKLAMA, GRUP_ETIKET, gruplaraGore, KRITER_ETIKET, type Kriter } from "@ykh/scoring";
 import { Bag, Baslik, Rozet, Sayfa, UstBar, Uyari } from "@/components/ui.tsx";
 import { OnayKutusu } from "@/components/onay-kutusu.tsx";
+import { EylemFormu, Gonder } from "@/components/eylem-formu.tsx";
+import { ALAN_ETIKET, GIRDI } from "@/components/ui.tsx";
+import { oneriDuzeltEylemi } from "@/lib/eylem.ts";
 import { DegerlendirmeDurumu } from "@/components/degerlendirme-durumu.tsx";
 import { baglam, kullanici } from "@/lib/oturum.ts";
 import { KAPALI } from "@/lib/site.ts";
@@ -428,6 +431,36 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
               <OnayKutusu oneriId={Number(id)} durum={o.durum} yol={`/oneri/${id}`} puanlar={puanlar} />
             </>
           ))}
+
+        {/* Yönetici: kuyruktaki önerinin metnini düzelt. Metin değişince eski
+            AI puanı bu metne ait olmaz; öneri yeniden değerlendirilir. */}
+        {k?.rol === "yonetici" && (o.durum === "degerlendiriliyor" || o.durum === "onay_bekliyor") && (
+          <section id="duzelt" className="scroll-mt-[84px] border border-hairline bg-surface">
+            <div className="serit px-4 py-2.5 etiket text-ink-soft">Metni düzelt · yönetici</div>
+            <EylemFormu eylem={oneriDuzeltEylemi} className="px-4 py-4">
+              <input type="hidden" name="oneriId" value={id} />
+              <label className={ALAN_ETIKET} htmlFor="d-baslik">Başlık</label>
+              <input id="d-baslik" name="baslik" defaultValue={o.baslik} required minLength={8} className={GIRDI} />
+              <label className={cn(ALAN_ETIKET, "mt-3 block")} htmlFor="d-gerekce">Neden burada?</label>
+              <textarea id="d-gerekce" name="gerekce" defaultValue={o.gerekce} required minLength={40} rows={5}
+                className="w-full resize-y border border-ink bg-alan px-3 py-[9px] text-[13.5px] leading-[1.5] text-ink" />
+              <label className={cn(ALAN_ETIKET, "mt-3 block")} htmlFor="d-ilce">İlçe · isteğe bağlı</label>
+              <input id="d-ilce" name="ilce" defaultValue={o.ilce ?? ""} className={GIRDI} />
+              <label className={cn(ALAN_ETIKET, "mt-3 block")} htmlFor="d-kapsam">Ürün grupları · her satıra bir</label>
+              <textarea id="d-kapsam" name="kapsam" defaultValue={(o.kapsam ?? []).map((g) => g.ad).join("\n")} rows={3}
+                className="w-full resize-y border border-ink bg-alan px-3 py-[9px] text-[13.5px] leading-[1.5] text-ink" />
+              <label className={cn(ALAN_ETIKET, "mt-3 block")} htmlFor="d-neden">Düzeltme nedeni</label>
+              <input id="d-neden" name="neden" required minLength={10} placeholder="Ör. yazım hatası, başlık kapsamı netleştirildi" className={GIRDI} />
+              <p className="mt-2 text-[12.5px] leading-[1.45] text-ink-soft">
+                Kaydedince eski yapay zekâ değerlendirmesi ve atadığı ek NACE kodları denetime yazılıp silinir; öneri yeniden
+                değerlendirilir. Önceki ve yeni metin denetimde yan yana durur.
+              </p>
+              <div className="mt-3">
+                <Gonder bekleme="Kaydediliyor">Düzelt ve yeniden değerlendir</Gonder>
+              </div>
+            </EylemFormu>
+          </section>
+        )}
 
         <div className="flex flex-wrap gap-2.5">
           {ajans ? (

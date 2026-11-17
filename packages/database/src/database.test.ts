@@ -278,9 +278,9 @@ test("KVKK: kimlik pseudonimleşir, öneri zinciri korunur", async () => {
 // ── migration geri alma ────────────────────────────────────────────────────
 
 test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
-  const geri = await asagi(20);
+  const geri = await asagi(21);
   assert.deepEqual(geri, [
-    "0020_kapsam_coklu_nace", "0019_model_ayari", "0018_tarama_reddi", "0017_aday_kesfi", "0016_degerlendirme_asamasi", "0015_kimlik_silme_yetkisi", "0014_rol_atama", "0013_gonderen_ajans", "0012_oneri_gizlilik", "0011_ulusal_agirlik", "0010_ayar", "0009_yatirim_konusu", "0008_ajans_kisa_ad", "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus",
+    "0021_oneri_silme", "0020_kapsam_coklu_nace", "0019_model_ayari", "0018_tarama_reddi", "0017_aday_kesfi", "0016_degerlendirme_asamasi", "0015_kimlik_silme_yetkisi", "0014_rol_atama", "0013_gonderen_ajans", "0012_oneri_gizlilik", "0011_ulusal_agirlik", "0010_ayar", "0009_yatirim_konusu", "0008_ajans_kisa_ad", "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus",
     "0004_kriter_dayanagi", "0003_kurallar", "0002_rls", "0001_sema",
   ]);
   const [{ n }] = await sahip()<{ n: string }[]>`
@@ -291,7 +291,7 @@ test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
   assert.deepEqual(await yukari(), [
     "0001_sema", "0002_rls", "0003_kurallar", "0004_kriter_dayanagi",
     "0005_karsi_gorus", "0006_yakin_kopya", "0007_misafir", "0008_ajans_kisa_ad", "0009_yatirim_konusu", "0010_ayar", "0011_ulusal_agirlik", "0012_oneri_gizlilik", "0013_gonderen_ajans", "0014_rol_atama",
-    "0015_kimlik_silme_yetkisi", "0016_degerlendirme_asamasi", "0017_aday_kesfi", "0018_tarama_reddi", "0019_model_ayari", "0020_kapsam_coklu_nace",
+    "0015_kimlik_silme_yetkisi", "0016_degerlendirme_asamasi", "0017_aday_kesfi", "0018_tarama_reddi", "0019_model_ayari", "0020_kapsam_coklu_nace", "0021_oneri_silme",
   ]);
   await seed();
 });
@@ -725,4 +725,45 @@ test("resmî konular belgelere göre yeniden değerlendirmeye alınır; yatırı
   assert.ok(satirlar.every((x) => x.durum === "degerlendiriliyor" && x.deneme === 0), "kuyruğa sıfır denemeyle döner");
   // Başlık olduğu gibi kalır; ikinci çağrı aynı konuları yeniden kuyruğa sokmaz.
   assert.equal(await resmiKonulariDegerlendir({ gonderenRef: aj.gonderen_ref, rol: "ajans" }, donemId), 0);
+});
+
+test("kuyruktaki öneriyi yalnızca yönetici siler; görüntü denetimde kalır; onaylı öneri silinmez", async () => {
+  const { oneriSil, oneriGuncelle } = await import("./sorgu.ts");
+  const sistem = { gonderenRef: null, rol: "yonetici" as const };
+  const ref = async (e: string) => (await islem(sistem, (sql) => sql<{ r: string }[]>`select gonderen_ref as r from kimlik where eposta = ${e}`))[0].r;
+  const yonetici = { gonderenRef: await ref("yonetici@ykh.local"), rol: "yonetici" as const };
+  const ajans = { gonderenRef: await ref("ajans@ykh.local"), rol: "ajans" as const };
+  const [{ d }] = await islem(sistem, (sql) => sql<{ d: string }[]>`select id as d from donem order by id limit 1`);
+  const yeni = async () => (await islem(ajans, (sql) => sql<{ id: string }[]>`
+    insert into oneri (donem_id, gonderen_ref, koken, baslik, gerekce, durum)
+    values (${d}, ${ajans.gonderenRef}, 'yeni', 'Silme sınaması konusu', ${"Neden burada sorusuna kırk karakterden uzun bir gerekçe metni."}, 'onay_bekliyor')
+    returning id`))[0].id;
+
+  const id = Number(await yeni());
+  assert.equal((await oneriSil(ajans, id, "ajans silmeye çalışıyor")).ok, false, "ajans silemez");
+  assert.equal((await oneriSil(yonetici, id, "kısa")).ok, false, "gerekçe zorunlu");
+  assert.ok((await oneriSil(yonetici, id, "Aynı konunun tekrarı, sınama")).ok);
+  const [{ n }] = await islem(sistem, (sql) => sql<{ n: string }[]>`select count(*) as n from oneri where id = ${id}`);
+  assert.equal(Number(n), 0);
+  const [iz] = await islem(sistem, (sql) => sql<{ detay: { kayit: { oneri: { baslik: string } }; gerekce: string } }[]>`
+    select detay from denetim where eylem = 'oneri_silindi' and nesne_id = ${String(id)}`);
+  assert.equal(iz.detay.kayit.oneri.baslik, "Silme sınaması konusu", "tam görüntü denetimde");
+
+  // Onaylanmış (listede) öneri kuyrukta değil: ne fonksiyon ne doğrudan SQL siler.
+  const id2 = Number(await yeni());
+  await islem(sistem, (sql) => sql`update oneri set durum = 'listede', onaylayan_ref = ${ajans.gonderenRef}, onay_zamani = now() where id = ${id2}`);
+  assert.equal((await oneriSil(yonetici, id2, "onaylı öneriyi silme denemesi")).ok, false);
+  const r = await islem(yonetici, (sql) => sql`delete from oneri where id = ${id2}`);
+  assert.equal(r.count, 0, "RLS: listedeki öneri silinemez");
+
+  // Düzeltme: değerlendirme gider, öneri yeniden değerlendirmeye döner.
+  const id3 = Number(await yeni());
+  const g = await oneriGuncelle(yonetici, id3, { baslik: "Düzeltilmiş konu başlığı", gerekce: "Düzeltilmiş gerekçe metni kırk karakterden uzun olmalıdır.", ilce: null, kapsam: ["Ürün grubu bir"] }, "Başlık netleştirildi");
+  assert.ok(g.ok);
+  const [o3] = await islem(sistem, (sql) => sql<{ durum: string; baslik: string; deneme: number }[]>`select durum::text, baslik, deneme from oneri where id = ${id3}`);
+  assert.deepEqual(o3, { durum: "degerlendiriliyor", baslik: "Düzeltilmiş konu başlığı", deneme: 0 });
+  const [dz] = await islem(sistem, (sql) => sql<{ detay: { onceki: { baslik: string } } }[]>`
+    select detay from denetim where eylem = 'oneri_duzeltildi' and nesne_id = ${String(id3)}`);
+  assert.equal(dz.detay.onceki.baslik, "Silme sınaması konusu", "önceki metin denetimde");
+  assert.equal((await oneriGuncelle(ajans, id3, { baslik: "x".repeat(10), gerekce: "y".repeat(45), ilce: null, kapsam: [] }, "ajans deniyor ama yetkisi yok")).ok, false);
 });
