@@ -11,7 +11,8 @@ import {
 import { gecisIzinli, onaylayabilir, ROL_ETIKET, ROLLER, type OneriDurumu, type Rol } from "@ykh/domain";
 import { log } from "@ykh/observability";
 import { KRITERLER, type Kriter } from "@ykh/scoring";
-import { degerlendirmeYap, SERVIS } from "@ykh/degerlendirme";
+import { degerlendirmeYap, MODEL_AYARI, modelOnbelleginiTemizle, SERVIS, TARAMA_MODEL_AYARI } from "@ykh/degerlendirme";
+import { MODEL_SECENEKLERI } from "@ykh/ai-gateway";
 import { baglam, cerezSil, COOKIE, istemciIp, kullanici, oturumCerezi } from "./oturum.ts";
 import { paletGecerli } from "./palet.ts";
 import { ayar, COK_FAZLA, icYol, ipBilinir, ipKaydet, siraBekle, sinirAsildi, sinirDolu, sinirGeriAl, sinirSay } from "./sinir.ts";
@@ -505,4 +506,25 @@ export async function resmiDegerlendirEylemi(_o: EylemSonucu | null, f: FormData
   revalidatePath("/onay");
   if (!n) return { ok: false, mesaj: "Değerlendirilmemiş resmî konu yok; hepsi zaten puanlanmış." };
   return { ok: true, mesaj: `${n} resmî konu değerlendirmeye alındı. Puanlar hazır olunca onay kuyruğuna düşer.` };
+}
+
+/**
+ * Yapay zekâ modeli seçimi — yalnızca yönetici. Anahtarı bu sunucuda tanımlı
+ * olmayan sağlayıcı reddedilir: kaydedilse her çağrı hata verirdi.
+ */
+export async function modelEylemi(gorev: "yargi" | "tarama", id: string): Promise<EylemSonucu> {
+  const k = await kullanici();
+  if (!k || k.rol !== "yonetici") return { ok: false, mesaj: "Bu ayarı yalnızca yönetici değiştirebilir." };
+  const ozel = gorev === "yargi" ? "varsayilan" : "ayni";
+  const secim = id === ozel ? null : MODEL_SECENEKLERI.find((m) => m.id === id);
+  if (id !== ozel && !secim) return { ok: false, mesaj: "Tanınmayan model." };
+  if (secim && !process.env[secim.anahtar]) {
+    return { ok: false, mesaj: `${secim.anahtar} bu sunucuda tanımlı değil; önce ortam değişkenine ekleyin.` };
+  }
+  const yazildi = await ayarYaz(await baglam(), gorev === "yargi" ? MODEL_AYARI : TARAMA_MODEL_AYARI, id);
+  if (!yazildi) return { ok: false, mesaj: "Ayar yazılamadı; yetki reddedildi." };
+  modelOnbelleginiTemizle();
+  log.info("model_degistirildi", { gorev, model: id });
+  revalidatePath("/ayarlar");
+  return { ok: true, mesaj: "Model değiştirildi." };
 }

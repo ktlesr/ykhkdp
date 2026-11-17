@@ -1,3 +1,4 @@
+import { anthropicIstemci } from "./anthropic-istemci.ts";
 import type { ModelCevabi, ModelIstegi, ModelIstemcisi } from "./gateway.ts";
 
 /**
@@ -10,7 +11,18 @@ import type { ModelCevabi, ModelIstegi, ModelIstemcisi } from "./gateway.ts";
  * hiçbir kontrolü gevşetmez.
  */
 
-export function istemciSec(): ModelIstemcisi {
+/**
+ * İstemci seçimi. Sağlayıcı verilirse o (yönetici ayarı); verilmezse
+ * ortamdaki anahtara göre: OpenAI anahtarı varsa OpenAI, yoksa çevrimdışı.
+ * Seçilen sağlayıcının anahtarı yoksa çağrı anında açık hata verir —
+ * sessizce başka sağlayıcıya düşmek künyeyi yalanlardı.
+ */
+export function istemciSec(saglayici?: "openai" | "anthropic" | "cevrimdisi"): ModelIstemcisi {
+  if (saglayici === "anthropic") return anthropicIstemci(eforSec);
+  if (saglayici === "openai") return openAiIstemci();
+  if (saglayici === "cevrimdisi") return cevrimdisiIstemci();
+  // Ortamda Claude pinlendiyse (eval, sınama) sağlayıcı ondan çıkar.
+  if (process.env.YKH_MODEL_SNAPSHOT?.startsWith("claude-")) return anthropicIstemci(eforSec);
   return process.env.OPENAI_API_KEY ? openAiIstemci() : cevrimdisiIstemci();
 }
 
@@ -237,7 +249,7 @@ export const openAiIstemci = (): ModelIstemcisi => ({
  * (ölçüldü: çağrı başına ~3.600 çıktı tokenı, 17–34 sn). Puanlama ve aday
  * üretimi yargı ister; onlar `YKH_MODEL_EFOR` (varsayılan medium) ile kalır.
  */
-function eforSec(sema: string): string {
+export function eforSec(sema: string): string {
   if (sema === "kanit_cikarimi") return process.env.YKH_TARAMA_EFOR || "low";
   return process.env.YKH_MODEL_EFOR || "medium";
 }

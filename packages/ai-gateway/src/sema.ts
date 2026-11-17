@@ -29,7 +29,9 @@ const Alinti = z
      */
     no: z.number().int().min(0).max(99),
     /** `<belge id="…">` bloğundaki PAKETE YEREL numara (1…n), veritabanı kimliği değil */
-    belge_id: z.number().int().min(1).max(64),
+    // Üst sınır gevşek: aralık dışı numara sert ret DEĞİL, doğrulayıcı metni
+    // pakette bulursa atfı düzeltir (brif §6). Sıkı sınır şemada reddettiriyordu.
+    belge_id: z.number().int().min(1).max(9999),
     /** belgede birebir geçen kısa alıntı; doğrulayıcı bunu belgede arar */
     alinti: z.string().min(10).max(400),
   })

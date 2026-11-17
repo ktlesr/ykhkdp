@@ -13,6 +13,7 @@
     "sinama": "node --env-file-if-exists=../../.env src/sinama.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "1.4.0",
     "@ykh/domain": "workspace:*",
     "@ykh/evidence-validation": "workspace:*",
     "zod": "4.6.7"

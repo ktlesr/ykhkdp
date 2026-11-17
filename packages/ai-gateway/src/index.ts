@@ -22,3 +22,16 @@ export function modelSnapshot(): string {
 
 /** Geriye dönük kullanım için; çağrı anında okunması gereken yerlerde modelSnapshot() kullanın. */
 export const MODEL_SNAPSHOT = modelSnapshot();
+
+/**
+ * Yöneticinin seçebileceği modeller (`/ayarlar`). Kimlikler pinli: `latest`
+ * yok, künyeye bu dizge yazılır. "varsayilan" = ortam değişkenine göre
+ * (OPENAI_API_KEY → OpenAI, yoksa çevrimdışı).
+ */
+export const MODEL_SECENEKLERI = [
+  { id: "openai:gpt-5.4-mini-2026-03-17", saglayici: "openai", model: "gpt-5.4-mini-2026-03-17", ad: "OpenAI GPT-5.4 mini", anahtar: "OPENAI_API_KEY" },
+  { id: "anthropic:claude-opus-5-5", saglayici: "anthropic", model: "claude-opus-5-5", ad: "Claude Opus 5.5", anahtar: "ANTHROPIC_API_KEY" },
+  { id: "anthropic:claude-sonnet-5-5", saglayici: "anthropic", model: "claude-sonnet-5-5", ad: "Claude Sonnet 5.5", anahtar: "ANTHROPIC_API_KEY" },
+  { id: "anthropic:claude-haiku-5-5", saglayici: "anthropic", model: "claude-haiku-5-5", ad: "Claude Haiku 5.5", anahtar: "ANTHROPIC_API_KEY" },
+] as const;
+export type ModelSecenegi = (typeof MODEL_SECENEKLERI)[number];

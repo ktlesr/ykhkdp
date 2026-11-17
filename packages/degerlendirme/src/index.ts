@@ -3,6 +3,8 @@ import { ayrilmisIslem, denetle, islem, kilitHavuzu, type Baglam } from "@ykh/da
 import { aiMaliyeti, log } from "@ykh/observability";
 import { belgePaketi, naceAdaylari } from "@ykh/retrieval";
 
+export { MODEL_AYARI, modelOnbelleginiTemizle, modelSec, TARAMA_MODEL_AYARI } from "./model-secimi.ts";
+import { modelSec } from "./model-secimi.ts";
 export { birKesifAl, kesifHatasi, kesifYap, onTarama, pencerele, type KesifSonucu } from "./kesif.ts";
 
 /**
@@ -114,8 +116,7 @@ async function calistir(b: Baglam, oneriId: number, yaz: Yaz): Promise<Sonuc> {
   }
 
   await asama("alindi");
-  const istemci = istemciSec();
-  const model = modelSnapshot();
+  const { istemci, model } = await modelSec();
   const notlar: string[] = [];
   let naceKod = o.nace_kod ?? undefined;
 

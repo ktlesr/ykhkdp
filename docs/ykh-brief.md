@@ -219,6 +219,31 @@ TR33 kalibrasyonu "varsayılan" değil `TR33-2027-v1`.
 
 ## 6. AI'nin sınırları
 
+**Model seçimi (yönetici, `/ayarlar`) — iki iş, iki model.** *Yargı*
+(değerlendirme, karşı görüş, NACE, aday üretimi) az çağrı yapar, muhakeme
+ister. *Tarama* (kanıt çıkarımı) çağrıların büyük çoğunluğudur ve muhakeme
+istemez: pasaj kaynakta birebir yoksa doğrulayıcı düşürür. Seçenekler: OpenAI
+`gpt-5.4-mini-2026-03-17`, Claude Opus 5.5 / Sonnet 5.5 / Haiku 5.5, yargı için
+"ortam değişkenine göre", tarama için "yargıyla aynı". Taramada ölçüldü
+(8 grup × 3 gerçek parça): Haiku 57 kanıt / 0 ret / 4 sn / ≈$0,009; Opus 66 /
+0 / 9,6 sn / ≈$0,41; Sonnet 13 / 4 ret — Haiku Opus'un kanıtının ~%86'sını
+~45'te bir maliyetle çıkarıyor.
+
+**Model belge kimliği görmez — düzeltildi (2026-11-17).** Değerlendirme ve
+karşı görüş blokları `belge.id` taşıyordu (`<belge id="412">`). OpenAI'de şema
+`≤ 64` sınırını üretimde zorladığı için model yanlış küçük numara yazıyor,
+doğrulayıcı metinden atfı düzeltiyordu — hata gizliydi. Claude gördüğü kimliği
+yazdı ve şema reddetti. Artık modele yerel numara (1…n) gider
+(`degerlendirme-v7`, `karsi-gorus-v4`); şemadaki üst sınır gevşetildi çünkü
+aralık dışı numara sert ret değil, metinden düzeltilir.
+Doğrulama zinciri sağlayıcıdan bağımsızdır — Claude'un şema motorunun kabul
+etmediği kısıtlar (minLength, maxItems…) gönderilen şemadan çıkarılır ama Zod
+yanıtta aynısını uygular. Opus ve Sonnet'te ret için sunucu tarafı yedek model
+açıktır; yedek devreye girerse künyeye YANITI VEREN model yazılır. Anahtarı
+tanımlı olmayan sağlayıcı seçilemez; seçili sağlayıcının anahtarı çalışma
+anında yoksa çağrı açık hatayla durur, başka modele sessizce düşülmez. Kanıt
+önbelleği modele bağlıdır: model değişince tarama yeni modelle baştan yapılır.
+
 AI **puan üretir** ama karar vermez: her puan ajans onayından geçer.
 
 Yapar: NACE önerisi (kullanıcı girmediyse), sekiz kriter puanı, üst ölçekli

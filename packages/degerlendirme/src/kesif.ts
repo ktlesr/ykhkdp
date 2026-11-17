@@ -1,4 +1,5 @@
-import { adayKesfet, istemciSec, kanitCikar, modelSnapshot, PROMPTLAR, type Maliyet } from "@ykh/ai-gateway";
+import { adayKesfet, kanitCikar, modelSnapshot, PROMPTLAR, type Maliyet } from "@ykh/ai-gateway";
+import { modelSec } from "./model-secimi.ts";
 import { denetle, islem, type Baglam } from "@ykh/database";
 import { MODEL_METIN_SINIRI, paketKur, yerelMi } from "@ykh/evidence-validation";
 import { aiMaliyeti, log } from "@ykh/observability";
@@ -74,13 +75,14 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
     return { ok, mesaj, adaySayisi };
   };
 
-  const istemci = istemciSec();
-  const model = modelSnapshot();
+  // Aday üretimi yargı modeliyle; tarama önbelleği tarama modelinin künyesiyle.
+  const { istemci, model } = await modelSec("yargi");
+  const { model: taramaModeli } = await modelSec("tarama");
   const taramaSurum = PROMPTLAR.kanit_cikarimi.surum;
 
   // ── 1. Envanter ──────────────────────────────────────────────────────────
   await durumYaz(k.id, {
-    asama: "envanter", mesaj: null, model_snapshot: model,
+    asama: "envanter", mesaj: null, model_snapshot: taramaModeli === model ? model : `${model} · tarama ${taramaModeli}`,
     prompt_surum: `${taramaSurum}+${PROMPTLAR.aday_kesfi.surum}`,
   });
   const parcalar = (
@@ -101,7 +103,7 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
       await islem(SERVIS, (sql) =>
         sql<{ belge_id: string }[]>`
           select belge_id from kanit_tarama
-          where prompt_surum = ${taramaSurum} and model_snapshot = ${model} and durum = 'tamam'
+          where prompt_surum = ${taramaSurum} and model_snapshot = ${taramaModeli} and durum = 'tamam'
             and belge_id in ${sql(parcalar.map((p) => p.id))}
         `,
       )
@@ -134,7 +136,7 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
     islem(SERVIS, (sql) =>
       sql<{ id: string; belge_id: string; tur: string; konu: string; alinti: string }[]>`
         select id, belge_id, tur, konu, alinti from kanit
-        where prompt_surum = ${taramaSurum} and model_snapshot = ${model}
+        where prompt_surum = ${taramaSurum} and model_snapshot = ${taramaModeli}
           and belge_id in ${sql(parcalar.map((p) => p.id))}
         order by id
       `,
@@ -290,8 +292,7 @@ export async function parcalariTara(
   bekleyen: readonly Parca[],
   o: { kesifId: number | null; ilerleme?: (taranan: number) => Promise<unknown> },
 ): Promise<{ taranan: number; basarisiz: number; basarisizIdler: number[] }> {
-  const istemci = istemciSec();
-  const model = modelSnapshot();
+  const { istemci, model } = await modelSec("tarama");
   const taramaSurum = PROMPTLAR.kanit_cikarimi.surum;
   const nesneId = o.kesifId ?? "on_tarama";
 
@@ -389,7 +390,7 @@ export async function parcalariTara(
  * yeni gelen bir öneri değerlendirmesi dakikalarca beklemesin.
  */
 export async function onTarama(enCok = ESZAMANLI * TARAMA_GRUBU): Promise<number> {
-  const model = modelSnapshot();
+  const { model } = await modelSec("tarama");
   const parcalar = (
     await islem(SERVIS, (sql) =>
       sql<Parca[]>`

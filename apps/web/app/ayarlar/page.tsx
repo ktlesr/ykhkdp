@@ -4,6 +4,8 @@ import { ayarGetir, bolgeler, kayitliKullanicilar, raporSatirlari } from "@ykh/d
 import { onaylayabilir } from "@ykh/domain";
 import { KullaniciListesi } from "@/components/kullanici-listesi.tsx";
 import { PaletSecici } from "@/components/palet-secici.tsx";
+import { ModelSecici } from "@/components/model-secici.tsx";
+import { MODEL_SECENEKLERI } from "@ykh/ai-gateway";
 import { RaporTablosu } from "@/components/rapor-tablosu.tsx";
 import { Bag, Baslik, Bos, Sayfa, UstBar, Uyari } from "@/components/ui.tsx";
 import { baglam, kullanici } from "@/lib/oturum.ts";
@@ -40,11 +42,54 @@ export default async function Ayarlar() {
 
   const yonetici = k.rol === "yonetici";
   const b = await baglam();
-  const [secili, satirlar, kullanicilar] = await Promise.all([
+  const [secili, satirlar, kullanicilar, modelAyari, taramaAyari] = await Promise.all([
     yonetici ? ayarGetir(b, "palet").then(paletGecerli) : Promise.resolve(null),
     raporSatirlari(b),
     yonetici ? kayitliKullanicilar(b) : Promise.resolve([]),
+    yonetici ? ayarGetir(b, "ai_model") : Promise.resolve(null),
+    yonetici ? ayarGetir(b, "ai_tarama_model") : Promise.resolve(null),
   ]);
+
+  // Ölçüm 2026-11-17: `pnpm ai:eval` (4 örnek × 3 koşu) ve 8 gruplu tarama sınaması.
+  const ACIKLAMA: Record<string, string> = {
+    "openai:gpt-5.4-mini-2026-03-17": "Eval kırıldı: yerelliği ayırıyor ama alıntılarının %57–77'si belgede bulunamadı ve düştü.",
+    "anthropic:claude-opus-5-5": "Eval geçti; düşen alıntı %0, belge dayanağı en yüksek. Sonnet'in iki katı fiyat.",
+    "anthropic:claude-sonnet-5-5": "Önerilen. Eval geçti; yerel/genel gerekçe ayrımı 78/36, belgeli/belgesiz konu 80/9. Opus'un yarı fiyatı.",
+    "anthropic:claude-haiku-5-5": "Eval kırıldı: yerellik ayrımı zayıf (55/32). Yargı için önerilmez.",
+  };
+  const TARAMA_ACIKLAMA: Record<string, string> = {
+    "openai:gpt-5.4-mini-2026-03-17": "8 grupta 75 kanıt, 1 reddedilen çağrı, ort. 6,1 sn.",
+    "anthropic:claude-opus-5-5": "8 grupta 66 kanıt, 0 ret, ort. 9,6 sn; ≈$0,41. Taramada gereğinden pahalı.",
+    "anthropic:claude-sonnet-5-5": "8 grupta yalnızca 13 kanıt, 4 reddedilen çağrı. Tarama için önerilmez.",
+    "anthropic:claude-haiku-5-5": "Önerilen. 8 grupta 57 kanıt, 0 ret, ort. 4 sn; ≈$0,009 — Opus'un ~45'te biri.",
+  };
+  const anthropicSecenekleri = MODEL_SECENEKLERI.map((m) => ({
+    id: m.id,
+    ad: m.ad,
+    model: m.model,
+    anahtarVar: Boolean(process.env[m.anahtar]),
+    aciklama: ACIKLAMA[m.id] ?? "",
+  }));
+  const taramaSecenekleri = [
+    {
+      id: "ayni",
+      ad: "Yargı modeliyle aynı",
+      model: "—",
+      anahtarVar: true,
+      aciklama: "Tarama da yukarıda seçilen modelle yapılır.",
+    },
+    ...anthropicSecenekleri.map((m) => ({ ...m, aciklama: TARAMA_ACIKLAMA[m.id] ?? m.aciklama })),
+  ];
+  const modelSecenekleri = [
+    {
+      id: "varsayilan",
+      ad: "Ortam değişkenine göre",
+      model: process.env.YKH_MODEL_SNAPSHOT || (process.env.OPENAI_API_KEY ? "gpt-5.4-mini-2026-03-17" : "çevrimdışı"),
+      anahtarVar: true,
+      aciklama: "YKH_MODEL_SNAPSHOT ve OPENAI_API_KEY belirler; anahtar yoksa çevrimdışı deterministik istemci.",
+    },
+    ...anthropicSecenekleri,
+  ];
 
   // ponytail: ajans listesi için ayrı sorgu yazılmadı — `bolgeler()` zaten
   // 26 ajansı getiriyor. İl listesi fazladan geliyor; ölçülebilir bir yük
@@ -155,6 +200,34 @@ export default async function Ayarlar() {
           <section className="mt-12 border-t border-t-hairline pt-9">
             <h2 className="font-display text-[24px] font-medium leading-[1.15]">Görünüm</h2>
             <PaletSecici secili={secili} />
+          </section>
+        )}
+
+        {/* ── Yapay zekâ modeli ───────────────────────────────────────── */}
+        {yonetici && (
+          <section className="mt-12 border-t border-t-hairline pt-9">
+            <h2 className="font-display text-[24px] font-medium leading-[1.15]">Yapay zekâ modeli</h2>
+            <p className="mt-3 max-w-[78ch] text-[13.5px] leading-[1.55] text-ink-soft text-pretty">
+              İki iş, iki model. <b className="font-medium text-ink">Yargı</b> az çağrı yapar ama muhakeme ister.{" "}
+              <b className="font-medium text-ink">Tarama</b> çağrıların büyük çoğunluğudur (her belge parçası bir kez)
+              ve muhakeme istemez: pasaj kaynakta birebir yoksa doğrulayıcı düşürür. Fiyat/performans için taramada
+              ucuz ve hızlı, yargıda güçlü model. Doğrulama zinciri ikisinde de aynıdır; her kaydın künyesine yanıtı
+              veren model yazılır. Değişiklik arka plan işleyicisine en geç yarım dakikada yansır.
+            </p>
+            <ModelSecici
+              gorev="yargi"
+              baslik="Yargı · değerlendirme, karşı görüş, NACE, aday üretimi"
+              aciklama="Sekiz kriter puanı, karşı görüş ve keşif adayları bu modelden gelir."
+              secili={modelAyari ?? "varsayilan"}
+              secenekler={modelSecenekleri}
+            />
+            <ModelSecici
+              gorev="tarama"
+              baslik="Tarama · kanıt çıkarımı"
+              aciklama="Belgelerden pasaj seçer; seçilen her pasaj kaynakta birebir doğrulanır. Model değişince tarama yeni modelle baştan yapılır, önceki taramalar künyeleriyle saklanır."
+              secili={taramaAyari ?? "ayni"}
+              secenekler={taramaSecenekleri}
+            />
           </section>
         )}
       </Sayfa>

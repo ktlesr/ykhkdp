@@ -26,7 +26,11 @@ export type ModelIstegi = {
   semaAdi: SemaAdi;
 };
 
-export type ModelCevabi = { metin: string; girdiToken: number; ciktiToken: number };
+export type ModelCevabi = {
+  metin: string; girdiToken: number; ciktiToken: number;
+  /** yanıtı GERÇEKTEN veren model (sunucu tarafı yedek devreye girdiyse farklıdır) */
+  model?: string;
+};
 export type ModelIstemcisi = { ad: string; cagir(istek: ModelIstegi): Promise<ModelCevabi> };
 export type Maliyet = { girdiToken: number; ciktiToken: number; model: string };
 
@@ -76,7 +80,8 @@ async function cagir<A extends SemaAdi>(
     return { ok: false, asama: "model", hatalar: [e instanceof Error ? e.message : String(e)] };
   }
 
-  const maliyet = { girdiToken: cevap.girdiToken, ciktiToken: cevap.ciktiToken, model: modelSnapshot };
+  // Künye yanıtı veren modeldir: yedek devreye girdiyse istenen model değil.
+  const maliyet = { girdiToken: cevap.girdiToken, ciktiToken: cevap.ciktiToken, model: cevap.model ?? modelSnapshot };
   let ham: unknown;
   try {
     ham = JSON.parse(cevap.metin);
@@ -112,7 +117,8 @@ export async function degerlendir(
     `Yatırım konusu: ${girdi.baslik}\n` +
     `Neden burada (yatırımcının gerekçesi): ${girdi.gerekce}`;
 
-  const r = await cagir(istemci, modelSnapshot, "degerlendirme", kaynakBloguKur(girdi.belgeler), gorev);
+  const r = await cagir(istemci, modelSnapshot, "degerlendirme", kaynakBloguKur(yereleCevir(girdi.belgeler)), gorev);
+  if (r.maliyet) meta.modelSnapshot = r.maliyet.model;
   if (!r.ok) return { ...r, ...meta };
 
   const dogrulama = degerlendirmeyiDogrula(r.veri, girdi.paket, girdi.agirliklar ?? {});
@@ -151,6 +157,7 @@ export async function naceOner(
     naceBloguKur(girdi.adaylar),
     `Yatırım konusu: ${girdi.baslik}\nGerekçe: ${girdi.gerekce}`,
   );
+  if (r.maliyet) meta.modelSnapshot = r.maliyet.model;
   if (!r.ok) return { ...r, ...meta };
 
   // Fail-closed: listede olmayan kod önerilirse reddet.
@@ -196,7 +203,8 @@ export async function karsiGorus(
     `Yatırım konusu: ${girdi.baslik}\n` +
     `Yatırımcının gerekçesi: ${girdi.gerekce}`;
 
-  const r = await cagir(istemci, modelSnapshot, "karsi_gorus", kaynakBloguKur(girdi.belgeler), gorev);
+  const r = await cagir(istemci, modelSnapshot, "karsi_gorus", kaynakBloguKur(yereleCevir(girdi.belgeler)), gorev);
+  if (r.maliyet) meta.modelSnapshot = r.maliyet.model;
   if (!r.ok) return { ...r, ...meta };
 
   const d = karsiGorusuDogrula(r.veri, girdi.paket);
@@ -231,6 +239,7 @@ export async function kanitCikar(
     kaynakBloguKur(girdi.belgeler),
     "Bu parçalardaki yatırım konusu belirlemeye yarar pasajları çıkar.",
   );
+  if (r.maliyet) meta.modelSnapshot = r.maliyet.model;
   if (!r.ok) return { ...r, ...meta };
   const d = kanitlariDogrula(r.veri.kanitlar, girdi.paket);
   if (!d.gecerli) return { ok: false, asama: "dayanak", hatalar: d.hatalar.map((h) => h.mesaj), maliyet: r.maliyet, ...meta };
@@ -263,7 +272,22 @@ export async function adayKesfet(
       : "") +
     "Bu ilin yerel kanıtlarına dayanan yatırım konusu adaylarını çıkar.";
   const r = await cagir(istemci, modelSnapshot, "aday_kesfi", defterBloguKur(girdi.defter), gorev);
+  if (r.maliyet) meta.modelSnapshot = r.maliyet.model;
   if (!r.ok) return { ...r, ...meta };
   const d = adaylariDogrula(r.veri.adaylar, girdi.defter);
   return { ok: true, adaylar: d.adaylar, dusenler: d.dusenler.map((h) => h.mesaj), maliyet: r.maliyet, ...meta };
+}
+
+/**
+ * Modele veritabanı kimliği değil PAKETE YEREL numara (1…n) gösterilir —
+ * `paketKur` aynı sırayla numaralar.
+ *
+ * Önceden değerlendirme ve karşı görüş blokları `belge.id`yi taşıyordu
+ * (ör. `<belge id="412">`); kural "model asla belge.id görmez" diyordu.
+ * OpenAI'de şema `belge_id ≤ 64` sınırını üretimde zorladığı için model
+ * yanlış küçük numara yazıyor, doğrulayıcı metinden atfı düzeltiyordu —
+ * hata gizliydi. Claude gördüğü kimliği yazdı ve şema reddetti (eval).
+ */
+function yereleCevir<T extends { id: number }>(belgeler: readonly T[]): T[] {
+  return belgeler.map((b, i) => ({ ...b, id: i + 1 }));
 }
