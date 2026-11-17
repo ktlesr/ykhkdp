@@ -609,9 +609,11 @@ export async function onayKuyrugu(b: Baglam, donemId?: number) {
   if (b.rol === "anonim" || !onaylayabilir(b.rol)) return [];
   return islem(b, (sql) =>
     sql<(ListeSatiri & { il: string; il_kod: string; yil: string; dayanak_esigi: number;
-      asama: string | null; hatali: boolean })[]>`
+      asama: string | null; hatali: boolean; gonderildi: string })[]>`
       select o.id, o.baslik, o.koken, o.gerekce, o.ilce, o.nace_kod, n.tanim as nace_tanim,
              o.nace_kaynagi, o.durum, o.olusturuldu::text,
+             -- Ekran saati: ürün Türkiye'de, oturum saat diliminden bağımsız.
+             to_char(o.olusturuldu at time zone 'Europe/Istanbul', 'DD.MM.YYYY HH24:MI') as gonderildi,
              coalesce(g.dayanak, 0) as dayanak,
              g.gerekce as ai_gerekce,
              (g.duzeltilmis_puanlar is not null) as duzeltildi,

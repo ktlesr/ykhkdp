@@ -54,14 +54,23 @@ export default async function Onay() {
           </Bos>
         ) : (
           <div className="mt-5 border border-hairline bg-surface">
-            {kuyruk.map((o) => (
+            {/* Sıra = geliş sırası (en eski önce); onaylandıkça kayar. Kalıcı
+                adres kayıt numarasıdır (#id), yakın kopya satırları da onu kullanır. */}
+            {kuyruk.map((o, i) => (
               <div key={o.id} className="border-b border-b-hairline-soft px-5 py-4 last:border-b-0">
                 <div className="flex flex-wrap items-start gap-3">
+                  <div className="num w-8 shrink-0 pt-px text-[13.5px] text-ink-mute" aria-label={`Sıra ${i + 1}`}>
+                    {String(i + 1).padStart(2, "0")}
+                  </div>
                   <div className="min-w-0 flex-1">
                     <Link href={`/oneri/${o.id}`} className="text-[15px] font-medium text-ink">
                       {o.baslik}
                     </Link>
                     <div className="mt-1 flex flex-wrap gap-2.5 etiket text-ink-mute">
+                      <span className="num">#{o.id}</span>
+                      <span className="num">
+                        {o.gonderildi}
+                      </span>
                       <span>
                         {o.il} · {o.ilce ?? "—"} · {o.yil}
                       </span>
@@ -73,7 +82,7 @@ export default async function Onay() {
                       )}
                     </div>
                   </div>
-                  <div className="flex shrink-0 flex-wrap items-center gap-2.5">
+                  <div className="flex shrink-0 flex-wrap items-center gap-2.5 max-[720px]:basis-full max-[720px]:pl-11">
                     {o.durum === "degerlendiriliyor" ? (
                       <AsamaRozeti asama={o.asama} hatali={o.hatali} />
                     ) : (
