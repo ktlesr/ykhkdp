@@ -44,3 +44,46 @@ test("çıkarılan kısıt modele açıklamada sözle bildirilir", () => {
   assert.match(s, /en çok 300 karakter/);
   assert.match(s, /en çok 3 öğe/);
 });
+
+// ── Limit dolunca GPT-5.4 mini devralır ────────────────────────────────────
+
+test("Anthropic limiti dolunca çağrı gpt-5.4-mini'ye geçer ve künyeye o yazılır", async () => {
+  const { yedekli, YEDEK_MODEL } = await import("./istemci.ts");
+  const { AnthropicLimitHatasi } = await import("./anthropic-istemci.ts");
+  const onceki = process.env.OPENAI_API_KEY;
+  process.env.OPENAI_API_KEY = "test";
+  try {
+    let gelenModel = "";
+    const i = yedekli(
+      { ad: "anthropic", cagir: async () => { throw new AnthropicLimitHatasi("429 rate_limit_error"); } },
+      () => ({ ad: "openai", cagir: async (r) => { gelenModel = r.modelSnapshot; return { metin: "{}", girdiToken: 1, ciktiToken: 1 }; } }),
+    );
+    const c = await i.cagir({ modelSnapshot: "claude-sonnet-5-5", sistem: "", kullanici: "", jsonSema: {}, semaAdi: "nace_onerisi" });
+    assert.equal(gelenModel, YEDEK_MODEL);
+    assert.equal(c.model, YEDEK_MODEL, "künye yanıtı veren model");
+  } finally {
+    if (onceki === undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY = onceki;
+  }
+});
+
+test("limit dışı hata (ret, kimlik, şema) yedeğe devredilmez", async () => {
+  const { yedekli } = await import("./istemci.ts");
+  let yedekCagrildi = false;
+  const i = yedekli(
+    { ad: "anthropic", cagir: async () => { throw new Error("Anthropic reddetti (cyber)."); } },
+    () => ({ ad: "openai", cagir: async () => { yedekCagrildi = true; return { metin: "{}", girdiToken: 0, ciktiToken: 0 }; } }),
+  );
+  await assert.rejects(() => i.cagir({ modelSnapshot: "claude-opus-5-5", sistem: "", kullanici: "", jsonSema: {}, semaAdi: "nace_onerisi" }), /reddetti/);
+  assert.equal(yedekCagrildi, false);
+});
+
+test("limit sınıflaması: 429, 529, bakiye mesajı evet; 401, düz 400 hayır", async () => {
+  const { default: Anthropic } = await import("@anthropic-ai/sdk");
+  const { limitHatasiMi } = await import("./anthropic-istemci.ts");
+  const h = (status: number, mesaj: string) => Anthropic.APIError.generate(status, { error: { message: mesaj } }, mesaj, new Headers());
+  assert.equal(limitHatasiMi(h(429, "rate limit")), true);
+  assert.equal(limitHatasiMi(h(529, "overloaded")), true);
+  assert.equal(limitHatasiMi(h(400, "Your credit balance is too low to access the Anthropic API.")), true);
+  assert.equal(limitHatasiMi(h(400, "invalid schema")), false);
+  assert.equal(limitHatasiMi(h(401, "invalid x-api-key")), false);
+});

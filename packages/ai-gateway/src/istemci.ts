@@ -1,4 +1,4 @@
-import { anthropicIstemci } from "./anthropic-istemci.ts";
+import { AnthropicLimitHatasi, anthropicIstemci } from "./anthropic-istemci.ts";
 import type { ModelCevabi, ModelIstegi, ModelIstemcisi } from "./gateway.ts";
 
 /**
@@ -18,11 +18,11 @@ import type { ModelCevabi, ModelIstegi, ModelIstemcisi } from "./gateway.ts";
  * sessizce başka sağlayıcıya düşmek künyeyi yalanlardı.
  */
 export function istemciSec(saglayici?: "openai" | "anthropic" | "cevrimdisi"): ModelIstemcisi {
-  if (saglayici === "anthropic") return anthropicIstemci(eforSec);
+  if (saglayici === "anthropic") return yedekli(anthropicIstemci(eforSec));
   if (saglayici === "openai") return openAiIstemci();
   if (saglayici === "cevrimdisi") return cevrimdisiIstemci();
   // Ortamda Claude pinlendiyse (eval, sınama) sağlayıcı ondan çıkar.
-  if (process.env.YKH_MODEL_SNAPSHOT?.startsWith("claude-")) return anthropicIstemci(eforSec);
+  if (process.env.YKH_MODEL_SNAPSHOT?.startsWith("claude-")) return yedekli(anthropicIstemci(eforSec));
   return process.env.OPENAI_API_KEY ? openAiIstemci() : cevrimdisiIstemci();
 }
 
@@ -274,4 +274,31 @@ async function yenidenDene(cagri: () => Promise<Response>, deneme = 4): Promise<
       await new Promise((ok) => setTimeout(ok, 2000 * 2 ** (i - 1)));
     }
   }
+}
+
+/** Anthropic limiti dolunca devralan model — yargıda da taramada da. */
+export const YEDEK_MODEL = "gpt-5.4-mini-2026-03-17";
+
+/**
+ * Anthropic limit (429/529/bakiye) hatası verirse çağrıyı OpenAI
+ * `gpt-5.4-mini` devralır. Künyeye YANITI VEREN model yazılır
+ * (`ModelCevabi.model`), Claude değil — "bu puanı kim koydu" doğru kalır.
+ * OpenAI anahtarı yoksa yedek yoktur, limit hatası olduğu gibi yükselir.
+ * Doğrulama zinciri aynı: yedek modelin çıktısı da aynı şemadan ve alıntı
+ * denetiminden geçer.
+ */
+export function yedekli(birincil: ModelIstemcisi, yedek: () => ModelIstemcisi = openAiIstemci): ModelIstemcisi {
+  return {
+    ad: birincil.ad,
+    async cagir(istek) {
+      try {
+        return await birincil.cagir(istek);
+      } catch (e) {
+        if (!(e instanceof AnthropicLimitHatasi) || !process.env.OPENAI_API_KEY) throw e;
+        console.warn(JSON.stringify({ seviye: "uyari", mesaj: "anthropic_limit_yedek_model", istenen: istek.modelSnapshot, yedek: YEDEK_MODEL, sebep: e.message.slice(0, 200) }));
+        const c = await yedek().cagir({ ...istek, modelSnapshot: YEDEK_MODEL });
+        return { ...c, model: YEDEK_MODEL };
+      }
+    },
+  };
 }

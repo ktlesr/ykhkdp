@@ -229,6 +229,14 @@ istemez: pasaj kaynakta birebir yoksa doğrulayıcı düşürür. Seçenekler: O
 0 / 9,6 sn / ≈$0,41; Sonnet 13 / 4 ret — Haiku Opus'un kanıtının ~%86'sını
 ~45'te bir maliyetle çıkarıyor.
 
+**Limit yedeği.** Claude limit hatası verirse (429, 529, bakiye/kredi) çağrıyı
+OpenAI `gpt-5.4-mini-2026-03-17` devralır — yargıda da taramada da. Künyeye
+yanıtı veren model yazılır. Yalnızca limit devredilir: ret, şema ve kimlik
+hatası gerçek hatadır, olduğu gibi görünür. OpenAI anahtarı yoksa yedek yok.
+Tarama önbelleği istenen modelin anahtarıyla tutulur (yedekle taranan parça
+yeniden taranmaz); kanıt metni kaynakta birebir doğrulandığı için bu güvenliği
+etkilemez.
+
 **Model belge kimliği görmez — düzeltildi (2026-11-17).** Değerlendirme ve
 karşı görüş blokları `belge.id` taşıyordu (`<belge id="412">`). OpenAI'de şema
 `≤ 64` sınırını üretimde zorladığı için model yanlış küçük numara yazıyor,

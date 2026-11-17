@@ -69,7 +69,9 @@ export const anthropicIstemci = (efor: (sema: string) => string): ModelIstemcisi
       timeout: Number(process.env.YKH_MODEL_ZAMAN_ASIMI_MS) || 180_000,
     });
 
-    const yanit = await client.beta.messages.create({
+    let yanit;
+    try {
+      yanit = await client.beta.messages.create({
       model: istek.modelSnapshot,
       max_tokens: 16000,
       system: istek.sistem,
@@ -81,7 +83,12 @@ export const anthropicIstemci = (efor: (sema: string) => string): ModelIstemcisi
       ...(yedekVar(istek.modelSnapshot)
         ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const }
         : {}),
-    });
+      });
+    } catch (e) {
+      // SDK kendi yeniden denemelerini bitirdi; hâlâ limitse yedek sağlayıcı devralabilir.
+      if (limitHatasiMi(e)) throw new AnthropicLimitHatasi(e instanceof Error ? e.message : String(e));
+      throw e;
+    }
 
     if (yanit.stop_reason === "refusal") {
       throw new Error(`Anthropic reddetti (${yanit.stop_details?.category ?? "kategori yok"}).`);
@@ -98,3 +105,22 @@ export const anthropicIstemci = (efor: (sema: string) => string): ModelIstemcisi
     };
   },
 });
+
+/**
+ * Anthropic kullanım LİMİTİ — hız sınırı (429), aşırı yük (529) ya da
+ * kredi/bakiye tükenmesi. Yalnızca bu sınıf yedek sağlayıcıya devredilir;
+ * ret, şema ve kimlik hataları gerçek hatadır ve olduğu gibi yükselir.
+ */
+export class AnthropicLimitHatasi extends Error {
+  constructor(mesaj: string) {
+    super(`Anthropic limiti: ${mesaj}`);
+    this.name = "AnthropicLimitHatasi";
+  }
+}
+
+export function limitHatasiMi(e: unknown): boolean {
+  if (!(e instanceof Anthropic.APIError)) return false;
+  if (e.status === 429 || e.status === 529) return true;
+  // Bakiye/kredi bitince 400/402/403 dönebiliyor; mesajdan ayırt edilir.
+  return (e.status === 400 || e.status === 402 || e.status === 403) && /credit|billing|balance|quota|spend limit/i.test(e.message);
+}

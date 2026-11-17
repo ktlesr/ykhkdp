@@ -212,7 +212,9 @@ export default async function Ayarlar() {
               <b className="font-medium text-ink">Tarama</b> çağrıların büyük çoğunluğudur (her belge parçası bir kez)
               ve muhakeme istemez: pasaj kaynakta birebir yoksa doğrulayıcı düşürür. Fiyat/performans için taramada
               ucuz ve hızlı, yargıda güçlü model. Doğrulama zinciri ikisinde de aynıdır; her kaydın künyesine yanıtı
-              veren model yazılır. Değişiklik arka plan işleyicisine en geç yarım dakikada yansır.
+              veren model yazılır. Claude'un kullanım limiti dolarsa (hız sınırı, aşırı yük, bakiye) o çağrıyı
+              otomatik olarak OpenAI GPT-5.4 mini devralır ve künyeye o yazılır; ret ya da kimlik hatası devredilmez.
+              Değişiklik arka plan işleyicisine en geç yarım dakikada yansır.
             </p>
             <ModelSecici
               gorev="yargi"
