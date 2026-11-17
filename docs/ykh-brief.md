@@ -305,6 +305,15 @@ Uydurmasızlık kuralları — hepsi mekanik, modelin beyanı değil:
 - Değerlendirme paketi adayı doğuran parçaları **zorunlu** taşır
   (`belgePaketi({ zorunlu })`).
 
+Hız: tarama 6 eşzamanlı çağrıyla (`YKH_TARAMA_ESZAMANLI`) ve düşük akıl
+yürütme düzeyiyle (`YKH_TARAMA_EFOR=low`) yürür — ölçüldü, çağrı başına
+19–35 sn → 5,6–8,6 sn, kanıt sayısı düşmeden. Doğruluğu modelin muhakemesi
+değil mekanik doğrulayıcı güvenceler; puanlama ve aday üretimi `medium`da
+kalır. Worker boştayken önbellekte olmayan parçaları **önceden tarar**:
+yeni belge yüklendiğinde keşif başlamadan tarama hazırdır. Gömme/RAG
+eklenmedi: tarama sorgusuz bir "bütün metni oku" işidir, getirme onu
+hızlandırmaz, yalnızca bazı parçaları atlatır.
+
 Bölge: ajans yalnızca kendi bölgesinin illerinde keşif açar (`kesif_ac` RLS,
 `app_il_kapsaminda`). Aynı dönemde tek aktif koşu.
 

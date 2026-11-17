@@ -109,71 +109,12 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
   );
   await durumYaz(k.id, { asama: "tarama", toplam_parca: parcalar.length, taranan_parca: taranmis.size });
 
-  // ── 2. Tarama · önbellekte olmayan parçalar ──────────────────────────────
+  // ── 2. Tarama · önbellekte olmayan parçalar (eşzamanlı) ──────────────────
   const bekleyen = parcalar.filter((p) => !taranmis.has(p.id));
-  let basarisiz = 0;
-  const tara = async (grup: Parca[]): Promise<boolean> => {
-    // Uzun parça PENCERELERE bölünür: model `MODEL_METIN_SINIRI` karakter
-    // görüyor ve tek pencere parçanın kuyruğunu hiç taramadan "taranmış"
-    // sayıyordu. Pencereler aynı belge kimliğini taşır ve örtüşür ki bir
-    // cümle sınırda bölünmesin.
-    const pencereler = grup.flatMap((p) => pencerele(p.metin).map((metin) => ({ ...p, metin })));
-    const paket = paketKur(`kesif-${k.id}-${grup[0].id}`, pencereler.map((p) => ({ id: p.id, ad: p.ad, bolum: p.bolum, metin: p.metin })));
-    // Modele pakete yerel numara (1…n) gider, veritabanı kimliği değil.
-    const r = await kanitCikar(istemci, model, { belgeler: pencereler.map((p, i) => ({ ...p, id: i + 1 })), paket });
-    maliyetYaz(r.maliyet, taramaSurum, r.ok);
-    if (!r.ok) {
-      await islem(SERVIS, (sql) =>
-        denetle(sql, SERVIS, "kanit_cikarimi_reddedildi", "kesif", k.id, { parcalar: grup.map((p) => p.id), asama: r.asama, hatalar: r.hatalar.slice(0, 5) }),
-      );
-      return false;
-    }
-    await islem(SERVIS, async (sql) => {
-      for (const x of r.kanitlar) {
-        await sql`
-          insert into kanit (belge_id, prompt_surum, model_snapshot, tur, konu, alinti)
-          values (${x.belge_id}, ${taramaSurum}, ${model}, ${x.tur}, ${x.konu.slice(0, 160)}, ${x.alinti})
-          on conflict do nothing
-        `;
-      }
-      for (const p of grup) {
-        await sql`
-          insert into kanit_tarama (belge_id, prompt_surum, model_snapshot, kanit_sayisi)
-          values (${p.id}, ${taramaSurum}, ${model}, ${r.kanitlar.filter((x) => x.belge_id === p.id).length})
-          on conflict do nothing
-        `;
-      }
-      if (r.dusenler.length) {
-        await denetle(sql, SERVIS, "kanit_dusuruldu", "kesif", k.id, { parcalar: grup.map((p) => p.id), dusenler: r.dusenler.slice(0, 10) });
-      }
-    });
-    return true;
-  };
-
-  // Grup PENCERE sayısıyla kurulur: tek uzun parça tek başına bir çağrı olabilir.
-  const gruplar: Parca[][] = [];
-  for (const p of bekleyen) {
-    const son = gruplar.at(-1);
-    const dolu = son ? son.reduce((t, x) => t + pencerele(x.metin).length, 0) : TARAMA_GRUBU;
-    if (son && dolu + pencerele(p.metin).length <= TARAMA_GRUBU) son.push(p);
-    else gruplar.push([p]);
-  }
-
-  let taranan = taranmis.size;
-  for (const grup of gruplar) {
-    if (await tara(grup)) {
-      taranan += grup.length;
-    } else {
-      // Grup reddedildiyse parçalar tek tek denenir: bir parçanın kusuru
-      // komşularını taranmamış bırakmasın.
-      for (const p of grup.length > 1 ? grup : []) {
-        if (await tara([p])) taranan++;
-        else basarisiz++;
-      }
-      if (grup.length === 1) basarisiz++;
-    }
-    await durumYaz(k.id, { taranan_parca: taranan });
-  }
+  const { basarisiz } = await parcalariTara(bekleyen, {
+    kesifId: k.id,
+    ilerleme: (n) => durumYaz(k.id, { taranan_parca: taranmis.size + n }),
+  });
   if (basarisiz) {
     return bitir(false, `${parcalar.length} parçanın ${basarisiz} tanesi taranamadı; tarama tamamlanmadan aday üretilmez. Yeniden başlatınca kalan parçalardan devam eder.`);
   }
@@ -278,6 +219,133 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
     (a.dusenler.length ? ` ${a.dusenler.length} aday kanıt kuralına takılıp düştü.` : "") +
     (atlananlar.length ? ` ${atlananlar.length} aday zaten öneriliydi.` : "");
   return bitir(true, ozet, yazilan);
+}
+
+/** Aynı anda yapılan tarama çağrısı. Parçalar bağımsız; sınır API hız limiti. */
+const ESZAMANLI = Math.max(1, Number(process.env.YKH_TARAMA_ESZAMANLI) || 6);
+
+/**
+ * Parçaları tarar ve kanıt defterine yazar. Keşif ve ön tarama AYNI yolu
+ * kullanır. Sonuç önbelleğe (`kanit_tarama`) yazılır: bir parça bir kez taranır.
+ *
+ * Eşzamanlı: grup başına bir çağrı, en çok `ESZAMANLI` çağrı aynı anda.
+ * Sıra sonucu değiştirmez — her grup kendi transaction'ında yazılır, aynı
+ * pasaj iki kez gelirse `kanit_tekil` ikincisini yok sayar.
+ */
+export async function parcalariTara(
+  bekleyen: readonly Parca[],
+  o: { kesifId: number | null; ilerleme?: (taranan: number) => Promise<unknown> },
+): Promise<{ taranan: number; basarisiz: number; basarisizIdler: number[] }> {
+  const istemci = istemciSec();
+  const model = modelSnapshot();
+  const taramaSurum = PROMPTLAR.kanit_cikarimi.surum;
+  const nesneId = o.kesifId ?? "on_tarama";
+
+  const tara = async (grup: Parca[]): Promise<boolean> => {
+    // Uzun parça PENCERELERE bölünür: model `MODEL_METIN_SINIRI` karakter
+    // görüyor ve tek pencere parçanın kuyruğunu hiç taramadan "taranmış"
+    // sayıyordu. Pencereler aynı belge kimliğini taşır ve örtüşür ki bir
+    // cümle sınırda bölünmesin.
+    const pencereler = grup.flatMap((p) => pencerele(p.metin).map((metin) => ({ ...p, metin })));
+    const paket = paketKur(`tarama-${grup[0].id}`, pencereler.map((p) => ({ id: p.id, ad: p.ad, bolum: p.bolum, metin: p.metin })));
+    // Modele pakete yerel numara (1…n) gider, veritabanı kimliği değil.
+    const r = await kanitCikar(istemci, model, { belgeler: pencereler.map((p, i) => ({ ...p, id: i + 1 })), paket });
+    maliyetYaz(r.maliyet, taramaSurum, r.ok);
+    if (!r.ok) {
+      await islem(SERVIS, (sql) =>
+        denetle(sql, SERVIS, "kanit_cikarimi_reddedildi", "kesif", nesneId, { parcalar: grup.map((p) => p.id), asama: r.asama, hatalar: r.hatalar.slice(0, 5) }),
+      );
+      return false;
+    }
+    await islem(SERVIS, async (sql) => {
+      for (const x of r.kanitlar) {
+        await sql`
+          insert into kanit (belge_id, prompt_surum, model_snapshot, tur, konu, alinti)
+          values (${x.belge_id}, ${taramaSurum}, ${model}, ${x.tur}, ${x.konu.slice(0, 160)}, ${x.alinti})
+          on conflict do nothing
+        `;
+      }
+      for (const p of grup) {
+        await sql`
+          insert into kanit_tarama (belge_id, prompt_surum, model_snapshot, kanit_sayisi)
+          values (${p.id}, ${taramaSurum}, ${model}, ${r.kanitlar.filter((x) => x.belge_id === p.id).length})
+          on conflict do nothing
+        `;
+      }
+      if (r.dusenler.length) {
+        await denetle(sql, SERVIS, "kanit_dusuruldu", "kesif", nesneId, { parcalar: grup.map((p) => p.id), dusenler: r.dusenler.slice(0, 10) });
+      }
+    });
+    return true;
+  };
+
+  // Grup PENCERE sayısıyla kurulur: tek uzun parça tek başına bir çağrı olabilir.
+  const gruplar: Parca[][] = [];
+  for (const p of bekleyen) {
+    const son = gruplar.at(-1);
+    const dolu = son ? son.reduce((t, x) => t + pencerele(x.metin).length, 0) : TARAMA_GRUBU;
+    if (son && dolu + pencerele(p.metin).length <= TARAMA_GRUBU) son.push(p);
+    else gruplar.push([p]);
+  }
+
+  let taranan = 0;
+  let basarisiz = 0;
+  const basarisizIdler: number[] = [];
+  let sira = 0;
+  const isci = async () => {
+    while (sira < gruplar.length) {
+      const grup = gruplar[sira++];
+      if (await tara(grup)) {
+        taranan += grup.length;
+      } else if (grup.length > 1) {
+        // Grup reddedildiyse parçalar tek tek denenir: bir parçanın kusuru
+        // komşularını taranmamış bırakmasın.
+        for (const p of grup) {
+          if (await tara([p])) taranan++;
+          else (basarisiz++, basarisizIdler.push(p.id));
+        }
+      } else {
+        basarisiz++;
+        basarisizIdler.push(grup[0].id);
+      }
+      await o.ilerleme?.(taranan);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(ESZAMANLI, gruplar.length) }, isci));
+  return { taranan, basarisiz, basarisizIdler };
+}
+
+/**
+ * Ön tarama — worker boştayken önbellekte olmayan parçaları tarar. Keşif
+ * başlatıldığında tarama büyük ölçüde hazır olur. Tur başına sınırlı iş:
+ * yeni gelen bir öneri değerlendirmesi dakikalarca beklemesin.
+ */
+// ponytail: süreç içi; worker yeniden başlayınca bir kez daha denenir.
+const onTaramaReddi = new Set<number>();
+
+export async function onTarama(enCok = ESZAMANLI * TARAMA_GRUBU): Promise<number> {
+  const model = modelSnapshot();
+  const parcalar = (
+    await islem(SERVIS, (sql) =>
+      sql<Parca[]>`
+        select b.id, b.ad, b.bolum, b.tur::text, b.yil, b.metin, b.il_kod from belge b
+        where not (b.id = any(${[...onTaramaReddi]}::bigint[]))
+          and not exists (
+          select 1 from kanit_tarama t
+          where t.belge_id = b.id and t.prompt_surum = ${PROMPTLAR.kanit_cikarimi.surum} and t.model_snapshot = ${model}
+        )
+        order by b.id
+        limit ${enCok}
+      `,
+    )
+  ).map((p) => ({ ...p, id: Number(p.id) }));
+  if (!parcalar.length) return 0;
+  const { taranan, basarisiz, basarisizIdler } = await parcalariTara(parcalar, { kesifId: null });
+  // Hep reddedilen parça ön taramayı sonsuz döngüye (ve maliyete) sokmasın:
+  // keşif onu yine dener ve "taranamadı" diye raporlar.
+  for (const id of basarisizIdler) onTaramaReddi.add(id);
+  log.info("on_tarama", { taranan, basarisiz });
+  return taranan + basarisiz;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { islem, kapat, type Baglam } from "@ykh/database";
-import { birKesifAl, degerlendirmeYap, kesifHatasi, kesifYap, KILIT } from "@ykh/degerlendirme";
+import { birKesifAl, degerlendirmeYap, kesifHatasi, kesifYap, KILIT, onTarama } from "@ykh/degerlendirme";
 import { log } from "@ykh/observability";
 
 /**
@@ -59,7 +59,16 @@ export async function hataYaz(oneriId: number, hata: string): Promise<void> {
  */
 async function kesifTuru(): Promise<boolean> {
   const kesifId = await birKesifAl();
-  if (kesifId === null) return false;
+  // Keşif de yoksa boş vakit ön taramaya: yeni yüklenen belgeler keşif
+  // başlamadan taranmış olur. Tur sınırlı; yeni öneri beklemez.
+  if (kesifId === null) {
+    try {
+      return (await onTarama()) > 0;
+    } catch (e) {
+      log.hata("on_tarama_hatasi", { hata: e instanceof Error ? e.message : String(e) });
+      return false;
+    }
+  }
   try {
     const s = await kesifYap(kesifId);
     log.info("kesif_turu", { kesifId, ok: s.ok, mesaj: s.mesaj });

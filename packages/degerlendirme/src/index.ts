@@ -3,7 +3,7 @@ import { ayrilmisIslem, denetle, islem, kilitHavuzu, type Baglam } from "@ykh/da
 import { aiMaliyeti, log } from "@ykh/observability";
 import { belgePaketi, naceAdaylari } from "@ykh/retrieval";
 
-export { birKesifAl, kesifHatasi, kesifYap, pencerele, type KesifSonucu } from "./kesif.ts";
+export { birKesifAl, kesifHatasi, kesifYap, onTarama, pencerele, type KesifSonucu } from "./kesif.ts";
 
 /**
  * Değerlendirme işi. Worker döngüsü ve web'deki "şimdi değerlendir" eylemi

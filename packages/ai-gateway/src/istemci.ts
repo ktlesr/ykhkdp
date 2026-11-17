@@ -192,7 +192,7 @@ export const openAiIstemci = (): ModelIstemcisi => ({
         // farklı uyguluyordu (eval: yersiz gerekçe 39–78). gpt-4.1 bu alanı kabul
         // etmez, o yüzden yalnızca akıl yürüten modellere gönderilir.
         ...(/^(gpt-5|o\d)/.test(istek.modelSnapshot)
-          ? { reasoning: { effort: process.env.YKH_MODEL_EFOR || "medium" } }
+          ? { reasoning: { effort: eforSec(istek.semaAdi) } }
           : {}),
       }),
       // Askıda kalan çağrı worker'ı süresiz durdurmasın. Zaman aşımı "model"
@@ -220,3 +220,15 @@ export const openAiIstemci = (): ModelIstemcisi => ({
     };
   },
 });
+
+/**
+ * Akıl yürütme düzeyi çağrı türüne göre. Kanıt TARAMASI metinden pasaj seçer;
+ * doğruluğu modelin muhakemesi değil mekanik doğrulayıcı güvenceler (pasaj
+ * kaynakta birebir yoksa düşer). Orada "medium" süre ve token harcıyordu
+ * (ölçüldü: çağrı başına ~3.600 çıktı tokenı, 17–34 sn). Puanlama ve aday
+ * üretimi yargı ister; onlar `YKH_MODEL_EFOR` (varsayılan medium) ile kalır.
+ */
+function eforSec(sema: string): string {
+  if (sema === "kanit_cikarimi") return process.env.YKH_TARAMA_EFOR || "low";
+  return process.env.YKH_MODEL_EFOR || "medium";
+}
