@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { oneriGetir, donemGetir } from "@ykh/database";
+import { oneriGetir, donemGetir, parcaMetinleri } from "@ykh/database";
+import { alintininMaddesi } from "@ykh/evidence-validation";
 import {
   KARSI_GORUS_ETIKET,
   NACE_KAYNAK_ETIKET,
@@ -52,6 +53,24 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
   const alintilar = o.alintilar ?? [];
   const kriterDayanagi = o.kriter_dayanagi ?? null;
   const karsiGorus = o.karsi_gorus ?? [];
+
+  /**
+   * Atıf çıpası: parça etiketi ("madde 470.2–474.1") parçanın ARALIĞIDIR.
+   * Alıntının kesin maddesi kaynakta aranarak bulunur ("madde 472.1");
+   * bulunamazsa uydurulmaz, aralık "bu parçada" diye açıkça yazılır.
+   */
+  const metinler = await parcaMetinleri(b, [
+    ...alintilar.map((a) => ({ ad: a.belge_ad, bolum: a.bolum })),
+    ...karsiGorus.flatMap((g) => g.alintilar.map((a) => ({ ad: a.belge_ad, bolum: a.bolum }))),
+    ...(o.kesif_kanit ?? []).map((a) => ({ ad: a.belge_ad, bolum: a.bolum })),
+  ]);
+  const cipa = (a: { belge_ad: string; bolum: string | null; alinti: string }): string | null => {
+    if (!a.bolum) return null;
+    if (!a.bolum.startsWith("madde")) return a.bolum;
+    const metin = metinler.get(`${a.belge_ad}|${a.bolum}`);
+    const kesin = metin ? alintininMaddesi(metin, a.alinti) : null;
+    return kesin ? `madde ${kesin}` : `${a.bolum.replace(/^madde /, "maddeler ")} arası parça`;
+  };
 
   return (
     <>
@@ -130,7 +149,7 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
                   <li key={i} className="border-l-[3px] border-l-verified pl-3">
                     <p className="text-[13px] leading-[1.5] text-ink text-pretty">&ldquo;{x.alinti}&rdquo;</p>
                     <div className="mt-1 flex flex-wrap gap-x-2.5 etiket text-ink-mute">
-                      <span>{x.belge_ad}{x.bolum ? ` · ${x.bolum}` : ""}</span>
+                      <span>{x.belge_ad}{cipa(x) ? ` · ${cipa(x)}` : ""}</span>
                       <span>{x.yerel ? "bu ile özgü" : "bölge / ulusal"}</span>
                     </div>
                   </li>
@@ -177,7 +196,7 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
                   <div key={i} className="border-b border-b-hairline-soft px-4 py-3.5 last:border-b-0">
                     <div className="etiket text-ink-mute">
                       {a.belge_ad}
-                      {a.bolum && <span className="num"> · {a.bolum}</span>}
+                      {cipa(a) && <span className="num"> · {cipa(a)}</span>}
                     </div>
                     <blockquote className="mt-1.5 border-l-2 border-l-ink pl-3 font-display text-[14.5px] leading-[1.55] text-ink text-pretty">
                       “{a.alinti}”
@@ -215,7 +234,7 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
                       <div key={j} className="mt-2">
                         <div className="etiket text-ink-mute">
                           {a.belge_ad}
-                          {a.bolum && <span className="num"> · {a.bolum}</span>}
+                          {cipa(a) && <span className="num"> · {cipa(a)}</span>}
                         </div>
                         <blockquote className="mt-1 border-l-2 border-l-ink-mute pl-3 text-[13px] leading-[1.5] text-ink-soft text-pretty">
                           “{a.alinti}”
@@ -282,7 +301,7 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
                               return (
                                 <span key={no}>
                                   {a.belge_ad}
-                                  {a.bolum && <span className="num"> · {a.bolum}</span>}
+                                  {cipa(a) && <span className="num"> · {cipa(a)}</span>}
                                 </span>
                               );
                             })}

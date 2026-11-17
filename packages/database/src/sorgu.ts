@@ -1404,3 +1404,20 @@ export async function nihaiListeVerisi(b: Baglam, suzgec: { il?: string; bolge?:
   }
   return sonuc;
 }
+
+/**
+ * Alıntıların parça metinleri — kesin madde için. Anahtar `ad|bolum`:
+ * değerlendirme, karşı görüş ve keşif kayıtlarının üçü de belge adı ile
+ * çıpayı taşıyor. Belgeler kamuya açık; RLS herkese okutur.
+ */
+export async function parcaMetinleri(b: Baglam, cipalar: ReadonlyArray<{ ad: string; bolum: string | null }>): Promise<Map<string, string>> {
+  const tekil = [...new Map(cipalar.filter((c) => c.bolum?.startsWith("madde")).map((c) => [`${c.ad}|${c.bolum}`, c])).values()];
+  if (!tekil.length) return new Map();
+  const r = await islem(b, (sql) =>
+    sql<{ ad: string; bolum: string; metin: string }[]>`
+      select ad, bolum, metin from belge
+      where (ad, bolum) in ${sql(tekil.map((c) => [c.ad, c.bolum!]) as never)}
+    `,
+  );
+  return new Map(r.map((x) => [`${x.ad}|${x.bolum}`, x.metin]));
+}

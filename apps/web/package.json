@@ -16,6 +16,7 @@
     "@ykh/database": "workspace:*",
     "@ykh/degerlendirme": "workspace:*",
     "@ykh/domain": "workspace:*",
+    "@ykh/evidence-validation": "workspace:*",
     "@ykh/observability": "workspace:*",
     "@ykh/retrieval": "workspace:*",
     "@ykh/scoring": "workspace:*",

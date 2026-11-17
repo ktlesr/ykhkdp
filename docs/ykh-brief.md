@@ -560,6 +560,15 @@ BGUS her ilde girer. Kodda hiçbir il veya ajans sabitlenmez.
 Çıpa sırası: sayfa → madde → başlık → `parça n/m`. Kimsenin bulamayacağı bir
 adres atıf değildir; sıralı numara yalnızca son çare.
 
+**Parça etiketi aralıktır, alıntının yeri değil.** "madde 470.2–474.1"
+parçanın kapsadığı maddeler; ekran alıntının KESİN maddesini kaynakta arayarak
+gösterir ("madde 471.2", `alintininMaddesi`). Alıntı parçanın ilk madde
+başından önce geçiyorsa madde uydurulmaz, "maddeler … arası parça" yazılır.
+Madde etiketi yalnızca madde numaralı belgede verilir (≥20 numaralı paragraf,
+en az biri ≥100): bilgi notundaki "1. Amaç" listesi madde değildir. Sayfa
+işaretleri parça metninde tutulmadığı için kesin sayfa hesaplanmaz; sayfa
+etiketi parçanın sayfa aralığıdır.
+
 **Kaynak kalitesi doğrudan alıntı doğrulamasını belirler.** İki kolonlu PDF'ten
 kolon-farkındalıksız çıkarılan metinde iki kolon aynı satırda birleşiyor ve
 belgede birebir hiçbir cümle kalmıyor — bu hâldeki 12KP ile yapılan

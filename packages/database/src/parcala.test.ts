@@ -37,13 +37,21 @@ test("sayfa işareti metinden çıkar, parça etiketine geçer", () => {
   assert.ok(!p.metin.includes("31 / 240"));
 });
 
-test("sayfa yoksa numaralı madde aralığı çıpa olur", () => {
-  const [p] = parcala(
-    "449. Elektronik sektöründe ithal bağımlılığı yüksek ara malların yerli üretimi desteklenecektir.\n\n" +
-      "450.1. Yarı iletken teknolojilerinin geliştirilmesi sağlanacak ve yatırımlar desteklenecektir.\n",
-    9999,
-  );
-  assert.equal(p.bolum, "madde 449–450.1");
+test("sayfa yoksa numaralı madde aralığı çıpa olur (madde numaralı plan belgesi)", () => {
+  // Plan belgesi: onlarca numaralı madde, numaralar yüzlerde.
+  const maddeler = Array.from({ length: 24 }, (_, i) => `${449 + i}. Madde ${i} kapsamında ara malların yerli üretimi desteklenecektir.`);
+  const [p] = parcala(maddeler.join("\n\n"), 9999);
+  assert.equal(p.bolum, "madde 449–472");
+});
+
+test("numaralı liste madde değildir: bilgi notunda uydurma madde etiketi yok", () => {
+  const notu =
+    "## Yerel Kalkınma Hamlesi Bilgi Notu\n\n" +
+    "1. Amaç bölümünde programın hedefleri ve kapsamı ayrıntılı biçimde açıklanmaktadır.\n\n" +
+    "2. Kapsam bölümünde illerin yatırım konularının nasıl belirleneceği anlatılmaktadır.\n\n" +
+    "3. Uygulama bölümünde ajansların görev ve sorumlulukları sıralanmaktadır.\n";
+  const [p] = parcala(notu, 9999);
+  assert.doesNotMatch(p.bolum, /^madde/);
 });
 
 test("sayfa ve madde yoksa en yakın başlık çıpa olur", () => {

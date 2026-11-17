@@ -824,3 +824,27 @@ export function adaylariDogrula(
   }
   return { adaylar: sonuc, dusenler };
 }
+
+/**
+ * Alıntının parça içindeki KESİN maddesi — "madde 472.1".
+ *
+ * Parça etiketi ("madde 470.2–474.1") parçanın kapsadığı ARALIKTIR; alıntının
+ * nerede geçtiğini söylemez ve okuyan onu alıntının maddesi sanıyordu.
+ * Alıntı kaynakta aranır, ondan önceki son madde başı alıntının maddesidir.
+ * Alıntı parçanın ilk madde başından ÖNCE geçiyorsa (önceki parçadan
+ * taşmış metin) madde bilinmez: null — uydurulmaz.
+ *
+ * Madde biçimi `belge-yukle.ts` MADDE ile aynı: satır başında "470.2. Büyük".
+ */
+const MADDE_BASI = /(?:^|\n)(\d{1,4}(?:\.\d{1,3})*)\.\s+\p{Lu}/gu;
+export function alintininMaddesi(parcaMetni: string, alinti: string): string | null {
+  const ozgun = kaynaktanCikar(parcaMetni, alinti);
+  const konum = ozgun ? parcaMetni.indexOf(ozgun) : -1;
+  if (konum === -1) return null;
+  let son: string | null = null;
+  for (const m of parcaMetni.matchAll(MADDE_BASI)) {
+    if ((m.index ?? 0) > konum) break;
+    son = m[1];
+  }
+  return son;
+}

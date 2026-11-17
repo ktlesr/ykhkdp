@@ -41,6 +41,8 @@ const ICINDEKILER = /\.{3,}\s*\d+(\s*·.*)?$/;
 const BASLIK = /^\s{0,3}#{1,6}\s+\S/;
 /** "449.", "881.4." gibi numaralı madde başı — 12. Kalkınma Planı bu biçimde. */
 const MADDE = /(?:^|\n)(\d{1,4}(?:\.\d{1,3})*)\.\s+\p{Lu}/gu;
+/** Bir belgenin "madde numaralı" sayılması için gereken en az numaralı paragraf. */
+const MADDE_ESIGI = 20;
 
 /**
  * Parça içindeki numaralı madde aralığı — atıf çıpası olarak sayfadan iyidir.
@@ -121,6 +123,15 @@ function tirelemesiz(satirlar: readonly string[]): string {
 
 export function parcala(hamMetin: string, parcaBoyu = 2500): Parca[] {
   const hamSatirlar = hamMetin.replace(/\r\n?/g, "\n").split("\n");
+  /**
+   * Madde etiketi yalnızca MADDE NUMARALI belgede. Satır başındaki her "1.
+   * Giriş" listesi madde değildir; bilgi notu gibi bir belgede "madde 1–5"
+   * etiketi uydurma bir adres olurdu. Plan maddesi belgesi: en az
+   * MADDE_ESIGI numaralı paragraf ve en az biri 100'ün üstünde (12. Kalkınma
+   * Planı: 400'ü aşkın madde).
+   */
+  const maddeler = [...hamMetin.replace(/\r\n?/g, "\n").replace(/\*\*/g, "").matchAll(MADDE)].map((m) => Number(m[1].split(".")[0]));
+  const maddeBelgesi = maddeler.length >= MADDE_ESIGI && Math.max(0, ...maddeler) >= 100;
   const atilacak = mobilya(hamSatirlar.map(markdownsuz));
 
   let sayfa: number | null = null;
@@ -182,7 +193,7 @@ export function parcala(hamMetin: string, parcaBoyu = 2500): Parca[] {
     if (metin.length < 120) return;
     const sayfaEtiketi =
       sayfaVar && bas !== null ? (bas === son ? `s. ${bas}` : `s. ${bas}–${son}`) : null;
-    parcalar.push({ bolum: sayfaEtiketi ?? maddeAraligi(metin) ?? parcaBaslik ?? "", metin });
+    parcalar.push({ bolum: sayfaEtiketi ?? (maddeBelgesi ? maddeAraligi(metin) : null) ?? parcaBaslik ?? "", metin });
     bas = null;
   };
 

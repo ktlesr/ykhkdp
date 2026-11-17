@@ -174,3 +174,18 @@ test("aynı metinli iki kanıt 'iki farklı kanıt' sayılmaz", () => {
   );
   assert.equal(s.adaylar.length, 0);
 });
+
+test("alıntının kesin maddesi: aralık değil, alıntının geçtiği madde", async () => {
+  const { alintininMaddesi } = await import("./index.ts");
+  const parca = [
+    "önceki maddeden taşan cümle burada sürüyor ve bitiyor.",
+    "470.2. Batarya geri dönüşümü, ikincil kullanımı ve bertarafına ilişkin bir sistem oluşturulacaktır.",
+    "470.3. Tedarik sanayiinin yeşil dönüşümü için farkındalık artırılacaktır.",
+    "474.1. Elektrikli araç şarj altyapısı yaygınlaştırılacaktır.",
+  ].join("\n\n");
+  assert.equal(alintininMaddesi(parca, "Tedarik sanayiinin yeşil dönüşümü için farkındalık"), "470.3");
+  assert.equal(alintininMaddesi(parca, "şarj altyapısı yaygınlaştırılacaktır"), "474.1");
+  // İlk madde başından önce: madde bilinmez, uydurulmaz.
+  assert.equal(alintininMaddesi(parca, "önceki maddeden taşan cümle burada sürüyor"), null);
+  assert.equal(alintininMaddesi(parca, "bu metin parçada hiç geçmiyor ve bulunamaz"), null);
+});
