@@ -56,7 +56,7 @@ export function nihaiHesapla(iller: readonly NihaiIl[]): { satirlar: NihaiSatir[
       ozet.push({ ...ortak, asil: 0, yedek: 0, bos: 0, bekleyen: 0, agirlik: "", kalibre: false, donemVar: false });
       continue;
     }
-    const h = hesapla(x.adaylar, ayardan(x.donem.set));
+    const h = hesapla(x.adaylar, ayardan(x.donem.set), { yerAdlari: [x.il] });
     const satir = (bolum: NihaiSatir["bolum"], s: (typeof h.kalanlar)[number]): NihaiSatir => {
       const d = x.detay.get(s.id);
       return {

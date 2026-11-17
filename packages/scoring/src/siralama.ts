@@ -1,5 +1,6 @@
 import type { Aday, BosSatir, DoluSatir, Hesap, Koken, Ozet, Satir, Sonuc, UcDurum } from "@ykh/domain";
 import type { AgirlikSeti } from "./kriterler.ts";
+import { ayniKonuMu } from "./ayni-konu.ts";
 
 /**
  * Sıralama ve slot doldurma. Saf fonksiyon: DB yok, UI yok, rastgelelik yok.
@@ -22,12 +23,34 @@ export function ayardan(set: AgirlikSeti, ezme?: Partial<Ayar>): Ayar {
   };
 }
 
-export function hesapla(adaylar: readonly Aday[], ayar: Ayar): Hesap {
+export function hesapla(adaylar: readonly Aday[], ayar: Ayar, secenek: { yerAdlari?: readonly string[] } = {}): Hesap {
   const { devamlilikPayi: pay, dayanakEsigi: esik, devirSiniri, slotSayisi } = ayar;
 
-  const liste = adaylar
+  const tumu = adaylar
     .map((k) => ({ ...k, puan: k.taban + (k.koken === "mevcut" ? pay : 0) }))
     .sort((a, b) => b.puan - a.puan || a.id.localeCompare(b.id, "tr"));
+
+  /**
+   * AYNI KONU tek kez yarışır. Başlıkları farklı yazılmış iki aday aynı
+   * konuysa (`ayniKonuMu`) temsilci, dayanak eşiğini geçenler arasında puanı
+   * en yüksek olandır (hiçbiri geçmiyorsa en yüksek puanlı); diğerleri
+   * asıl/yedek dışında "aynı konu" olarak kalır. Canlıda iki "emniyet kemeri"
+   * önerisi asıl listeye birlikte girmişti.
+   */
+  const yerler = secenek.yerAdlari ?? [];
+  const temsilci = new Map<string, string>(); // tekrar id → temsilci adı
+  const kumeler: Array<typeof tumu> = [];
+  for (const k of tumu) {
+    const kume = kumeler.find((c) => ayniKonuMu(c[0].ad, k.ad, yerler));
+    if (kume) kume.push(k);
+    else kumeler.push([k]);
+  }
+  for (const c of kumeler) {
+    if (c.length < 2) continue;
+    const bas = c.find((x) => x.dayanak >= esik) ?? c[0];
+    for (const x of c) if (x !== bas) temsilci.set(x.id, bas.ad);
+  }
+  const liste = tumu.filter((k) => !temsilci.has(k.id));
 
   type Sirali = (typeof liste)[number];
   const slots: Satir[] = [];
@@ -83,6 +106,7 @@ export function hesapla(adaylar: readonly Aday[], ayar: Ayar): Hesap {
   const puanSirasi = kalan.sort((a, b) => b.puan - a.puan || a.id.localeCompare(b.id, "tr"));
   const yedek = puanSirasi.filter((k) => !k.dayanaksiz).slice(0, slotSayisi);
   const disarida = puanSirasi.filter((k) => !yedek.includes(k));
+  const tekrarlar = tumu.filter((k) => temsilci.has(k.id));
   let s = slotSayisi + 1;
   const kalanlar = [
     ...yedek.map((k) => ({ ...satir(k, s++, false, false, false), yedekte: true })),
@@ -90,13 +114,20 @@ export function hesapla(adaylar: readonly Aday[], ayar: Ayar): Hesap {
       const r = satir(k, s++, false, false, k.dayanaksiz);
       return { ...r, yedekte: false, sonuc: !k.dayanaksiz && k.koken === "yeni" ? ("liste dışı" as const) : r.sonuc };
     }),
+    ...tekrarlar.map((k) => ({
+      ...satir(k, s++, false, false, k.dayanak < esik),
+      yedekte: false,
+      sonuc: "aynı konu" as const,
+      ayniKonu: temsilci.get(k.id),
+    })),
   ];
 
   const dolular = slots.filter((x): x is DoluSatir => !x.bos);
   const ozet: Ozet = {
     korunuyor: dolular.filter((x) => x.koken === "mevcut").length,
     ekleniyor: dolular.filter((x) => x.koken === "yeni").length,
-    cikiyor: kalanlar.filter((x) => x.koken === "mevcut").length,
+    // Aynı konulu yeni sürümü listeye giren resmî konu "çıkmıyor": konu kalıyor.
+    cikiyor: kalanlar.filter((x) => x.koken === "mevcut" && x.sonuc !== "aynı konu").length,
     bosSlot: slots.length - dolular.length,
   };
 

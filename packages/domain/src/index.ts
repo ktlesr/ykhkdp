@@ -119,8 +119,11 @@ export type Koken = "mevcut" | "yeni";
  * "liste dışı": eşiği geçen ama yedek sınırının (slot sayısı kadar) ötesinde
  * kalan yeni öneri. Platformun çıktısı en çok slot kadar asıl + slot kadar
  * yedektir; sıralama geri kalanı gizlemez, adıyla söyler.
+ *
+ * "aynı konu": başka bir adayla aynı konu (başlığı farklı yazılmış). Aynı
+ * konudan yalnızca biri asıl ya da yedek listeye girer.
  */
-export type Sonuc = "korunuyor" | "ekleniyor" | "çıkıyor" | "yedek" | "liste dışı" | "dayanaksız";
+export type Sonuc = "korunuyor" | "ekleniyor" | "çıkıyor" | "yedek" | "liste dışı" | "dayanaksız" | "aynı konu";
 
 /**
  * Sıralamaya giren aday.
@@ -148,6 +151,8 @@ export type DoluSatir = Aday & {
   dayanaksiz: boolean;
   /** ilk dörtte değil ama yedek sırasında (en çok slot sayısı kadar) */
   yedekte?: boolean;
+  /** aynı konunun listeye giren temsilcisinin adı — bu satır onun tekrarı */
+  ayniKonu?: string;
 };
 
 export type BosSatir = { bos: true; sira: number; gerekce: string };

@@ -2,7 +2,7 @@ import type { DonemKaydi } from "@ykh/database";
 import type { Aday } from "@ykh/domain";
 import { ayardan, hesapla } from "@ykh/scoring";
 
-export type Konum = { sira: number; tur: "asıl" | "yedek" | "liste dışı" | "dayanaksız" };
+export type Konum = { sira: number; tur: "asıl" | "yedek" | "liste dışı" | "dayanaksız" | "aynı konu"; ayniKonu?: string };
 
 /**
  * "Onaylanırsa nereye girer" — onay bekleyen öneri için öngörü.
@@ -12,12 +12,16 @@ export type Konum = { sira: number; tur: "asıl" | "yedek" | "liste dışı" | "
  * asıl + yedek sınırı. Ayrı bir sıralama formülü yok — iki hesap iki doğru
  * demek olurdu. Bu bir öngörüdür, karar değil: gerçek sıralama onayla oluşur.
  */
-export function onaylanirsa(onayli: readonly Aday[], bekleyen: readonly Aday[], d: DonemKaydi): Map<string, Konum> {
-  const h = hesapla([...onayli, ...bekleyen], ayardan(d.set));
+export function onaylanirsa(onayli: readonly Aday[], bekleyen: readonly Aday[], d: DonemKaydi, yerAdlari: readonly string[] = [d.il]): Map<string, Konum> {
+  const h = hesapla([...onayli, ...bekleyen], ayardan(d.set), { yerAdlari });
   const sonuc = new Map<string, Konum>();
   for (const s of h.ilkDort) if (!s.bos) sonuc.set(s.id, { sira: s.sira, tur: "asıl" });
   for (const s of h.kalanlar) {
-    sonuc.set(s.id, { sira: s.sira, tur: s.yedekte ? "yedek" : s.dayanaksiz ? "dayanaksız" : "liste dışı" });
+    sonuc.set(s.id, {
+      sira: s.sira,
+      tur: s.sonuc === "aynı konu" ? "aynı konu" : s.yedekte ? "yedek" : s.dayanaksiz ? "dayanaksız" : "liste dışı",
+      ayniKonu: s.ayniKonu,
+    });
   }
   const bekleyenIdleri = new Set(bekleyen.map((x) => x.id));
   return new Map([...sonuc].filter(([id]) => bekleyenIdleri.has(id)));

@@ -195,6 +195,19 @@ puan sırasıyla dolar ve asılların hemen ardından numaralanır. Ötesindeki 
 yedekte de olsa dışarıda da olsa **çıkıyor**dur. Sınır sabit değil, ağırlık
 setinden gelir.
 
+**Aynı konu tek kez yarışır.** Başlığı farklı yazılmış aynı konu ("Emniyet
+Kemeri Üretimi" ↔ "Aksaray İli Emniyet Kemeri İmalatı Tesisi") asıl listeye
+birlikte girmişti — trigram benzerliği il adı ve "imalatı tesisi" kalıbı
+yüzünden ayıramıyordu. `ayniKonuMu` başlığı konunun özüne indirger (yer adları,
+"üretimi/imalatı/tesisi/asgari/işleme…" kalıbı ve sayılar atılır, 5 harf kök
+karşılaştırılır). Ölçüldü: resmî listelerde aynı il-yıl içi 972 farklı konu
+çiftinde 0 yanlış alarm; yıllar arası birebir aynı 9 konunun 9'u yakalandı.
+Sıralamada (`hesapla`) aynı konudan yalnızca biri asıl/yedek olur — temsilci
+dayanak eşiğini geçenler arasında en yüksek puanlı; diğerleri "aynı konu"
+etiketiyle dışarıda, kimin tekrarı olduğu yazar. Keşif aynı kuralla tekrarı
+kuyruğa hiç almaz (üçüncü katman). Sınır: sözcükseldir — "hava yastığı" ile
+"airbag" ayrılmaz.
+
 **Resmî konular da yarışır.** Tebliğden türeyen mevcut konular puanlanmadan
 "dayanaksız" kalıyordu — gerçek puanla yarışmıyorlardı. `/il/[il]` "Belgelere
 göre değerlendir" ile onları aynı hatta sokar (`listede → degerlendiriliyor`):

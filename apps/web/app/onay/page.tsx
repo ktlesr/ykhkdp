@@ -212,6 +212,7 @@ export default async function Onay({ searchParams }: { searchParams: Promise<{ b
                             <span className="text-ink-soft">{yol(o)}</span>
                             {o.ilce && <span>{o.ilce}</span>}
                             {o.nace_kod && <span className="num">NACE {o.nace_kod}</span>}
+                            {konum?.ayniKonu && <span className="text-unverif">= aynı konu: {konum.ayniKonu}</span>}
                             {benzer.length > 0 && (
                               <span className="text-unverif">
                                 ◌ benzer başlık: {benzer.map((y) => `#${y.id}`).join(", ")}

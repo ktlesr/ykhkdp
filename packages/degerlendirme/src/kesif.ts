@@ -2,6 +2,7 @@ import { adayKesfet, kanitCikar, modelSnapshot, PROMPTLAR, type Maliyet } from "
 import { modelSec } from "./model-secimi.ts";
 import { denetle, islem, type Baglam } from "@ykh/database";
 import { MODEL_METIN_SINIRI, paketKur, yerelMi } from "@ykh/evidence-validation";
+import { ayniKonuMu } from "@ykh/scoring";
 import { aiMaliyeti, log } from "@ykh/observability";
 
 /**
@@ -291,11 +292,15 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
         const kesisim = eski.filter((x) => yeniKanit.has(x)).length;
         return kesisim / Math.min(eski.length, yeniKanit.size) >= TEKRAR_KANIT;
       });
-      if (benzer || ortak) {
+      // Üçüncü katman: "konunun özü" aynı — il adı ve "üretimi/imalatı/tesisi"
+      // kalıbı atılınca aynı sözcükler (canlıda: "Emniyet Kemeri Üretimi" ↔
+      // "Aksaray İli Emniyet Kemeri İmalatı Tesisi"; trigram ikisini ayırıyordu).
+      const ozu = donemdekiler.find((r) => ayniKonuMu(r.b, anahtar, hedef.adlar));
+      if (benzer || ortak || ozu) {
         tekrarlar.push({
           baslik: aday.baslik,
-          oncekiId: Number(benzer?.id ?? ortak!.id),
-          neden: benzer ? `başlık benzerliği ${benzer.benzerlik}` : "aynı kanıtlara dayanıyor",
+          oncekiId: Number(benzer?.id ?? ortak?.id ?? ozu!.id),
+          neden: benzer ? `başlık benzerliği ${benzer.benzerlik}` : ortak ? "aynı kanıtlara dayanıyor" : "konunun özü aynı",
         });
         continue;
       }

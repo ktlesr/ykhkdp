@@ -6,7 +6,12 @@ import { TR33_2027_V1 } from "@ykh/scoring";
 import { nihaiExcel, nihaiHesapla, nihaiWord } from "./nihai-liste.ts";
 
 const D = { donemId: 1, ilKod: "usak", il: "Uşak", ajansKod: "TR33", ajans: "ZAFER", yil: "2027", set: TR33_2027_V1, kalibre: true } as DonemKaydi;
-const aday = (id: string, taban: number, dayanak = 80): Aday => ({ id, ad: `Konu ${id}`, koken: "yeni", taban, dayanak, nace: null });
+// Birbirinden farklı konular: "Konu 1/2/…" gibi yalnızca numarası farklı adlar
+// aynı konu sayılır (sıralama tekrarı eler) — test verisi gerçekçi olmalı.
+const URUNLER = ["seramik", "tekstil", "deri", "mermer", "zeytin", "bor", "kaolen", "termal", "jeotermal", "lojistik", "dayanaksiz", "a", "b"];
+const aday = (id: string, taban: number, dayanak = 80): Aday => ({
+  id, ad: `${URUNLER[Number(id) - 1] ?? id} ürünleri üretimi`, koken: "yeni", taban, dayanak, nace: null,
+});
 
 const IL: NihaiIl = {
   il: "Uşak", ilKod: "usak", ajans: "Zafer Kalkınma Ajansı", ajansKod: "TR33", donem: D,
@@ -21,9 +26,9 @@ test("nihai liste: en çok slot kadar asıl + slot kadar yedek; liste dışı ve
   const usak = satirlar.filter((s) => s.il === "Uşak");
   assert.equal(usak.filter((s) => s.bolum === "Asıl").length, TR33_2027_V1.slotSayisi);
   assert.equal(usak.filter((s) => s.bolum === "Yedek").length, TR33_2027_V1.slotSayisi);
-  assert.ok(!usak.some((s) => s.baslik === "Konu dayanaksiz"), "dayanaksız nihai listeye girmez");
+  assert.ok(!usak.some((s) => s.baslik.startsWith("dayanaksiz")), "dayanaksız nihai listeye girmez");
   assert.deepEqual(usak.slice(0, 4).map((s) => s.sira), [1, 2, 3, 4]);
-  assert.equal(usak[0].baslik, "Konu 1", "en yüksek puan en üstte");
+  assert.equal(usak[0].baslik, "seramik ürünleri üretimi", "en yüksek puan en üstte");
   // Eksik gizlenmez: bekleyen sayısı ve dönemsiz il özette.
   assert.equal(ozet.find((o) => o.il === "Uşak")?.bekleyen, 2);
   assert.equal(ozet.find((o) => o.il === "Ankara")?.donemVar, false);
@@ -42,5 +47,5 @@ test("dayanak eşiği sıralamayı ezer: en yüksek puanlı aday dayanaksızsa s
   const il: NihaiIl = { ...IL, adaylar: [aday("dayanaksiz", 99, 5), aday("a", 60), aday("b", 55)] };
   const usak = nihaiHesapla([il]).satirlar;
   assert.equal(usak[0].bolum, "Boş slot", "devir sınırı dışındaki aday slotu devralmaz");
-  assert.ok(!usak.some((s) => s.baslik === "Konu dayanaksiz"));
+  assert.ok(!usak.some((s) => s.baslik.startsWith("dayanaksiz")));
 });

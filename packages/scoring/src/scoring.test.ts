@@ -287,3 +287,39 @@ test("çıktı en çok slot kadar asıl + slot kadar yedektir; ötesi 'liste dı
   assert.equal(disari.find((x) => x.id === "m")?.sonuc, "çıkıyor");
   assert.ok(disari.filter((x) => x.koken === "yeni" && !x.dayanaksiz).every((x) => x.sonuc === "liste dışı"));
 });
+
+// ── Aynı konu tek kez yarışır ──────────────────────────────────────────────
+
+test("aynı konu: il adı ve 'üretimi/imalatı/tesisi' kalıbı atılınca eşleşir; farklı ürünler ayrı kalır", async () => {
+  const { ayniKonuMu } = await import("./ayni-konu.ts");
+  const yer = ["Aksaray"];
+  assert.equal(ayniKonuMu("Emniyet Kemeri Üretimi", "Aksaray İli Emniyet Kemeri İmalatı Tesisi", yer), true);
+  assert.equal(ayniKonuMu("Nitelikli Süt Tozu Üretim Tesisi", "Aksaray'da nitelikli süt tozu üretim tesisi", yer), true);
+  assert.equal(ayniKonuMu("Motorlu Kara Taşıtları İçin Airbag Üretimi", "Emniyet Kemeri Üretimi", yer), false);
+  assert.equal(ayniKonuMu("Organik süt üretimi", "Nitelikli süt tozu üretim tesisi", yer), false);
+  // Resmî listelerin kalıbı: süt ve et tesisleri FARKLI konu (ölçülen yanlış alarm).
+  assert.equal(
+    ayniKonuMu("Asgari 500 Büyükbaş Kapasiteli Entegre Süt Üretimi ve Süt İşleme Tesisi", "Asgari 500 Büyükbaş Kapasiteli Entegre Besi ve Et Ürünleri İşleme Tesisi"),
+    false,
+  );
+});
+
+test("aynı konudan yalnızca biri asıl/yedek listeye girer; temsilci eşiği geçen en yüksek puanlı", () => {
+  const adaylar: Aday[] = [
+    { id: "a", ad: "Motorlu Kara Taşıtları İçin Airbag Üretimi", koken: "yeni", taban: 86, dayanak: 80, nace: null },
+    { id: "b", ad: "Emniyet Kemeri Üretimi", koken: "yeni", taban: 82, dayanak: 67, nace: null },
+    { id: "c", ad: "Aksaray İli Emniyet Kemeri İmalatı Tesisi", koken: "yeni", taban: 77, dayanak: 58, nace: null },
+    { id: "d", ad: "Motosiklet Dış Lastiği Üretimi", koken: "yeni", taban: 77, dayanak: 77, nace: null },
+    // Puanı en yüksek ama dayanaksız tekrar: temsilci OLAMAZ.
+    { id: "e", ad: "Aksaray'da emniyet kemeri üretimi", koken: "yeni", taban: 95, dayanak: 10, nace: null },
+  ];
+  const h = hesapla(adaylar, AYAR, { yerAdlari: ["Aksaray"] });
+  const listede = [...h.ilkDort, ...h.kalanlar.filter((x) => x.yedekte)].filter((x) => !x.bos) as Array<{ id: string }>;
+  const kemer = listede.filter((x) => ["b", "c", "e"].includes(x.id));
+  assert.equal(kemer.length, 1, "emniyet kemeri listede bir kez");
+  assert.equal(kemer[0].id, "b", "eşiği geçen en yüksek puanlı temsilci");
+  const tekrar = h.kalanlar.filter((x) => x.sonuc === "aynı konu").map((x) => x.id).sort();
+  assert.deepEqual(tekrar, ["c", "e"]);
+  assert.equal(h.kalanlar.find((x) => x.id === "c")?.ayniKonu, "Emniyet Kemeri Üretimi");
+  assert.equal(h.ozet.cikiyor, 0);
+});

@@ -48,6 +48,7 @@ const SONUC_ROZET: Record<Sonuc, { tur: "yesil" | "notr" | "kirmizi" | "amber" |
   çıkıyor: { tur: "kirmizi", isaret: "▼" },
   yedek: { tur: "gri", isaret: "·" },
   "liste dışı": { tur: "gri", isaret: "—" },
+  "aynı konu": { tur: "gri", isaret: "=" },
   dayanaksız: { tur: "amber", isaret: "◌" },
 };
 
@@ -129,6 +130,7 @@ function SiraSatiri({ s, o, ikincil }: { s: DoluSatir; o: IlOnerisi | undefined;
         <div className="mt-1 flex flex-wrap gap-x-2.5 gap-y-1 etiket text-ink-mute">
           {s.nace && <span className="num">NACE {s.nace}</span>}
           <span>dayanak {s.dayanak}/100</span>
+          {s.ayniKonu && <span className="text-unverif">aynı konu: {s.ayniKonu}</span>}
           <span className="min-[861px]:hidden">{k.ad}</span>
         </div>
       </div>
@@ -190,7 +192,9 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
         bolgeler(b).then((x) => x.flatMap((y) => y.iller).find((y) => y.kod === il)?.ilceler ?? []),
       ])
     : [[], [], null, [] as string[]];
-  const h = d ? hesapla(adaylar, ayardan(d.set)) : null;
+  // Aynı konu tek kez yarışır; il ve ilçe adları "konunun özü" karşılaştırmasından atılır.
+  const yerAdlari = [ilKaydi.ad, ...ilceler];
+  const h = d ? hesapla(adaylar, ayardan(d.set), { yerAdlari }) : null;
   const yerellik = d ? Math.round(grupAgirligi(d.set.agirliklar, "yerellik") * 100) : 0;
   const oneriBul = new Map(oneriler.map((o) => [String(o.id), o]));
 
@@ -200,7 +204,7 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
   const bekleyenAdaylar = oneriler
     .filter((o) => o.durum === "onay_bekliyor")
     .map((o) => ({ id: String(o.id), ad: o.baslik, koken: o.koken, taban: o.taban ?? 0, dayanak: o.dayanak ?? 0, nace: null }));
-  const konumlar = d ? onaylanirsa(adaylar, bekleyenAdaylar, d) : new Map();
+  const konumlar = d ? onaylanirsa(adaylar, bekleyenAdaylar, d, yerAdlari) : new Map();
   const onayBekleyen = konumaGore(oneriler.filter((o) => o.durum === "onay_bekliyor"), konumlar);
   const surecte = oneriler.filter((o) => o.durum === "degerlendiriliyor");
   const reddedilen = oneriler.filter((o) => o.durum === "reddedildi");
@@ -387,7 +391,7 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
               )}
             </Kategori>
 
-            <Kategori katli baslik="Liste dışı ve dayanaksız" sayi={disarida.length} aciklama="Yedek sınırının ötesinde ya da dayanak eşiğinin altında">
+            <Kategori katli baslik="Liste dışı, dayanaksız ve aynı konu" sayi={disarida.length} aciklama="Yedek sınırının ötesinde, dayanak eşiğinin altında ya da listedeki bir konunun tekrarı">
               {disarida.length ? disarida.map((s) => <SiraSatiri key={s.id} s={s} o={oneriBul.get(s.id)} ikincil />) : <Bosluk>Yok.</Bosluk>}
             </Kategori>
 
