@@ -258,6 +258,8 @@ export async function adayKesfet(
     yururlukte?: readonly string[];
     /** önceki yılların resmî konuları — kanıt destekliyorsa başlığı değişmeden yeniden önerilebilir */
     onceki?: ReadonlyArray<{ yil: number; baslik: string }>;
+    /** bu dönemde zaten önerilmiş başlıklar — eşdeğeri yeniden önerilmez */
+    oneriler?: readonly string[];
   },
 ): Promise<({ ok: true; adaylar: DogrulanmisAday[]; dusenler: string[]; maliyet: Maliyet } & Meta) | Hatali> {
   const meta = { modelSnapshot, promptSurum: PROMPTLAR.aday_kesfi.surum };
@@ -269,6 +271,9 @@ export async function adayKesfet(
       : "") +
     (girdi.onceki?.length
       ? `Önceki yılların resmî konuları: ${girdi.onceki.map((o) => `${o.yil}: ${o.baslik}`).join(" | ")}\n`
+      : "") +
+    (girdi.oneriler?.length
+      ? `Bu dönemde ZATEN ÖNERİLMİŞ konular (bunları ve eşdeğerlerini YENİDEN ÖNERME): ${girdi.oneriler.join(" | ")}\n`
       : "") +
     "Bu ilin yerel kanıtlarına dayanan yatırım konusu adaylarını çıkar.";
   const r = await cagir(istemci, modelSnapshot, "aday_kesfi", defterBloguKur(girdi.defter), gorev);

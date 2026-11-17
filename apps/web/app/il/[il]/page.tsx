@@ -23,6 +23,7 @@ import { resmiDegerlendirEylemi } from "@/lib/eylem.ts";
 import { baglam, kullanici } from "@/lib/oturum.ts";
 import { KAPALI } from "@/lib/site.ts";
 import { cn } from "@/lib/utils.ts";
+import { konumaGore, onaylanirsa } from "@/lib/projeksiyon.ts";
 
 /**
  * İl ekranı — AJANS VE YÖNETİCİ. Yalnızca bu ilin verisi.
@@ -194,7 +195,12 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
 
   const yedek = h ? h.kalanlar.filter((x) => x.yedekte) : [];
   const disarida = h ? h.kalanlar.filter((x) => !x.yedekte) : [];
-  const onayBekleyen = oneriler.filter((o) => o.durum === "onay_bekliyor");
+  // En iyi en üstte: onaylanırsa listeye nereye girer (karar modelinin kendisi).
+  const bekleyenAdaylar = oneriler
+    .filter((o) => o.durum === "onay_bekliyor")
+    .map((o) => ({ id: String(o.id), ad: o.baslik, koken: o.koken, taban: o.taban ?? 0, dayanak: o.dayanak ?? 0, nace: null }));
+  const konumlar = d ? onaylanirsa(adaylar, bekleyenAdaylar, d) : new Map();
+  const onayBekleyen = konumaGore(oneriler.filter((o) => o.durum === "onay_bekliyor"), konumlar);
   const surecte = oneriler.filter((o) => o.durum === "degerlendiriliyor");
   const reddedilen = oneriler.filter((o) => o.durum === "reddedildi");
   const puansizResmi = adaylar.filter((a) => a.koken === "mevcut" && a.dayanak === 0).length;
@@ -345,7 +351,7 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
                     Yalnızca {ilKaydi.ad} kuyruğunu aç
                   </Link>
                 ) : (
-                  "Yapay zekâ puanladı, kararınızı bekliyor"
+                  "En iyisi en üstte · onaylanırsa listeye gireceği yer"
                 )
               }
             >
@@ -355,9 +361,15 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
                     key={o.id}
                     o={o}
                     sag={
-                      <Rozet tur="amber" isaret="◌">
-                        karar bekliyor
-                      </Rozet>
+                      konumlar.get(String(o.id)) ? (
+                        <Rozet tur={konumlar.get(String(o.id))!.tur === "asıl" ? "notr" : "amber"} isaret="◌">
+                          onaylanırsa {konumlar.get(String(o.id))!.tur} #{konumlar.get(String(o.id))!.sira}
+                        </Rozet>
+                      ) : (
+                        <Rozet tur="amber" isaret="◌">
+                          karar bekliyor
+                        </Rozet>
+                      )
                     }
                   />
                 ))

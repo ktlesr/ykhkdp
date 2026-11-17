@@ -37,6 +37,18 @@ export function pencerele(metin: string): string[] {
 const TARAMA_GRUBU = 3;
 /** Aday aşamasına giren defter: yerel kanıtların tamamı (üst sınırla) + konuyla örtüşen ulusal kanıt. */
 const YEREL_SINIR = 80;
+/**
+ * Tekrar eşikleri — gerçek aday çiftleriyle ölçüldü (2026-11-17):
+ *   aynı konu, farklı yazım      0.48 – 0.67
+ *   farklı konu                  0.06 – 0.30
+ * Başlık eşiği 0.50: brif §7, farklı iki resmî konunun 0.48 alabildiğini
+ * belgeliyor (Muş). 0.48'de kalan aynı-konu çifti (Deri OSB arıtma) aynı
+ * kanıtlara dayandığı için kanıt örtüşmesi yakalar.
+ */
+const TEKRAR_BENZERLIK = 0.5;
+/** Yeni adayın kanıtlarının en az yarısı önceki bir adayınkiyle aynıysa tekrar. */
+const TEKRAR_KANIT = 0.5;
+const ONCEKI_BASLIK_SINIRI = 40;
 const DIGER_SINIR = 30;
 
 type Kesif = {
@@ -184,7 +196,18 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
     `,
   );
   const sonYil = Math.max(0, ...resmi.map((r) => r.yil));
+  // Bu dönemde zaten önerilmiş başlıklar (resmî konular hariç; onlar ayrıca
+  // veriliyor). Model eşdeğerini yeniden önermesin — ilk katman.
+  const donemBasliklari = (
+    await islem(SERVIS, (sql) =>
+      sql<{ baslik: string }[]>`
+        select baslik from oneri where donem_id = ${k.donem_id} and koken = 'yeni'
+        order by olusturuldu desc limit ${ONCEKI_BASLIK_SINIRI}
+      `,
+    )
+  ).map((r) => r.baslik);
   const a = await adayKesfet(istemci, model, {
+    oneriler: donemBasliklari,
     il: k.il,
     ilceler: ilceAdlari,
     defter,
@@ -204,11 +227,13 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
   const sinir = k.slot_sayisi * 2;
   const atlananlar: string[] = [];
   const desteklenen: string[] = [];
+  const tekrarlar: Array<{ baslik: string; oncekiId: number; neden: string }> = [];
   let yazilan = 0;
   await islem(tetikleyen, async (sql) => {
-    const donemdekiler = await sql<{ id: string; b: string; koken: string; durum: string; puanli: boolean }[]>`
+    const donemdekiler = await sql<{ id: string; b: string; koken: string; durum: string; puanli: boolean; kanitlar: number[] | null }[]>`
       select o.id, lower(trim(o.baslik)) as b, o.koken::text, o.durum::text,
-             exists (select 1 from degerlendirme g where g.oneri_id = o.id) as puanli
+             exists (select 1 from degerlendirme g where g.oneri_id = o.id) as puanli,
+             (select array_agg((x->>'kanit_id')::bigint) from jsonb_array_elements(o.kesif_kanit) x) as kanitlar
       from oneri o where o.donem_id = ${k.donem_id}
     `;
     const mevcut = new Set(donemdekiler.map((r) => r.b));
@@ -243,10 +268,35 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
         desteklenen.push(aday.baslik);
         continue;
       }
-      // Yalnızca BİREBİR tekrar atlanır; yakın kopya bir karar değil işaret —
-      // onay kuyruğunda "aynı dönemde benzer başlık" olarak görünür.
       if (mevcut.has(anahtar)) {
         atlananlar.push(aday.baslik);
+        continue;
+      }
+      /**
+       * TEKRAR ELEMESİ — keşif tekrarlandıkça kuyruk şişmesin. Aynı dönemdeki
+       * herhangi bir öneriyle (reddedilen dahil) aynı konuysa aday yazılmaz:
+       *  · başlık benzerliği ≥ TEKRAR_BENZERLIK (pg_trgm), ya da
+       *  · kanıt örtüşmesi ≥ TEKRAR_KANIT: aynı konu tekrar çıktığında aynı
+       *    pasajlara dayanır; başlığı yeniden yazılsa da kanıt ele verir.
+       */
+      const [benzer] = await sql<{ id: string; baslik: string; benzerlik: number }[]>`
+        select id, baslik, round(similarity(baslik, ${aday.baslik})::numeric, 2)::float8 as benzerlik
+        from oneri where donem_id = ${k.donem_id} and similarity(baslik, ${aday.baslik}) >= ${TEKRAR_BENZERLIK}
+        order by similarity(baslik, ${aday.baslik}) desc limit 1
+      `;
+      const yeniKanit = new Set(aday.kanitIdleri);
+      const ortak = donemdekiler.find((r) => {
+        const eski = (r.kanitlar ?? []).map(Number);
+        if (!eski.length) return false;
+        const kesisim = eski.filter((x) => yeniKanit.has(x)).length;
+        return kesisim / Math.min(eski.length, yeniKanit.size) >= TEKRAR_KANIT;
+      });
+      if (benzer || ortak) {
+        tekrarlar.push({
+          baslik: aday.baslik,
+          oncekiId: Number(benzer?.id ?? ortak!.id),
+          neden: benzer ? `başlık benzerliği ${benzer.benzerlik}` : "aynı kanıtlara dayanıyor",
+        });
         continue;
       }
       const r = await sql`
@@ -257,11 +307,13 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
       `;
       if (r.count) {
         yazilan++;
-        mevcut.add(aday.baslik.toLocaleLowerCase("tr-TR").trim());
+        mevcut.add(anahtar);
+        // Aynı koşunun sonraki adayları da bununla karşılaştırılsın.
+        donemdekiler.push({ id: "0", b: anahtar, koken: "yeni", durum: "degerlendiriliyor", puanli: false, kanitlar: aday.kanitIdleri });
       }
     }
     await denetle(sql, tetikleyen, "kesif_adaylari_yazildi", "kesif", k.id, {
-      yazilan, atlananlar, desteklenen, dusenler: a.dusenler.slice(0, 10), model: a.modelSnapshot, promptSurum: a.promptSurum,
+      yazilan, atlananlar, desteklenen, tekrarlar, dusenler: a.dusenler.slice(0, 10), model: a.modelSnapshot, promptSurum: a.promptSurum,
       not: "Adaylar doğrulanmamış; her biri ayrıca puanlanır ve ajans onayı bekler.",
     });
   });
@@ -272,7 +324,9 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
     (yazilan ? `${yazilan} aday değerlendirmeye alındı.` : "Kanıtlara dayanan aday çıkmadı.") +
     (a.dusenler.length ? ` ${a.dusenler.length} aday kanıt kuralına takılıp düştü.` : "") +
     (desteklenen.length ? ` ${desteklenen.length} yürürlükteki resmî konu belgelerle desteklendi.` : "") +
-    (atlananlar.length ? ` ${atlananlar.length} aday zaten öneriliydi.` : "") +
+    (atlananlar.length + tekrarlar.length
+      ? ` ${atlananlar.length + tekrarlar.length} aday bu dönemde zaten önerilmiş bir konuyla aynı olduğu için alınmadı.`
+      : "") +
     okunamayan;
   return bitir(true, ozet, yazilan);
 }

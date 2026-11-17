@@ -356,7 +356,17 @@ Uydurmasızlık kuralları — hepsi mekanik, modelin beyanı değil:
   tablo ayracı (`|`) eşleşmede boşluk sayılır, taramada çağrı ancak HİÇBİR
   pasaj doğrulanamazsa reddedilir (her pasaj zaten tek tek doğrulanıyor;
   puan yok, "yarısı düşerse hepsi" kuralı burada doğru pasajları da atıyordu).
-- **Yakın kopya elenmez, işaretlenir** (`/onay`); yalnızca birebir başlık atlanır.
+- **Tekrarlanan keşif kuyruğu şişirmez.** Model dönemde zaten önerilmiş
+  başlıkları görür ve eşdeğerini önermez; kayıtta mekanik iki katman daha:
+  dönemdeki herhangi bir öneriyle (reddedilen dahil) başlık benzerliği ≥ 0.50
+  ya da kanıtlarının yarısı aynıysa aday yazılmaz, denetime yazılır.
+  Ölçüldü: aynı konu farklı yazım 0.48–0.67, farklı konu 0.06–0.30; 0.48'de
+  kalan aynı-konu çiftini kanıt örtüşmesi yakalar.
+
+**En iyi en üstte.** Onay kuyruğu ve il ekranı onay bekleyenleri "onaylanırsa
+il listesinde nereye girer" öngörüsüyle sıralar (`lib/projeksiyon.ts`):
+karar modelinin kendisi (`hesapla`), onaylı konularla birlikte — ayrı formül
+yok. Gerçek sıralama onayla oluşur.
 - **Resmî konuyu yeniden önermek meşrudur** — yürürlükteki liste gelecek yıl
   "önceki" olur. Model yürürlükteki ve önceki yılların resmî konularını
   bağlam olarak görür (kanıt değil); başlığı harfi harfine aynı yazarsa:

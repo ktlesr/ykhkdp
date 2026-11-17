@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { kuyrukKopyalari, onayKuyrugu } from "@ykh/database";
+import { adaylariGetir, donemGetir, kuyrukKopyalari, onayKuyrugu } from "@ykh/database";
+import { konumaGore, onaylanirsa, type Konum } from "@/lib/projeksiyon.ts";
 import { onaylayabilir } from "@ykh/domain";
 import { AsamaRozeti } from "@/components/degerlendirme-durumu.tsx";
 import { Bag, Baslik, Bos, Rozet, Sayfa, UstBar } from "@/components/ui.tsx";
@@ -49,6 +50,24 @@ export default async function Onay({ searchParams }: { searchParams: Promise<{ b
   const kuyruk = tumu.filter((o) => (!bolge || o.ajans_kod === bolge) && (!il || o.il_kod === il));
   const bekleyen = kuyruk.filter((o) => o.durum === "onay_bekliyor").length;
 
+  /**
+   * İl içinde EN İYİ EN ÜSTTE: onay bekleyenler, onaylanırsa il listesinde
+   * nereye girecekleriyle sıralanır (karar modelinin kendisi; onaylı konular
+   * dahil). Puanı henüz olmayanlar (değerlendiriliyor) sonda, geliş sırasıyla.
+   */
+  const konumlar = new Map<string, Konum>();
+  await Promise.all(
+    [...new Set(kuyruk.map((o) => o.il_kod))].map(async (ilKod) => {
+      const d = await donemGetir(b, ilKod);
+      if (!d) return;
+      const bekleyen = kuyruk
+        .filter((o) => o.il_kod === ilKod && o.durum === "onay_bekliyor")
+        .map((o) => ({ id: String(o.id), ad: o.baslik, koken: o.koken, taban: o.taban, dayanak: o.dayanak, nace: o.nace_kod }));
+      if (!bekleyen.length) return;
+      for (const [id, k] of onaylanirsa(await adaylariGetir(b, d), bekleyen, d)) konumlar.set(id, k);
+    }),
+  );
+
   // Bölge → il grupları (sorgu bu sırayla geliyor).
   const gruplar = new Map<string, { ad: string; kisa: string | null; iller: Map<string, { ad: string; satirlar: Satir[] }> }>();
   for (const o of kuyruk) {
@@ -71,7 +90,7 @@ export default async function Onay({ searchParams }: { searchParams: Promise<{ b
         ]}
       />
       <Sayfa genis>
-        <Baslik alt="Yapay zekâ puanladı, puan doğrulanmadı. Onaylanmadan hiçbir öneri il sıralamasına girmez; onay geri alınabilir.">
+        <Baslik alt="Yapay zekâ puanladı, puan doğrulanmadı. Her ilde en iyisi en üstte: soldaki sayı, öneri onaylanırsa il listesinde gireceği yer (asıl ya da yedek). Onaylanmadan hiçbir öneri sıralamaya girmez; onay geri alınabilir.">
           Onay kuyruğu
         </Baslik>
 
@@ -148,21 +167,37 @@ export default async function Onay({ searchParams }: { searchParams: Promise<{ b
                     </Link>
                   </div>
 
-                  {i.satirlar.map((o) => {
+                  {konumaGore(i.satirlar, konumlar).map((o) => {
                     const benzer = kopyalar.get(Number(o.id)) ?? [];
+                    const konum = konumlar.get(String(o.id));
                     return (
                       <Link
                         key={o.id}
                         href={`/oneri/${o.id}`}
                         className="grid grid-cols-[56px_minmax(0,1fr)_150px_160px] items-start gap-x-4 gap-y-2 border-b border-b-hairline-soft px-4 py-3.5 last:border-b-0 hover:bg-paper max-[860px]:grid-cols-[minmax(0,1fr)]"
                       >
-                        <span className="num pt-0.5 text-[13.5px] text-ink-mute max-[860px]:hidden">#{o.id}</span>
+                        {/* Öngörülen yer: onaylanırsa il listesinde kaçıncı, asıl mı yedek mi */}
+                        <span className="pt-0.5 max-[860px]:hidden">
+                          {konum ? (
+                            <>
+                              <span className={cn("num block text-[18px] leading-none", konum.tur === "asıl" ? "text-ink" : "text-ink-mute")}>{konum.sira}</span>
+                              <span className={cn("etiket", konum.tur === "asıl" ? "text-navy" : konum.tur === "yedek" ? "text-ink-soft" : "text-unverif")}>{konum.tur}</span>
+                            </>
+                          ) : (
+                            <span className="num text-[18px] leading-none text-ink-mute" title="Puan henüz yok">—</span>
+                          )}
+                        </span>
                         <span className="min-w-0">
                           <span className="block text-[15px] font-medium leading-[1.35] text-ink text-pretty [overflow-wrap:anywhere]">
                             {o.baslik}
                           </span>
                           <span className="mt-1 flex flex-wrap gap-x-2.5 gap-y-1 etiket text-ink-mute">
-                            <span className="num min-[861px]:hidden">#{o.id}</span>
+                            {konum && (
+                              <span className={cn("min-[861px]:hidden", konum.tur === "asıl" ? "text-navy" : "text-ink-soft")}>
+                                onaylanırsa {konum.tur} #{konum.sira}
+                              </span>
+                            )}
+                            <span className="num">#{o.id}</span>
                             <span className="num">{o.gonderildi}</span>
                             <span className="text-ink-soft">{yol(o)}</span>
                             {o.ilce && <span>{o.ilce}</span>}

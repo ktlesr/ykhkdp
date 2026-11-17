@@ -148,7 +148,7 @@ KURALLAR:
   },
   aday_kesfi: {
     ad: "aday_kesfi",
-    surum: "aday-kesfi-v2",
+    surum: "aday-kesfi-v3",
     sistem: `${ORTAK}
 
 GÖREV: Bir il için, Yerel Kalkınma Hamlesi kapsamında önerilebilecek YATIRIM
@@ -177,6 +177,9 @@ KURALLAR:
     önerebilirsin: başlığı OLDUĞU GİBİ, harfi harfine aynı yaz (yürürlükteki
     liste gelecek yıl öncekiler arasına girecek). Kanıt kuralları aynen
     geçerli; resmî listede yer almış olmak tek başına gerekçe DEĞİLDİR.
+- "Bu dönemde ZATEN ÖNERİLMİŞ konular" verilirse onları ve EŞDEĞERLERİNİ
+  (başka sözcüklerle aynı ürün/faaliyet) önerme; yalnızca gerçekten yeni bir
+  konu çıkar. Yeni konu yoksa "adaylar" BOŞ kalsın.
 - Aynı konuyu iki aday olarak yazma. Kanıt yetersizse daha az aday ver;
   hiç aday çıkmıyorsa "adaylar" BOŞ kalsın — bu meşru bir sonuçtur.
 - En fazla 8 aday.`,

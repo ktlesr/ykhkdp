@@ -622,7 +622,9 @@ export async function onayKuyrugu(b: Baglam, donemId?: number) {
              coalesce(g.dayanak, 0) as dayanak,
              g.gerekce as ai_gerekce,
              (g.duzeltilmis_puanlar is not null) as duzeltildi,
-             0 as taban,
+             -- Stratejik puan: "en iyi en üstte" sıralaması ve öngörü için.
+             case when g.oneri_id is null then 0
+                  else oneri_taban_puani(o.id, s.agirliklar) end as taban,
              i.ad as il, i.kod as il_kod, d.yil,
              -- Eşik dönemin ağırlık setinden: detay ekranıyla aynı etiket.
              s.dayanak_esigi,

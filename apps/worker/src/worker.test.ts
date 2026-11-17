@@ -224,6 +224,13 @@ test("keşif: bütün parçaları tarar, adayları yerel kanıtla ve kaynaktan b
   assert.ok(s2.ok, s2.mesaj);
   const [{ n: sonra }] = await islem(SERVIS, (sql) => sql<{ n: string }[]>`select count(*) as n from kanit_tarama`);
   assert.equal(sonra, once);
+  // Tekrarlanan keşif kuyruğu şişirmez: çevrimdışı istemci aynı konuları
+  // üretir, hepsi elenir. (Gerçek modelde yeni konu çıkabilir; o meşru.)
+  if (!process.env.OPENAI_API_KEY) {
+    const [{ n: ikinci }] = await islem(SERVIS, (sql) => sql<{ n: string }[]>`select count(*) as n from oneri where kesif_id = ${id2} and koken = 'yeni'`);
+    assert.equal(Number(ikinci), 0, "ikinci keşif aynı konuları yeniden kuyruğa almaz");
+    assert.match(s2.mesaj, /zaten önerilmiş/);
+  }
   // Aynı başlık ikinci kez yazılmaz (model başka başlık üretebilir; o yeni bir adaydır).
   const [{ n: kopya }] = await islem(SERVIS, (sql) => sql<{ n: string }[]>`
     select count(*) as n from (select lower(trim(baslik)) from oneri where donem_id = ${d}
