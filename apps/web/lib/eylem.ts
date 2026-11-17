@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import {
   belgeEkle, belgeSil, cikisYap, donemGetir, girisYap, islem, kayitOl, naceAra, naceDuzelt,
   ayarYaz, kimlikAc, kimlikSil, KotaAsildi, misafirAc, oneriOlustur, puanDuzelt, durumDegistir, rolAta,
+  kesifAc, kesifDonemleri, KesifZatenAcik,
 } from "@ykh/database";
 import { gecisIzinli, onaylayabilir, ROL_ETIKET, ROLLER, type OneriDurumu, type Rol } from "@ykh/domain";
 import { log } from "@ykh/observability";
@@ -455,4 +456,38 @@ export async function rolAtaEylemi(_o: EylemSonucu | null, f: FormData): Promise
   log.info("rol_atandi", { ref, rol, ajansKod });
   revalidatePath("/ayarlar");
   return { ok: true, mesaj: `Rol ${ROL_ETIKET[rol as Rol]} olarak güncellendi.` };
+}
+
+// ── aday keşfi ─────────────────────────────────────────────────────────────
+
+/**
+ * Belgelerden aday keşfini sıraya koyar. İşi worker yapar (bütün parçalar
+ * taranır, dakikalar sürebilir); eylem yalnızca koşuyu açar. Bölge kontrolü
+ * veritabanında (`kesif_ac` RLS): ajans yalnızca kendi bölgesindeki illerde.
+ */
+export async function kesifEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
+  const k = await kullanici();
+  if (!k || !onaylayabilir(k.rol)) return { ok: false, mesaj: "Aday keşfini yalnızca ajans ve yönetici başlatabilir." };
+  const b = await baglam();
+  const il = String(f.get("il") ?? "");
+  try {
+    if (il) {
+      const d = await donemGetir(b, il);
+      if (!d) return { ok: false, mesaj: "Bu il için açık bir dönem yok." };
+      await kesifAc(b, [d.donemId]);
+      revalidatePath(`/il/${il}`);
+      return { ok: true, mesaj: "Aday keşfi sıraya alındı. Belgeler taranırken ilerleme burada görünür." };
+    }
+    const donemler = await kesifDonemleri(b);
+    if (!donemler.length) return { ok: false, mesaj: "Hesabınıza bölge atanmamış; keşif açılabilecek il yok." };
+    const acilan = await kesifAc(b, donemler);
+    revalidatePath("/iller");
+    return { ok: true, mesaj: `${acilan} il için aday keşfi sıraya alındı${acilan < donemler.length ? `; ${donemler.length - acilan} ilde zaten sürüyor` : ""}.` };
+  } catch (e) {
+    if (e instanceof KesifZatenAcik) return { ok: false, mesaj: "Bu ilde keşif zaten sürüyor; bitmesini bekleyin." };
+    if (e instanceof Error && /row-level security/.test(e.message)) {
+      return { ok: false, mesaj: "Bu il ajansınızın bölgesinde değil." };
+    }
+    throw e;
+  }
 }

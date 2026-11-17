@@ -1,11 +1,16 @@
 import {
+  adaylariDogrula,
   degerlendirmeyiDogrula,
+  kanitlariDogrula,
   karsiGorusuDogrula,
+  type DefterKaydi,
+  type DogrulanmisAday,
+  type DogrulanmisKanit,
   type DogrulanmisKarsiGorus,
   type Paket,
 } from "@ykh/evidence-validation";
 import type { z } from "zod";
-import { kaynakBloguKur, naceBloguKur, PROMPTLAR, type BelgeSatiri } from "./prompt.ts";
+import { defterBloguKur, kaynakBloguKur, naceBloguKur, PROMPTLAR, type BelgeSatiri } from "./prompt.ts";
 import { jsonSema, SEMALAR, type SemaAdi } from "./sema.ts";
 
 /**
@@ -206,4 +211,49 @@ export async function karsiGorus(
     maliyet: r.maliyet,
     ...meta,
   };
+}
+
+// ── Aday keşfi ─────────────────────────────────────────────────────────────
+
+type Hatali = { ok: false; asama: "model" | "sema" | "dayanak"; hatalar: string[]; maliyet?: Maliyet } & Meta;
+
+/** Tarama: parçalardan birebir doğrulanmış kanıt pasajları. Puan ve aday üretmez. */
+export async function kanitCikar(
+  istemci: ModelIstemcisi,
+  modelSnapshot: string,
+  girdi: { belgeler: readonly BelgeSatiri[]; paket: Paket },
+): Promise<({ ok: true; kanitlar: DogrulanmisKanit[]; dusenler: string[]; maliyet: Maliyet } & Meta) | Hatali> {
+  const meta = { modelSnapshot, promptSurum: PROMPTLAR.kanit_cikarimi.surum };
+  const r = await cagir(
+    istemci,
+    modelSnapshot,
+    "kanit_cikarimi",
+    kaynakBloguKur(girdi.belgeler),
+    "Bu parçalardaki yatırım konusu belirlemeye yarar pasajları çıkar.",
+  );
+  if (!r.ok) return { ...r, ...meta };
+  const d = kanitlariDogrula(r.veri.kanitlar, girdi.paket);
+  if (!d.gecerli) return { ok: false, asama: "dayanak", hatalar: d.hatalar.map((h) => h.mesaj), maliyet: r.maliyet, ...meta };
+  return { ok: true, kanitlar: d.kanitlar, dusenler: d.dusenler.map((h) => h.mesaj), maliyet: r.maliyet, ...meta };
+}
+
+/** İl aşaması: defterdeki kanıtlardan aday. Yeni alıntı yazılamaz. */
+export async function adayKesfet(
+  istemci: ModelIstemcisi,
+  modelSnapshot: string,
+  girdi: {
+    il: string;
+    ilceler: readonly string[];
+    defter: ReadonlyArray<DefterKaydi & { tur: string; konu: string; kaynak: string }>;
+  },
+): Promise<({ ok: true; adaylar: DogrulanmisAday[]; dusenler: string[]; maliyet: Maliyet } & Meta) | Hatali> {
+  const meta = { modelSnapshot, promptSurum: PROMPTLAR.aday_kesfi.surum };
+  const gorev =
+    `İl: ${girdi.il}\n` +
+    `İlçeler: ${girdi.ilceler.length ? girdi.ilceler.join(", ") : "yüklenmedi"}\n` +
+    "Bu ilin yerel kanıtlarına dayanan yatırım konusu adaylarını çıkar.";
+  const r = await cagir(istemci, modelSnapshot, "aday_kesfi", defterBloguKur(girdi.defter), gorev);
+  if (!r.ok) return { ...r, ...meta };
+  const d = adaylariDogrula(r.veri.adaylar, girdi.defter);
+  return { ok: true, adaylar: d.adaylar, dusenler: d.dusenler.map((h) => h.mesaj), maliyet: r.maliyet, ...meta };
 }

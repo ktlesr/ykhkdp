@@ -268,6 +268,54 @@ yeni ekran yok.
   engellemez (puan zaten geçerli); ama doğrulanmamış alıntı taşıyan bir itiraz
   kaydedilmez.
 
+### Aday keşfi · belgelerden konu çıkarma
+
+`/il/[il]` içinde bölüm (yeni ekran yok); `/iller` bölge veya 81 il için toplu
+başlatır. Keşif **aday üretir, puanlamaz ve seçmez**: her aday sıradan bir
+`oneri` olarak `degerlendiriliyor` durumuna girer ve yukarıdaki değerlendirme
+hattından AYRI bir model çağrısıyla geçer. Karar yine ajansın.
+
+```
+envanter  il + ajans + ulusal kapsamdaki BÜTÜN parçalar
+tarama    her parça bir kez (il bağımsız, önbellek `kanit_tarama`):
+          yerel_olgu · firsat · oncelik · kisit pasajları → `kanit`
+aday      ilin kanıt defteri; model yalnızca NUMARAYLA atıf yapar
+kayıt     aday → oneri (koken 'yeni', gönderen = tetikleyen, kesif_id)
+```
+
+Uydurmasızlık kuralları — hepsi mekanik, modelin beyanı değil:
+
+- **Kanıt metni kaynaktan kesilir.** Model tırnağı/harfi değiştirse de kayda
+  belgedeki özgün metin girer (`kaynaktanCikar`). "…" ile birleştirilmiş pasaj
+  kanıt olamaz.
+- **Yerellik cümle düzeyinde ölçülür.** Parça ilin kendi belgesiyse ya da
+  pasajın cümlesinde il/ilçe adı geçiyorsa yerel. Karakter penceresi
+  kullanılmaz: ölçüldü, "Kütahya'da seramik…" komşu cümledeki "Uşak'ta"
+  yüzünden Uşak'a yerel sayılıyordu.
+- **Aday: en az iki kanıt, en az biri yerel.** Yeni alıntı yazamaz.
+- **Gerekçenin her cümlesi atıf yapılan kanıtta karşılık bulur**
+  (içerik köklerinin ≥ yarısı). Ölçüldü: model defterde olup atıf yapmadığı
+  bir kanıtı gerekçeye yazıyordu. Sözcüksel kontrol — yeniden ifade edilmiş
+  doğru cümleyi düşürebilir, fail-closed yönde.
+- **Kaynaksız sayı** başlıkta veya gerekçede aday düşürür.
+- Kurallar **aday başına**: kötü aday iyileri batırmaz, iyiler kötüyü örtmez.
+- **Tarama eksikse aday üretilmez**: "bütün belgeler dikkate alındı"
+  denemeyen koşu tamamlanmış görünmez; yeniden başlatınca önbellekten sürer.
+- **Yakın kopya elenmez, işaretlenir** (`/onay`); yalnızca birebir başlık atlanır.
+- Değerlendirme paketi adayı doğuran parçaları **zorunlu** taşır
+  (`belgePaketi({ zorunlu })`).
+
+Bölge: ajans yalnızca kendi bölgesinin illerinde keşif açar (`kesif_ac` RLS,
+`app_il_kapsaminda`). Aynı dönemde tek aktif koşu.
+
+### Konu puanla
+
+Ajans `/il/[il]` içinde başlık ve "neden burada?" açıklaması girer; konu
+yatırımcı önerisiyle **aynı yoldan** (`oneriEylemi` → değerlendirme hattı)
+geçer ve sonuç `/oneri/[id]` içinde canlı ilerlemeyle açılır: stratejik puan
+(sekiz kriter, dönemin ağırlık seti), belge dayanağı, kriter başına alıntı,
+karşı görüş. Ayrı bir puan hesaplayıcı yazılmadı — iki hesap iki doğru demektir.
+
 ### Yakın kopya · AI yok
 
 Aynı (il, dönem) içinde başlıkları benzeşen öneriler `/onay` ekranında
@@ -450,9 +498,9 @@ Redis, S3/MinIO, pgvector, PostGIS **yok**. Gerekene kadar eklenmez.
 
 ## 9. Veri modeli
 
-15 tablo: `ayar` · `gonderen` · `kimlik` · `oturum` · `ajans` · `il` · `ilce` · `nace` ·
+18 tablo: `ayar` · `gonderen` · `kimlik` · `oturum` · `ajans` · `il` · `ilce` · `nace` ·
 `agirlik_seti` · `donem` · `belge` · `yatirim_konusu` · `oneri` · `degerlendirme` ·
-`denetim`.
+`denetim` · `kesif` · `kanit` · `kanit_tarama`.
 
 - **KVKK ayrımı:** öneri kişiye değil değişmez `gonderen.ref` anahtarına bağlanır;
   kişisel veri ayrı `kimlik` tablosunda. `kimlik_pseudonimlestir()` silme talebinde
@@ -519,5 +567,9 @@ kilidi, künye çekmecesi) bu üründe **yok**.
   şema değişikliği ister, ayrı plan (inceleme raporu §6.2).
 - CI yok. Plan: PostgreSQL 17 servisi, `_test` veritabanı, çevrimdışı istemci,
   sıralı testler, typecheck, build, `pnpm audit --prod`.
+- Aday keşfinde üretici ile puanlayıcı aynı model; ayrı çağrı ama kendi
+  ürettiğini kayırma yanlılığı henüz ölçülmedi (plan: kaynağı gizli, sırası
+  karışık çapraz eval). Keşif adayının gerekçesi değerlendirme prompt'unda
+  hâlâ "yatırımcının gerekçesi" etiketiyle gider.
 - Seed'in demo değerlendirmeleri `model_snapshot = 'seed-demo'` künyesi taşır;
   gerçek bir model künyesi uydurulmaz. `/oneri/[id]` künye satırında görünür.

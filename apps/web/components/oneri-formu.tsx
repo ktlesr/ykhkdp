@@ -23,11 +23,14 @@ export function OneriFormu({
   yerellikPayi,
   taslak,
   setTaslak,
+  ajansModu = false,
 }: {
   il: { kod: string; ad: string; ilceler: string[] };
   yerellikPayi: number;
   taslak: Taslak;
   setTaslak: (t: Taslak) => void;
+  /** il ekranındaki "konu puanla": aynı form, ajansın kendi sorusu — gizlilik notu yatırımcıya ait */
+  ajansModu?: boolean;
 }) {
   const { baslik, gerekce } = taslak;
   const setBaslik = (v: string) => setTaslak({ ...taslak, baslik: v });
@@ -36,11 +39,13 @@ export function OneriFormu({
   const ilce = il.ilceler.includes(taslak.ilce) ? taslak.ilce : "";
 
   return (
-    <EylemFormu eylem={oneriEylemi} className="mt-6 border border-ink bg-surface">
-      <div className="serit flex items-center justify-between px-4 py-2.5 etiket text-ink-soft">
-        <span>Öneri formu</span>
-        <span>{il.ad}</span>
-      </div>
+    <EylemFormu eylem={oneriEylemi} className={ajansModu ? "" : "mt-6 border border-ink bg-surface"}>
+      {!ajansModu && (
+        <div className="serit flex items-center justify-between px-4 py-2.5 etiket text-ink-soft">
+          <span>Öneri formu</span>
+          <span>{il.ad}</span>
+        </div>
+      )}
 
       <div className="px-4 py-5">
         <label className={ALAN_ETIKET} htmlFor="baslik">
@@ -118,6 +123,7 @@ export function OneriFormu({
           <NaceSecici secili={taslak.nace} degisti={(nace) => setTaslak({ ...taslak, nace })} />
         </div>
 
+        {!ajansModu && (
         <div className="mt-5 border border-hairline-soft bg-paper px-3.5 py-3">
           <div className="etiket text-ink-mute">Gizlilik</div>
           <p className="mt-1.5 text-[12.5px] leading-[1.45] text-ink-soft">
@@ -125,12 +131,17 @@ export function OneriFormu({
             kalır.
           </p>
         </div>
+        )}
 
         <div className="mt-5">
-          <Gonder className="w-full">Öneriyi değerlendirmeye gönder · {il.ad}</Gonder>
+          <Gonder className="w-full">
+            {ajansModu ? `Konuyu puanlat · ${il.ad}` : `Öneriyi değerlendirmeye gönder · ${il.ad}`}
+          </Gonder>
         </div>
         <p className="mt-2 text-[12px] leading-[1.45] text-ink-mute">
-          Gönderdikten sonra yapay zekâ değerlendirir. Puan hazır olduğunda ajans onayına düşer.
+          {ajansModu
+            ? "Puanlama ilerlemesi kayıt ekranında canlı görünür: stratejik puan, belge dayanağı ve her kriterin alıntısı."
+            : "Gönderdikten sonra yapay zekâ değerlendirir. Puan hazır olduğunda ajans onayına düşer."}
         </p>
       </div>
     </EylemFormu>

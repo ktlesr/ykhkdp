@@ -23,7 +23,15 @@ export type BelgeSatiri = {
  */
 export async function belgePaketi(
   b: Baglam,
-  girdi: { ilKod: string; ajansKod: string; sorgu: string; limit?: number },
+  girdi: {
+    ilKod: string; ajansKod: string; sorgu: string; limit?: number;
+    /**
+     * Pakete MUTLAKA girecek parçalar (kapsam içindeyse). Keşif adayı
+     * değerlendirilirken onu doğuran kanıtların parçaları: puanlayıcı adayın
+     * dayandığı metni görmeden puanlamasın.
+     */
+    zorunlu?: readonly number[];
+  },
 ): Promise<{ paket: Paket; belgeler: BelgeSatiri[] }> {
   /**
    * Paket boyu 12. Sekizde kalırken model paketin dışındaki (ama gerçek) plan
@@ -33,6 +41,7 @@ export async function belgePaketi(
   const limit = girdi.limit ?? 12;
   const q = herhangiBiri(girdi.sorgu) || girdi.sorgu;
 
+  const zorunlu = [...new Set(girdi.zorunlu ?? [])].slice(0, limit);
   const satirlar = await islem(b, (sql) =>
     sql<BelgeSatiri[]>`
       select id, ad, bolum, tur::text, yil, metin,
@@ -42,11 +51,13 @@ export async function belgePaketi(
              or (il_kod is null and ajans_kod = ${girdi.ajansKod})
              or (il_kod is null and ajans_kod is null))
         -- Parça bazlı arama: alakasız parçayı pakete koymanın maliyeti var.
-        and arama @@ websearch_to_tsquery('simple', ${q})
+        and (arama @@ websearch_to_tsquery('simple', ${q})
+             ${zorunlu.length ? sql`or id in ${sql(zorunlu)}` : sql``})
       -- il → ajans → ulusal. Ulusal parçada il_kod/ajans_kod NULL ve
       -- karşılaştırma NULL verir; DESC sıralamada NULL ÖNCE gelir; nulls last
       -- olmadan sıra tam tersine dönüyordu (ulusal paket dolduruyordu).
       order by
+        ${zorunlu.length ? sql`(id in ${sql(zorunlu)}) desc,` : sql``}
         (il_kod = ${girdi.ilKod}) desc nulls last,
         (ajans_kod = ${girdi.ajansKod}) desc nulls last,
         ts_rank(arama, websearch_to_tsquery('simple', ${q})) desc,

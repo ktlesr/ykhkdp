@@ -109,12 +109,30 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
           </Uyari>
         )}
 
-        {/* Yatırımcının gerekçesi */}
+        {/* Gerekçe — kimin yazdığı açıkça: yatırımcı mı, belgelerden keşif mi */}
         <div className="mt-6 border border-hairline bg-surface first:mt-0">
           <div className="serit px-4 py-3 etiket text-ink">
-            Neden burada? · yatırımcının gerekçesi
+            {o.kesif_id ? "Neden burada? · belgelerden keşif, yapay zekâ yazdı" : "Neden burada? · yatırımcının gerekçesi"}
           </div>
           <p className="px-4 py-4 text-[13.5px] leading-[1.6] text-ink text-pretty">{o.gerekce}</p>
+          {o.kesif_kanit && (
+            <div className="border-t border-t-hairline-soft px-4 py-3.5">
+              <div className="etiket text-ink-mute">
+                Adayı doğuran kanıtlar · kaynakta birebir doğrulandı, metin kaynaktan kesildi
+              </div>
+              <ul className="mt-2 flex flex-col gap-2.5">
+                {o.kesif_kanit.map((x, i) => (
+                  <li key={i} className="border-l-[3px] border-l-verified pl-3">
+                    <p className="text-[13px] leading-[1.5] text-ink text-pretty">&ldquo;{x.alinti}&rdquo;</p>
+                    <div className="mt-1 flex flex-wrap gap-x-2.5 etiket text-ink-mute">
+                      <span>{x.belge_ad}{x.bolum ? ` · ${x.bolum}` : ""}</span>
+                      <span>{x.yerel ? "bu ile özgü" : "bölge / ulusal"}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* Puan */}

@@ -65,6 +65,12 @@ yazma sessizce 0 satır etkiler (RLS filtresi), hata fırlatmaz — bu bilinçli
   arayüze eklenene kadar ulaşılabilir yol yoktu; 0014 ile kapatıldı.
   Rol ataması `rol_atandi` olarak denetime yazılır.
 
+- **`kesif` · `kanit` · `kanit_tarama`** (0017) — yalnızca ajans/yönetici
+  okur. Keşif açmak `app_il_kapsaminda(il)` ister: yönetici her il, ajans
+  yalnızca `gonderen.ajans_kod` bölgesi; bölgesiz ajans hiçbir ilde açamaz.
+  İlerleme ve kanıt yazımı yalnızca servis bağlamında (yönetici). Keşif
+  adayını oneri'ye yazan bağlam tetikleyen kişinin kendisidir (`oneri_kayit`).
+
 Veritabanı düzeyinde iş kuralları (`check` kısıtları):
 
 - `oneri_nace_kaynagi` — `nace_kod` varsa `nace_kaynagi` de zorunlu.

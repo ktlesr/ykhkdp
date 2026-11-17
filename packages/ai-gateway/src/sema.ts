@@ -1,4 +1,5 @@
 import { KARSI_GORUS_TURLERI } from "@ykh/domain";
+import { KANIT_TURLERI } from "@ykh/evidence-validation";
 import { z } from "zod";
 
 /**
@@ -117,10 +118,56 @@ export const KarsiGorus = z
 
 export type KarsiGorus = z.infer<typeof KarsiGorus>;
 
+/**
+ * Kanıt çıkarımı — aday keşfinin TARAMA aşaması. Puan yok, aday yok: yalnızca
+ * belgede yazanı birebir pasajla kayda geçirir. Boş liste meşrudur.
+ */
+export const KanitCikarimi = z
+  .object({
+    kanitlar: z
+      .array(
+        z
+          .object({
+            belge_id: z.number().int().min(1).max(64),
+            tur: z.enum(KANIT_TURLERI),
+            /** pasajın neyle ilgili olduğu, kısa ad: "tekstil geri dönüşümü" */
+            konu: z.string().min(3).max(120),
+            /** belgede KESİNTİSİZ ve birebir geçen pasaj; "…" yok */
+            alinti: z.string().min(20).max(400),
+          })
+          .strict(),
+      )
+      .max(12),
+  })
+  .strict();
+
+/**
+ * Aday üretimi — keşfin İL aşaması. Model yeni alıntı yazamaz; yalnızca
+ * defterdeki doğrulanmış kanıtlara `kanit_no` ile atıf yapar.
+ */
+export const AdayKesfi = z
+  .object({
+    adaylar: z
+      .array(
+        z
+          .object({
+            baslik: z.string().min(8).max(140),
+            /** "neden bu ilde?" — yalnızca atıf yapılan kanıtlarda yazanla */
+            gerekce: z.string().min(40).max(1200),
+            kanit_no: z.array(z.number().int().min(1).max(200)).min(2).max(8),
+          })
+          .strict(),
+      )
+      .max(8),
+  })
+  .strict();
+
 export const SEMALAR = {
   degerlendirme: Degerlendirme,
   nace_onerisi: NaceOnerisi,
   karsi_gorus: KarsiGorus,
+  kanit_cikarimi: KanitCikarimi,
+  aday_kesfi: AdayKesfi,
 } as const;
 
 export type SemaAdi = keyof typeof SEMALAR;

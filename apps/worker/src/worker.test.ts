@@ -136,3 +136,107 @@ test("değerlendirme sonucu aşama bilgisi taşır", async () => {
   assert.equal(s.asama, "oneri");
   assert.equal(typeof s.mesaj, "string");
 });
+
+// ── Aday keşfi ─────────────────────────────────────────────────────────────
+
+async function ref(eposta: string): Promise<string> {
+  const [r] = await islem(SERVIS, (sql) => sql<{ gonderen_ref: string }[]>`select gonderen_ref from kimlik where eposta = ${eposta}`);
+  return r.gonderen_ref;
+}
+async function donem(il: string): Promise<number> {
+  const [d] = await islem(SERVIS, (sql) => sql<{ id: string }[]>`select id from donem where il_kod = ${il} order by yil desc limit 1`);
+  return Number(d.id);
+}
+
+test("keşif yalnızca ajansın kendi bölgesinde ve yalnızca onaylayan rolle açılır (RLS)", async () => {
+  const ajans: Baglam = { gonderenRef: await ref("ajans@ykh.local"), rol: "ajans" };
+  const yatirimci: Baglam = { gonderenRef: await ref("yatirimci@ykh.local"), rol: "yatirimci" };
+  const [bolgeDisi] = await islem(SERVIS, (sql) => sql<{ kod: string }[]>`select kod from il where ajans_kod <> 'TR33' order by kod limit 1`);
+
+  await assert.rejects(
+    async () => islem(ajans, async (sql) => sql`insert into kesif (donem_id, tetikleyen_ref) values (${await donem(bolgeDisi.kod)}, ${ajans.gonderenRef})`),
+    /row-level security/,
+  );
+  await assert.rejects(
+    async () => islem(yatirimci, async (sql) => sql`insert into kesif (donem_id, tetikleyen_ref) values (${await donem("usak")}, ${yatirimci.gonderenRef})`),
+    /row-level security/,
+  );
+});
+
+test("keşif: bütün parçaları tarar, adayları yerel kanıtla ve kaynaktan birebir pasajla yazar", async () => {
+  const { birKesifAl, kesifYap } = await import("@ykh/degerlendirme");
+  const ajans: Baglam = { gonderenRef: await ref("ajans@ykh.local"), rol: "ajans" };
+  const d = await donem("usak");
+  await islem(ajans, (sql) => sql`insert into kesif (donem_id, tetikleyen_ref) values (${d}, ${ajans.gonderenRef})`);
+  // Aynı dönemde ikinci aktif koşu açılamaz.
+  await assert.rejects(() => islem(ajans, (sql) => sql`insert into kesif (donem_id, tetikleyen_ref) values (${d}, ${ajans.gonderenRef})`), /kesif_tek_aktif/);
+
+  const id = await birKesifAl();
+  assert.ok(id);
+  const s = await kesifYap(id);
+  assert.ok(s.ok, s.mesaj);
+
+  const [k] = await islem(SERVIS, (sql) => sql<{ durum: string; toplam_parca: number; taranan_parca: number; aday_sayisi: number }[]>`
+    select durum, toplam_parca, taranan_parca, aday_sayisi from kesif where id = ${id}`);
+  assert.equal(k.durum, "tamam");
+  assert.ok(k.toplam_parca > 0);
+  assert.equal(k.taranan_parca, k.toplam_parca, "tarama eksiksiz");
+  // Gerçek modelde sıfır aday meşru bir sonuçtur (hepsi kanıt kuralına takılabilir);
+  // deterministik çevrimdışı istemcide en az bir aday çıkmalı.
+  if (!process.env.OPENAI_API_KEY) assert.ok(k.aday_sayisi > 0, "çevrimdışı istemci en az bir aday üretmeli");
+
+  const adaylar = await islem(SERVIS, (sql) => sql<{ durum: string; koken: string; gonderen_ref: string; kesif_kanit: Array<{ belge_id: number; alinti: string; yerel: boolean }> }[]>`
+    select durum::text, koken::text, gonderen_ref, kesif_kanit from oneri where kesif_id = ${id}`);
+  assert.equal(adaylar.length, k.aday_sayisi);
+  for (const a of adaylar) {
+    assert.equal(a.durum, "degerlendiriliyor", "aday onaysız; mevcut değerlendirme hattına girer");
+    assert.equal(a.koken, "yeni");
+    assert.equal(a.gonderen_ref, ajans.gonderenRef, "gönderen keşfi tetikleyen kişi");
+    assert.ok(a.kesif_kanit.length >= 2);
+    assert.ok(a.kesif_kanit.some((x) => x.yerel), "en az bir yerel kanıt");
+    // Doğrulayıcıdan BAĞIMSIZ kontrol: kayıttaki pasaj belgede harfi harfine geçer.
+    for (const x of a.kesif_kanit) {
+      const [b] = await islem(SERVIS, (sql) => sql<{ metin: string }[]>`select metin from belge where id = ${x.belge_id}`);
+      assert.ok(b.metin.includes(x.alinti), `pasaj kaynakta birebir yok: ${x.alinti}`);
+    }
+  }
+
+  // İkinci koşu önbellekten: hiçbir parça yeniden taranmaz.
+  const [{ n: once }] = await islem(SERVIS, (sql) => sql<{ n: string }[]>`select count(*) as n from kanit_tarama`);
+  await islem(ajans, (sql) => sql`insert into kesif (donem_id, tetikleyen_ref) values (${d}, ${ajans.gonderenRef})`);
+  const id2 = await birKesifAl();
+  assert.ok(id2);
+  const s2 = await kesifYap(id2);
+  assert.ok(s2.ok, s2.mesaj);
+  const [{ n: sonra }] = await islem(SERVIS, (sql) => sql<{ n: string }[]>`select count(*) as n from kanit_tarama`);
+  assert.equal(sonra, once);
+  // Aynı başlık ikinci kez yazılmaz (model başka başlık üretebilir; o yeni bir adaydır).
+  const [{ n: kopya }] = await islem(SERVIS, (sql) => sql<{ n: string }[]>`
+    select count(*) as n from (select lower(trim(baslik)) from oneri where donem_id = ${d}
+      group by 1 having count(*) > 1) t`);
+  assert.equal(Number(kopya), 0);
+});
+
+test("yerel belgesi olmayan ilde keşif aday üretmez, nedenini yazar", async () => {
+  const { birKesifAl, kesifYap } = await import("@ykh/degerlendirme");
+  const [il] = await islem(SERVIS, (sql) => sql<{ kod: string }[]>`select kod from il where ajans_kod <> 'TR33' order by kod limit 1`);
+  const yonetici: Baglam = { gonderenRef: await ref("yonetici@ykh.local"), rol: "yonetici" };
+  await islem(yonetici, async (sql) => sql`insert into kesif (donem_id, tetikleyen_ref) values (${await donem(il.kod)}, ${yonetici.gonderenRef})`);
+  const id = await birKesifAl();
+  assert.ok(id);
+  const s = await kesifYap(id);
+  assert.ok(s.ok);
+  assert.equal(s.adaySayisi, 0);
+  assert.match(s.mesaj, /özgü değil|belge yok/);
+});
+
+test("uzun parça örtüşen pencerelerle eksiksiz taranır", async () => {
+  const { pencerele } = await import("@ykh/degerlendirme");
+  const { MODEL_METIN_SINIRI } = await import("@ykh/evidence-validation");
+  const metin = Array.from({ length: 900 }, (_, i) => `cümle ${i}.`).join(" ");
+  const p = pencerele(metin);
+  assert.ok(p.length > 1);
+  assert.ok(p.every((x) => x.length <= MODEL_METIN_SINIRI));
+  assert.ok(p.at(-1)!.endsWith("cümle 899."), "kuyruk taranır");
+  assert.deepEqual(pencerele("kısa"), ["kısa"]);
+});

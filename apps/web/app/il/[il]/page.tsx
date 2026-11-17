@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { adaylariGetir, donemGetir, ilGetir, konuluYillar, yatirimKonulari } from "@ykh/database";
+import { adaylariGetir, bolgeler, donemGetir, ilGetir, konuluYillar, sonKesif, yatirimKonulari } from "@ykh/database";
 import { onaylayabilir, type Sonuc } from "@ykh/domain";
 import { ayardan, grupAgirligi, hesapla } from "@ykh/scoring";
+import { KesifPaneli, KonuPuanla } from "@/components/kesif-paneli.tsx";
 import { Bag, Baslik, Bos, Rozet, Sayfa, UstBar, Uyari } from "@/components/ui.tsx";
 import { baglam, kullanici } from "@/lib/oturum.ts";
 import { KAPALI } from "@/lib/site.ts";
@@ -67,6 +68,12 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
   const adaylar = d ? await adaylariGetir(b, d) : [];
   const h = d ? hesapla(adaylar, ayardan(d.set)) : null;
   const yerellik = d ? Math.round(grupAgirligi(d.set.agirliklar, "yerellik") * 100) : 0;
+  const [kesif, ilceler] = d
+    ? await Promise.all([
+        sonKesif(b, d.donemId),
+        bolgeler(b).then((x) => x.flatMap((y) => y.iller).find((y) => y.kod === il)?.ilceler ?? []),
+      ])
+    : [null, []];
 
   return (
     <>
@@ -218,6 +225,13 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
         )}
 
         {/* Yürürlükteki resmî liste ve yıllar arası süreklilik */}
+        {/* Araştırma — ikisi de mevcut değerlendirme hattına girer; karar yine onay kuyruğunda. */}
+        {d && (
+          <div className="mt-8 grid grid-cols-2 items-start gap-5 max-[1040px]:grid-cols-1">
+            <KesifPaneli il={il} kesif={kesif} />
+            <KonuPuanla il={{ kod: il, ad: ilKaydi.ad, ilceler }} yerellikPayi={yerellik} />
+          </div>
+        )}
         {resmi.length > 0 && (
           <div className="mt-8 border border-hairline bg-surface">
             <div className="serit flex flex-wrap items-baseline gap-x-3 px-4 py-2.5 etiket">

@@ -74,6 +74,43 @@ function uret(istek: ModelIstegi): unknown {
     };
   }
 
+  if (istek.semaAdi === "kanit_cikarimi") {
+    // ponytail: çevrimdışı tarama her parçadan ilk üç uygun cümleyi alır.
+    // Amaç zinciri çalıştırmak; gerçek çıkarım OPENAI_API_KEY ile yapılır.
+    const kanitlar = belgeleriCoz(istek.kullanici).flatMap((b) =>
+      b.metin
+        .split(/(?<=[.!?])\s+/)
+        .map((c) => c.trim())
+        .filter((c) => c.length >= 30 && c.length <= 380 && !/…|\.{3,}/.test(c))
+        .slice(0, 3)
+        .flatMap((c) => {
+          const konu = c.split(/\s+/).filter((w) => !/\d/.test(w)).slice(0, 5).join(" ");
+          return konu.length >= 3 ? [{ belge_id: b.id, tur: "firsat", konu, alinti: c }] : [];
+        }),
+    );
+    return { kanitlar: kanitlar.slice(0, 12) };
+  }
+
+  if (istek.semaAdi === "aday_kesfi") {
+    // İki kanıt → bir aday; biri yerel. Gerekçe kanıtların kendi cümleleridir:
+    // çevrimdışı istemci de gerekçe kuralından geçmek zorunda.
+    const kayitlar = [
+      ...istek.kullanici.matchAll(
+        /<kanit no="(\d+)" yerel="(evet|hayir)"[^>]*>[\s\S]*?<konu>([\s\S]*?)<\/konu>\s*<icerik guvenilir="hayir">([\s\S]*?)<\/icerik>/g,
+      ),
+    ].map((m) => ({ no: Number(m[1]), yerel: m[2] === "evet", konu: coz(m[3]), metin: coz(m[4]) }));
+    const adaylar = kayitlar
+      .filter((k) => k.yerel)
+      .slice(0, 3)
+      .flatMap((y) => {
+        const es = kayitlar.find((k) => k.no !== y.no);
+        if (!es) return [];
+        const gerekce = `${y.metin} ${es.metin}`.slice(0, 1200);
+        return gerekce.length >= 40 ? [{ baslik: `${y.konu} yatırımı`.slice(0, 140).padEnd(8, "."), gerekce, kanit_no: [y.no, es.no] }] : [];
+      });
+    return { adaylar };
+  }
+
   if (istek.semaAdi === "karsi_gorus") {
     // ponytail: çevrimdışı karşı görüş tek tipli ve tek alıntılı. Amaç zinciri
     // çalıştırmak; gerçek itiraz OPENAI_API_KEY ile üretilir.

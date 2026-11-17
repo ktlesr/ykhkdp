@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { illeriListele } from "@ykh/database";
 import { onaylayabilir } from "@ykh/domain";
+import { TopluKesif } from "@/components/toplu-kesif.tsx";
 import { Bag, Baslik, Bos, Rozet, Sayfa, UstBar } from "@/components/ui.tsx";
 import { baglam, kullanici } from "@/lib/oturum.ts";
 import { KAPALI } from "@/lib/site.ts";
@@ -66,6 +67,8 @@ export default async function Iller() {
         >
           İl bazında yatırım konusu önerileri
         </Baslik>
+
+        <TopluKesif yonetici={k.rol === "yonetici"} />
 
         {bolgeler.length === 0 ? (
           <Bos baslik="Henüz ajans kaydı yok.">Ajanslar yüklendiğinde iller burada listelenir.</Bos>

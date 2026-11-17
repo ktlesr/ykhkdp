@@ -1,3 +1,4 @@
+import { MODEL_METIN_SINIRI } from "@ykh/evidence-validation";
 import type { SemaAdi } from "./sema.ts";
 
 /**
@@ -118,6 +119,62 @@ KURALLAR:
   BOŞ bırak — bu meşru ve bilgi taşıyan bir cevaptır.
 - Yatırımcıyı veya öneriyi küçümseyen dil kullanma; itirazı belgeye dayandır.`,
   },
+  kanit_cikarimi: {
+    ad: "kanit_cikarimi",
+    surum: "kanit-cikarimi-v1",
+    sistem: `${ORTAK}
+
+GÖREV: Verilen belge parçalarından, bir ilde YATIRIM KONUSU belirlemeye
+yarayacak pasajları çıkar. Puan verme, konu önerme: yalnızca belgede yazanı
+kayda geçir.
+
+TÜRLER:
+- yerel_olgu: belirli bir il/ilçe/bölgede var olan kaynak, hammadde, tesis,
+  küme, işgücü, altyapı, coğrafi özellik.
+- firsat: belgenin belirli bir yer veya sektör için tanımladığı yatırım,
+  geliştirme, dönüşüm alanı.
+- oncelik: plan veya programın sektörel/politik önceliği, hedefi, desteği.
+- kisit: belgenin saydığı darboğaz, risk, eksiklik.
+
+KURALLAR:
+- "alinti" belgede KESİNTİSİZ ve BİREBİR geçmeli. "…" ile kısaltma YASAK —
+  kısaltılmış pasaj kaydedilmez. 15-40 kelimelik tek cümle ya da cümle parçası.
+- "belge_id" <belge id="N"> bloğundaki N'dir.
+- "konu" pasajın konusunu birkaç kelimeyle adlandırır; pasajda olmayan sayı YAZMA.
+- Genel, her yer için geçerli süs cümlelerini ALMA ("sanayi önemlidir").
+  Somut sektör, ürün, yer veya araç adı geçen pasajları al.
+- Parçada uygun pasaj yoksa "kanitlar" BOŞ kalsın; bu meşru bir sonuçtur.
+- En fazla 12 kanıt.`,
+  },
+  aday_kesfi: {
+    ad: "aday_kesfi",
+    surum: "aday-kesfi-v1",
+    sistem: `${ORTAK}
+
+GÖREV: Bir il için, Yerel Kalkınma Hamlesi kapsamında önerilebilecek YATIRIM
+KONUSU ADAYLARINI çıkar. Sana belgelerden çıkarılmış ve kaynakta birebir
+doğrulanmış bir KANIT DEFTERİ veriliyor. Yeni alıntı yazamazsın; yalnızca
+defterdeki kanıtlara "kanit_no" ile atıf yaparsın.
+
+Bu bir ADAY listesidir, karar değil: her aday ayrıca sekiz kriterle puanlanacak
+ve ajans onaylamadan hiçbir yere girmeyecek.
+
+KURALLAR:
+- Her aday EN AZ İKİ kanıta dayanır ve bunlardan EN AZ BİRİ yerel="evet"
+  olmalıdır. Yerel kanıtı olmayan aday "neden burada?" sorusuna cevap vermez
+  ve düşürülür.
+- Başlık somut bir yatırım konusudur: ürün/faaliyet + gerekiyorsa yer
+  ("Tekstil atıklarından geri dönüştürülmüş elyaf üretimi"). Sektör adı tek
+  başına konu değildir ("Tekstil").
+- Gerekçe bu ilin kendine özgü olgusuna bağlanır ve YALNIZCA atıf yaptığın
+  kanıtlarda yazanı söyler. Gerekçenin HER CÜMLESİ "kanit_no" listesindeki bir
+  kanıta dayanmalı; defterde olup atıf YAPMADIĞIN bir kanıtın içeriğini
+  gerekçeye yazarsan aday düşer. Kanıtta olmayan sayı, kapasite, oran YAZMA.
+- "kisit" türündeki kanıtı gizleme: adayın aleyhine bir kısıt varsa gerekçede an.
+- Aynı konuyu iki aday olarak yazma. Kanıt yetersizse daha az aday ver;
+  hiç aday çıkmıyorsa "adaylar" BOŞ kalsın — bu meşru bir sonuçtur.
+- En fazla 8 aday.`,
+  },
   nace_onerisi: {
     ad: "nace_onerisi",
     surum: "nace-onerisi-v3",
@@ -135,7 +192,7 @@ doğrulanmadı" olarak işaretlenir; ajans düzeltebilir.`,
 export type BelgeSatiri = { id: number; ad: string; bolum?: string | null; tur: string; yil: string | null; metin: string };
 
 /** Belgeleri prompt'a gömer; içerik "güvenilmeyen veri" etiketiyle yalıtılır. */
-export function kaynakBloguKur(belgeler: readonly BelgeSatiri[], maksKarakter = 4000): string {
+export function kaynakBloguKur(belgeler: readonly BelgeSatiri[], maksKarakter = MODEL_METIN_SINIRI): string {
   const govde = belgeler
     .map(
       (b) =>
@@ -157,3 +214,23 @@ export function naceBloguKur(adaylar: readonly { kod: string; tanim: string }[])
 function kacisla(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
+
+/** Kanıt defterini prompt'a gömer. Pasaj kaynakta doğrulanmış ama yine GÜVENİLMEYEN veridir. */
+export function defterBloguKur(
+  defter: readonly { no: number; yerel: boolean; tur: string; konu: string; metin: string; kaynak: string }[],
+): string {
+  const govde = defter
+    .map((d) =>
+      [
+        `<kanit no="${d.no}" yerel="${d.yerel ? "evet" : "hayir"}" tur="${d.tur}">`,
+        `  <kunye>${kacisla(d.kaynak)}</kunye>`,
+        `  <konu>${kacisla(d.konu)}</konu>`,
+        `  <icerik guvenilir="hayir">${kacisla(d.metin)}</icerik>`,
+        `</kanit>`,
+      ].join(SATIR),
+    )
+    .join(SATIR);
+  return [`<belgeler adet="${defter.length}">`, "<kanit-defteri>", govde, "</kanit-defteri>", "</belgeler>"].join(SATIR);
+}
+
+const SATIR = "\n";

@@ -1,5 +1,5 @@
 import { islem, kapat, type Baglam } from "@ykh/database";
-import { degerlendirmeYap, KILIT } from "@ykh/degerlendirme";
+import { birKesifAl, degerlendirmeYap, kesifHatasi, kesifYap, KILIT } from "@ykh/degerlendirme";
 import { log } from "@ykh/observability";
 
 /**
@@ -53,9 +53,27 @@ export async function hataYaz(oneriId: number, hata: string): Promise<void> {
   await islem(SERVIS, (sql) => sql`update oneri set son_hata = ${hata} where id = ${oneriId}`);
 }
 
+/**
+ * Keşif turu. Önce öneriler: keşif uzun sürer (bütün parçaları tarar) ve
+ * yatırımcının bekleyen değerlendirmesini arkasında bekletmemeli.
+ */
+async function kesifTuru(): Promise<boolean> {
+  const kesifId = await birKesifAl();
+  if (kesifId === null) return false;
+  try {
+    const s = await kesifYap(kesifId);
+    log.info("kesif_turu", { kesifId, ok: s.ok, mesaj: s.mesaj });
+  } catch (e) {
+    const mesaj = e instanceof Error ? e.message : String(e);
+    await kesifHatasi(kesifId, mesaj);
+    log.hata("kesif_hatasi", { kesifId, hata: mesaj });
+  }
+  return true;
+}
+
 async function turAt(): Promise<boolean> {
   const oneriId = await birOneriAl();
-  if (oneriId === null) return false;
+  if (oneriId === null) return kesifTuru();
 
   try {
     const s = await degerlendirmeYap(SERVIS, oneriId);

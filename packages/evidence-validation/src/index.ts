@@ -85,9 +85,31 @@ export type Sonuc =
  */
 const UYDURMA_ESIGI = 0.5;
 
-/** Sayısal token: 12, 12,5, %41,3, 1.234 ton gibi. Yıllar sayılmaz. */
-const SAYI = /(?<![\p{L}])[%₺$]?\d[\d.,]*(?:\s?(?:%|puan|kişi|ton|MW|km|m²|milyon|milyar|bin))?/gu;
+/**
+ * Sayısal token: 12, 12,5, %41,3, 1.234 ton gibi. Yıllar sayılmaz.
+ *
+ * Sol sınır harf VE rakam: önceden "TR33"teki ikinci "3" (solunda rakam var)
+ * ayrı bir sayı sayılıyordu ve gerekçesinde bölge kodu geçen her çıktı
+ * "kaynaksız sayı" diye düşüyordu (ölçüldü: aday keşfinde 5 adayın 5'i).
+ */
+const SAYI = /(?<![\p{L}\p{N}])[%₺$]?\d[\d.,]*(?:\s?(?:%|puan|kişi|ton|MW|km|m²|milyon|milyar|bin))?/gu;
 const YIL = /^(19|20)\d{2}$/;
+
+/**
+ * Sayı kaynakta SAYI OLARAK geçiyor mu.
+ *
+ * Alt dize araması yetmiyordu: kaynakta "120 işletme" varken "20 işletme"
+ * iddiası geçiyordu (Codex incelemesi). Sayının çekirdeği (12, 12,5, 1.234)
+ * kaynakta solunda ve sağında başka rakam olmadan aranır; birim aranmaz —
+ * "120" ile "120 ton" aynı sayıdır.
+ */
+export function sayiKaynakta(token: string, normalizeKaynak: string): boolean {
+  const cekirdek = token.match(/\d[\d.,]*/)?.[0].replace(/[.,]+$/, "");
+  if (!cekirdek) return true;
+  // Yalnızca nokta kaçışlanır: "u" kipinde `\,` geçersiz bir kaçıştır.
+  const kacis = cekirdek.replace(/\./g, "\\.");
+  return new RegExp(`(?<![\\p{N}])${kacis}(?![\\p{N}]|[.,]\\p{N})`, "u").test(normalizeKaynak);
+}
 
 export function sayisalTokenlar(metin: string): string[] {
   return [...metin.matchAll(SAYI)]
@@ -371,7 +393,7 @@ export function degerlendirmeyiDogrula(
     paket.belgeler.filter((b) => b.pakete_dahil).map((b) => b.metin).join(" "),
   );
   for (const token of sayisalTokenlar(cikti.gerekce)) {
-    if (!kaynakMetni.includes(normalize(token))) {
+    if (!sayiKaynakta(token, kaynakMetni)) {
       hatalar.push({
         kod: "kaynaksiz_sayi",
         mesaj: `Belgelerde bulunmayan sayısal ifade: “${token}”. Kaynaksız sayı reddedilir.`,
@@ -459,8 +481,24 @@ export function paketKur(
   id: string,
   belgeler: readonly Omit<BelgeKaydi, "pakete_dahil" | "yerel">[],
 ): Paket {
-  return { id, belgeler: belgeler.map((b, i) => ({ ...b, yerel: i + 1, pakete_dahil: true })) };
+  /**
+   * Paket, modele GİDEN metnin aynısıdır. `kaynakBloguKur` metni
+   * `MODEL_METIN_SINIRI`nda kesiyor; paket tam metni tutsaydı modele hiç
+   * gösterilmemiş kuyruktan yapılan bir "alıntı" (ezberden) doğrulanırdı.
+   */
+  return {
+    id,
+    belgeler: belgeler.map((b, i) => ({
+      ...b,
+      metin: b.metin.slice(0, MODEL_METIN_SINIRI),
+      yerel: i + 1,
+      pakete_dahil: true,
+    })),
+  };
 }
+
+/** Bir belge parçasından modele gösterilen en çok karakter. `kaynakBloguKur` de bunu kullanır. */
+export const MODEL_METIN_SINIRI = 4000;
 
 export type KarsiGorus = { tur: KarsiGorusTuru; iddia: string; alinti_no?: readonly number[] };
 
@@ -503,7 +541,7 @@ export function karsiGorusuDogrula(
   for (const g of cikti.gorusler) {
     // Ana değerlendirmedeki kural itirazda da geçerli: kaynaksız sayı taşıyan
     // itiraz DÜŞER (ana puanı engellemez, karşı görüş en iyi çabadır).
-    const kaynaksiz = sayisalTokenlar(g.iddia).find((t) => !kaynakMetni.includes(normalize(t)));
+    const kaynaksiz = sayisalTokenlar(g.iddia).find((t) => !sayiKaynakta(t, kaynakMetni));
     if (kaynaksiz) {
       dusenler.push({
         kod: "kaynaksiz_sayi",
@@ -527,4 +565,250 @@ export function karsiGorusuDogrula(
   }
 
   return { gecerli: true, gorusler, dusenler, duzeltilenler };
+}
+
+// ── Aday keşfi ─────────────────────────────────────────────────────────────
+
+/**
+ * Alıntının kaynaktaki ÖZGÜN karşılığını keser.
+ *
+ * Karşılaştırma `normalize` ile yapılır (büyük/küçük harf, tipografik tırnak,
+ * boşluk), ama kayda modelin yazdığı değil KAYNAĞIN metni girer: model bir
+ * tırnağı ya da harfi değiştirmişse kayıt yine belgedeki gibidir.
+ *
+ * Yalnızca KESİNTİSİZ alıntı: "…" ile birleştirilmiş parçalar kanıt defterine
+ * girmez — arası atlanmış bir pasaj, belgede o hâliyle geçmez.
+ */
+export function kaynaktanCikar(metin: string, alinti: string): string | null {
+  const temiz = alinti.replace(/^[\s"'“”«»]+|[\s"'“”«»]+$/g, "");
+  if (/…|\.{3,}/.test(temiz)) return null;
+  const aranan = normalize(temiz);
+  if (aranan.length < 20) return null;
+
+  // Normalize edilmiş metnin her karakteri için kaynaktaki konum.
+  let n = "";
+  const kaynak: number[] = [];
+  let bosluk = false;
+  for (let i = 0; i < metin.length; i++) {
+    if (/[\s ]/.test(metin[i])) {
+      if (!bosluk && n.length) {
+        n += " ";
+        kaynak.push(i);
+      }
+      bosluk = true;
+      continue;
+    }
+    bosluk = false;
+    // Karakter başına normalize: tr-TR küçük harf ve tipografi (İ → i).
+    for (const c of normalize(metin[i]) || metin[i]) {
+      n += c;
+      kaynak.push(i);
+    }
+  }
+  const bas = n.indexOf(aranan);
+  if (bas === -1) return null;
+  return metin.slice(kaynak[bas], kaynak[bas + aranan.length - 1] + 1);
+}
+
+const kacisRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Bir pasaj hedef ile ilgili mi — MEKANİK kontrol, modelin beyanı değil.
+ *
+ * Ajans kapsamlı belge tek başına yetmez: parça komşu ili anlatabilir. Yerel
+ * sayılması için ya belgenin kendisi o ile ait olmalı ya da pasajın içinde
+ * bulunduğu CÜMLE(LER)DE il veya ilçe adı geçmeli. Karakter penceresi
+ * kullanılmıyor: ölçüldü, "Kütahya'da seramik…" cümlesi bir önceki
+ * cümledeki "Uşak'ta" yüzünden Uşak'a yerel sayılıyordu.
+ *
+ * ponytail: ad eşlemesi sol kelime sınırıyla önek araması ("Uşak'ta",
+ * "Kütahyalı" yakalanır). "Muş" gibi kısa adlar "muşamba"ya takılabilir;
+ * yanlış pozitif görülürse ek listesiyle daraltılır.
+ */
+export function yerelMi(
+  parca: { metin: string; ilKod: string | null },
+  pasaj: string,
+  hedef: { ilKod: string; adlar: readonly string[] },
+): boolean {
+  if (parca.ilKod === hedef.ilKod) return true;
+  const i = parca.metin.indexOf(pasaj);
+  if (i === -1) return false;
+  // Pasajı cümle sınırlarına genişlet. Pasaj zaten cümle sonuyla bitiyorsa
+  // genişletme bir SONRAKİ cümleye taşmaz (ölçüldü: komşu cümledeki il adı
+  // yakalanıyordu).
+  const once = parca.metin.slice(0, i);
+  const bas = Math.max(once.search(/[.!?]\s[^.!?]*$/) + 1, 0);
+  const sonrasi = /[.!?]["'”’)]*\s*$/.test(pasaj) ? 0 : parca.metin.slice(i + pasaj.length).search(/[.!?](\s|$)/);
+  const son = sonrasi === -1 ? parca.metin.length : i + pasaj.length + (sonrasi ? sonrasi + 1 : 0);
+  const cumle = parca.metin.slice(bas, son).toLocaleLowerCase("tr-TR");
+  return hedef.adlar.some((ad) =>
+    new RegExp(`(?<![\\p{L}])${kacisRegex(ad.toLocaleLowerCase("tr-TR"))}`, "u").test(cumle),
+  );
+}
+
+/** İçerik kelimesi kökleri: 5+ harfli kelimelerin ilk 5 harfi (Türkçe ekleri kabaca atar). */
+function kokler(metin: string): string[] {
+  return metin
+    .toLocaleLowerCase("tr-TR")
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((w) => w.length >= 5)
+    .map((w) => w.slice(0, 5));
+}
+
+/**
+ * Gerekçe cümlesi atıf yapılan kanıtlarda karşılık buluyor mu.
+ *
+ * Gerçek alıntı doğru gerekçe garantisi değil: ölçüldü, model defterde olan
+ * ama ATIF YAPMADIĞI bir kanıtın cümlesini gerekçeye yazdı ("seramik
+ * hammaddesi rezervleri…") ve gösterdiği kanıtlar bunu desteklemiyordu.
+ * Her cümlenin içerik köklerinin en az yarısı atıf yapılan kanıtlarda geçmeli.
+ *
+ * ponytail: sözcüksel örtüşme, anlamsal destek değil — yeniden ifade edilmiş
+ * doğru bir cümleyi düşürebilir (fail-closed yönde). Kalan yargı ajansta.
+ */
+export const GEREKCE_ORTUSME_ESIGI = 0.5;
+export function desteksizCumle(gerekce: string, kanitMetni: string): string | null {
+  const kaynak = new Set(kokler(kanitMetni));
+  for (const c of gerekce.split(/(?<=[.!?;])\s+/)) {
+    const k = kokler(c);
+    if (k.length < 2) continue;
+    if (k.filter((x) => kaynak.has(x)).length / k.length < GEREKCE_ORTUSME_ESIGI) return c.trim();
+  }
+  return null;
+}
+
+export const KANIT_TURLERI = ["yerel_olgu", "firsat", "oncelik", "kisit"] as const;
+export type KanitTuru = (typeof KANIT_TURLERI)[number];
+
+export type HamKanit = { belge_id: number; tur: KanitTuru; konu: string; alinti: string };
+/** Doğrulanmış kanıt: `belge_id` veritabanı kimliği, `alinti` kaynaktan kesilmiş özgün metin. */
+export type DogrulanmisKanit = HamKanit;
+
+/**
+ * Kanıt çıkarımını doğrular (tarama aşaması).
+ *
+ * Değerlendirmeyle aynı ilke: paket dışı belge sert ret, eşleşmeyen alıntı
+ * düşer, yarısından fazlası düşerse çağrının tamamı reddedilir (model
+ * uyduruyor). Fark: kayda modelin metni değil kaynaktan kesilen metin girer
+ * ve atıf, metnin GERÇEKTEN bulunduğu parçaya yapılır. Konu adında kaynaksız
+ * sayı taşıyan kanıt düşer.
+ */
+export function kanitlariDogrula(
+  kanitlar: readonly HamKanit[],
+  paket: Paket,
+): { gecerli: true; kanitlar: DogrulanmisKanit[]; dusenler: Hata[] } | { gecerli: false; hatalar: Hata[] } {
+  const sonuc: DogrulanmisKanit[] = [];
+  const dusenler: Hata[] = [];
+  const goruldu = new Set<string>();
+
+  for (const k of kanitlar) {
+    const adres = paket.belgeler.find((b) => b.yerel === k.belge_id);
+    if (adres && !adres.pakete_dahil) {
+      return { gecerli: false, hatalar: [{ kod: "pakette_yok", mesaj: `Belge pakete dahil değil: ${adres.ad}` }] };
+    }
+    // Önce gösterilen parça, sonra paketin geri kalanı: metin nerede geçiyorsa atıf oraya.
+    const sira = [...(adres ? [adres] : []), ...paket.belgeler.filter((b) => b.pakete_dahil && b !== adres)];
+    let bulunan: { belge: BelgeKaydi; metin: string } | null = null;
+    for (const b of sira) {
+      const m = kaynaktanCikar(b.metin, k.alinti);
+      if (m) {
+        bulunan = { belge: b, metin: m };
+        break;
+      }
+    }
+    if (!bulunan) {
+      dusenler.push({
+        kod: "alinti_eslesmiyor",
+        mesaj: `Kanıt “${k.alinti.slice(0, 60)}…” kaynakta kesintisiz ve birebir bulunamadı; düşürüldü.`,
+      });
+      continue;
+    }
+    const kaynakMetni = normalize(bulunan.metin);
+    const kaynaksiz = sayisalTokenlar(k.konu).find((t) => !sayiKaynakta(t, kaynakMetni));
+    if (kaynaksiz) {
+      dusenler.push({ kod: "kaynaksiz_sayi", mesaj: `Konu adında kaynaksız sayı (“${kaynaksiz}”); kanıt düşürüldü.` });
+      continue;
+    }
+    const anahtar = `${bulunan.belge.id}:${kaynakMetni}`;
+    if (goruldu.has(anahtar)) continue;
+    goruldu.add(anahtar);
+    sonuc.push({ belge_id: bulunan.belge.id, tur: k.tur, konu: k.konu.trim(), alinti: bulunan.metin });
+  }
+
+  if (kanitlar.length && dusenler.length / kanitlar.length > UYDURMA_ESIGI) {
+    return {
+      gecerli: false,
+      hatalar: [
+        {
+          kod: "alinti_eslesmiyor",
+          mesaj: `${kanitlar.length} kanıtın ${dusenler.length} tanesi doğrulanamadı; çıktı reddedildi.`,
+        },
+        ...dusenler,
+      ],
+    };
+  }
+  return { gecerli: true, kanitlar: sonuc, dusenler };
+}
+
+/** Aday üretiminde modele verilen defter satırı; `no` pakete yerel (1…n). */
+export type DefterKaydi = { no: number; kanitId: number; yerel: boolean; metin: string };
+
+export type HamAday = { baslik: string; gerekce: string; kanit_no: readonly number[] };
+export type DogrulanmisAday = { baslik: string; gerekce: string; kanitIdleri: number[] };
+
+/**
+ * Aday üretimini doğrular. Model yeni alıntı YAZAMAZ; yalnızca defterdeki
+ * doğrulanmış kanıtlara numarayla atıf yapar.
+ *
+ * Aday başına kurallar (biri tutmazsa YALNIZCA o aday düşer; toplu çağrıda
+ * iyi adaylar kötüsünü maskelemez, kötüsü de iyileri batırmaz):
+ *  - en az iki farklı çözülen kanıt,
+ *  - bunlardan en az biri YEREL ("neden burada?"),
+ *  - başlık ve gerekçedeki her sayı atıf yapılan kanıtlardan birinde geçer,
+ *  - çözülemeyen numaralar çözülenleri aşamaz,
+ *  - gerekçenin her cümlesi atıf yapılan kanıtlarda karşılık bulur.
+ */
+export function adaylariDogrula(
+  adaylar: readonly HamAday[],
+  defter: readonly DefterKaydi[],
+): { adaylar: DogrulanmisAday[]; dusenler: Hata[] } {
+  const sonuc: DogrulanmisAday[] = [];
+  const dusenler: Hata[] = [];
+  const numara = new Map(defter.map((d) => [d.no, d]));
+
+  for (const a of adaylar) {
+    const ad = `“${a.baslik.slice(0, 60)}”`;
+    const tekil = [...new Set(a.kanit_no)];
+    // Aynı metin iki kanıt sayılmaz (çakışan pencere, eşzamanlı tarama).
+    const metinler = new Set<string>();
+    const cozulen = tekil
+      .map((n) => numara.get(n))
+      .filter((d): d is DefterKaydi => Boolean(d))
+      .filter((d) => !metinler.has(normalize(d.metin)) && Boolean(metinler.add(normalize(d.metin))));
+    if (cozulen.length < 2) {
+      dusenler.push({ kod: "alinti_no_gecersiz", mesaj: `${ad} en az iki doğrulanmış kanıta dayanmıyor; düşürüldü.` });
+      continue;
+    }
+    if (tekil.length - cozulen.length > cozulen.length) {
+      dusenler.push({ kod: "alinti_no_gecersiz", mesaj: `${ad} atıflarının çoğu defterde yok; düşürüldü.` });
+      continue;
+    }
+    if (!cozulen.some((d) => d.yerel)) {
+      dusenler.push({ kod: "belge_yok", mesaj: `${ad} hiçbir yerel kanıta dayanmıyor; "neden burada?" cevapsız, düşürüldü.` });
+      continue;
+    }
+    const kaynak = normalize(cozulen.map((d) => d.metin).join(" "));
+    const kaynaksiz = sayisalTokenlar(`${a.baslik} ${a.gerekce}`).find((t) => !sayiKaynakta(t, kaynak));
+    if (kaynaksiz) {
+      dusenler.push({ kod: "kaynaksiz_sayi", mesaj: `${ad} kaynaksız sayı (“${kaynaksiz}”) taşıyor; düşürüldü.` });
+      continue;
+    }
+    const desteksiz = desteksizCumle(a.gerekce, cozulen.map((d) => d.metin).join(" "));
+    if (desteksiz) {
+      dusenler.push({ kod: "alinti_eslesmiyor", mesaj: `${ad} gerekçesindeki “${desteksiz.slice(0, 80)}” cümlesi atıf yapılan kanıtlarda karşılık bulmuyor; düşürüldü.` });
+      continue;
+    }
+    sonuc.push({ baslik: a.baslik.trim(), gerekce: a.gerekce.trim(), kanitIdleri: cozulen.map((d) => d.kanitId) });
+  }
+  return { adaylar: sonuc, dusenler };
 }

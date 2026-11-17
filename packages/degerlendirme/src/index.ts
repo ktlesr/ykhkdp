@@ -3,6 +3,8 @@ import { ayrilmisIslem, denetle, islem, kilitHavuzu, type Baglam } from "@ykh/da
 import { aiMaliyeti, log } from "@ykh/observability";
 import { belgePaketi, naceAdaylari } from "@ykh/retrieval";
 
+export { birKesifAl, kesifHatasi, kesifYap, pencerele, type KesifSonucu } from "./kesif.ts";
+
 /**
  * Değerlendirme işi. Worker döngüsü ve web'deki "şimdi değerlendir" eylemi
  * AYNI fonksiyonu çağırır — tek kod yolu, tek davranış.
@@ -89,9 +91,10 @@ async function calistir(b: Baglam, oneriId: number, yaz: Yaz): Promise<Sonuc> {
   const [o] = await islem(b, (sql) =>
     sql<
       { id: number; baslik: string; gerekce: string; ilce: string | null; nace_kod: string | null;
-        il: string; il_kod: string; ajans_kod: string; agirliklar: Record<string, number>; durum: string }[]
+        il: string; il_kod: string; ajans_kod: string; agirliklar: Record<string, number>; durum: string;
+        kesif_kanit: Array<{ belge_id: number }> | null }[]
     >`
-      select o.id, o.baslik, o.gerekce, o.ilce, o.nace_kod, o.durum::text as durum,
+      select o.id, o.baslik, o.gerekce, o.ilce, o.nace_kod, o.durum::text as durum, o.kesif_kanit,
              i.ad as il, i.kod as il_kod, i.ajans_kod,
              -- Dayanak kapsaması kriter payıyla çarpılır: "neden burada?"
              -- dayanaksız kalmak, küçük paylı bir kriterin dayanaksız
@@ -171,6 +174,7 @@ async function calistir(b: Baglam, oneriId: number, yaz: Yaz): Promise<Sonuc> {
     ilKod: o.il_kod,
     ajansKod: o.ajans_kod,
     sorgu: `${o.baslik} ${o.gerekce}`,
+    zorunlu: (o.kesif_kanit ?? []).map((x) => Number(x.belge_id)),
   });
   if (!belgeler.length) {
     return {

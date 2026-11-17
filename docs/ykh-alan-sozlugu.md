@@ -41,6 +41,9 @@ kullanır. Türkçe terim kanoniktir.
 | erişim sınıfı | `access_class` | "Veri sınıfı" |
 | ajans kodu | `ajans.kod` (NUTS-2) | "TR33" |
 | ajans kısaltması | `ajans.kisa_ad` | "ZAFER" |
+| aday keşfi | `kesif` · `kesifYap()` | "Belgelerden aday keşfi" |
+| kanıt | `kanit` (kaynaktan kesilmiş pasaj) | "Adayı doğuran kanıtlar" |
+| yerel kanıt | `yerelMi()` | "bu ile özgü" |
 | açık dönem | `donem` satırı · `Bolge.iller[].yil` | "2027 dönemi" / "Açık dönem yok" |
 
 ## Kriter grupları — "neden burada?" kuralı

@@ -83,6 +83,11 @@ export default async function Onay() {
                     </div>
                   </div>
                   <div className="flex shrink-0 flex-wrap items-center gap-2.5 max-[720px]:basis-full max-[720px]:pl-11">
+                    {o.kesif_id && (
+                      <Rozet tur="notr" isaret="◇">
+                        belgelerden keşif
+                      </Rozet>
+                    )}
                     {o.durum === "degerlendiriliyor" ? (
                       <AsamaRozeti asama={o.asama} hatali={o.hatali} />
                     ) : (

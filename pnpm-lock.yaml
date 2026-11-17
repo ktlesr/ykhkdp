@@ -98,6 +98,9 @@ importers:
       '@ykh/degerlendirme':
         specifier: workspace:*
         version: link:../../packages/degerlendirme
+      '@ykh/evidence-validation':
+        specifier: workspace:*
+        version: link:../../packages/evidence-validation
       '@ykh/observability':
         specifier: workspace:*
         version: link:../../packages/observability

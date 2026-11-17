@@ -609,8 +609,8 @@ export async function onayKuyrugu(b: Baglam, donemId?: number) {
   if (b.rol === "anonim" || !onaylayabilir(b.rol)) return [];
   return islem(b, (sql) =>
     sql<(ListeSatiri & { il: string; il_kod: string; yil: string; dayanak_esigi: number;
-      asama: string | null; hatali: boolean; gonderildi: string })[]>`
-      select o.id, o.baslik, o.koken, o.gerekce, o.ilce, o.nace_kod, n.tanim as nace_tanim,
+      asama: string | null; hatali: boolean; gonderildi: string; kesif_id: number | null })[]>`
+      select o.id, o.baslik, o.kesif_id, o.koken, o.gerekce, o.ilce, o.nace_kod, n.tanim as nace_tanim,
              o.nace_kaynagi, o.durum, o.olusturuldu::text,
              -- Ekran saati: ürün Türkiye'de, oturum saat diliminden bağımsız.
              to_char(o.olusturuldu at time zone 'Europe/Istanbul', 'DD.MM.YYYY HH24:MI') as gonderildi,
@@ -748,9 +748,12 @@ export async function oneriGetir(b: Baglam, id: number) {
           alintilar: Array<{ belge_ad: string; bolum: string | null; alinti: string }>;
         }> | null;
         model_snapshot: string | null; prompt_surum: string | null;
+        /** aday keşfinden geldiyse: adayı doğuran doğrulanmış kanıtlar */
+        kesif_id: number | null;
+        kesif_kanit: Array<{ belge_ad: string; bolum: string | null; tur: string; konu: string; alinti: string; yerel: boolean }> | null;
       })[]
     >`
-      select o.id, o.donem_id, o.gonderen_ref, o.baslik, o.koken, o.gerekce, o.ilce,
+      select o.id, o.donem_id, o.gonderen_ref, o.baslik, o.koken, o.gerekce, o.ilce, o.kesif_id, o.kesif_kanit,
              o.nace_kod, n.tanim as nace_tanim, o.nace_kaynagi, o.durum, o.ret_gerekcesi,
              o.deneme, o.son_hata, o.asama,
              -- ISO 8601: tarayıcının Date.parse'ı Postgres'in boşluklu biçimini güvenle okumaz.
@@ -1166,4 +1169,62 @@ export async function rolAta(b: Baglam, ref: string, rol: Rol, ajansKod: string 
     });
     return true;
   });
+}
+
+// ── Aday keşfi ─────────────────────────────────────────────────────────────
+
+export type KesifDurumu = {
+  id: number; durum: "bekliyor" | "calisiyor" | "tamam" | "hata"; asama: string | null;
+  toplam_parca: number; taranan_parca: number; kanit_sayisi: number; yerel_kanit: number;
+  aday_sayisi: number; mesaj: string | null; model_snapshot: string | null; guncellendi: string;
+  tarih: string;
+};
+
+/** Dönemin en son keşif koşusu — ajans ekranında ilerleme ve sonuç. */
+export async function sonKesif(b: Baglam, donemId: number): Promise<KesifDurumu | null> {
+  if (b.rol === "anonim" || !onaylayabilir(b.rol)) return null;
+  const [r] = await islem(b, (sql) =>
+    sql<KesifDurumu[]>`
+      select id, durum, asama, toplam_parca, taranan_parca, kanit_sayisi, yerel_kanit, aday_sayisi,
+             mesaj, model_snapshot, guncellendi::text,
+             to_char(olusturuldu at time zone 'Europe/Istanbul', 'DD.MM.YYYY HH24:MI') as tarih
+      from kesif where donem_id = ${donemId} order by id desc limit 1
+    `,
+  );
+  return r ? { ...r, id: Number(r.id) } : null;
+}
+
+export class KesifZatenAcik extends Error {}
+
+/**
+ * Keşif koşusu açar. Bölge kontrolü RLS'tedir (`kesif_ac`); burada yalnızca
+ * "zaten sürüyor" durumu anlamlı bir mesaja çevrilir.
+ */
+export async function kesifAc(b: Baglam, donemIdleri: readonly number[]): Promise<number> {
+  return islem(b, async (sql) => {
+    let acilan = 0;
+    for (const donemId of donemIdleri) {
+      const r = await sql`
+        insert into kesif (donem_id, tetikleyen_ref) values (${donemId}, ${b.gonderenRef})
+        on conflict do nothing
+      `;
+      acilan += r.count;
+      if (r.count) await denetle(sql, b, "kesif_acildi", "donem", donemId);
+    }
+    if (donemIdleri.length === 1 && !acilan) throw new KesifZatenAcik();
+    return acilan;
+  });
+}
+
+/** Ajansın keşif açabileceği dönemler: yönetici 81 il, ajans kendi bölgesi. */
+export async function kesifDonemleri(b: Baglam): Promise<number[]> {
+  if (b.rol === "anonim" || !onaylayabilir(b.rol)) return [];
+  const r = await islem(b, (sql) =>
+    sql<{ id: string }[]>`
+      select distinct on (d.il_kod) d.id from donem d
+      where app_il_kapsaminda(d.il_kod)
+      order by d.il_kod, d.yil desc
+    `,
+  );
+  return r.map((x) => Number(x.id));
 }
