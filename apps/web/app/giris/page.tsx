@@ -6,18 +6,13 @@ import { ALAN_ETIKET, GIRDI, KimlikSayfasi, UstBar } from "@/components/ui.tsx";
 import { girisEylemi } from "@/lib/eylem.ts";
 import { kullanici } from "@/lib/oturum.ts";
 import { DEMO_HESAPLAR, DEMO_PAROLA } from "@ykh/database/seed";
+import { acikSayfa } from "@/lib/site.ts";
 
-export const metadata: Metadata = {
-  title: "Giriş",
-  description: "YKH-KDP hesabınıza girin.",
-  alternates: { canonical: "/giris" },
-  openGraph: { title: "Giriş", description: "YKH-KDP hesabınıza girin.", url: "/giris" },
-  // `card` burada TEKRAR yazılıyor: Next sayfa seviyesindeki `twitter`
-  // nesnesini üsttekiyle birleştirmiyor, tamamen eziyor. Ölçüldü — kart
-  // `summary_large_image` yerine `summary` çıkıyordu, yani görsel küçük
-  // küçük bir kutuda görünüyordu.
-  twitter: { card: "summary_large_image", title: "Giriş", description: "YKH-KDP hesabınıza girin." },
-};
+export const metadata: Metadata = acikSayfa({
+  baslik: "Giriş",
+  aciklama: "YKH-KDP hesabınıza girin; önerilerinizi ve yapay zekâ puanının hangi belgeye dayandığını görün.",
+  yol: "/giris",
+});
 
 export default async function Giris({ searchParams }: { searchParams: Promise<{ hedef?: string }> }) {
   if (await kullanici()) redirect("/oneri");

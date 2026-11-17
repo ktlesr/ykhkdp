@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 /**
  * Site kimliği — paylaşım kartları, kanonik adres ve sitemap için tek kaynak.
  *
@@ -72,3 +74,20 @@ export const KAPALI = {
   nocache: true,
   googleBot: { index: false, follow: false, noimageindex: true },
 } as const;
+
+/**
+ * Açık sayfanın metadata'sı — başlık, açıklama, kanonik adres, Open Graph ve
+ * X kartı tek yerden. Next sayfa düzeyindeki `openGraph`/`twitter`
+ * nesnesini kök layout'unkiyle BİRLEŞTİRMİYOR, eziyor: sayfa yalnızca
+ * `{title, url}` yazınca `siteName`, `locale`, `type` ve kart türü
+ * kayboluyordu. Görsel yazılmaz; segmentin `opengraph-image.tsx`'i ekler.
+ */
+export function acikSayfa({ baslik, aciklama, yol }: { baslik: string; aciklama: string; yol: string }): Metadata {
+  return {
+    title: baslik,
+    description: aciklama,
+    alternates: { canonical: yol },
+    openGraph: { type: "website", locale: "tr_TR", siteName: "YKH-KDP", title: baslik, description: aciklama, url: yol },
+    twitter: { card: "summary_large_image", title: baslik, description: aciklama },
+  };
+}

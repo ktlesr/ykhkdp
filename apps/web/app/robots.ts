@@ -28,7 +28,15 @@ export default function robots(): MetadataRoute.Robots {
          * `$` kalıbı adresin SONUNU bağlıyor, yalnızca ana sayfayı açıyor.
          * Google ve Bing bu kalıbı destekliyor.
          */
-        allow: ACIK_YOLLAR.map((x) => (x.yol === "/" ? "/$" : x.yol)),
+        // Paylaşım kartı ve simgeler: X'in tarayıcısı robots.txt'e uyar,
+        // kart görseli yasaklıysa kart boş çıkar.
+        allow: [
+          ...ACIK_YOLLAR.map((x) => (x.yol === "/" ? "/$" : x.yol)),
+          "/opengraph-image",
+          "/icon",
+          "/apple-icon",
+          "/manifest.webmanifest",
+        ],
       },
     ],
     sitemap: new URL("/sitemap.xml", site).toString(),

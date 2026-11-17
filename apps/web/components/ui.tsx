@@ -88,9 +88,10 @@ export function Isaret({ ad, className }: { ad: IsaretAdi; className?: string })
 function Amblem() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden className="size-6 shrink-0">
-      <rect x="1" y="1" width="22" height="22" rx="2" className="fill-navy" />
-      <path d="M6.5 7.5h11M6.5 12h6.5M6.5 16.5h8.5" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
-      <rect x="15.5" y="10.5" width="3" height="3" fill="#fff" />
+      {/* `app/icon.svg` (favicon) ile aynı geometri: belge satırları + doğrulanmış alıntı ■ */}
+      <rect width="24" height="24" rx="3" className="fill-navy" />
+      <path d="M6 7.5h12M6 12h6.5M6 16.5h9" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+      <rect x="15" y="10" width="4" height="4" fill="#fff" />
     </svg>
   );
 }

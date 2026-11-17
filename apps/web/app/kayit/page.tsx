@@ -5,19 +5,14 @@ import { EylemFormu, Gonder } from "@/components/eylem-formu.tsx";
 import { ALAN_ETIKET as ETIKET, GIRDI, KimlikSayfasi, UstBar } from "@/components/ui.tsx";
 import { kayitEylemi } from "@/lib/eylem.ts";
 import { kullanici } from "@/lib/oturum.ts";
+import { acikSayfa } from "@/lib/site.ts";
 
 
-export const metadata: Metadata = {
-  title: "Hesap aç",
-  description: "YKH-KDP hesabı açın. Öneri vermek için kayıt zorunlu değildir.",
-  alternates: { canonical: "/kayit" },
-  openGraph: { title: "Hesap aç", description: "YKH-KDP hesabı açın. Öneri vermek için kayıt zorunlu değildir.", url: "/kayit" },
-  // `card` burada TEKRAR yazılıyor: Next sayfa seviyesindeki `twitter`
-  // nesnesini üsttekiyle birleştirmiyor, tamamen eziyor. Ölçüldü — kart
-  // `summary_large_image` yerine `summary` çıkıyordu, yani görsel küçük
-  // küçük bir kutuda görünüyordu.
-  twitter: { card: "summary_large_image", title: "Hesap aç", description: "YKH-KDP hesabı açın. Öneri vermek için kayıt zorunlu değildir." },
-};
+export const metadata: Metadata = acikSayfa({
+  baslik: "Hesap aç",
+  aciklama: "YKH-KDP hesabı açın. Öneri vermek için kayıt zorunlu değildir; kurum kaydı ve kurum onayı istenmez.",
+  yol: "/kayit",
+});
 
 export default async function Kayit() {
   // Misafir de hesap açabilir (yeni hesap; misafir önerileri taşınmaz).

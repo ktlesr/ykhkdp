@@ -6,6 +6,7 @@ import { GRUP_ETIKET, gruplaraGore, KRITER_ETIKET, TR33_2027_V1, type Kriter } f
 import { KanitAgi } from "@/components/kanit-agi.tsx";
 import { Bag, UstBar } from "@/components/ui.tsx";
 import { baglam, kullanici } from "@/lib/oturum.ts";
+import { acikSayfa } from "@/lib/site.ts";
 
 /**
  * Tanıtım sayfası — platformun başlangıç ekranı.
@@ -25,17 +26,11 @@ const ACIKLAMA =
   "Yatırım konusu önerileri üst ölçekli plan belgelerine birebir alıntıyla bağlanır, sekiz kriterle " +
   "puanlanır ve kalkınma ajansı onayından geçer. Yapay zekâ puan üretir, karar vermez.";
 
+const TAM_AD = "YKH-KDP · Yerel Kalkınma Hamlesi karar destek platformu";
 export const metadata: Metadata = {
-  // `title.absolute`: künye şablonu ("%s · YKH-KDP") burada uygulanmasın,
-  // tanıtım sayfasının başlığı zaten tam künyeyi taşıyor.
-  title: { absolute: "YKH-KDP · Yerel Kalkınma Hamlesi karar destek platformu" },
-  description: ACIKLAMA,
-  alternates: { canonical: "/" },
-  openGraph: { url: "/", description: ACIKLAMA },
-  // `card` burada TEKRAR yazılıyor: Next sayfa seviyesindeki `twitter`
-  // nesnesini üsttekiyle birleştirmiyor, tamamen eziyor. Ölçüldü — kart
-  // `summary_large_image` yerine `summary` çıkıyordu.
-  twitter: { card: "summary_large_image", description: ACIKLAMA },
+  ...acikSayfa({ baslik: TAM_AD, aciklama: ACIKLAMA, yol: "/" }),
+  // `title.absolute`: künye şablonu ("%s · YKH-KDP") burada uygulanmasın.
+  title: { absolute: TAM_AD },
 };
 
 /**
