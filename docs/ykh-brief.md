@@ -612,6 +612,16 @@ en az biri ≥100): bilgi notundaki "1. Amaç" listesi madde değildir. Sayfa
 işaretleri parça metninde tutulmadığı için kesin sayfa hesaplanmaz; sayfa
 etiketi parçanın sayfa aralığıdır.
 
+**Kütüphane belgeleri.** Kalkınma Kütüphanesi'nden (kalkinmakutuphanesi.gov.tr)
+2019 ve sonrası 623 il/ajans raporu Markdown'a çevrilip `docs/kutuphane/`
+altına alındı (26 ajans, 63 il, ~29,5 bin parça); `pnpm db:kur` yalnızca
+sistemde olmayanı yükler, ajansın sildiği geri gelmez. Kapsam sitenin
+etiketinden ve başlığından gelir, metinle sınanır; kalite ölçerinden
+geçemeyen, taranmış (OCR yok), bozuk kodlamalı, Türkçe olmayan ve kopya
+belgeler alınmaz — nedenleriyle `docs/kutuphane/rapor.json`. Ölçüldü: rastgele
+2.400 cümlenin %99,75'i PDF ham metninde birebir. Ayrıntı:
+`docs/kutuphane/README.md`.
+
 **Kaynak kalitesi doğrudan alıntı doğrulamasını belirler.** İki kolonlu PDF'ten
 kolon-farkındalıksız çıkarılan metinde iki kolon aynı satırda birleşiyor ve
 belgede birebir hiçbir cümle kalmıyor — bu hâldeki 12KP ile yapılan

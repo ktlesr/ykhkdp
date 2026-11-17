@@ -288,3 +288,56 @@ export const RESMI_BELGELER: YuklemeGirdisi[] = [
     yil: "2024",
   },
 ];
+
+/**
+ * Kütüphane belgeleri — `docs/kutuphane/manifest.json`. Kalkınma
+ * Kütüphanesi'nden dönüştürülmüş il ve ajans raporları.
+ *
+ * `belgeYukle`den farkı: VAR OLANA DOKUNMAZ. `belgeYukle` belgeyi silip
+ * yeniden yazar; bunu her dağıtımda çalıştırmak parça kimliklerini değiştirir
+ * ve kanıt tarama önbelleğini (yüzlerce model çağrısı) her seferinde silerdi.
+ * Burada aynı adla bir belge varsa atlanır; yalnızca eksik olan eklenir.
+ * Ajansın sildiği belge de geri yüklenmez.
+ */
+export type KutuphaneGirdisi = YuklemeGirdisi & { kaynak?: string };
+
+export async function kutuphaneYukle(): Promise<{ eklenen: number; atlanan: number; parca: number; hatalar: string[] }> {
+  let manifest: KutuphaneGirdisi[];
+  let ham: string;
+  try {
+    ham = await readFile(yolCoz("docs/kutuphane/manifest.json"), "utf8");
+  } catch {
+    return { eklenen: 0, atlanan: 0, parca: 0, hatalar: [] }; // manifest yok: yapılacak iş yok
+  }
+  try {
+    manifest = JSON.parse(ham);
+  } catch (e) {
+    // Bozuk manifest "iş yok" değildir: sessizce geçmek eksik yüklemeyi gizlerdi.
+    return { eklenen: 0, atlanan: 0, parca: 0, hatalar: [`manifest okunamadı: ${e instanceof Error ? e.message : String(e)}`] };
+  }
+  // Var olan belge yeniden yazılmaz; ajansın /belgeler'den SİLDİĞİ belge de geri
+  // gelmez (denetimdeki `belge_silindi` kaydı mezar taşıdır). Geri almak için
+  // belge /belgeler'den yeniden yüklenir.
+  const mevcut = new Set(
+    (
+      await sahip()<{ ad: string }[]>`
+        select distinct ad from belge
+        union
+        select detay->>'ad' from denetim where eylem = 'belge_silindi' and detay->>'ad' is not null`
+    ).map((r) => r.ad),
+  );
+  let eklenen = 0, atlanan = 0, parca = 0;
+  const hatalar: string[] = [];
+  for (const g of manifest) {
+    if (mevcut.has(g.ad)) { atlanan++; continue; }
+    try {
+      parca += (await belgeYukle(g)).parca;
+      mevcut.add(g.ad);
+      eklenen++;
+    } catch (e) {
+      // Tek belgenin hatası kurulumu durdurmaz; neden rapora yazılır.
+      hatalar.push(`${g.ad}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  return { eklenen, atlanan, parca, hatalar };
+}

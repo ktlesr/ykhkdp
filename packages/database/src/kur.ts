@@ -2,7 +2,7 @@ import { sahip } from "./baglanti.ts";
 import { yukari } from "./migrate.ts";
 import { ajanslariYukle, naceYukle, ULUSAL_SURUM } from "./seed.ts";
 import { konulariYukle, RESMI_LISTELER } from "./konu-yukle.ts";
-import { belgeYukle, RESMI_BELGELER } from "./belge-yukle.ts";
+import { belgeYukle, kutuphaneYukle, RESMI_BELGELER } from "./belge-yukle.ts";
 import { parolaOzetle } from "./parola.ts";
 import { TR33_2027_V1 } from "@ykh/scoring";
 
@@ -275,6 +275,12 @@ export async function kur(): Promise<string> {
   } else {
     const [b] = await sql<{ n: string }[]>`select count(*) as n from belge`;
     rapor.push(`belge yüklenmedi (mevcut ${b.n} parça) — YKH_KUR_BELGELER=evet ile yükleyin`);
+  }
+
+  // ── 7 · kütüphane belgeleri (manifest varsa; yalnızca eksik olanlar) ──────
+  const k = await kutuphaneYukle();
+  if (k.eklenen || k.atlanan || k.hatalar.length) {
+    rapor.push(`kütüphane: ${k.eklenen} belge eklendi (${k.parca} parça), ${k.atlanan} zaten vardı` + (k.hatalar.length ? `, ${k.hatalar.length} HATA: ${k.hatalar.slice(0, 3).join(" | ")}` : ""));
   }
 
   return rapor.join(" · ");

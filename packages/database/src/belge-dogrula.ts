@@ -45,7 +45,17 @@ const CUMLE_ESIK = 0.5;
 export async function belgeDenetle(yol: string): Promise<Denetim> {
   const ham = (await readFile(yolCoz(yol), "utf8")).replace(/\r\n?/g, "\n");
   const satirlar = ham.split("\n");
-  const dolu = satirlar.filter((s) => s.trim().length > 0);
+  /**
+   * Yalnızca DÜZ YAZI satırları ölçülür. Tablo satırı (`| a | b |`), Markdown
+   * başlığı ve sayfa işareti paragraf değildir; ortalamayı düşürüp sağlam
+   * belgeyi "kırpılmış" gösteriyordu (ölçüldü: paragrafları ortalama 300
+   * karakter olan fizibilite raporları, yüzlerce tablo satırı yüzünden 108
+   * ortalamayla eleniyordu). Çoğu tablo olan belgeyi bu ölçer ELEMEZ;
+   * kütüphane aktarımı onu ayrıca eler (tools/kutuphane/donustur.py).
+   */
+  const dolu = satirlar.filter(
+    (s) => s.trim().length > 0 && !/^\s*\|/.test(s) && !/^\s{0,3}#{1,6}\s/.test(s) && !/^\s*\d{1,4}\s*\/\s*\d{1,4}\s*$/.test(s),
+  );
 
   const ortalamaUzunluk = dolu.length
     ? Math.round(dolu.reduce((t, s) => t + s.trim().length, 0) / dolu.length)
