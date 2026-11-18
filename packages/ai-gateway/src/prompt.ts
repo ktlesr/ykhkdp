@@ -181,7 +181,7 @@ KURALLAR:
   },
   aday_kesfi: {
     ad: "aday_kesfi",
-    surum: "aday-kesfi-v6",
+    surum: "aday-kesfi-v7",
     sistem: `${ORTAK}
 
 GÖREV: Bir il için, Yerel Kalkınma Hamlesi kapsamında önerilebilecek YATIRIM
@@ -218,19 +218,32 @@ HANGİ KONU İYİ ADAYDIR — önce YER, sonra NİTELİK:
 4. ÇEŞİTLİLİK. Adayların hepsi aynı sektörden olmasın; defter farklı
    sektörlerde (sanayi, tarım-gıda, madencilik, enerji, turizm) yere bağlı
    konu destekliyorsa her birinden en güçlüsünü ver.
-5. YATIRIM UZMANI GİBİ DÜŞÜN — hazır başlığı geri verme. Defterdeki
-   fizibilite ve sektör raporları bazı yatırımları zaten ADIYLA önerir;
-   onları olduğu gibi geri vermek keşif değildir. Kanıtları BİRLEŞTİR:
-   bir yerel varlık (hammadde, kaynak, atık, yan ürün) + ilde var olan bir
-   kabiliyet (küme, tesis, işgücü, altyapı) + bir talep ya da öncelik
-   (ithalat bağımlılığı, plan önceliği, pazar) → hiçbir belgede adıyla
-   geçmeyen ama kanıtların BİRLİKTE işaret ettiği konu. (Mantık örneği: ilde
-   A atığı birikiyor + ildeki B üreticileri bu girdiyi dışarıdan alıyor +
-   plan bu girdinin yerlileşmesini önceliklendiriyor → A'dan B girdisi
-   üretimi.) Konu tek bir spesifik ürün de olabilir, aynı alanda birden çok
-   ürünü kapsayan bir aile de ("urun_gruplari"). Adayların EN AZ YARISI böyle
-   bir sentez olsun. Belgenin adıyla önerdiği yatırımı ancak ona yeni bir açı
-   (yan ürün, entegrasyon, ileri işleme, yeni pazar) katabiliyorsan ver.
+5. YENİ KONU ÜRET — var olanı geri verme. Bir yatırım uzmanı gibi düşün.
+   Ön fizibilite ve sektör raporlarının KENDİ konusu aday OLAMAZ: o yatırım
+   zaten biliniyor, raporu yazılmış. <hazir-konular> bloğundaki başlıklar ve
+   eşdeğerleri (aynı ürün/tesis, başka sözcüklerle) YASAKTIR; yazarsan aday
+   düşer. İlde zaten yapılan üretim de aday değildir. Rapor ve mevcut yatırım
+   bir BAŞLANGIÇ NOKTASIDIR; aday şu yollardan biriyle ondan TÜRER:
+   · tamamlayıcı: mevcut ya da planlanan yatırımın ihtiyaç duyduğu ama ilde
+     olmayan halka (girdi, ara mal, hizmet, ekipman, ambalaj, lojistik).
+   · ileri bağlantı: mevcut üretimin çıktısını, yan ürününü ya da atığını
+     girdi olarak kullanıp daha ileri işleyen, daha yüksek katma değerli ürün.
+   · geri bağlantı: ildeki üreticilerin dışarıdan aldığı girdiyi yerinde üreten.
+   · darboğaz çözümü: defterdeki bir "kisit" kanıtının (eksik tesis, işlenmeden
+     giden hammadde, düşük kalış süresi, kalite sorunu) doğrudan cevabı.
+   · yeni alan: ilin varlığının (kaynak, coğrafya, küme, işgücü) mümkün kıldığı
+     ama ilde henüz girilmemiş, daha niş ve özellikli bir ürün ya da hizmet.
+   Kanıtları BİRLEŞTİR: bir yerel varlık + ildeki bir kabiliyet + bir talep,
+   öncelik ya da kısıt → hiçbir belgede adıyla geçmeyen ama kanıtların BİRLİKTE
+   işaret ettiği konu. Özgün ve niş olan, genel ve bilinenden iyidir; katma
+   değeri, hammaddeyi ham satmaktan ya da mevcut ürünü tekrar etmekten yüksek
+   olmalı. Konu tek bir spesifik ürün de olabilir, aynı alanda birden çok
+   ürünü kapsayan bir aile de ("urun_gruplari").
+   "sentez" alanını şu kelimelerden biriyle başlat ve neyin türevi olduğunu
+   söyle: "Tamamlayıcı:", "İleri bağlantı:", "Geri bağlantı:", "Darboğaz
+   çözümü:", "Yeni alan:".
+   Kanıtlar yeni bir konu çıkarmaya yetmiyorsa daha az aday ver; bilineni
+   doldurma.
 
 KURALLAR:
 - Her aday EN AZ İKİ kanıta dayanır ve bunlardan EN AZ BİRİ yerel="evet"

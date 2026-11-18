@@ -414,6 +414,24 @@ Uydurmasızlık kuralları — hepsi mekanik, modelin beyanı değil:
   kısmı sentez (süt dışarı gidiyor + küme + yöresel ürün → koyun-keçi sütü
   işleme), bir kısmı hâlâ fizibilite raporunun kendi başlığı. Sayı denetimi
   ayraç biçimini fark saymaz ("2,247" ↔ "2.247").
+- **Bilinen yatırım aday değildir** (2026-11-18, `aday-kesfi-v7`). Ön fizibilite
+  raporunun KENDİ konusu ve ilde zaten yapılan üretim aday olamaz; rapor ve
+  mevcut yatırım başlangıç noktasıdır. Aday ondan türer: tamamlayıcı halka,
+  ileri bağlantı (çıktıyı, yan ürünü, atığı ileri işleyen), geri bağlantı
+  (dışarıdan alınan girdiyi yerinde üreten), darboğaz çözümü (bir "kısıt"
+  kanıtının cevabı) ya da ilin varlığının mümkün kıldığı girilmemiş niş alan;
+  sentez bu türle başlar. İki katman: model rapor konularını (belge adından)
+  yasaklı liste olarak görür; yine de aynısını yazarsa kayıtta `ayniKonuMu`
+  ile elenir ve nedeni ekranda yazar. Ölçüldü (gpt-5.4-mini, Afyonkarahisar
+  ve Aksaray, üçer koşu): rapor başlıkları (dondurarak kurutma, kayak
+  merkezi, atıktan yakıt, perlit genleştirme) gelmedi; gelenler Sultandağı
+  kirazı için tasnif-soğuk depolama, coğrafi işaretli ürünler için ortak
+  paketleme, yerli veteriner aşı ve ilaç üretimi (yumurta sektörünün dışa
+  bağımlı girdisi), perlitten yalıtım ve hafif yapı malzemeleri, koyun-keçi
+  sütü işleme, Ziga jeotermal sera. Aday sayısı düştü (3–5): kanıt yeni konu
+  çıkarmaya yetmiyorsa bilinen doldurulmuyor. Sınır: "ilde zaten yapılan
+  üretim" yalnızca belgelerin söylediği kadar bilinir; ildeki mevcut firma
+  ve ürün verisi (kapasite raporları) yüklü değil.
 - **Tekrarlanan keşif kuyruğu şişirmez.** Model dönemde zaten önerilmiş
   başlıkları görür ve eşdeğerini önermez; kayıtta mekanik iki katman daha:
   dönemdeki herhangi bir öneriyle (reddedilen dahil) başlık benzerliği ≥ 0.50

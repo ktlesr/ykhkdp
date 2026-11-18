@@ -267,6 +267,8 @@ export async function adayKesfet(
     onceki?: ReadonlyArray<{ yil: number; baslik: string }>;
     /** bu dönemde zaten önerilmiş başlıklar — eşdeğeri yeniden önerilmez */
     oneriler?: readonly string[];
+    /** ön fizibilite/rapor konuları — bilinen yatırım, aday olamaz (belge adından) */
+    hazirKonular?: readonly string[];
   },
 ): Promise<({ ok: true; adaylar: DogrulanmisAday[]; dusenler: string[]; maliyet: Maliyet } & Meta) | Hatali> {
   const meta = { modelSnapshot, promptSurum: PROMPTLAR.aday_kesfi.surum };
@@ -282,9 +284,11 @@ export async function adayKesfet(
     "Bu ilin yerel kanıtlarına dayanan yatırım konusu adaylarını çıkar.";
   // Önceki öneri başlıkları kullanıcı yazısıdır: görev metnine değil,
   // güvenilmeyen veri bloğuna (kaçışlı) girer.
-  const kaynak = girdi.oneriler?.length
-    ? `${defterBloguKur(girdi.defter)}${SATIR_SONU}${oneriBloguKur(girdi.oneriler)}`
-    : defterBloguKur(girdi.defter);
+  // Belge adları ve önceki başlıklar veridir: kaçışlı bloklarda, görev metninde değil.
+  const kaynak =
+    defterBloguKur(girdi.defter) +
+    (girdi.hazirKonular?.length ? SATIR_SONU + oneriBloguKur(girdi.hazirKonular).replaceAll("onceki-oneriler", "hazir-konular") : "") +
+    (girdi.oneriler?.length ? SATIR_SONU + oneriBloguKur(girdi.oneriler) : "");
   const r = await cagir(istemci, modelSnapshot, "aday_kesfi", kaynak, gorev);
   if (r.maliyet) meta.modelSnapshot = r.maliyet.model;
   if (!r.ok) return { ...r, ...meta };

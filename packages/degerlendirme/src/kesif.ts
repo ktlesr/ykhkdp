@@ -231,7 +231,19 @@ async function kesifKos(kesifId: number): Promise<KesifSonucu> {
       `,
     )
   ).map((r) => r.baslik);
+  /**
+   * Ön fizibilite raporlarının KENDİ konusu aday olamaz: o yatırım zaten
+   * biliniyor. Konu belge adından çıkar ("… İli X Ön Fizibilite Raporu" → X);
+   * model bunları görür ve eşdeğerini yazarsa kayıtta mekanik olarak elenir.
+   */
+  const hazirKonular = [...new Set(parcalar.map((p) => p.ad))]
+    .filter((ad) => /fizibilite/i.test(ad))
+    // Sözcük sözcük süzülür: `\b` Türkçe harfte çalışmaz ("ili" → "bilişim").
+    .map((ad) => ad.split(/\s+/).filter((w) => !/^(ön|fizibilite|fizibilitesi|raporu|kurulumu|kurulması|projesi|ili|ilçesi)$/iu.test(w)).join(" "))
+    .filter((ad) => ad.length >= 8)
+    .slice(0, 40);
   const a = await adayKesfet(istemci, model, {
+    hazirKonular,
     oneriler: donemBasliklari,
     il: k.il,
     ilceler: ilceAdlari,
@@ -253,6 +265,7 @@ async function kesifKos(kesifId: number): Promise<KesifSonucu> {
   const atlananlar: string[] = [];
   const desteklenen: string[] = [];
   const tekrarlar: Array<{ baslik: string; oncekiId: number; neden: string }> = [];
+  const hazirlar: string[] = [];
   let yazilan = 0;
   await islem(tetikleyen, async (sql) => {
     const donemdekiler = await sql<{ id: string; b: string; koken: string; durum: string; puanli: boolean; kanitlar: number[] | null }[]>`
@@ -295,6 +308,11 @@ async function kesifKos(kesifId: number): Promise<KesifSonucu> {
       }
       if (mevcut.has(anahtar)) {
         atlananlar.push(aday.baslik);
+        continue;
+      }
+      const hazir = hazirKonular.find((h) => ayniKonuMu(h.toLocaleLowerCase("tr-TR"), anahtar, hedef.adlar));
+      if (hazir) {
+        hazirlar.push(`“${aday.baslik.slice(0, 60)}” ön fizibilitesi yapılmış konunun (“${hazir.slice(0, 60)}”) aynısı; yeni konu değil, alınmadı.`);
         continue;
       }
       /**
@@ -345,7 +363,7 @@ ${SENTEZ_ETIKETI} ${aday.sentez}` : "")},
       }
     }
     await denetle(sql, tetikleyen, "kesif_adaylari_yazildi", "kesif", k.id, {
-      yazilan, atlananlar, desteklenen, tekrarlar, dusenler: a.dusenler.slice(0, 30), model: a.modelSnapshot, promptSurum: a.promptSurum,
+      yazilan, atlananlar, desteklenen, tekrarlar, dusenler: [...hazirlar, ...a.dusenler].slice(0, 30), model: a.modelSnapshot, promptSurum: a.promptSurum,
       not: "Adaylar doğrulanmamış; her biri ayrıca puanlanır ve ajans onayı bekler.",
     });
   });
@@ -357,6 +375,7 @@ ${SENTEZ_ETIKETI} ${aday.sentez}` : "")},
     `${parcalar.length - basarisiz} parça tarandı, ${defterHam.length} kanıt (${yerel.length} yerel). ` +
     (yazilan ? `${yazilan} aday değerlendirmeye alındı.` : "Kanıtlara dayanan aday çıkmadı.") +
     (dusenAday ? ` ${dusenAday} aday kanıt kuralına takılıp düştü.` : "") +
+    (hazirlar.length ? ` ${hazirlar.length} aday ön fizibilitesi yapılmış konunun aynısı olduğu için alınmadı.` : "") +
     (desteklenen.length ? ` ${desteklenen.length} yürürlükteki resmî konu belgelerle desteklendi.` : "") +
     (atlananlar.length + tekrarlar.length
       ? ` ${atlananlar.length + tekrarlar.length} aday bu dönemde zaten önerilmiş bir konuyla aynı olduğu için alınmadı.`
