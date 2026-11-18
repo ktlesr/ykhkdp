@@ -186,7 +186,7 @@ KURALLAR:
   },
   aday_kesfi: {
     ad: "aday_kesfi",
-    surum: "aday-kesfi-v8",
+    surum: "aday-kesfi-v9",
     sistem: `${ORTAK}
 
 GÖREV: Bir il için, Yerel Kalkınma Hamlesi kapsamında önerilebilecek YATIRIM
@@ -196,6 +196,37 @@ defterdeki kanıtlara "kanit_no" ile atıf yaparsın.
 
 Bu bir ADAY listesidir, karar değil: her aday ayrıca sekiz kriterle puanlanacak
 ve ajans onaylamadan hiçbir yere girmeyecek.
+
+ANA ÇERÇEVE — KESİN KURAL. Her aday aşağıdaki on temel unsurdan EN AZ BİRİNE
+girmek zorundadır; hiçbirine girmeyen konu aday DEĞİLDİR, yazma. Adayın en iyi
+karşıladığı unsurun numarasını "unsur" alanına yaz. Unsur bir etikettir, kanıt
+değildir: adayın o unsura girdiğini atıf yaptığın kanıtlar göstermeli.
+ 1. İlin yeraltı zenginlikleri, doğal kaynakları, tarım ve bitki örtüsü gibi
+    ekonomik coğrafyasıyla ilişkilendirilebilen potansiyeli değerlendiren ya
+    da ilin coğrafyadan kaynaklı ihtiyaç ve darboğazını çözen konu.
+ 2. Bölgede üretimi olmayan ama ekonomik coğrafyadan kaynaklı üretilme
+    potansiyeli olan ürün ya da yatırım.
+ 3. İlin önemli turizm destinasyonlarında, konaklama başta olmak üzere turizm
+    potansiyelini çeşitlendirecek, destinasyona cazibe katacak yatırım.
+ 4. Bölgede yetişen tarımsal ürünlerin katma değerli ürünlere dönüşmesini ya
+    da var olan tesislerin nihai ürünlerinin katma değeri daha yüksek ürünlere
+    dönüşmesini sağlayan konu.
+ 5. Üretim ekosisteminde ileri-geri bağlantıyı sağlayan yeni konu (ör. beyaz
+    eşya üretilen yerde aksam ve yedek parça üretimi).
+ 6. Üretim aşamalarında ortaya çıkan atıkların yeniden değerlendirilmesine
+    yönelik döngüsel üretim konusu.
+ 7. İlin ya da bölgenin bilgi ve becerisine uygun, ilin bilgi ve üretim
+    ekonomisinin ortaya çıkarabileceği konu.
+ 8. İthal edilen girdileri üretmeye yönelik yerel yatırım konusu.
+ 9. Kümelenme potansiyeli taşıyan sektörlerin yenilik ve teknoloji düzeyini
+    yükseltecek yeni konu.
+10. Özel sektörün yapabileceği, ilin yaşam kalitesini yükselten ve sosyal
+    gelişimine katkı sunan hizmet altyapısı (alışveriş merkezi, özel hastane,
+    lojistik merkez, şehir oteli). Doğu ve Güneydoğu Anadolu illeri
+    önceliklidir; başka illerde bu unsurdan aday ancak kanıt açık bir yerel
+    hizmet açığı gösteriyorsa verilir. Bu unsur aşağıdaki "yere bağlılık"
+    sıralamasının istisnasıdır: hizmet açığı kanıtı yere bağlılığın yerini tutar.
+Aşağıdaki ölçütler bu çerçevenin İÇİNDE hangi adayın daha iyi olduğunu söyler.
 
 HANGİ KONU İYİ ADAYDIR — önce YER, sonra NİTELİK:
 1. YERE BAĞLILIK belirleyicidir. En güçlü aday, bu ilde ya da ilçede olup

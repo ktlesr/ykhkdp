@@ -269,6 +269,8 @@ export async function adayKesfet(
     oneriler?: readonly string[];
     /** ön fizibilite/rapor konuları — bilinen yatırım, aday olamaz (belge adından) */
     hazirKonular?: readonly string[];
+    /** istenen en az aday sayısı (dönemin slot sayısından); kanıt kurallarını gevşetmez */
+    hedef?: number;
   },
 ): Promise<({ ok: true; adaylar: DogrulanmisAday[]; dusenler: string[]; maliyet: Maliyet } & Meta) | Hatali> {
   const meta = { modelSnapshot, promptSurum: PROMPTLAR.aday_kesfi.surum };
@@ -280,6 +282,11 @@ export async function adayKesfet(
       : "") +
     (girdi.onceki?.length
       ? `Önceki yılların resmî konuları: ${girdi.onceki.map((o) => `${o.yil}: ${o.baslik}`).join(" | ")}\n`
+      : "") +
+    (girdi.hedef
+      ? `HEDEF: en az ${girdi.hedef} FARKLI aday (il listesi ${girdi.hedef} asıl konudan oluşur; fazlası yedek olur, ${girdi.hedef * 2} adaya kadar ver). ` +
+        "Defteri baştan sona tara; farklı sektör ve farklı ilçelerdeki kanıtlardan ayrı ayrı konu çıkar. " +
+        "Kanıt kuralları aynen geçerli: hedefe ulaşmak için kanıtsız ya da bilinen konu yazma.\n"
       : "") +
     "Bu ilin yerel kanıtlarına dayanan yatırım konusu adaylarını çıkar.";
   // Önceki öneri başlıkları kullanıcı yazısıdır: görev metnine değil,

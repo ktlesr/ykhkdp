@@ -1,4 +1,4 @@
-import { adayKesfet, kanitCikar, modelSnapshot, PROMPTLAR, type Maliyet } from "@ykh/ai-gateway";
+import { adayKesfet, kanitCikar, modelSnapshot, PROMPTLAR, TEMEL_UNSURLAR, type Maliyet } from "@ykh/ai-gateway";
 import { icerikDegil } from "./icerik-degil.ts";
 import { modelSec } from "./model-secimi.ts";
 import { denetle, islem, type Baglam } from "@ykh/database";
@@ -51,6 +51,10 @@ const TEKRAR_BENZERLIK = 0.5;
 /** Yeni adayın kanıtlarının en az yarısı önceki bir adayınkiyle aynıysa tekrar. */
 const TEKRAR_KANIT = 0.5;
 const ONCEKI_BASLIK_SINIRI = 40;
+/** Aday üretim turu üst sınırı: ilk tur + en çok iki tamamlama turu. */
+const TUR_SINIRI = 3;
+/** Adayın girdiği ana çerçeve unsuru; modelin sınıflamasıdır, kayıtta bu etiketle ayrılır. */
+export const UNSUR_ETIKETI = "Temel unsur (yapay zekâ sınıflaması):";
 /** Gerekçe olgudur (kanıtta karşılığı var); sentez modelin çıkarımıdır ve kayıtta bu etiketle ayrılır. */
 export const SENTEZ_ETIKETI = "Yapay zekâ çıkarımı (belgede yazmaz):";
 const DIGER_SINIR = 30;
@@ -190,11 +194,40 @@ async function kesifKos(kesifId: number): Promise<KesifSonucu> {
     };
   });
   // Belgeler arasında dengeli: ilk N kanıt, defteri ilk taranan bir iki belgeye bırakıyordu.
-  const yerel = dengeliSec(defterHam.filter((d) => d.yerel), (d) => parcaHaritasi.get(d.belgeId)!.ad, YEREL_SINIR);
+  const yerelHepsi = defterHam.filter((d) => d.yerel);
+  let yerel = dengeliSec(yerelHepsi, (d) => parcaHaritasi.get(d.belgeId)!.ad, YEREL_SINIR);
   await surdur({ asama: "aday", kanit_sayisi: defterHam.length, yerel_kanit: yerel.length });
   if (!yerel.length) {
     return bitir(true, `${parcalar.length - basarisiz} parça tarandı, ${defterHam.length} kanıt bulundu ama hiçbiri bu ile özgü değil; "neden burada?" sorusuna dayanak olmadan aday üretilmez.${okunamayan}`);
   }
+
+  /**
+   * EN AZ SLOT KADAR ADAY. İl listesi `slot_sayisi` asıl konudan oluşur;
+   * fazlası yedektir. İlk tur slot sayısına ulaşamazsa (model az aday verdi ya
+   * da adaylar kanıt kuralına takıldı) TAMAMLAMA TURU koşar: model defterin
+   * henüz GÖRMEDİĞİ yerel kanıtlarını ve o ana kadar yazılan başlıkları görür.
+   * Kanıt kuralları hiçbir turda gevşemez: kanıt yetmiyorsa sayı tutmaz ve
+   * bu, özet mesajında açıkça yazar. En çok `TUR_SINIRI` tur.
+   */
+  const tetikleyen: Baglam = { gonderenRef: k.tetikleyen_ref, rol: k.tetikleyen_rol };
+  const sinir = k.slot_sayisi * 2;
+  const atlananlar: string[] = [];
+  const desteklenen: string[] = [];
+  const tekrarlar: Array<{ baslik: string; oncekiId: number; neden: string }> = [];
+  const hazirlar: string[] = [];
+  const dusenler: string[] = [];
+  const gorulen = new Set<number>();
+  let yazilan = 0;
+  let tur = 0;
+  for (; tur < TUR_SINIRI; tur++) {
+  if (tur > 0) {
+    if (yazilan >= k.slot_sayisi) break;
+    const kalan = yerelHepsi.filter((d) => !gorulen.has(d.kanitId));
+    if (!kalan.length) break;
+    yerel = dengeliSec(kalan, (d) => parcaHaritasi.get(d.belgeId)!.ad, YEREL_SINIR);
+    await surdur({ asama: "aday" });
+  }
+  yerel.forEach((d) => gorulen.add(d.kanitId));
 
   // Yerel olmayan kanıt (ulusal öncelik, kısıt) yerel konularla örtüştüğü ölçüde girer.
   const terimler = new Set(
@@ -244,6 +277,7 @@ async function kesifKos(kesifId: number): Promise<KesifSonucu> {
     .slice(0, 40);
   const a = await adayKesfet(istemci, model, {
     hazirKonular,
+    hedef: k.slot_sayisi,
     oneriler: donemBasliklari,
     il: k.il,
     ilceler: ilceAdlari,
@@ -252,6 +286,7 @@ async function kesifKos(kesifId: number): Promise<KesifSonucu> {
     onceki: resmi.filter((r) => r.yil < sonYil).map((r) => ({ yil: r.yil, baslik: r.baslik })),
   });
   maliyetYaz(a.maliyet, PROMPTLAR.aday_kesfi.surum, a.ok);
+  if (!a.ok && tur > 0) break; // tamamlama turunun reddi ilk turun adaylarını geri almaz
   if (!a.ok) {
     await islem(SERVIS, (sql) => denetle(sql, SERVIS, "aday_kesfi_reddedildi", "kesif", k.id, { asama: a.asama, hatalar: a.hatalar.slice(0, 5) }));
     return bitir(false, `Aday üretimi reddedildi (${a.asama}): ${a.hatalar[0] ?? ""}`);
@@ -259,14 +294,8 @@ async function kesifKos(kesifId: number): Promise<KesifSonucu> {
 
   // ── 5. Kayıt ─────────────────────────────────────────────────────────────
   await surdur({ asama: "kayit" });
-  const tetikleyen: Baglam = { gonderenRef: k.tetikleyen_ref, rol: k.tetikleyen_rol };
+  dusenler.push(...a.dusenler);
   const kanitHaritasi = new Map(defter.map((d) => [d.kanitId, d]));
-  const sinir = k.slot_sayisi * 2;
-  const atlananlar: string[] = [];
-  const desteklenen: string[] = [];
-  const tekrarlar: Array<{ baslik: string; oncekiId: number; neden: string }> = [];
-  const hazirlar: string[] = [];
-  let yazilan = 0;
   await islem(tetikleyen, async (sql) => {
     const donemdekiler = await sql<{ id: string; b: string; koken: string; durum: string; puanli: boolean; kanitlar: number[] | null }[]>`
       select o.id, lower(trim(o.baslik)) as b, o.koken::text, o.durum::text,
@@ -350,7 +379,9 @@ async function kesifKos(kesifId: number): Promise<KesifSonucu> {
         insert into oneri (donem_id, gonderen_ref, koken, baslik, gerekce, durum, kesif_id, kesif_kanit, kapsam)
         values (${k.donem_id}, ${k.tetikleyen_ref}, 'yeni', ${aday.baslik}, ${aday.gerekce + (aday.sentez ? `
 
-${SENTEZ_ETIKETI} ${aday.sentez}` : "")},
+${SENTEZ_ETIKETI} ${aday.sentez}` : "") + (aday.unsur && TEMEL_UNSURLAR[aday.unsur] ? `
+
+${UNSUR_ETIKETI} ${aday.unsur} — ${TEMEL_UNSURLAR[aday.unsur]}.` : "")},
                 'degerlendiriliyor', ${k.id}, ${sql.json(kanit as never)},
                 ${aday.urunGruplari.length ? sql.json(aday.urunGruplari.map((g) => ({ ad: g.ad, kanit_id: g.kanitIdleri, yerel: g.yerel })) as never) : null})
         on conflict do nothing
@@ -363,14 +394,15 @@ ${SENTEZ_ETIKETI} ${aday.sentez}` : "")},
       }
     }
     await denetle(sql, tetikleyen, "kesif_adaylari_yazildi", "kesif", k.id, {
-      yazilan, atlananlar, desteklenen, tekrarlar, dusenler: [...hazirlar, ...a.dusenler].slice(0, 30), model: a.modelSnapshot, promptSurum: a.promptSurum,
+      yazilan, atlananlar, desteklenen, tekrarlar, tur: tur + 1, dusenler: [...hazirlar, ...dusenler].slice(0, 30), model: a.modelSnapshot, promptSurum: a.promptSurum,
       not: "Adaylar doğrulanmamış; her biri ayrıca puanlanır ve ajans onayı bekler.",
     });
   });
   await durumYaz(k.id, { aday_sayisi: yazilan });
+  } // tur
 
   // Düşen ürün grubu aday değildir; sayıya girmez (ayrıntısı denetimde).
-  const dusenAday = a.dusenler.filter((m) => !/^(Ürün grubu|Çıkarım düşürüldü)/.test(m)).length;
+  const dusenAday = dusenler.filter((m) => !/^(Ürün grubu|Çıkarım düşürüldü)/.test(m)).length;
   const ozet =
     `${parcalar.length - basarisiz} parça tarandı, ${defterHam.length} kanıt (${yerel.length} yerel). ` +
     (yazilan ? `${yazilan} aday değerlendirmeye alındı.` : "Kanıtlara dayanan aday çıkmadı.") +
@@ -379,6 +411,9 @@ ${SENTEZ_ETIKETI} ${aday.sentez}` : "")},
     (desteklenen.length ? ` ${desteklenen.length} yürürlükteki resmî konu belgelerle desteklendi.` : "") +
     (atlananlar.length + tekrarlar.length
       ? ` ${atlananlar.length + tekrarlar.length} aday bu dönemde zaten önerilmiş bir konuyla aynı olduğu için alınmadı.`
+      : "") +
+    (yazilan < k.slot_sayisi
+      ? ` Hedef en az ${k.slot_sayisi} adaydı; ${tur} turda kanıtlar ${yazilan} adaya yetti.`
       : "") +
     okunamayan;
   return bitir(true, ozet, yazilan);

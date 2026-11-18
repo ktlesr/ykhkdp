@@ -119,7 +119,7 @@ function uret(istek: ModelIstegi): unknown {
         if (!es) return [];
         const gerekce = `${y.metin} ${es.metin}`.slice(0, 1200);
         return gerekce.length >= 40
-          ? [{ baslik: `${y.konu} yatırımı`.slice(0, 140).padEnd(8, "."), gerekce, sentez: "", kanit_no: [y.no, es.no], urun_gruplari: [] }]
+          ? [{ baslik: `${y.konu} yatırımı`.slice(0, 140).padEnd(8, "."), gerekce, sentez: "", unsur: 1, kanit_no: [y.no, es.no], urun_gruplari: [] }]
           : [];
       });
     // Yürürlükteki ilk resmî konuyu OLDUĞU GİBİ yeniden önerir: "resmî konuyu

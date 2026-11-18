@@ -7,7 +7,7 @@ import { cookies } from "next/headers";
 import {
   belgeEkle, belgeSil, KATEGORILER, type Kategori, metinDenetle, cikisYap, donemGetir, girisYap, islem, kayitOl, naceAra, naceDuzelt,
   ayarYaz, kimlikAc, kimlikSil, KotaAsildi, misafirAc, oneriOlustur, puanDuzelt, durumDegistir, rolAta,
-  kesifAc, kesifDonemleri, kesifDurdur, KesifZatenAcik, resmiKonulariDegerlendir, oneriGuncelle, oneriSil,
+  kesifAc, kesifDonemleri, kesifDurdur, KesifZatenAcik, resmiKonulariDegerlendir, oneriGuncelle, oneriSil, kesifAdaylariniSil,
 } from "@ykh/database";
 import { gecisIzinli, onaylayabilir, ROL_ETIKET, ROLLER, type OneriDurumu, type Rol } from "@ykh/domain";
 import { log } from "@ykh/observability";
@@ -574,6 +574,20 @@ export async function oneriSilEylemi(_o: EylemSonucu | null, f: FormData): Promi
   log.info("oneri_silindi", { oneriId: id });
   revalidatePath("/onay");
   return { ok: true, mesaj: `#${id} kalıcı olarak silindi; kaydı denetimde.` };
+}
+
+export async function kesifAdaylariniSilEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
+  const k = await kullanici();
+  if (!k || k.rol !== "yonetici") return { ok: false, mesaj: "Toplu silmeyi yalnızca yönetici yapabilir." };
+  const s = await kesifAdaylariniSil(
+    await baglam(),
+    { ajansKod: String(f.get("bolge") ?? "") || null, ilKod: String(f.get("il") ?? "") || null },
+    String(f.get("gerekce") ?? ""),
+  );
+  if (!s.ok) return s;
+  log.info("kesif_adaylari_silindi", { silinen: s.silinen });
+  revalidatePath("/onay");
+  return { ok: true, mesaj: `${s.silinen} keşif adayı kalıcı olarak silindi; kayıtları denetimde.` };
 }
 
 export async function oneriDuzeltEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {

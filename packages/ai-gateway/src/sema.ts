@@ -159,6 +159,25 @@ export const KanitCikarimi = z
  * Aday üretimi — keşfin İL aşaması. Model yeni alıntı yazamaz; yalnızca
  * defterdeki doğrulanmış kanıtlara `kanit_no` ile atıf yapar.
  */
+/**
+ * Yerel yatırım konularının belirlenmesinde temel alınacak unsurlar — ANA
+ * ÇERÇEVE. Her keşif adayı bunlardan birine girmek zorundadır (`unsur`);
+ * şema dışındaki numara çıktıyı reddettirir. Kısa adlar ekranda, tam metin
+ * prompt'ta (`aday_kesfi`).
+ */
+export const TEMEL_UNSURLAR: Record<number, string> = {
+  1: "ekonomik coğrafyanın potansiyeli ve coğrafyadan kaynaklı darboğazın çözümü",
+  2: "bölgede üretilmeyen ama ekonomik coğrafyanın mümkün kıldığı ürün",
+  3: "turizm destinasyonunu çeşitlendiren ve cazibe katan yatırım",
+  4: "tarımsal ürünün ve mevcut nihai ürünün daha katma değerli ürüne dönüşmesi",
+  5: "üretim ekosisteminde ileri-geri bağlantı",
+  6: "üretim atıklarının değerlendirilmesi, döngüsel üretim",
+  7: "ilin bilgi ve becerisine uygun yatırım",
+  8: "ithal edilen girdinin yerli üretimi",
+  9: "kümelenme potansiyeli taşıyan sektörün yenilik ve teknoloji düzeyini yükseltme",
+  10: "yaşam kalitesini yükselten özel sektör hizmet altyapısı",
+};
+
 export const AdayKesfi = z
   .object({
     adaylar: z
@@ -170,6 +189,8 @@ export const AdayKesfi = z
             gerekce: z.string().min(40).max(1200),
             /** Uzman çıkarımı — kanıtları birleştiren bağ; olgu değil, ekranda öyle etiketlenir. Boş olabilir. */
             sentez: z.string().max(600),
+            /** Ana çerçeve: adayın girdiği temel unsur (1–10, `TEMEL_UNSURLAR`). */
+            unsur: z.number().int().min(1).max(10),
             kanit_no: z.array(z.number().int().min(1).max(200)).min(2).max(8),
             /**
              * Ürün grupları — her grup KENDİ kanıtına (`kanit_no`) dayanır.

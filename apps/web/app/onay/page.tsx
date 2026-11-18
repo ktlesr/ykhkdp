@@ -7,6 +7,7 @@ import { onaylayabilir } from "@ykh/domain";
 import { OtoYenile } from "@/components/oto-yenile.tsx";
 import { AsamaRozeti } from "@/components/degerlendirme-durumu.tsx";
 import { SatirIslemleri } from "@/components/satir-islemleri.tsx";
+import { TopluSil } from "@/components/toplu-sil.tsx";
 import { Bag, Baslik, Bos, Rozet, Sayfa, UstBar } from "@/components/ui.tsx";
 import { baglam, kullanici } from "@/lib/oturum.ts";
 import { KAPALI } from "@/lib/site.ts";
@@ -133,6 +134,15 @@ export default async function Onay({ searchParams }: { searchParams: Promise<{ b
             </Link>
           )}
         </form>
+
+        {yonetici && (
+          <TopluSil
+            adet={kuyruk.filter((o) => o.kesif_id && o.koken === "yeni").length}
+            bolge={bolge ?? ""}
+            il={il ?? ""}
+            kapsamAdi={il ? (iller.find((x) => x.kod === il)?.ad ?? il) : bolge ? (bolgeler.find((x) => x.kod === bolge)?.ad ?? bolge) : "bütün iller"}
+          />
+        )}
 
         <p className="mt-3 text-[13.5px] text-ink-soft">
           <span className="num font-medium text-ink">{kuyruk.length}</span> öneri ·{" "}

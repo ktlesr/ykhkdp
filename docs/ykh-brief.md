@@ -432,6 +432,30 @@ Uydurmasızlık kuralları — hepsi mekanik, modelin beyanı değil:
   çıkarmaya yetmiyorsa bilinen doldurulmuyor. Sınır: "ilde zaten yapılan
   üretim" belgelerin ve il ihracat verisinin söylediği kadar bilinir; ildeki
   mevcut firma ve ürün verisi (kapasite raporları) yüklü değil.
+- **Ana çerçeve: on temel unsur** (2026-11-18, `aday-kesfi-v9`). "Yerel Yatırım
+  Konularının Belirlenmesinde Temel Alınacak Unsurlar" keşfin kesin kuralıdır:
+  her aday on unsurdan birine girmek zorundadır (ekonomik coğrafya potansiyeli
+  ve darboğazı · bölgede üretilmeyen ama üretilebilir ürün · turizm
+  destinasyonunu çeşitlendirme · tarımsal ve mevcut ürünün katma değerli ürüne
+  dönüşmesi · ileri-geri bağlantı · atık ve döngüsel üretim · ilin bilgi ve
+  becerisi · ithal girdinin yerli üretimi · kümenin yenilik ve teknoloji
+  düzeyi · yaşam kalitesini yükselten özel sektör hizmet altyapısı; sonuncusu
+  Doğu ve Güneydoğu Anadolu öncelikli ve "yere bağlılık" sıralamasının
+  istisnası). Model unsur numarasını `unsur` alanında verir; şema 1–10 dışını
+  reddeder. Kayıtta gerekçenin sonuna "Temel unsur (yapay zekâ sınıflaması):"
+  etiketiyle yazılır. Mekanik olan numaranın varlığıdır; adayın o unsura
+  GERÇEKTEN girip girmediği modelin sınıflamasıdır, ajans tartar. Önceki
+  ölçütler (yere bağlılık, mevzuat nitelikleri, yeni konu, kanıt kuralları)
+  değişmedi; çerçevenin içinde sıralar. Ölçüldü (gpt-5.4-mini,
+  Afyonkarahisar, üç koşu): 2, 4, 4 aday; unsur 1, 4 ve 9.
+- **En az slot kadar aday** (2026-11-18). İl listesi `slot_sayisi` asıl konudan
+  oluşur; fazlası yedektir. Model hedefi görür (en az slot kadar, slotun iki
+  katına kadar farklı aday). İlk tur slot sayısına ulaşamazsa tamamlama turu
+  koşar (en çok üç tur): model defterin henüz görmediği yerel kanıtlarını ve o
+  ana kadar yazılan başlıkları görür. Kanıt kuralları hiçbir turda gevşemez;
+  kanıt yetmiyorsa sayı tutmaz ve özet mesajı "hedef en az N adaydı; … turda
+  kanıtlar M adaya yetti" yazar. Ölçüldü (gpt-5.4-mini, Afyonkarahisar, iki
+  koşu): ilk turda 5 ve 5 aday; tamamlama turu canlı modelle henüz gözlenmedi.
 - **Tekrarlanan keşif kuyruğu şişirmez.** Model dönemde zaten önerilmiş
   başlıkları görür ve eşdeğerini önermez; kayıtta mekanik iki katman daha:
   dönemdeki herhangi bir öneriyle (reddedilen dahil) başlık benzerliği ≥ 0.50
@@ -587,6 +611,16 @@ forma aktar" ile konu normal yoldan puanlanır. Değilse nedenini yazar.
 - Sınır: eşleşme sözcükseldir (5 harf kök); eşanlamlı yazılmış konu
   ("airbag") kanıtını bulamaz. Yalnızca ajans/yönetici: kanıt defteri
   yatırımcıya açık değil.
+
+### Kuyruğu topluca boşaltma
+
+`/onay` içinde, yalnızca yönetici: "Keşif adaylarını topluca sil". Keşif yeni
+kaynaklarla sıfırdan koşturulmadan önce kuyruğu boşaltmak içindir. Kapsam
+ekrandaki süzgeçtir (bütün iller / bölge / il) ve SQL'de dardır: yalnızca
+keşfin ürettiği, `koken = 'yeni'`, kuyruktaki (değerlendiriliyor / onay
+bekliyor) öneriler. Elle girilen öneri, onaylanmış ya da reddedilmiş kayıt ve
+resmî konu silinmez. İki adımlıdır, gerekçe ister; her kaydın tam görüntüsü
+tek tek denetime yazılır.
 
 ### Yakın kopya · AI yok
 

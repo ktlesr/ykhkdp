@@ -1514,6 +1514,45 @@ export async function oneriSil(b: Baglam, id: number, gerekce: string): Promise<
   });
 }
 
+/**
+ * Kuyruktaki KEŞİF ADAYLARINI topluca siler — yalnızca yönetici, gerekçeyle.
+ * Keşfi yeni kaynaklarla sıfırdan koşturmadan önce kuyruğu boşaltmak için.
+ *
+ * Kapsam dardır ve SQL'de kurulur: yalnızca keşfin ürettiği (`kesif_id`),
+ * `koken = 'yeni'`, kuyruktaki (değerlendiriliyor / onay bekliyor) öneriler.
+ * Yatırımcının ya da ajansın elle girdiği öneri, onaylanmış ya da reddedilmiş
+ * öneri ve resmî listeden türeyen konu SİLİNMEZ. Her kaydın tam görüntüsü tek
+ * tek denetime yazılır (`oneri_silindi`), tekil silmeyle aynı biçimde.
+ */
+export async function kesifAdaylariniSil(
+  b: Baglam, kapsam: { ajansKod?: string | null; ilKod?: string | null }, gerekce: string,
+): Promise<{ ok: true; silinen: number } | { ok: false; mesaj: string }> {
+  if (b.rol !== "yonetici") return { ok: false, mesaj: "Toplu silmeyi yalnızca yönetici yapabilir." };
+  if (gerekce.trim().length < 10) return { ok: false, mesaj: "Silme gerekçesi en az 10 karakter olmalı." };
+  return islem(b, async (sql) => {
+    const kayitlar = await sql<{ id: string; kayit: Record<string, unknown> }[]>`
+      select o.id, jsonb_build_object('oneri', to_jsonb(o) - 'arama', 'degerlendirme', to_jsonb(g),
+               'ek_nace', (select jsonb_agg(to_jsonb(x)) from oneri_nace x where x.oneri_id = o.id)) as kayit
+      from oneri o
+      join donem dn on dn.id = o.donem_id
+      join il i on i.kod = dn.il_kod
+      left join degerlendirme g on g.oneri_id = o.id
+      where o.kesif_id is not null and o.koken = 'yeni' and o.durum in ${sql(KUYRUK_DURUMLARI)}
+        ${kapsam.ilKod ? sql`and i.kod = ${kapsam.ilKod}` : sql``}
+        ${kapsam.ajansKod ? sql`and i.ajans_kod = ${kapsam.ajansKod}` : sql``}
+      for update of o
+    `;
+    for (const k of kayitlar) {
+      await denetle(sql, b, "oneri_silindi", "oneri", Number(k.id), { gerekce: gerekce.trim(), toplu: true, kayit: k.kayit });
+    }
+    if (kayitlar.length) {
+      const r = await sql`delete from oneri where id in ${sql(kayitlar.map((k) => k.id))}`;
+      if (r.count !== kayitlar.length) throw new Error("Toplu silme tamamlanamadı; hiçbir kayıt silinmedi.");
+    }
+    return { ok: true as const, silinen: kayitlar.length };
+  });
+}
+
 export type OneriDuzeltme = { baslik: string; gerekce: string; ilce: string | null; kapsam: string[] };
 
 /**

@@ -790,3 +790,43 @@ test("kaynak belgesi: aynı içerik dokunmaz, değişen içerik yeniden yazılı
   assert.ok(yeni.every((r) => r.id !== ilk.id) && yeni.some((r) => r.metin.includes("Uşak Halısı")));
   await sahip()`delete from belge where ad = ${g.ad}`;
 });
+
+test("toplu silme: yalnızca kuyruktaki keşif adayları; elle girilen, onaylanan ve resmî konu kalır", async () => {
+  const { kesifAdaylariniSil } = await import("./sorgu.ts");
+  const ajans = await girisBaglami("ajans@ykh.local");
+  const yonetici = await girisBaglami("yonetici@ykh.local");
+  const sql = sahip();
+  const [d] = await sql<{ id: string }[]>`select id from donem where il_kod = 'usak' limit 1`;
+  const [k] = await sql<{ id: string }[]>`insert into kesif (donem_id, tetikleyen_ref, durum) values (${d.id}, ${yonetici.gonderenRef}, 'tamam') returning id`;
+  const ekle = async (baslik: string, kesif: boolean, durum: string) => {
+    const [o] = await sql<{ id: string }[]>`
+      insert into oneri (donem_id, gonderen_ref, koken, baslik, gerekce, durum, kesif_id, kesif_kanit, onaylayan_ref, onay_zamani)
+      values (${d.id}, ${yonetici.gonderenRef}, 'yeni', ${baslik}, ${"Toplu silme sınaması için yeterince uzun bir gerekçe metni."}, ${durum}::oneri_durumu,
+              ${kesif ? k.id : null}, ${kesif ? sql.json([]) : null}, ${durum === "listede" ? yonetici.gonderenRef : null}, ${durum === "listede" ? sql`now()` : null})
+      returning id`;
+    return Number(o.id);
+  };
+  const aday1 = await ekle("Toplu silme keşif adayı bir", true, "onay_bekliyor");
+  const aday2 = await ekle("Toplu silme keşif adayı iki", true, "degerlendiriliyor");
+  const elle = await ekle("Toplu silme elle girilen öneri", false, "onay_bekliyor");
+  const onayli = await ekle("Toplu silme onaylanmış keşif adayı", true, "listede");
+  const [{ n: mevcutOnce }] = await sql<{ n: string }[]>`select count(*) as n from oneri where koken = 'mevcut'`;
+
+  assert.equal((await kesifAdaylariniSil(ajans, {}, "ajans topluca silmeye çalışıyor")).ok, false, "ajans silemez");
+  assert.equal((await kesifAdaylariniSil(yonetici, {}, "kısa")).ok, false, "gerekçe zorunlu");
+  const baska = await kesifAdaylariniSil(yonetici, { ilKod: "kutahya" }, "başka ilin süzgeci bu adayları silmemeli");
+  assert.ok(baska.ok);
+  assert.equal((await sql`select 1 from oneri where id in ${sql([aday1, aday2])}`).length, 2, "il süzgeci kapsamı daraltır");
+
+  const r = await kesifAdaylariniSil(yonetici, { ilKod: "usak" }, "Keşif yeni kaynaklarla yeniden koşturulacak");
+  assert.ok(r.ok && r.silinen >= 2);
+  const kalan = (await sql<{ id: string }[]>`select id from oneri where id in ${sql([aday1, aday2, elle, onayli])}`).map((x) => Number(x.id)).sort();
+  assert.deepEqual(kalan, [elle, onayli].sort(), "elle girilen ve onaylanmış kalır");
+  const [{ n: mevcutSonra }] = await sql<{ n: string }[]>`select count(*) as n from oneri where koken = 'mevcut'`;
+  assert.equal(mevcutSonra, mevcutOnce, "resmî konulara dokunulmaz");
+  const iz = await sql<{ detay: { toplu: boolean; kayit: { oneri: { baslik: string } } } }[]>`
+    select detay from denetim where eylem = 'oneri_silindi' and nesne_id = ${String(aday1)}`;
+  assert.equal(iz[0]?.detay.kayit.oneri.baslik, "Toplu silme keşif adayı bir", "silinen kaydın görüntüsü denetimde");
+  assert.equal(iz[0]?.detay.toplu, true);
+  await sql`delete from oneri where id in ${sql([elle, onayli])}`;
+});

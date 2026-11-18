@@ -771,11 +771,11 @@ export function kanitlariDogrula(
 export type DefterKaydi = { no: number; kanitId: number; yerel: boolean; metin: string };
 
 export type HamUrunGrubu = { ad: string; kanit_no: readonly number[] };
-export type HamAday = { baslik: string; gerekce: string; sentez?: string; kanit_no: readonly number[]; urun_gruplari?: readonly HamUrunGrubu[] };
+export type HamAday = { baslik: string; gerekce: string; sentez?: string; unsur?: number; kanit_no: readonly number[]; urun_gruplari?: readonly HamUrunGrubu[] };
 /** Doğrulanmış ürün grubu: kendi kanıtına bağlı; `yerel` = kanıtlarından biri bu ile özgü. */
 export type UrunGrubu = { ad: string; kanitIdleri: number[]; yerel: boolean };
 /** `sentez`: modelin çıkarımı (olgu değil). Kanıtta olmayan sayı taşıyorsa boşaltılır. */
-export type DogrulanmisAday = { baslik: string; gerekce: string; sentez: string; kanitIdleri: number[]; urunGruplari: UrunGrubu[] };
+export type DogrulanmisAday = { baslik: string; gerekce: string; sentez: string; unsur?: number; kanitIdleri: number[]; urunGruplari: UrunGrubu[] };
 
 /**
  * Ürün grubunda ayırt edici sayılmayan genel kökler — "otomotiv sanayi"
@@ -918,7 +918,7 @@ export function adaylariDogrula(
      * sayı taşıyan sentez düşer, aday kalır.
      */
     // Model etiketi kendisi de yazabiliyor; etiket kayıtta bir kez durur.
-    let sentez = (ham.sentez ?? "").replace(ATIF_NOTU, "").replace(/^s*yapay zek[aâ] çıkarımı[^:]{0,30}:s*/iu, "").trim();
+    let sentez = (ham.sentez ?? "").replace(ATIF_NOTU, "").replace(/^\s*yapay zek[aâ] çıkarımı[^:]{0,30}:\s*/iu, "").trim();
     const sentezSayisi = sayisalTokenlar(atifsiz(sentez)).find((t) => !sayiKaynakta(t, kaynak));
     if (sentezSayisi) {
       dusenler.push({ kod: "kaynaksiz_sayi", mesaj: `Çıkarım düşürüldü: ${ad} adayının çıkarımı kaynaksız sayı (“${sentezSayisi}”) taşıyor; aday çıkarımsız alındı.` });
@@ -928,6 +928,7 @@ export function adaylariDogrula(
       baslik: a.baslik.trim(),
       gerekce: a.gerekce.trim(),
       sentez,
+      unsur: ham.unsur,
       kanitIdleri: cozulen.map((d) => d.kanitId),
       urunGruplari: urunGruplariniDogrula(a.baslik, a.urun_gruplari ?? [], cozulen, numara, dusenler),
     });
