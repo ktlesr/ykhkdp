@@ -750,7 +750,10 @@ sınıf ve faaliyet düzeyi seçilebilir olarak sunulur.
 Sanayi ve Teknoloji Bakanlığı **Yerel Yatırım Konuları Listesi Tebliği** —
 her il için o yılın dört yatırım konusu. `docs/` altındaki iki JSON dosyası
 `pnpm db:konular` ile yüklenir: 2025 ve 2026, 81 il × 4 konu = 648 kayıt.
-2026 tebliğinde her konunun **gerekçesi** de var (226–810 karakter).
+2026 tebliğinde her konunun **gerekçesi** de var (226–810 karakter). 2025 konularının gerekçesi
+Bakanlığın 2025 gerekçelendirme çalışmasındaki "Arka Plan Bilgisi"
+metinlerinden alındı (2026-11-18; 324 konunun 324'ü başlıkla birebir eşleşti,
+1.020–6.101 karakter) ve aynı alanda, aynı etiketle gösterilir.
 
 Bu liste `oneri` tablosuna **zorlanmaz**, kendi tablosunda (`yatirim_konusu`)
 durur. Zorlansaydı iki şey uydurmak gerekirdi: `gonderen_ref` (kimse önermedi,

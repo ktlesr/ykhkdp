@@ -632,7 +632,7 @@ test("resmî liste yüklendi: 81 il × 4 konu, iki yıl", async () => {
   assert.equal(r.il, 81, "81 ilin tamamı");
   assert.equal(r.yil, 2, "2025 ve 2026");
   assert.equal(r.konu, 648, "81 × 4 × 2");
-  assert.equal(r.gerekceli, 324, "yalnızca 2026 tebliğinde gerekçe var");
+  assert.equal(r.gerekceli, 648, "2026 tebliğ gerekçesi + 2025 arka plan bilgisi");
 
   const [k] = await islem(ANONIM, (sql) =>
     sql<{ kaynak: string }[]>`select distinct kaynak from yatirim_konusu where yil = 2026`,
