@@ -1,4 +1,4 @@
-import { AnthropicLimitHatasi, anthropicIstemci } from "./anthropic-istemci.ts";
+import { AnthropicLimitHatasi, anthropicIstemci, semayiSadelestir } from "./anthropic-istemci.ts";
 import type { ModelCevabi, ModelIstegi, ModelIstemcisi } from "./gateway.ts";
 
 /**
@@ -284,6 +284,7 @@ export const openAiIstemci = (): ModelIstemcisi => ({
  */
 const ZAFER_ESZAMANLI = Math.max(1, Number(process.env.ZAFER_AI_ESZAMANLI) || 3);
 let zaferAcik = 0;
+let zaferSadeSema = false;
 const zaferSira: Array<() => void> = [];
 async function zaferSirasi<S>(is: () => Promise<S>): Promise<S> {
   if (zaferAcik >= ZAFER_ESZAMANLI) await new Promise<void>((ok) => zaferSira.push(ok));
@@ -303,7 +304,7 @@ export const zaferIstemci = (): ModelIstemcisi => ({
     const anahtar = process.env.ZAFER_AI_API_KEY;
     if (!anahtar) throw new Error("ZAFER_AI_API_KEY tanımlı değil.");
     const taban = (process.env.ZAFER_AI_URL || "https://ai.zafer.gov.tr/api/v1").replace(/\/+$/, "");
-    const yanit = await zaferSirasi(() =>
+    const gonder = (sema: unknown) =>
       yenidenDene(() =>
         fetch(`${taban}/chat/completions`, {
           method: "POST",
@@ -314,15 +315,29 @@ export const zaferIstemci = (): ModelIstemcisi => ({
               { role: "system", content: istek.sistem },
               { role: "user", content: istek.kullanici },
             ],
-            response_format: { type: "json_schema", json_schema: { name: istek.semaAdi, strict: true, schema: istek.jsonSema } },
+            response_format: { type: "json_schema", json_schema: { name: istek.semaAdi, strict: true, schema: sema } },
             max_tokens: 8192,
             stream: false,
           }),
           // Yerel model bulut modellerinden yavaş; sunucunun kendi sınırı 10 dakika.
           signal: AbortSignal.timeout(Number(process.env.ZAFER_AI_ZAMAN_ASIMI_MS) || 590_000),
         }),
-      ),
-    );
+      );
+    /**
+     * Şemaya zorlama motorları (vLLM guided decoding) her kısıtı desteklemez.
+     * Tam şema 400 ile reddedilirse kısıtları açıklamaya taşınmış sade şemayla
+     * (Claude'a gidenle aynı) bir kez daha denenir ve süreç boyunca sade şema
+     * kullanılır. Güvence değişmez: Zod yanıtta tam şemayı uygular.
+     */
+    const yanit = await zaferSirasi(async () => {
+      if (zaferSadeSema) return gonder(semayiSadelestir(istek.jsonSema));
+      const ilk = await gonder(istek.jsonSema);
+      if (ilk.status !== 400) return ilk;
+      await ilk.body?.cancel();
+      const ikinci = await gonder(semayiSadelestir(istek.jsonSema));
+      if (ikinci.ok) zaferSadeSema = true;
+      return ikinci;
+    });
     if (!yanit.ok) throw new Error(`Zafer AI ${yanit.status}: ${(await yanit.text()).slice(0, 500)}`);
     const j = (await yanit.json()) as {
       choices?: Array<{ message?: { content?: string | null }; finish_reason?: string }>;
