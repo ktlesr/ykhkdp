@@ -152,6 +152,9 @@ test("sayı kaynakta SAYI olarak aranır: 120 varken 20 geçmez", async () => {
   assert.equal(sayiKaynakta("2.247", "yaklaşık 2,247 metrede"), true);
   assert.equal(sayiKaynakta("2.247", "yaklaşık 22,47 metrede"), false);
   assert.equal(sayiKaynakta("2247", "yaklaşık 2,247 metrede"), false);
+  // Üç haneli grup dışında ayraç birebir aranır.
+  assert.equal(sayiKaynakta("12.5", "oran %12,5 oldu"), false);
+  assert.equal(sayiKaynakta("1.250.000", "toplam 1,250,000 ton"), true);
   const defter = [
     { no: 1, kanitId: 1, yerel: true, metin: "İlde 120 işletme faaliyet göstermektedir." },
     { no: 2, kanitId: 2, yerel: false, metin: "Sanayide döngüsel ekonomi uygulamaları yaygınlaştırılacaktır." },
@@ -175,7 +178,7 @@ test("gerekçedeki atıf notu sayısal iddia değildir ve kayda girmez", () => {
   // Sentez çıkarımdır: kanıtta karşılık aranmaz ama yeni sayı getiremez.
   const g = "İlde mermer sektörü yoğunlaşmıştır. Mermer atıkları mikronize öğütme faaliyetlerine odaklanılacaktır.";
   const cikarim = "Atığın yerinde işlenmesi yapı kimyasalları üreticilerine yakın girdi sağlayabilir (kanıt 1).";
-  const u = adaylariDogrula([{ baslik, gerekce: g, sentez: cikarim, kanit_no: [1, 22] }, { baslik, gerekce: g, sentez: "Yılda 5000 ton işlenebilir.", kanit_no: [1, 22] }], defter);
+  const u = adaylariDogrula([{ baslik, gerekce: g, sentez: cikarim, kanit_no: [1, 22] }, { baslik, gerekce: g, sentez: "Yılda kanıt 5000 ton işlenebilir.", kanit_no: [1, 22] }], defter);
   assert.deepEqual(u.adaylar.map((a) => a.sentez), ["Atığın yerinde işlenmesi yapı kimyasalları üreticilerine yakın girdi sağlayabilir.", ""]);
   assert.match(u.dusenler[0].mesaj, /^Çıkarım düşürüldü/);
   // Parantezsiz ve karışık biçimler de atıftır.

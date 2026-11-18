@@ -107,8 +107,12 @@ export function sayiKaynakta(token: string, normalizeKaynak: string): boolean {
   const cekirdek = token.match(/\d[\d.,]*/)?.[0].replace(/[.,]+$/, "");
   if (!cekirdek) return true;
   // Yalnızca nokta kaçışlanır: "u" kipinde `\,` geçersiz bir kaçıştır.
-  // Ayraç biçimi değer değildir: belgede "2,247" yazan sayıyı model "2.247" yazabiliyor.
-  const kacis = cekirdek.replace(/[.,]/g, "[.,]");
+  // Ayraç biçimi yalnızca ÜÇ HANELİ grupta fark sayılmaz: belgede "2,247" yazan
+  // sayıyı model "2.247" yazabiliyor. Başka yerde ayraç birebir aranır
+  // ("12,5" ile "12.5" aynı sayılmaz).
+  const kacis = cekirdek.replace(/[.,]/g, (a, i: number) =>
+    /^\d{3}(?!\d)/.test(cekirdek.slice(i + 1)) ? "[.,]" : a === "." ? "\\." : a,
+  );
   return new RegExp(`(?<![\\p{N}])${kacis}(?![\\p{N}]|[.,]\\p{N})`, "u").test(normalizeKaynak);
 }
 
@@ -895,10 +899,10 @@ export function adaylariDogrula(
       continue;
     }
     const kaynak = normalize(cozulen.map((d) => d.metin).join(" "));
-    const kaynaksiz = sayisalTokenlar(
-      // Yalnızca adayın GERÇEKTEN atıf yaptığı numaralar yok sayılır: "kanıt 5000 ton" denetimden kaçamaz.
-      `${a.baslik} ${a.gerekce.replace(CIPLAK_ATIF, (m) => ((m.match(/\d+/g) ?? []).every((n) => a.kanit_no.includes(Number(n))) ? "" : m))}`,
-    ).find((t) => !sayiKaynakta(t, kaynak));
+    // Yalnızca adayın GERÇEKTEN atıf yaptığı numaralar yok sayılır: "kanıt 5000 ton" denetimden kaçamaz.
+    const atifsiz = (s: string) =>
+      s.replace(CIPLAK_ATIF, (m) => ((m.match(/\d+/g) ?? []).every((n) => a.kanit_no.includes(Number(n))) ? "" : m));
+    const kaynaksiz = sayisalTokenlar(`${a.baslik} ${atifsiz(a.gerekce)}`).find((t) => !sayiKaynakta(t, kaynak));
     if (kaynaksiz) {
       dusenler.push({ kod: "kaynaksiz_sayi", mesaj: `${ad} kaynaksız sayı (“${kaynaksiz}”) taşıyor; düşürüldü.` });
       continue;
@@ -914,7 +918,7 @@ export function adaylariDogrula(
      * sayı taşıyan sentez düşer, aday kalır.
      */
     let sentez = (ham.sentez ?? "").replace(ATIF_NOTU, "").trim();
-    const sentezSayisi = sayisalTokenlar(sentez.replace(CIPLAK_ATIF, "")).find((t) => !sayiKaynakta(t, kaynak));
+    const sentezSayisi = sayisalTokenlar(atifsiz(sentez)).find((t) => !sayiKaynakta(t, kaynak));
     if (sentezSayisi) {
       dusenler.push({ kod: "kaynaksiz_sayi", mesaj: `Çıkarım düşürüldü: ${ad} adayının çıkarımı kaynaksız sayı (“${sentezSayisi}”) taşıyor; aday çıkarımsız alındı.` });
       sentez = "";
