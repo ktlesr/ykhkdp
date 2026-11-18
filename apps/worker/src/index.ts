@@ -1,4 +1,4 @@
-import { islem, kapat, kaynaklariDenetle, type Baglam } from "@ykh/database";
+import { adaysizKesifleriYenidenAc, islem, kapat, kaynaklariDenetle, type Baglam } from "@ykh/database";
 import { birKesifAl, degerlendirmeYap, kesifHatasi, kesifYap, KILIT, onTarama } from "@ykh/degerlendirme";
 import { log } from "@ykh/observability";
 
@@ -62,6 +62,16 @@ async function kesifTuru(): Promise<boolean> {
   // Keşif de yoksa boş vakit ön taramaya: yeni yüklenen belgeler keşif
   // başlamadan taranmış olur. Tur sınırlı; yeni öneri beklemez.
   if (kesifId === null) {
+    // Kuyruk boşaldı (toplu koşu bitti): aday çıkmayan iller yeniden sıraya girer.
+    try {
+      const acilan = await adaysizKesifleriYenidenAc();
+      if (acilan) {
+        log.info("adaysiz_kesif_yeniden", { acilan });
+        return true;
+      }
+    } catch (e) {
+      log.hata("adaysiz_kesif_hatasi", { hata: e instanceof Error ? e.message : String(e) });
+    }
     try {
       return (await onTarama()) > 0;
     } catch (e) {

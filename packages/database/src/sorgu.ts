@@ -1288,6 +1288,41 @@ export async function kesifAc(b: Baglam, donemIdleri: readonly number[]): Promis
   });
 }
 
+/**
+ * Aday çıkmayan illeri kendiliğinden yeniden sıraya alır. İşleyici keşif
+ * kuyruğu BOŞALINCA çağırır (toplu koşu bitti): son keşfi aday vermeden biten
+ * (reddedilen çıktı, kanıt kuralına takılan adaylar, hata) dönem için yeni
+ * koşu açılır — tetikleyen aynı kişidir, tarama önbellekten gelir.
+ *
+ * Sınırlar — sonsuz döngü ve boşa harcama olmasın:
+ *  · dönem başına 24 saatte en çok `DENEME_SINIRI` koşu (ilk koşu dahil);
+ *  · elle DURDURULAN koşu yeniden açılmaz;
+ *  · yalnızca son 24 saatte koşmuş dönemler (eski sonuçlar diriltilmez).
+ */
+const KESIF_DENEME_SINIRI = 3;
+export async function adaysizKesifleriYenidenAc(): Promise<number> {
+  const servis: Baglam = { gonderenRef: null, rol: "yonetici" };
+  const adaylar = await islem(servis, (sql) =>
+    sql<{ donem_id: string; tetikleyen_ref: string; rol: Rol }[]>`
+      select k.donem_id, k.tetikleyen_ref, g.rol
+      from kesif k
+      join gonderen g on g.ref = k.tetikleyen_ref
+      where k.id = (select max(id) from kesif x where x.donem_id = k.donem_id)
+        and k.durum in ('tamam', 'hata') and k.aday_sayisi = 0
+        and coalesce(k.mesaj, '') not like 'Keşif durduruldu%'
+        and k.olusturuldu > now() - interval '24 hours'
+        and (select count(*) from kesif x where x.donem_id = k.donem_id and x.olusturuldu > now() - interval '24 hours') < ${KESIF_DENEME_SINIRI}
+        and not exists (select 1 from kesif x where x.durum in ('bekliyor', 'calisiyor'))
+    `,
+  );
+  let acilan = 0;
+  for (const a of adaylar) {
+    // Tetikleyenin KENDİ bağlamıyla: `kesif_ac` RLS'i bölge kapsamını yeniden sınar.
+    acilan += await kesifAc({ gonderenRef: a.tetikleyen_ref, rol: a.rol }, [Number(a.donem_id)]).catch(() => 0);
+  }
+  return acilan;
+}
+
 /** Ajansın keşif açabileceği dönemler: yönetici 81 il, ajans kendi bölgesi. */
 export async function kesifDonemleri(b: Baglam): Promise<number[]> {
   if (b.rol === "anonim" || !onaylayabilir(b.rol)) return [];

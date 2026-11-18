@@ -830,3 +830,29 @@ test("toplu silme: yalnızca kuyruktaki keşif adayları; elle girilen, onaylana
   assert.equal(iz[0]?.detay.toplu, true);
   await sql`delete from oneri where id in ${sql([elle, onayli])}`;
 });
+
+test("aday çıkmayan il kendiliğinden yeniden sıraya girer; durdurulan ve sınırı aşan girmez", async () => {
+  const { adaysizKesifleriYenidenAc } = await import("./sorgu.ts");
+  const yonetici = await girisBaglami("yonetici@ykh.local");
+  const sql = sahip();
+  await sql`delete from kesif`;
+  const donem = async (il: string) => Number((await sql<{ id: string }[]>`select id from donem where il_kod = ${il} limit 1`)[0].id);
+  const [usak, kutahya, manisa] = [await donem("usak"), await donem("kutahya"), await donem("manisa")];
+  const yaz = (d: number, durum: string, aday: number, mesaj: string | null) =>
+    sql`insert into kesif (donem_id, tetikleyen_ref, durum, aday_sayisi, mesaj) values (${d}, ${yonetici.gonderenRef}, ${durum}, ${aday}, ${mesaj})`;
+  await yaz(usak, "hata", 0, "Aday üretimi reddedildi (sema)");
+  await yaz(kutahya, "hata", 0, "Keşif durduruldu. Taranmış parçalar saklandı.");
+  await yaz(manisa, "tamam", 5, "5 aday değerlendirmeye alındı.");
+
+  assert.equal(await adaysizKesifleriYenidenAc(), 1, "yalnızca aday vermeyen, durdurulmamış il");
+  const acik = await sql<{ donem_id: string }[]>`select donem_id from kesif where durum = 'bekliyor'`;
+  assert.deepEqual(acik.map((r) => Number(r.donem_id)), [usak]);
+  assert.equal(await adaysizKesifleriYenidenAc(), 0, "kuyruk doluyken yeni koşu açılmaz");
+
+  // İkinci ve üçüncü koşu da aday vermezse: sınır 3 koşu, dördüncüsü açılmaz.
+  await sql`update kesif set durum = 'hata', mesaj = 'yine yok' where durum = 'bekliyor'`;
+  assert.equal(await adaysizKesifleriYenidenAc(), 1);
+  await sql`update kesif set durum = 'hata', mesaj = 'yine yok' where durum = 'bekliyor'`;
+  assert.equal(await adaysizKesifleriYenidenAc(), 0, "24 saatte en çok üç koşu");
+  await sql`delete from kesif`;
+});

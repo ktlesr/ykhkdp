@@ -456,6 +456,15 @@ Uydurmasızlık kuralları — hepsi mekanik, modelin beyanı değil:
   kanıt yetmiyorsa sayı tutmaz ve özet mesajı "hedef en az N adaydı; … turda
   kanıtlar M adaya yetti" yazar. Ölçüldü (gpt-5.4-mini, Afyonkarahisar, iki
   koşu): ilk turda 5 ve 5 aday; tamamlama turu canlı modelle henüz gözlenmedi.
+- **Aday çıkmayan il kendiliğinden yeniden koşar** (2026-11-18). Keşif kuyruğu
+  boşalınca (toplu koşu bitti) işleyici, son keşfi aday vermeden biten dönemler
+  için yeni koşu açar (`adaysizKesifleriYenidenAc`); tarama önbellekten gelir.
+  Sınırlar: dönem başına 24 saatte en çok üç koşu, elle durdurulan koşu
+  yeniden açılmaz, yalnızca son 24 saatte koşmuş dönemler. Üç koşuda da aday
+  çıkmayan il öyle kalır ve mesajı nedenini yazar.
+- **Biçim kusuru aday başınadır.** Başlığı 8, gerekçesi 40 karakterden kısa
+  aday yalnızca kendisi düşer. Sınır önce şemadaydı; canlıda tek bir kısa
+  başlık bir ilin bütün adaylarını reddettirdi.
 - **Tekrarlanan keşif kuyruğu şişirmez.** Model dönemde zaten önerilmiş
   başlıkları görür ve eşdeğerini önermez; kayıtta mekanik iki katman daha:
   dönemdeki herhangi bir öneriyle (reddedilen dahil) başlık benzerliği ≥ 0.50
