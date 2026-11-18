@@ -55,6 +55,7 @@ services:
       # Zafer AI Local LLM (kurum sunucusu, OpenAI uyumlu uç); /ayarlar'dan seçilir.
       ZAFER_AI_API_KEY: ${ZAFER_AI_API_KEY:-}
       ZAFER_AI_URL: ${ZAFER_AI_URL:-}
+      ZAFER_AI_ESZAMANLI: ${ZAFER_AI_ESZAMANLI:-}
       YKH_MODEL_SNAPSHOT: ${YKH_MODEL_SNAPSHOT}
       YKH_MODEL_EFOR: ${YKH_MODEL_EFOR}
       YKH_LOG_SEVIYE: ${YKH_LOG_SEVIYE}
@@ -85,6 +86,7 @@ services:
       # Zafer AI Local LLM (kurum sunucusu, OpenAI uyumlu uç); /ayarlar'dan seçilir.
       ZAFER_AI_API_KEY: ${ZAFER_AI_API_KEY:-}
       ZAFER_AI_URL: ${ZAFER_AI_URL:-}
+      ZAFER_AI_ESZAMANLI: ${ZAFER_AI_ESZAMANLI:-}
       YKH_MODEL_SNAPSHOT: ${YKH_MODEL_SNAPSHOT}
       YKH_MODEL_EFOR: ${YKH_MODEL_EFOR}
       YKH_WORKER_ARALIK: ${YKH_WORKER_ARALIK}
