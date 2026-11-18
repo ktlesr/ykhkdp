@@ -37,7 +37,9 @@ const nextConfig: NextConfig = {
     "@ykh/retrieval",
     "@ykh/scoring",
   ],
-  serverExternalPackages: ["postgres"],
+  serverExternalPackages: ["postgres", "mammoth", "unpdf"],
+  // Belge yükleme (PDF/Word/Excel) sunucu eylemiyle gelir; varsayılan gövde sınırı 1 MB.
+  experimental: { serverActions: { bodySizeLimit: "32mb" } },
 };
 
 export default nextConfig;

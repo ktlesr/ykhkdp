@@ -43,7 +43,12 @@ const SARKAN_ESIK = 0.35;
 const CUMLE_ESIK = 0.5;
 
 export async function belgeDenetle(yol: string): Promise<Denetim> {
-  const ham = (await readFile(yolCoz(yol), "utf8")).replace(/\r\n?/g, "\n");
+  return metinDenetle(await readFile(yolCoz(yol), "utf8"));
+}
+
+/** Dosyadan bağımsız ölçer: yükleme ekranı dönüştürdüğü metni bununla sınar. */
+export function metinDenetle(hamGirdi: string): Denetim {
+  const ham = hamGirdi.replace(/\r\n?/g, "\n");
   const satirlar = ham.split("\n");
   /**
    * Yalnızca DÜZ YAZI satırları ölçülür. Tablo satırı (`| a | b |`), Markdown
@@ -111,6 +116,11 @@ export async function belgeDenetle(yol: string): Promise<Denetim> {
     );
   }
   if (!parcalar.length) uyarilar.push("Ayrıştırılabilir metin bulunamadı.");
+  // Bozuk kodlama: PDF yazı tipi Türkçe harfleri yanlış eşlemiş ("edilmiĢtir", "ÖNERĠLER").
+  const bozuk = (ham.match(/[ĢģĠġȘșȚțÝýÞþÐð\u0080-\u009f]/g) ?? []).length;
+  if (bozuk > 50) uyarilar.push(`Metinde ${bozuk} hatalı kodlanmış harf var; Türkçe harfler yanlış çıkarılmış.`);
+  // Buraya kadarki uyarılar engeldir; çıpasızlık yalnızca nottur (atıf "parça n/m" olur).
+  const engel = uyarilar.length;
   if (cipa["yok (sıralı numara)"] === parcalar.length && parcalar.length) {
     // Uyarı, hata değil: çıpasız da yüklenir ama atıf denetlenebilir olmaz.
     uyarilar.push(
@@ -128,7 +138,7 @@ export async function belgeDenetle(yol: string): Promise<Denetim> {
     parca: parcalar.length,
     cipa,
     cumleOrani,
-    gecti: !uyarilar.length,
+    gecti: engel === 0,
     uyarilar,
   };
 }

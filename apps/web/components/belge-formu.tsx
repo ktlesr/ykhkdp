@@ -16,10 +16,8 @@ const TURLER = [
 ] as const;
 
 /**
- * Belge ekleme. Metin dosyası yüklenir veya metin yapıştırılır.
- *
- * ponytail: PDF/docx ayrıştırıcısı yok — bu ekranda .txt/.md kabul ediliyor,
- * PDF için metni yapıştırma yolu açık. Ayrıştırıcı gerekirse tek eylem değişir.
+ * Belge ekleme. Dosya yüklenir (PDF/Word/Excel sunucuda Markdown'a çevrilir,
+ * `lib/belge-cevir.ts`) veya metin yapıştırılır.
  */
 export function BelgeFormu({
   iller,
@@ -164,15 +162,20 @@ export function BelgeFormu({
         </div>
 
         <label className={`${ALAN_ETIKET} mt-4`} htmlFor="dosya">
-          Metin dosyası · .txt veya .md
+          Dosya · PDF, Word (.docx), Excel (.xlsx), .txt veya .md · en çok 30 MB
         </label>
         <input
           id="dosya"
           name="dosya"
           type="file"
-          accept=".txt,.md,text/plain,text/markdown"
+          accept=".pdf,.docx,.xlsx,.txt,.md"
           className="min-h-11 w-full border border-dashed border-hairline bg-paper hover:border-ink-mute px-3 py-2.5 text-[13px]"
         />
+
+        <p className="mt-1.5 text-[12px] leading-[1.45] text-ink-soft">
+          Dosya metne çevrilir ve kalitesi ölçülür; paragrafları bozuk çıkan dosya yüklenmez. Taranmış
+          (görüntü) PDF okunmaz.
+        </p>
 
         <label className={`${ALAN_ETIKET} mt-4`} htmlFor="metin">
           Veya metni yapıştırın · en az 200 karakter
@@ -184,7 +187,7 @@ export function BelgeFormu({
           value={metin}
           onChange={(e) => setMetin(e.target.value)}
           className="w-full resize-y border border-hairline bg-alan px-3 py-2.5 text-[13px] leading-[1.5] text-ink"
-          placeholder="PDF'ten kopyaladığınız metni buraya yapıştırabilirsiniz."
+          placeholder="Dosya yerine metni buraya yapıştırabilirsiniz."
         />
         <div className="num mt-1.5 text-[10px] text-ink-mute">{metin.length} karakter</div>
 

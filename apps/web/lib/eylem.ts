@@ -1,10 +1,11 @@
 "use server";
 
+import { dosyadanMetin } from "./belge-cevir.ts";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import {
-  belgeEkle, belgeSil, cikisYap, donemGetir, girisYap, islem, kayitOl, naceAra, naceDuzelt,
+  belgeEkle, belgeSil, metinDenetle, cikisYap, donemGetir, girisYap, islem, kayitOl, naceAra, naceDuzelt,
   ayarYaz, kimlikAc, kimlikSil, KotaAsildi, misafirAc, oneriOlustur, puanDuzelt, durumDegistir, rolAta,
   kesifAc, kesifDonemleri, KesifZatenAcik, resmiKonulariDegerlendir, oneriGuncelle, oneriSil,
 } from "@ykh/database";
@@ -337,11 +338,25 @@ export async function belgeEylemi(_o: EylemSonucu | null, f: FormData): Promise<
   const dosya = f.get("dosya");
   let metin = String(f.get("metin") ?? "").trim();
 
+  let ceviri = "";
   if (dosya instanceof File && dosya.size > 0) {
-    if (dosya.size > 5_000_000) return { ok: false, mesaj: "Dosya en çok 5 MB olabilir." };
-    // ponytail: metin tabanlı dosya (txt/md). PDF/docx için ayrıştırıcı gerekir;
-    // şimdilik metni panodan yapıştırma yolu açık.
-    metin = (await dosya.text()).trim();
+    if (dosya.size > 30_000_000) return { ok: false, mesaj: "Dosya en çok 30 MB olabilir." };
+    const c = await dosyadanMetin(dosya.name, new Uint8Array(await dosya.arrayBuffer()));
+    if (!c.ok) return { ok: false, mesaj: c.hata };
+    metin = c.metin;
+    ceviri = c.ozet;
+    // Dönüştürülen metin kalite ölçerinden geçmeden yüklenmez: kırpılmış ya da
+    // kolonları karışmış metinde alıntı doğrulaması anlamını yitirir. Excel
+    // tablodur, düz yazı ölçütleri ona uygulanmaz.
+    if (!c.tablo && dosya.name.toLowerCase().match(/\.(pdf|docx)$/)) {
+      const d = metinDenetle(metin);
+      if (!d.gecti) {
+        return {
+          ok: false,
+          mesaj: `Dosyadan çıkarılan metin yüklemeye uygun değil: ${d.uyarilar[0]} Metni kendiniz yapıştırabilirsiniz.`,
+        };
+      }
+    }
   }
 
   if (ad.length < 5) return { ok: false, mesaj: "Belge adı en az 5 karakter olmalı." };
@@ -373,7 +388,7 @@ export async function belgeEylemi(_o: EylemSonucu | null, f: FormData): Promise<
   revalidatePath("/belgeler");
   return {
     ok: true,
-    mesaj: `“${ad}” eklendi (${metin.length} karakter, ${r.parca} parça). Yeni öneriler bu belgeye dayanabilir.`,
+    mesaj: `“${ad}” eklendi (${ceviri ? `${ceviri} · ` : ""}${metin.length} karakter, ${r.parca} parça). Yeni öneriler bu belgeye dayanabilir.`,
   };
 }
 

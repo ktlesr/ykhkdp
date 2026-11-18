@@ -711,7 +711,15 @@ kilidi, künye çekmecesi) bu üründe **yok**.
 - `OPENAI_API_KEY` yoksa çevrimdışı deterministik istemci çalışır: belgelerden
   birebir alıntı çıkarır ama puanları ve NACE eşleşmesini kaba üretir. Doğrulama
   zinciri her iki modda aynıdır.
-- Belge yükleme yalnızca `.txt`/`.md` veya metin yapıştırma. PDF/docx ayrıştırıcı yok.
+- Belge yükleme PDF, Word (.docx), Excel (.xlsx), `.txt`/`.md` ya da metin
+  yapıştırma (`lib/belge-cevir.ts`, en çok 30 MB). PDF ve Word'den çıkan metin
+  kalite ölçerinden geçmeden yüklenmez; taranmış PDF okunmaz (OCR yok). PDF'te
+  tablo algılama kabadır: aynı satırdaki ayrık hücreler tablo satırı olur, çok
+  satırlı hücreler bölünür. Ölçüldü (kütüphane PDF'leri): 60 belgenin 53'ü
+  ölçerden geçti; 900 cümlenin %97,6'sı PDF ham metninde birebir — kalanı
+  komşu tablo hücrelerinin birleşmesi. Kütüphane aktarımındaki PyMuPDF
+  dönüştürücü (%99,75) daha iyidir; toplu aktarım için o kullanılır. Yüklemeden
+  önce önizleme yok.
 - E-posta doğrulama SMTP'ye bağlı değil.
 - Hız sınırı süreç içi (tek web konteyneri varsayımı); birden çok kopyada
   paylaşılan sayaç gerekir. Öneri kotası veritabanında, kopyadan bağımsız.
