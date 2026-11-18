@@ -3,6 +3,7 @@ import { denetle, islem, type Baglam } from "@ykh/database";
 import { dengeliSec, yerelMi, type UygunlukKarari } from "@ykh/evidence-validation";
 import { aiMaliyeti } from "@ykh/observability";
 import { konuKategorileri } from "@ykh/retrieval";
+import { taramaKaynagi } from "./kesif.ts";
 import { modelSec } from "./model-secimi.ts";
 
 /**
@@ -53,10 +54,9 @@ export async function konuUygunluguYap(b: Baglam, girdi: { ilKod: string; baslik
     .map((x) => x.ad)
     .filter((a) => a !== "Merkez");
   const hedef = { ilKod: girdi.ilKod, adlar: [il.ad, ...ilceler] };
-  const { model: taramaModeli } = await modelSec("tarama");
   const surum = PROMPTLAR.kanit_cikarimi.surum;
   const kapsam = (sql: Parameters<Parameters<typeof islem>[1]>[0]) => sql`
-    k.prompt_surum = ${surum} and k.model_snapshot = ${taramaModeli}
+    k.prompt_surum = ${surum} and ${taramaKaynagi(sql, sql`k`, surum)}
     and (p.il_kod = ${girdi.ilKod} or (p.il_kod is null and p.ajans_kod = ${il.ajans_kod}) or (p.il_kod is null and p.ajans_kod is null))`;
 
   const q = baslikSorgusu(girdi.baslik, hedef.adlar);

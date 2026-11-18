@@ -7,7 +7,7 @@ import { cookies } from "next/headers";
 import {
   belgeEkle, belgeSil, KATEGORILER, type Kategori, metinDenetle, cikisYap, donemGetir, girisYap, islem, kayitOl, naceAra, naceDuzelt,
   ayarYaz, kimlikAc, kimlikSil, KotaAsildi, misafirAc, oneriOlustur, puanDuzelt, durumDegistir, rolAta,
-  kesifAc, kesifDonemleri, kesifDurdur, KesifZatenAcik, resmiKonulariDegerlendir, oneriGuncelle, oneriSil, kesifAdaylariniSil,
+  kesifAc, kesifDonemleri, kesifGerekenDonemler, kesifDurdur, KesifZatenAcik, resmiKonulariDegerlendir, oneriGuncelle, oneriSil, kesifAdaylariniSil,
 } from "@ykh/database";
 import { gecisIzinli, onaylayabilir, ROL_ETIKET, ROLLER, type OneriDurumu, type Rol } from "@ykh/domain";
 import { log } from "@ykh/observability";
@@ -502,9 +502,16 @@ export async function kesifEylemi(_o: EylemSonucu | null, f: FormData): Promise<
     }
     const donemler = await kesifDonemleri(b);
     if (!donemler.length) return { ok: false, mesaj: "Hesabınıza bölge atanmamış; keşif açılabilecek il yok." };
-    const acilan = await kesifAc(b, donemler);
+    // Adayı hazır olan il atlanır: durdurulan toplu koşu kaldığı yerden sürer.
+    const eksik = await kesifGerekenDonemler(b, donemler);
+    const hazir = donemler.length - eksik.length;
+    if (!eksik.length) return { ok: true, mesaj: `${hazir} ilin tamamında yeterli keşif adayı var; yeniden koşturmak için önce onay kuyruğundaki adayları silin.` };
+    const acilan = await kesifAc(b, eksik);
     revalidatePath("/iller");
-    return { ok: true, mesaj: `${acilan} il için aday keşfi sıraya alındı${acilan < donemler.length ? `; ${donemler.length - acilan} ilde zaten sürüyor` : ""}.` };
+    return {
+      ok: true,
+      mesaj: `${acilan} il için aday keşfi sıraya alındı${hazir ? `; ${hazir} ilin adayları hazır olduğu için atlandı` : ""}${acilan < eksik.length ? `; ${eksik.length - acilan} ilde zaten sürüyor` : ""}.`,
+    };
   } catch (e) {
     if (e instanceof KesifZatenAcik) return { ok: false, mesaj: "Bu ilde keşif zaten sürüyor; bitmesini bekleyin." };
     if (e instanceof Error && /row-level security/.test(e.message)) {

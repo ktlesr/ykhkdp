@@ -226,7 +226,7 @@ export default async function Ayarlar() {
             <ModelSecici
               gorev="tarama"
               baslik="Tarama · kanıt çıkarımı"
-              aciklama="Belgelerden pasaj seçer; seçilen her pasaj kaynakta birebir doğrulanır. Model değişince tarama yeni modelle baştan yapılır, önceki taramalar künyeleriyle saklanır."
+              aciklama="Belgelerden pasaj seçer; seçilen her pasaj kaynakta birebir doğrulanır. Bir parça hangi modelle taranmış olursa olsun bir kez taranır: model değişince yalnızca henüz taranmamış parçalar yeni modelle taranır."
               secili={taramaAyari ?? "ayni"}
               secenekler={taramaSecenekleri}
             />

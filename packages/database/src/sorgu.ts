@@ -1289,6 +1289,28 @@ export async function kesifAc(b: Baglam, donemIdleri: readonly number[]): Promis
 }
 
 /**
+ * Toplu başlatmada adayı HAZIR olan il atlanır: kuyrukta ya da listede en az
+ * slot sayısı kadar keşif adayı olan dönem yeniden koşmaz. Durdurulan toplu
+ * koşu yeniden başlatılınca yalnızca kalan iller çalışır; kuyruk topluca
+ * silinirse bütün iller yeniden koşar. Tek il için elle başlatma bu süzgece
+ * girmez — orada istek açıktır.
+ */
+export async function kesifGerekenDonemler(b: Baglam, donemIdleri: readonly number[]): Promise<number[]> {
+  if (!donemIdleri.length) return [];
+  const r = await islem(b, (sql) =>
+    sql<{ id: string }[]>`
+      select d.id from donem d
+      join agirlik_seti s on s.surum = d.agirlik_seti_surum
+      where d.id in ${sql(donemIdleri)}
+        and (select count(*) from oneri o
+             where o.donem_id = d.id and o.kesif_id is not null and o.koken = 'yeni'
+               and o.durum in ('degerlendiriliyor', 'onay_bekliyor', 'listede')) < s.slot_sayisi
+    `,
+  );
+  return r.map((x) => Number(x.id));
+}
+
+/**
  * Aday çıkmayan illeri kendiliğinden yeniden sıraya alır. İşleyici keşif
  * kuyruğu BOŞALINCA çağırır (toplu koşu bitti): son keşfi aday vermeden biten
  * (reddedilen çıktı, kanıt kuralına takılan adaylar, hata) dönem için yeni

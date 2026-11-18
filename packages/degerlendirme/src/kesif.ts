@@ -51,6 +51,22 @@ const TEKRAR_BENZERLIK = 0.5;
 /** Yeni adayın kanıtlarının en az yarısı önceki bir adayınkiyle aynıysa tekrar. */
 const TEKRAR_KANIT = 0.5;
 const ONCEKI_BASLIK_SINIRI = 40;
+/**
+ * TARAMA ÖNBELLEĞİ MODELDEN BAĞIMSIZDIR. Bir parça hangi modelle taranmış
+ * olursa olsun taranmış sayılır; tarama ya da yargı modeli değişince kütüphane
+ * baştan taranmaz (canlıda model değişimleri aynı parçaları yeniden taratıp
+ * boşa harcama yaptı). Güvenli, çünkü kanıt modelin beyanı değil kaynaktan
+ * birebir kesilmiş pasajdır. Bir parça birden çok modelle taranmışsa kanıtları
+ * TEK taramadan okunur (en çok kanıt çıkaran; eşitlikte model adı) — iki
+ * modelin aynı pasajı deftere iki kez girmesin. Künye her kanıtta durur.
+ */
+type Sql = Parameters<Parameters<typeof islem>[1]>[0];
+export const taramaKaynagi = (sql: Sql, k: ReturnType<Sql>, surum: string) => sql`
+  ${k}.model_snapshot = (
+    select t.model_snapshot from kanit_tarama t
+    where t.belge_id = ${k}.belge_id and t.prompt_surum = ${surum} and t.durum = 'tamam'
+    order by t.kanit_sayisi desc, t.model_snapshot limit 1)`;
+
 /** Aday üretim turu üst sınırı: ilk tur + en çok iki tamamlama turu. */
 const TUR_SINIRI = 3;
 /** Adayın girdiği ana çerçeve unsuru; modelin sınıflamasıdır, kayıtta bu etiketle ayrılır. */
@@ -142,8 +158,9 @@ async function kesifKos(kesifId: number): Promise<KesifSonucu> {
     (
       await islem(SERVIS, (sql) =>
         sql<{ belge_id: string }[]>`
-          select belge_id from kanit_tarama
-          where prompt_surum = ${taramaSurum} and model_snapshot = ${taramaModeli} and durum = 'tamam'
+          -- HANGİ modelle olursa olsun taranmış parça yeniden taranmaz (bkz. TARAMA_KAYNAGI).
+          select distinct belge_id from kanit_tarama
+          where prompt_surum = ${taramaSurum} and durum = 'tamam'
             and belge_id in ${sql(parcalar.map((p) => p.id))}
         `,
       )
@@ -176,7 +193,7 @@ async function kesifKos(kesifId: number): Promise<KesifSonucu> {
     islem(SERVIS, (sql) =>
       sql<{ id: string; belge_id: string; tur: string; konu: string; alinti: string }[]>`
         select id, belge_id, tur, konu, alinti from kanit
-        where prompt_surum = ${taramaSurum} and model_snapshot = ${taramaModeli}
+        where prompt_surum = ${taramaSurum} and ${taramaKaynagi(sql, sql`kanit`, taramaSurum)}
           and belge_id in ${sql(parcalar.map((p) => p.id))}
         order by id
       `,
@@ -420,7 +437,7 @@ ${UNSUR_ETIKETI} ${aday.unsur} — ${TEMEL_UNSURLAR[aday.unsur]}.` : "")},
 }
 
 /** Aynı anda yapılan tarama çağrısı. Parçalar bağımsız; sınır API hız limiti. */
-const ESZAMANLI = Math.max(1, Number(process.env.YKH_TARAMA_ESZAMANLI) || 6);
+const ESZAMANLI = Math.max(1, Number(process.env.YKH_TARAMA_ESZAMANLI) || 10);
 
 /**
  * Parçaları tarar ve kanıt defterine yazar. Keşif ve ön tarama AYNI yolu
@@ -559,7 +576,9 @@ export async function onTarama(enCok = ESZAMANLI * TARAMA_GRUBU): Promise<number
         -- (maliyet döngüsü olmasın); keşif bir kez daha dener.
         where not exists (
           select 1 from kanit_tarama t
-          where t.belge_id = b.id and t.prompt_surum = ${PROMPTLAR.kanit_cikarimi.surum} and t.model_snapshot = ${model}
+          where t.belge_id = b.id and t.prompt_surum = ${PROMPTLAR.kanit_cikarimi.surum}
+            -- başka modelle taranmış parça da taranmıştır; bu modelin reddettiği yeniden denenmez
+            and (t.durum = 'tamam' or t.model_snapshot = ${model})
         )
         order by b.id
         limit ${enCok}

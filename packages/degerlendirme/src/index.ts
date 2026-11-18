@@ -6,7 +6,7 @@ import { belgePaketi, naceAdaylari } from "@ykh/retrieval";
 export { MODEL_AYARI, modelOnbelleginiTemizle, modelSec, TARAMA_MODEL_AYARI } from "./model-secimi.ts";
 import { modelSec } from "./model-secimi.ts";
 export { baslikSorgusu, konuUygunluguYap, type UygunlukSonucu } from "./uygunluk.ts";
-export { SENTEZ_ETIKETI } from "./kesif.ts";
+export { SENTEZ_ETIKETI, taramaKaynagi } from "./kesif.ts";
 export { icerikDegil } from "./icerik-degil.ts";
 export { birKesifAl, kesifHatasi, kesifYap, onTarama, pencerele, type KesifSonucu } from "./kesif.ts";
 

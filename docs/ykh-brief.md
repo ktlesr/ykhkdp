@@ -274,8 +274,17 @@ etmediği kısıtlar (minLength, maxItems…) gönderilen şemadan çıkarılır
 yanıtta aynısını uygular. Opus ve Sonnet'te ret için sunucu tarafı yedek model
 açıktır; yedek devreye girerse künyeye YANITI VEREN model yazılır. Anahtarı
 tanımlı olmayan sağlayıcı seçilemez; seçili sağlayıcının anahtarı çalışma
-anında yoksa çağrı açık hatayla durur, başka modele sessizce düşülmez. Kanıt
-önbelleği modele bağlıdır: model değişince tarama yeni modelle baştan yapılır.
+anında yoksa çağrı açık hatayla durur, başka modele sessizce düşülmez.
+
+**Tarama önbelleği modelden bağımsızdır** (2026-11-18). Bir parça hangi modelle
+taranmış olursa olsun taranmış sayılır; tarama ya da yargı modeli değişince
+kütüphane baştan taranmaz, yalnızca henüz taranmamış parçalar yeni modelle
+taranır. Önceki kural (önbellek modele bağlı) canlıda model değişimlerinde aynı
+parçaları yeniden tarattı ve boşa harcama yaptı. Güvenli, çünkü kanıt modelin
+beyanı değil kaynaktan birebir kesilmiş pasajdır. Bir parça birden çok modelle
+taranmışsa kanıtları tek taramadan okunur (en çok kanıt çıkaran) — aynı pasaj
+deftere iki kez girmesin; künye her kanıtta durur. Yalnızca tarama TALİMATI
+değişirse (`kanit-cikarimi` sürümü) kütüphane yeniden taranır.
 
 AI **puan üretir** ama karar vermez: her puan ajans onayından geçer.
 
@@ -465,6 +474,13 @@ Uydurmasızlık kuralları — hepsi mekanik, modelin beyanı değil:
 - **Biçim kusuru aday başınadır.** Başlığı 8, gerekçesi 40 karakterden kısa
   aday yalnızca kendisi düşer. Sınır önce şemadaydı; canlıda tek bir kısa
   başlık bir ilin bütün adaylarını reddettirdi.
+- **Toplu başlatma adayı hazır ili atlar** (2026-11-18). "Tüm illerde başlat"
+  (ve bölge için toplu başlatma) kuyrukta ya da listede en az slot sayısı
+  kadar keşif adayı olan dönemi yeniden koşturmaz: durdurulan toplu koşu
+  yeniden başlatılınca yalnızca kalan iller çalışır. Bütün illeri sıfırdan
+  koşturmak için önce onay kuyruğundaki keşif adayları topluca silinir. Tek il
+  için elle başlatma bu süzgece girmez. Tarama eşzamanlılığı varsayılanı 6'dan
+  10'a çıkarıldı (`YKH_TARAMA_ESZAMANLI`).
 - **Tekrarlanan keşif kuyruğu şişirmez.** Model dönemde zaten önerilmiş
   başlıkları görür ve eşdeğerini önermez; kayıtta mekanik iki katman daha:
   dönemdeki herhangi bir öneriyle (reddedilen dahil) başlık benzerliği ≥ 0.50
@@ -486,7 +502,7 @@ yok. Gerçek sıralama onayla oluşur.
 - Değerlendirme paketi adayı doğuran parçaları **zorunlu** taşır
   (`belgePaketi({ zorunlu })`).
 
-Hız: tarama 6 eşzamanlı çağrıyla (`YKH_TARAMA_ESZAMANLI`) ve düşük akıl
+Hız: tarama 10 eşzamanlı çağrıyla (`YKH_TARAMA_ESZAMANLI`; ölçüm 6 ile yapıldı) ve düşük akıl
 yürütme düzeyiyle (`YKH_TARAMA_EFOR=low`) yürür — ölçüldü, çağrı başına
 19–35 sn → 5,6–8,6 sn, kanıt sayısı düşmeden. Doğruluğu modelin muhakemesi
 değil mekanik doğrulayıcı güvenceler; puanlama ve aday üretimi `medium`da

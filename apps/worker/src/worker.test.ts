@@ -373,3 +373,23 @@ test("içerik olmayan parça (kaynakça, tablo listesi) taramaya girmez; plan me
   // İstatistik tablosu içeriktir.
   assert.equal(icerikDegil("| İlçe | Tesis |\n| --- | --- |\n| Banaz | 14 |\n\nTablo 3: İlçelere göre tesis sayısı (2022)"), null);
 });
+
+test("tarama önbelleği modelden bağımsız: başka modelle taranmış parça yeniden taranmaz, kanıtı tek taramadan okunur", async () => {
+  const { taramaKaynagi } = await import("@ykh/degerlendirme");
+  const surum = "onbellek-sinama-v1";
+  const servis: Baglam = { gonderenRef: null, rol: "yonetici" };
+  const [b] = await islem(servis, (sql) => sql<{ id: string }[]>`
+    insert into belge (ad, tur, metin) values ('Önbellek sınaması', 'diger', 'Uşak ilinde tekstil geri dönüşümü yoğunlaşmıştır.') returning id`);
+  await islem(servis, async (sql) => {
+    for (const [model, n] of [["model-a-2026", 2], ["model-b-2026", 1]] as const) {
+      await sql`insert into kanit_tarama (belge_id, prompt_surum, model_snapshot, kanit_sayisi) values (${b.id}, ${surum}, ${model}, ${n})`;
+      for (let i = 0; i < n; i++) {
+        await sql`insert into kanit (belge_id, prompt_surum, model_snapshot, tur, konu, alinti) values (${b.id}, ${surum}, ${model}, 'yerel_olgu', 'tekstil', ${`pasaj ${model} ${i}`})`;
+      }
+    }
+  });
+  const okunan = await islem(servis, (sql) => sql<{ model_snapshot: string }[]>`
+    select model_snapshot from kanit where belge_id = ${b.id} and prompt_surum = ${surum} and ${taramaKaynagi(sql, sql`kanit`, surum)}`);
+  assert.deepEqual(okunan.map((r) => r.model_snapshot), ["model-a-2026", "model-a-2026"], "tek taramadan: en çok kanıt çıkaran");
+  await islem(servis, (sql) => sql`delete from belge where id = ${b.id}`);
+});
