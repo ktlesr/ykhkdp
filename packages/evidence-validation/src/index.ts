@@ -837,6 +837,31 @@ function urunGruplariniDogrula(
  *  - çözülemeyen numaralar çözülenleri aşamaz,
  *  - gerekçenin her cümlesi atıf yapılan kanıtlarda karşılık bulur.
  */
+/**
+ * Modelin gerekçeye yazdığı atıf notu — "(kanıt 22)", "(kanıt 9 ve 31)", "[4, 7]".
+ * Numara pakete yerel bir ADRESTİR, sayısal iddia değil; kayda da girmez.
+ * Canlıda ölçüldü: Sonnet her cümleyi böyle bitiriyor, "kaynaksız sayı"
+ * kuralı yedi adayın yedisini düşürüyordu.
+ */
+const ATIF_NOTU = /\s*(?:\([^()]*kan[ıi]t(?:lar)?(?![\p{L}])[^()]*\)|\[\s*\d+(?:\s*[,;]\s*\d+)*\s*\])/giu;
+/** Parantezsiz atıf ("kanıt 64'e göre", "64 numaralı kanıt"): yalnızca sayı denetiminde yok sayılır. */
+const CIPLAK_ATIF = /kan[ıi]t(?:lar)?(?:\s*no)?[\s:.]*\d+(?:\s*(?:,|ve|-)\s*\d+)*|\d+\s*(?:numaralı|no['’]?lu|nolu)\s*kan[ıi]t/giu;
+
+/**
+ * Gruplar arasında dengeli seçim: her grup sırayla bir kayıt verir, grubun
+ * payı kendi içinde eşit aralıkla dağıtılır. Kanıt defteri bununla kurulur —
+ * ilk N kaydı almak, defteri ilk taranan bir iki belgeye bırakıyordu.
+ */
+export function dengeliSec<T>(liste: readonly T[], anahtar: (x: T) => string | number, sinir: number): T[] {
+  if (liste.length <= sinir) return [...liste];
+  const gruplar = [...Map.groupBy(liste, anahtar).values()];
+  const pay = gruplar.map(() => 0);
+  for (let kalan = sinir; kalan > 0; ) {
+    for (const [i, g] of gruplar.entries()) if (kalan > 0 && pay[i] < g.length) { pay[i]++; kalan--; }
+  }
+  return gruplar.flatMap((g, i) => Array.from({ length: pay[i] }, (_, j) => g[Math.floor((j * g.length) / pay[i])]));
+}
+
 export function adaylariDogrula(
   adaylar: readonly HamAday[],
   defter: readonly DefterKaydi[],
@@ -845,8 +870,9 @@ export function adaylariDogrula(
   const dusenler: Hata[] = [];
   const numara = new Map(defter.map((d) => [d.no, d]));
 
-  for (const a of adaylar) {
-    const ad = `“${a.baslik.slice(0, 60)}”`;
+  for (const ham of adaylar) {
+    const a = { ...ham, gerekce: ham.gerekce.replace(ATIF_NOTU, "").trim() };
+    const ad =`“${a.baslik.slice(0, 60)}”`;
     const tekil = [...new Set(a.kanit_no)];
     // Aynı metin iki kanıt sayılmaz (çakışan pencere, eşzamanlı tarama).
     const metinler = new Set<string>();
@@ -867,7 +893,7 @@ export function adaylariDogrula(
       continue;
     }
     const kaynak = normalize(cozulen.map((d) => d.metin).join(" "));
-    const kaynaksiz = sayisalTokenlar(`${a.baslik} ${a.gerekce}`).find((t) => !sayiKaynakta(t, kaynak));
+    const kaynaksiz = sayisalTokenlar(`${a.baslik} ${a.gerekce.replace(CIPLAK_ATIF, "")}`).find((t) => !sayiKaynakta(t, kaynak));
     if (kaynaksiz) {
       dusenler.push({ kod: "kaynaksiz_sayi", mesaj: `${ad} kaynaksız sayı (“${kaynaksiz}”) taşıyor; düşürüldü.` });
       continue;

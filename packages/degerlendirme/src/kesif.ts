@@ -2,7 +2,7 @@ import { adayKesfet, kanitCikar, modelSnapshot, PROMPTLAR, type Maliyet } from "
 import { icerikDegil } from "./icerik-degil.ts";
 import { modelSec } from "./model-secimi.ts";
 import { denetle, islem, type Baglam } from "@ykh/database";
-import { MODEL_METIN_SINIRI, paketKur, yerelMi } from "@ykh/evidence-validation";
+import { dengeliSec, MODEL_METIN_SINIRI, paketKur, yerelMi } from "@ykh/evidence-validation";
 import { ayniKonuMu } from "@ykh/scoring";
 import { aiMaliyeti, log } from "@ykh/observability";
 
@@ -38,7 +38,7 @@ export function pencerele(metin: string): string[] {
 /** Bir tarama çağrısındaki en çok pencere; pencere başına metin `MODEL_METIN_SINIRI`. */
 const TARAMA_GRUBU = 3;
 /** Aday aşamasına giren defter: yerel kanıtların tamamı (üst sınırla) + konuyla örtüşen ulusal kanıt. */
-const YEREL_SINIR = 80;
+const YEREL_SINIR = 120;
 /**
  * Tekrar eşikleri — gerçek aday çiftleriyle ölçüldü (2026-11-17):
  *   aynı konu, farklı yazım      0.48 – 0.67
@@ -167,7 +167,8 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
       yerel: yerelMi({ metin: p.metin, ilKod: p.il_kod }, x.alinti, hedef),
     };
   });
-  const yerel = defterHam.filter((d) => d.yerel).slice(0, YEREL_SINIR);
+  // Belgeler arasında dengeli: ilk N kanıt, defteri ilk taranan bir iki belgeye bırakıyordu.
+  const yerel = dengeliSec(defterHam.filter((d) => d.yerel), (d) => parcaHaritasi.get(d.belgeId)!.ad, YEREL_SINIR);
   await durumYaz(k.id, { asama: "aday", kanit_sayisi: defterHam.length, yerel_kanit: yerel.length });
   if (!yerel.length) {
     return bitir(true, `${parcalar.length - basarisiz} parça tarandı, ${defterHam.length} kanıt bulundu ama hiçbiri bu ile özgü değil; "neden burada?" sorusuna dayanak olmadan aday üretilmez.${okunamayan}`);
@@ -326,10 +327,12 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
   });
   await durumYaz(k.id, { aday_sayisi: yazilan });
 
+  // Düşen ürün grubu aday değildir; sayıya girmez (ayrıntısı denetimde).
+  const dusenAday = a.dusenler.filter((m) => !m.startsWith("Ürün grubu")).length;
   const ozet =
     `${parcalar.length - basarisiz} parça tarandı, ${defterHam.length} kanıt (${yerel.length} yerel). ` +
     (yazilan ? `${yazilan} aday değerlendirmeye alındı.` : "Kanıtlara dayanan aday çıkmadı.") +
-    (a.dusenler.length ? ` ${a.dusenler.length} aday kanıt kuralına takılıp düştü.` : "") +
+    (dusenAday ? ` ${dusenAday} aday kanıt kuralına takılıp düştü.` : "") +
     (desteklenen.length ? ` ${desteklenen.length} yürürlükteki resmî konu belgelerle desteklendi.` : "") +
     (atlananlar.length + tekrarlar.length
       ? ` ${atlananlar.length + tekrarlar.length} aday bu dönemde zaten önerilmiş bir konuyla aynı olduğu için alınmadı.`

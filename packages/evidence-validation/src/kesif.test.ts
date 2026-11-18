@@ -156,6 +156,33 @@ test("sayı kaynakta SAYI olarak aranır: 120 varken 20 geçmez", async () => {
   assert.equal(s.adaylar.length, 0);
 });
 
+test("gerekçedeki atıf notu sayısal iddia değildir ve kayda girmez", () => {
+  const defter = [
+    { no: 1, kanitId: 11, yerel: true, metin: "İlde mermer sektörü yoğunlaşmıştır." },
+    { no: 22, kanitId: 12, yerel: false, metin: "Mermer atıkları mikronize öğütme faaliyetlerine odaklanılacaktır." },
+  ];
+  const baslik = "Mermer atıklarından mikronize ürün üretimi";
+  const s = adaylariDogrula(
+    [{ baslik, gerekce: "İlde mermer sektörü yoğunlaşmıştır (kanıt 1). Mermer atıkları mikronize öğütme faaliyetlerine odaklanılacaktır (kanıt 22 ve 1) [22].", kanit_no: [1, 22] }],
+    defter,
+  );
+  assert.equal(s.adaylar.length, 1, JSON.stringify(s.dusenler));
+  assert.equal(s.adaylar[0].gerekce, "İlde mermer sektörü yoğunlaşmıştır. Mermer atıkları mikronize öğütme faaliyetlerine odaklanılacaktır.");
+  // Parantezsiz ve karışık biçimler de atıftır.
+  assert.equal(adaylariDogrula([{ baslik, gerekce: "Kanıt 1'e göre ilde mermer sektörü yoğunlaşmıştır (bkz. kanıt 1; kanıt 22). 22 numaralı kanıt mermer atıkları mikronize öğütme faaliyetlerine odaklanır.", kanit_no: [1, 22] }], defter).adaylar.length, 1);
+  // Gerçek sayı hâlâ kaynakta aranır.
+  assert.equal(adaylariDogrula([{ baslik, gerekce: "İlde mermer sektörü yoğunlaşmıştır, 22 ocak vardır (kanıt 1).", kanit_no: [1, 22] }], defter).adaylar.length, 0);
+});
+
+test("dengeliSec: her belge pay alır, pay belge içinde yayılır", async () => {
+  const { dengeliSec } = await import("./index.ts");
+  const liste = [...Array.from({ length: 100 }, (_, i) => ({ b: "a", i })), ...Array.from({ length: 4 }, (_, i) => ({ b: "b", i })), { b: "c", i: 0 }];
+  const s = dengeliSec(liste, (x) => x.b, 10);
+  assert.deepEqual(["a", "b", "c"].map((b) => s.filter((x) => x.b === b).length), [5, 4, 1]);
+  assert.deepEqual(s.filter((x) => x.b === "a").map((x) => x.i), [0, 20, 40, 60, 80]);
+  assert.equal(dengeliSec(liste, (x) => x.b, 500).length, liste.length);
+});
+
 test("cümle sonuyla biten pasaj sonraki cümlenin il adını almaz", () => {
   const metin = "Uşak’ta tekstil geri dönüşümü gelişmiştir. Kütahya’da seramik üretimi yaygındır.";
   const kutahya = { ilKod: "kutahya", adlar: ["Kütahya"] };

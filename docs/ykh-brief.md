@@ -381,6 +381,17 @@ Uydurmasızlık kuralları — hepsi mekanik, modelin beyanı değil:
   tablo ayracı (`|`) eşleşmede boşluk sayılır, taramada çağrı ancak HİÇBİR
   pasaj doğrulanamazsa reddedilir (her pasaj zaten tek tek doğrulanıyor;
   puan yok, "yarısı düşerse hepsi" kuralı burada doğru pasajları da atıyordu).
+- **Atıf notu sayı değildir; defter belgeler arasında dengelidir**
+  (2026-11-18). Canlıda bir il 3.335 kanıtla 0 aday verdi; yerelde üretildi:
+  Sonnet her cümleyi "(kanıt 22)" diye bitiriyor, "kaynaksız sayı" kuralı
+  numarayı iddia sanıp yedi adayın yedisini düşürüyordu. Atıf notu gerekçeden
+  silinir (kayda da girmez); gerçek sayı yine kaynakta aranır. Ayrıca defter
+  yerel kanıtların İLK 80'ini alıyordu — il raporları yüklenince binlerce
+  yerel kanıtın yalnızca ilk taranan bir iki belgesi görülüyordu. Şimdi 120
+  kanıt belgeler arasında sırayla, belge içinde eşit aralıkla seçilir
+  (`dengeliSec`). Ölçüldü (aynı il, Sonnet, 3 koşu): 0 → 5, 7, 7 aday; adaylar
+  altı ayrı il raporuna dayanıyor. Sınır: 120'nin dışındaki kanıt o koşuda
+  görülmez; özet mesajındaki "düşen aday" sayısı artık ürün gruplarını saymaz.
 - **Tekrarlanan keşif kuyruğu şişirmez.** Model dönemde zaten önerilmiş
   başlıkları görür ve eşdeğerini önermez; kayıtta mekanik iki katman daha:
   dönemdeki herhangi bir öneriyle (reddedilen dahil) başlık benzerliği ≥ 0.50
