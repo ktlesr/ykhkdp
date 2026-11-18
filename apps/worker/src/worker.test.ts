@@ -257,6 +257,31 @@ test("konu uygunluğu: yalnızca başlıkla; kanıt yoksa model çağrılmadan s
   }
 });
 
+test("keşif durdurulur: sıradaki alınmaz, süren koşu kendini keser ve yeniden sıraya girmez", async () => {
+  const { birKesifAl, kesifYap } = await import("@ykh/degerlendirme");
+  const { kesifDurdur, topluKesifDurumu } = await import("@ykh/database");
+  const ajans: Baglam = { gonderenRef: await ref("ajans@ykh.local"), rol: "ajans" };
+  const yatirimci: Baglam = { gonderenRef: await ref("yatirimci@ykh.local"), rol: "yatirimci" };
+  const [d1, d2] = [await donem("usak"), await donem("kutahya")];
+  await islem(ajans, (sql) => sql`insert into kesif (donem_id, tetikleyen_ref) values (${d1}, ${ajans.gonderenRef}), (${d2}, ${ajans.gonderenRef})`);
+  const suren = await birKesifAl();
+  assert.ok(suren);
+  const durum = await topluKesifDurumu(ajans);
+  assert.deepEqual([durum?.bekleyen, durum?.calisan.length], [1, 1]);
+  assert.equal(await topluKesifDurumu(yatirimci), null, "yatırımcı keşif durumunu göremez");
+  assert.equal(await kesifDurdur(yatirimci), 0, "yatırımcı durduramaz");
+  assert.equal(await kesifDurdur(ajans), 2);
+  assert.equal(await topluKesifDurumu(ajans), null);
+  assert.equal(await birKesifAl(), null, "durdurulan sıradaki koşu alınmaz");
+  const s = await kesifYap(suren);
+  assert.deepEqual([s.ok, s.adaySayisi], [false, 0]);
+  const [k] = await islem(SERVIS, (sql) => sql<{ durum: string; mesaj: string }[]>`select durum, mesaj from kesif where id = ${suren}`);
+  assert.equal(k.durum, "hata");
+  assert.match(k.mesaj, /durduruldu/);
+  const [{ n }] = await islem(SERVIS, (sql) => sql<{ n: string }[]>`select count(*) as n from oneri where kesif_id = ${suren}`);
+  assert.equal(Number(n), 0, "durdurulan koşu aday yazmaz");
+});
+
 test("yerel belgesi olmayan ilde keşif aday üretmez, nedenini yazar", async () => {
   const { birKesifAl, kesifYap } = await import("@ykh/degerlendirme");
   const [il] = await islem(SERVIS, (sql) => sql<{ kod: string }[]>`select kod from il where ajans_kod <> 'TR33' order by kod limit 1`);

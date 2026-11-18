@@ -7,7 +7,7 @@ import { cookies } from "next/headers";
 import {
   belgeEkle, belgeSil, metinDenetle, cikisYap, donemGetir, girisYap, islem, kayitOl, naceAra, naceDuzelt,
   ayarYaz, kimlikAc, kimlikSil, KotaAsildi, misafirAc, oneriOlustur, puanDuzelt, durumDegistir, rolAta,
-  kesifAc, kesifDonemleri, KesifZatenAcik, resmiKonulariDegerlendir, oneriGuncelle, oneriSil,
+  kesifAc, kesifDonemleri, kesifDurdur, KesifZatenAcik, resmiKonulariDegerlendir, oneriGuncelle, oneriSil,
 } from "@ykh/database";
 import { gecisIzinli, onaylayabilir, ROL_ETIKET, ROLLER, type OneriDurumu, type Rol } from "@ykh/domain";
 import { log } from "@ykh/observability";
@@ -510,6 +510,18 @@ export async function kesifEylemi(_o: EylemSonucu | null, f: FormData): Promise<
   }
 }
 
+/** Sıradaki ve süren keşifleri durdurur: `il` verilirse o il, yoksa kapsamdaki hepsi. */
+export async function kesifDurdurEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
+  const k = await kullanici();
+  if (!k || !onaylayabilir(k.rol)) return { ok: false, mesaj: "Keşfi yalnızca ajans ve yönetici durdurabilir." };
+  const il = String(f.get("il") ?? "");
+  const n = await kesifDurdur(await baglam(), il || undefined);
+  revalidatePath(il ? `/il/${il}` : "/iller");
+  return n
+    ? { ok: true, mesaj: `${n} keşif durduruldu. Taranmış parçalar saklandı; yeniden başlatınca kalanından devam eder.` }
+    : { ok: false, mesaj: "Durdurulacak keşif yok." };
+}
+
 /** Resmî listedeki (puanlanmamış) konuları değerlendirme kuyruğuna alır. */
 export async function resmiDegerlendirEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
   const k = await kullanici();
@@ -596,6 +608,10 @@ export async function uygunlukEylemi(ilKod: string, baslik: string): Promise<Uyg
   const temiz = String(baslik ?? "").trim().slice(0, 140);
   if (temiz.length < 8) return { ...bos, karar: "hata", neden: "Başlık en az 8 karakter olmalı." };
   const b = await baglam();
+  // Her analiz ücretli bir model çağrısı: hesap başına saatlik sınır.
+  if (sinirAsildi(`uygunluk:${b.gonderenRef}`, ayar("YKH_SINIR_UYGUNLUK", 40), 60 * DK)) {
+    return { ...bos, karar: "hata", neden: "Çok fazla analiz yapıldı; biraz sonra yeniden deneyin." };
+  }
   const [{ ok }] = await islem(b, (sql) => sql<{ ok: boolean }[]>`select app_il_kapsaminda(${String(ilKod)}) as ok`);
   if (!ok) return { ...bos, karar: "hata", neden: "Bu il ajansınızın bölgesinde değil." };
   try {

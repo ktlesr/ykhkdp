@@ -69,7 +69,20 @@ const durumYaz = (id: number, alanlar: Record<string, string | number | null>) =
 const maliyetYaz = (m: Maliyet | undefined, promptSurum: string, ok: boolean) =>
   aiMaliyeti({ model: m?.model ?? modelSnapshot(), girdiToken: m?.girdiToken ?? 0, ciktiToken: m?.ciktiToken ?? 0, promptSurum, sonuc: ok ? "ok" : "red" });
 
+/** Koşu kullanıcı tarafından durduruldu (`kesifDurdur`): durum artık `calisiyor` değil. */
+class KesifDurduruldu extends Error {}
+
 export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
+  try {
+    return await kesifKos(kesifId);
+  } catch (e) {
+    // Durdurulan koşu hata değildir: durum ve mesaj `kesifDurdur`da yazıldı, yeniden sıraya girmez.
+    if (e instanceof KesifDurduruldu) return { ok: false, mesaj: "Keşif durduruldu.", adaySayisi: 0 };
+    throw e;
+  }
+}
+
+async function kesifKos(kesifId: number): Promise<KesifSonucu> {
   const [k] = await islem(SERVIS, (sql) =>
     sql<Kesif[]>`
       select k.id, k.donem_id, d.il_kod, i.ad as il, i.ajans_kod, k.tetikleyen_ref,
@@ -84,8 +97,15 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
   );
   if (!k) return { ok: false, mesaj: `Keşif bulunamadı: ${kesifId}`, adaySayisi: 0 };
 
+  /** İlerleme yazar; koşu durdurulduysa (durum değişmiş) keser. */
+  const surdur = async (alanlar: Record<string, string | number | null>) => {
+    const r = await islem(SERVIS, (sql) => sql`update kesif set ${sql(alanlar)}, guncellendi = now() where id = ${k.id} and durum = 'calisiyor' returning id`);
+    if (!r.length) throw new KesifDurduruldu();
+  };
+
   const bitir = async (ok: boolean, mesaj: string, adaySayisi = 0) => {
-    await durumYaz(k.id, { durum: ok ? "tamam" : "hata", asama: null, mesaj });
+    // Durdurulmuş koşu "tamam" diye üzerine yazılmaz.
+    await surdur({ durum: ok ? "tamam" : "hata", asama: null, mesaj });
     await islem(SERVIS, (sql) => denetle(sql, SERVIS, ok ? "kesif_tamamlandi" : "kesif_durdu", "kesif", k.id, { il: k.il_kod, mesaj, adaySayisi }));
     log.info("kesif_bitti", { kesifId: k.id, il: k.il_kod, ok, adaySayisi });
     return { ok, mesaj, adaySayisi };
@@ -97,7 +117,7 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
   const taramaSurum = PROMPTLAR.kanit_cikarimi.surum;
 
   // ── 1. Envanter ──────────────────────────────────────────────────────────
-  await durumYaz(k.id, {
+  await surdur({
     asama: "envanter", mesaj: null, model_snapshot: taramaModeli === model ? model : `${model} · tarama ${taramaModeli}`,
     prompt_surum: `${taramaSurum}+${PROMPTLAR.aday_kesfi.surum}`,
   });
@@ -125,13 +145,13 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
       )
     ).map((r) => Number(r.belge_id)),
   );
-  await durumYaz(k.id, { asama: "tarama", toplam_parca: parcalar.length, taranan_parca: taranmis.size });
+  await surdur({ asama: "tarama", toplam_parca: parcalar.length, taranan_parca: taranmis.size });
 
   // ── 2. Tarama · önbellekte olmayan parçalar (eşzamanlı) ──────────────────
   const bekleyen = parcalar.filter((p) => !taranmis.has(p.id));
   const { basarisiz, basarisizIdler } = await parcalariTara(bekleyen, {
     kesifId: k.id,
-    ilerleme: (n) => durumYaz(k.id, { taranan_parca: taranmis.size + n }),
+    ilerleme: (n) => surdur({ taranan_parca: taranmis.size + n }),
   });
   /**
    * Okunamayan parça keşfi KİLİTLEMEZ ama GİZLENMEZ de: sayısı ve belgeleri
@@ -139,7 +159,7 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
    * ("tarama tamamlanmadan aday üretilmez") her yeniden başlatmada aynı
    * parçaya takılıyor ve il hiç aday üretemiyordu.
    */
-  await durumYaz(k.id, { taranamayan: basarisiz });
+  await surdur({ taranamayan: basarisiz });
   const okunamayan = basarisiz
     ? ` ${basarisiz} parça okunamadı ve kapsam dışında kaldı (${[
         ...new Set(basarisizIdler.map((id) => parcalar.find((p) => p.id === id)?.ad).filter(Boolean)),
@@ -171,7 +191,7 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
   });
   // Belgeler arasında dengeli: ilk N kanıt, defteri ilk taranan bir iki belgeye bırakıyordu.
   const yerel = dengeliSec(defterHam.filter((d) => d.yerel), (d) => parcaHaritasi.get(d.belgeId)!.ad, YEREL_SINIR);
-  await durumYaz(k.id, { asama: "aday", kanit_sayisi: defterHam.length, yerel_kanit: yerel.length });
+  await surdur({ asama: "aday", kanit_sayisi: defterHam.length, yerel_kanit: yerel.length });
   if (!yerel.length) {
     return bitir(true, `${parcalar.length - basarisiz} parça tarandı, ${defterHam.length} kanıt bulundu ama hiçbiri bu ile özgü değil; "neden burada?" sorusuna dayanak olmadan aday üretilmez.${okunamayan}`);
   }
@@ -226,7 +246,7 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
   }
 
   // ── 5. Kayıt ─────────────────────────────────────────────────────────────
-  await durumYaz(k.id, { asama: "kayit" });
+  await surdur({ asama: "kayit" });
   const tetikleyen: Baglam = { gonderenRef: k.tetikleyen_ref, rol: k.tetikleyen_rol };
   const kanitHaritasi = new Map(defter.map((d) => [d.kanitId, d]));
   const sinir = k.slot_sayisi * 2;

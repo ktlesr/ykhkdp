@@ -444,6 +444,19 @@ yeni belge yüklendiğinde keşif başlamadan tarama hazırdır. Gömme/RAG
 eklenmedi: tarama sorgusuz bir "bütün metni oku" işidir, getirme onu
 hızlandırmaz, yalnızca bazı parçaları atlatır.
 
+**Eşzamanlılık, ilerleme, durdurma** (2026-11-18). İşleyicide öneri
+değerlendirmesi ile keşif BAĞIMSIZ döngülerde yürür: aynı anda en çok
+`YKH_DEGERLENDIRME_ESZAMANLI` (varsayılan 3) öneri + bir keşif koşusu. Önceki
+tek döngüde toplu keşif sürerken yeni gelen öneri sırada bekliyordu. `/iller`
+toplu keşfin ilerlemesini (biten/toplam il, süren ilin aşaması, aday sayısı)
+gösterir ve durdurur; il ekranında da "Keşfi durdur" var. Durdurma
+(`kesifDurdur`): sıradakiler alınmaz, süren koşu bir sonraki ilerleme adımında
+kendini keser, aday yazmaz, yeniden sıraya girmez; taranmış parçalar
+önbellekte kalır. Durum `hata` + "Keşif durduruldu" mesajıyla tutulur (ayrı
+durum değeri eklenmedi). Süren iş olan sayfalar (`/il/[il]`, `/onay`,
+`/onerilerim`, `/iller`) 4 saniyede bir kendiliğinden tazelenir; aşama
+rozetleri elle yenilemeden ilerler.
+
 Bölge: ajans yalnızca kendi bölgesinin illerinde keşif açar (`kesif_ac` RLS,
 `app_il_kapsaminda`). Aynı dönemde tek aktif koşu.
 

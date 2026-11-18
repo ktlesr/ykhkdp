@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { illeriListele } from "@ykh/database";
+import { illeriListele, topluKesifDurumu } from "@ykh/database";
 import { onaylayabilir } from "@ykh/domain";
 import { NihaiIndir } from "@/components/nihai-indir.tsx";
 import { TopluKesif } from "@/components/toplu-kesif.tsx";
@@ -37,7 +37,8 @@ export const metadata: Metadata = { title: "İller", robots: KAPALI };
 export default async function Iller() {
   const k = await kullanici();
   if (!k || !onaylayabilir(k.rol)) redirect("/oneri");
-  const iller = await illeriListele(await baglam());
+  const b = await baglam();
+  const [iller, toplu] = await Promise.all([illeriListele(b), topluKesifDurumu(b)]);
 
   // `typeof iller` postgres.js'in RowList'i; gruplama düz dizi taşır.
   type IlSatiri = (typeof iller)[number];
@@ -69,7 +70,7 @@ export default async function Iller() {
           İl bazında yatırım konusu önerileri
         </Baslik>
 
-        <TopluKesif yonetici={k.rol === "yonetici"} />
+        <TopluKesif yonetici={k.rol === "yonetici"} durum={toplu} />
 
         {/* Nihai liste: asıl + yedek, yalnızca onaylı öneriler; il il, bölge bölge, tümü */}
         <NihaiIndir

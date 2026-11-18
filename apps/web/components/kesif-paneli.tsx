@@ -6,7 +6,7 @@ import type { KesifDurumu } from "@ykh/database";
 import { EylemFormu, Gonder } from "./eylem-formu.tsx";
 import { OneriFormu, type Taslak } from "./oneri-formu.tsx";
 import { Bag, Isaret } from "./ui.tsx";
-import { kesifEylemi } from "@/lib/eylem.ts";
+import { kesifDurdurEylemi, kesifEylemi } from "@/lib/eylem.ts";
 import { cn } from "@/lib/utils.ts";
 
 /**
@@ -151,6 +151,12 @@ export function KesifPaneli({ il, kesif }: { il: string; kesif: KesifDurumu | nu
             <EylemFormu eylem={kesifEylemi} onSonuc={(s) => s.ok && router.refresh()}>
               <input type="hidden" name="il" value={il} />
               <Gonder bekleme="Sıraya alınıyor">{kesif ? "Keşfi yeniden başlat" : "Aday keşfini başlat"}</Gonder>
+            </EylemFormu>
+          )}
+          {surer && (
+            <EylemFormu eylem={kesifDurdurEylemi} onSonuc={(s) => s.ok && router.refresh()}>
+              <input type="hidden" name="il" value={il} />
+              <Gonder varyant="kirmizi" bekleme="Durduruluyor">Keşfi durdur</Gonder>
             </EylemFormu>
           )}
           {kesif && kesif.aday_sayisi > 0 && <Bag href="/onay">Adayları onay kuyruğunda gör</Bag>}

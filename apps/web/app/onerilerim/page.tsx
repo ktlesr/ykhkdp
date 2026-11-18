@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { AsamaRozeti } from "@/components/degerlendirme-durumu.tsx";
 import Link from "next/link";
 import { onerilerim } from "@ykh/database";
+import { OtoYenile } from "@/components/oto-yenile.tsx";
 import { ONERI_DURUM_ACIKLAMA, ONERI_DURUM_ETIKET, onaylayabilir, type OneriDurumu } from "@ykh/domain";
 import { Bag, Baslik, Bos, Rozet, Sayfa, UstBar, Uyari } from "@/components/ui.tsx";
 import { baglam, kullanici } from "@/lib/oturum.ts";
@@ -99,6 +100,7 @@ export default async function Onerilerim() {
         ]}
       />
       <Sayfa>
+        <OtoYenile aktif={liste.some((o) => o.durum === "degerlendiriliyor")} />
         <Baslik
           ustEtiket={
             liste.length > 0

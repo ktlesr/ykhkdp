@@ -1529,3 +1529,63 @@ export async function oneriGuncelle(b: Baglam, id: number, yeni: OneriDuzeltme, 
     return { ok: true as const };
   });
 }
+
+/** Kapsamdaki sürmekte olan keşiflerin özeti — toplu keşif ilerlemesi. Aktif koşu yoksa null. */
+export type TopluKesifDurumu = {
+  bekleyen: number;
+  biten: number;
+  aday: number;
+  calisan: Array<{ il: string; asama: string | null; taranan: number; toplam: number }>;
+};
+
+export async function topluKesifDurumu(b: Baglam): Promise<TopluKesifDurumu | null> {
+  if (b.rol === "anonim" || !onaylayabilir(b.rol)) return null;
+  const r = await islem(b, (sql) =>
+    sql<{ il: string; durum: string; asama: string | null; taranan_parca: number; toplam_parca: number; aday_sayisi: number }[]>`
+      with kapsam as (
+        select k.*, i.ad as il from kesif k
+        join donem d on d.id = k.donem_id join il i on i.kod = d.il_kod
+        where app_il_kapsaminda(d.il_kod)
+      )
+      -- Aynı toplu başlatmanın bitenleri: aktif koşuların en eskisinden beri açılanlar.
+      select il, durum, asama, taranan_parca, toplam_parca, aday_sayisi from kapsam
+      where olusturuldu >= (select min(olusturuldu) from kapsam where durum in ('bekliyor', 'calisiyor'))
+      order by id
+    `,
+  );
+  const aktif = r.filter((x) => x.durum === "bekliyor" || x.durum === "calisiyor");
+  if (!aktif.length) return null;
+  return {
+    bekleyen: aktif.filter((x) => x.durum === "bekliyor").length,
+    biten: r.length - aktif.length,
+    aday: r.reduce((t, x) => t + x.aday_sayisi, 0),
+    calisan: aktif.filter((x) => x.durum === "calisiyor").map((x) => ({ il: x.il, asama: x.asama, taranan: x.taranan_parca, toplam: x.toplam_parca })),
+  };
+}
+
+/**
+ * Sıradaki ve süren keşifleri durdurur (kapsam: `app_il_kapsaminda`; `ilKod`
+ * verilirse yalnızca o il). Süren koşu bir sonraki ilerleme adımında kendini
+ * keser (`kesifYap`). Taranmış parçalar önbellekte kalır.
+ */
+export async function kesifDurdur(b: Baglam, ilKod?: string): Promise<number> {
+  if (b.rol === "anonim" || !onaylayabilir(b.rol)) return 0;
+  const idler = (
+    await islem(b, (sql) =>
+      sql<{ id: string }[]>`
+        select k.id from kesif k join donem d on d.id = k.donem_id
+        where k.durum in ('bekliyor', 'calisiyor') and app_il_kapsaminda(d.il_kod)
+          ${ilKod ? sql`and d.il_kod = ${ilKod}` : sql``}
+      `,
+    )
+  ).map((x) => Number(x.id));
+  if (!idler.length) return 0;
+  // Güncelleme politikası yalnızca yönetici: kapsam yukarıda kullanıcının bağlamında süzüldü.
+  const r = await islem({ gonderenRef: null, rol: "yonetici" }, (sql) => sql`
+    update kesif set durum = 'hata', asama = null, guncellendi = now(),
+      mesaj = 'Keşif durduruldu. Taranmış parçalar saklandı; yeniden başlatınca kalanından devam eder.'
+    where id in ${sql(idler)} and durum in ('bekliyor', 'calisiyor')
+  `);
+  await islem(b, (sql) => denetle(sql, b, "kesif_durduruldu", "kesif", null, { adet: r.count, il: ilKod ?? null }));
+  return r.count;
+}

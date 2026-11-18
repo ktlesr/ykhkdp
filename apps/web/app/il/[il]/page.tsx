@@ -1,3 +1,4 @@
+import { OtoYenile } from "@/components/oto-yenile.tsx";
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -230,6 +231,7 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
         ]}
       />
       <Sayfa genis>
+        <OtoYenile aktif={surecte.length > 0} />
         <Baslik
           ustEtiket={
             d

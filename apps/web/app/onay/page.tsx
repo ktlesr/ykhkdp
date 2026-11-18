@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { adaylariGetir, donemGetir, kuyrukKopyalari, onayKuyrugu } from "@ykh/database";
 import { konumaGore, onaylanirsa, type Konum } from "@/lib/projeksiyon.ts";
 import { onaylayabilir } from "@ykh/domain";
+import { OtoYenile } from "@/components/oto-yenile.tsx";
 import { AsamaRozeti } from "@/components/degerlendirme-durumu.tsx";
 import { SatirIslemleri } from "@/components/satir-islemleri.tsx";
 import { Bag, Baslik, Bos, Rozet, Sayfa, UstBar } from "@/components/ui.tsx";
@@ -93,6 +94,7 @@ export default async function Onay({ searchParams }: { searchParams: Promise<{ b
         ]}
       />
       <Sayfa genis>
+        <OtoYenile aktif={tumu.some((o) => o.durum === "degerlendiriliyor")} />
         <Baslik alt="Yapay zekâ puanladı; alıntılar belgede birebir doğrulandı, puanlar ise ajans onaylayana kadar taslaktır. Her ilde en iyisi en üstte: soldaki sayı, öneri onaylanırsa il listesinde gireceği yer (asıl ya da yedek). Onaylanmadan hiçbir öneri sıralamaya girmez; onay geri alınabilir.">
           Onay kuyruğu
         </Baslik>

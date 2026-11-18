@@ -82,7 +82,7 @@ async function kesifTuru(): Promise<boolean> {
 
 async function turAt(): Promise<boolean> {
   const oneriId = await birOneriAl();
-  if (oneriId === null) return kesifTuru();
+  if (oneriId === null) return false;
 
   try {
     const s = await degerlendirmeYap(SERVIS, oneriId);
@@ -103,16 +103,29 @@ async function turAt(): Promise<boolean> {
   return true;
 }
 
-export async function dongu(): Promise<void> {
-  log.info("worker_basladi", { aralik: ARALIK, maksDeneme: MAKS_DENEME });
+/**
+ * Öneri değerlendirmesi ile keşif BAĞIMSIZ döngülerde yürür. Tek döngüde
+ * keşif (binlerce parça, dakikalar) sürerken yeni gelen öneri sırada
+ * bekliyordu; toplu keşifte bu saatler demekti. `ESZAMANLI` öneri aynı anda
+ * değerlendirilir (kilit havuzu `YKH_DEGERLENDIRME_ESZAMANLI` ile aynı sayı),
+ * yanında tek keşif koşusu — keşif kendi içinde zaten eşzamanlı tarar.
+ */
+const ESZAMANLI = Math.max(1, Number(process.env.YKH_DEGERLENDIRME_ESZAMANLI) || 3);
+
+async function surekli(ad: string, tur: () => Promise<boolean>): Promise<void> {
   while (calisiyor) {
     try {
-      if (await turAt()) continue;
+      if (await tur()) continue;
     } catch (e) {
-      log.hata("worker_dongu_hatasi", { hata: e instanceof Error ? e.message : String(e) });
+      log.hata("worker_dongu_hatasi", { dongu: ad, hata: e instanceof Error ? e.message : String(e) });
     }
     await new Promise((r) => setTimeout(r, ARALIK));
   }
+}
+
+export async function dongu(): Promise<void> {
+  log.info("worker_basladi", { aralik: ARALIK, maksDeneme: MAKS_DENEME, eszamanli: ESZAMANLI });
+  await Promise.all([...Array.from({ length: ESZAMANLI }, () => surekli("oneri", turAt)), surekli("kesif", kesifTuru)]);
   await kapat();
   log.info("worker_durdu", {});
 }
