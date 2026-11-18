@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { Document, HeadingLevel, Packer, Paragraph, Table, TableCell, TableRow } from "docx";
 import ExcelJS from "exceljs";
-import { dosyadanMetin, htmldenMd } from "./belge-cevir.ts";
+import { dosyadanMetin, htmldenMd, zipSismesi } from "./belge-cevir.ts";
 
 test("Word: başlık çıpa olur, paragraf TEK satırda ve birebir kalır, tablo satır satır gelir", async () => {
   const cumle = "Uşak'ta 2023 yılında tekstil ihracatı %12,5 arttı (kaynak: TÜİK); geri dönüşüm iplik üretimi 1.250 tona ulaştı.";
@@ -54,4 +54,18 @@ test("desteklenmeyen ve bozuk dosya açık hatayla döner, fırlatmaz", async ()
 
 test("htmldenMd: varlıklar çözülür, etiketler atılır", () => {
   assert.equal(htmldenMd("<p>Ar&amp;Ge <strong>payı</strong> &lt; %1</p><ul><li>madde</li></ul>"), "Ar&Ge payı < %1\n\n- madde");
+});
+
+test("zipSismesi: açık boyutu sınırı aşan arşiv açılmadan reddedilir", async () => {
+  const k = new ExcelJS.Workbook();
+  k.addWorksheet("a").addRow(["x"]);
+  const veri = new Uint8Array(await k.xlsx.writeBuffer());
+  assert.equal(zipSismesi(veri), null);
+  // Merkezi dizindeki ilk girdinin beyan edilen açık boyutunu 4 GB'a yakın yap.
+  const g = new DataView(veri.buffer, veri.byteOffset, veri.byteLength);
+  let p = 0;
+  while (g.getUint32(p, true) !== 0x02014b50) p++;
+  g.setUint32(p + 24, 0xfffffff0, true);
+  assert.match(zipSismesi(veri) ?? "", /çok büyük/);
+  assert.equal((await dosyadanMetin("bomba.xlsx", veri)).ok, false);
 });

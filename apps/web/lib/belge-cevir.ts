@@ -20,8 +20,11 @@ export async function dosyadanMetin(ad: string, veri: Uint8Array): Promise<Cevir
   const uzanti = ad.toLowerCase().match(/\.([a-z0-9]+)$/)?.[1] ?? "";
   try {
     if (uzanti === "pdf") return await pdftenMd(veri);
-    if (uzanti === "docx") return await wordenMd(veri);
-    if (uzanti === "xlsx") return await exceldenMd(veri);
+    if (uzanti === "docx" || uzanti === "xlsx") {
+      const sisme = zipSismesi(veri);
+      if (sisme) return { ok: false, hata: sisme };
+      return uzanti === "docx" ? await wordenMd(veri) : await exceldenMd(veri);
+    }
     if (uzanti === "txt" || uzanti === "md") {
       return { ok: true, metin: new TextDecoder().decode(veri).trim(), ozet: "metin dosyası", tablo: false };
     }
@@ -32,6 +35,34 @@ export async function dosyadanMetin(ad: string, veri: Uint8Array): Promise<Cevir
     return { ok: false, hata: `Eski .${uzanti} biçimi okunamıyor; dosyayı .${uzanti}x olarak kaydedip yeniden yükleyin.` };
   }
   return { ok: false, hata: "Desteklenen biçimler: PDF, Word (.docx), Excel (.xlsx), .txt, .md." };
+}
+
+/**
+ * .docx/.xlsx bir ZIP'tir: 30 MB'lık dosya açılınca gigabaytlara şişebilir.
+ * Açmadan önce merkezi dizindeki BEYAN EDİLEN açık boyutlar toplanır.
+ * ponytail: beyan yalan olabilir (kasıtlı bozuk ZIP); yükleme yalnızca ajans
+ * rolüne açık. Tam koruma için dönüştürme bellek sınırlı ayrı süreçte koşmalı.
+ */
+export function zipSismesi(veri: Uint8Array): string | null {
+  const g = new DataView(veri.buffer, veri.byteOffset, veri.byteLength);
+  let son = -1;
+  for (let i = veri.length - 22; i >= Math.max(0, veri.length - 66_000); i--) {
+    if (g.getUint32(i, true) === 0x06054b50) {
+      son = i;
+      break;
+    }
+  }
+  if (son < 0) return "Dosya geçerli bir Word/Excel dosyası değil.";
+  const adet = g.getUint16(son + 10, true);
+  let p = g.getUint32(son + 16, true);
+  if (adet > 5000) return "Dosya çok fazla iç parça içeriyor.";
+  let toplam = 0;
+  for (let i = 0; i < adet; i++) {
+    if (p + 46 > veri.length || g.getUint32(p, true) !== 0x02014b50) return "Dosya bozuk.";
+    toplam += g.getUint32(p + 24, true);
+    p += 46 + g.getUint16(p + 28, true) + g.getUint16(p + 30, true) + g.getUint16(p + 32, true);
+  }
+  return toplam > 300_000_000 ? "Dosya açıldığında çok büyük (300 MB üstü); yüklenmedi." : null;
 }
 
 // ───────────────────────── Word ─────────────────────────
@@ -191,12 +222,17 @@ function kolonSirasi(ks: Kesit[], genislik: number): Kesit[] {
 function paragraflar(ks: Kesit[], genislik: number): Kesit[] {
   const ayniKolon = (a: Kesit, b: Kesit) => Math.abs(a.x0 - b.x0) < genislik * 0.06 || (a.x0 - 2 <= b.x0 && b.x0 <= a.x1);
   const out: Kesit[] = [];
+  const kenar = new Map<Kesit, number>(); // satır başına bir kez; sayfa ögesi sayısı ayrıca sınırlı
   let sonSatir: Kesit | null = null; // paragrafın son görsel satırı
   for (const b of ks) {
     const o = out.at(-1);
     if (o && sonSatir) {
       const s: Kesit = sonSatir;
-      const sagKenar = Math.max(...ks.filter((k) => ayniKolon(s, k)).map((k) => k.x1));
+      let sagKenar = kenar.get(s);
+      if (sagKenar === undefined) {
+        sagKenar = ks.reduce((m, k) => (ayniKolon(s, k) ? Math.max(m, k.x1) : m), s.x1);
+        kenar.set(s, sagKenar);
+      }
       const dolu = s.x1 >= sagKenar - 2 * s.h; // satır kolonun sonuna kadar gidiyor: paragraf sürüyor
       const yakin = s.y - b.y > 0 && s.y - b.y < 1.7 * Math.max(s.h, b.h);
       const bitmedi = !CUMLE_SONU.test(o.metin) || dolu || /^\p{Ll}/u.test(b.metin);
@@ -218,6 +254,7 @@ async function pdftenMd(veri: Uint8Array): Promise<Ceviri> {
   const { getDocumentProxy } = await import("unpdf");
   const pdf = await getDocumentProxy(veri);
   const n = pdf.numPages;
+  if (n > 2000) return { ok: false, hata: `PDF ${n} sayfa; en çok 2000 sayfa yüklenebilir.` };
   const sayfalar: Array<{ no: number; ps: Kesit[] }> = [];
   const boyAgirlik = new Map<number, number>();
   const gorulme = new Map<string, number>();
@@ -226,6 +263,8 @@ async function pdftenMd(veri: Uint8Array): Promise<Ceviri> {
     const sayfa = await pdf.getPage(no);
     const genislik = sayfa.getViewport({ scale: 1 }).width;
     const icerik = await sayfa.getTextContent();
+    // Sayfa başına öge sınırı: paragraf birleştirme sayfa içinde karesel çalışır.
+    if (icerik.items.length > 20_000) return { ok: false, hata: `PDF'in ${no}. sayfası olağan dışı yoğun; yüklenmedi.` };
     const ks = kesitler(icerik.items.filter((i): i is typeof i & { str: string } => "str" in i) as never, genislik);
     if (!ks.length) {
       metinsiz++;

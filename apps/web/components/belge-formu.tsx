@@ -4,7 +4,17 @@ import { cn } from "@/lib/utils.ts";
 import { useState } from "react";
 import { EylemFormu, Gonder } from "./eylem-formu.tsx";
 import { ALAN_ETIKET, GIRDI, DUGME_STIL, DUGME_TABAN } from "./ui.tsx";
-import { belgeEylemi } from "@/lib/eylem.ts";
+import { useRouter } from "next/navigation";
+import type { EylemSonucu } from "@/lib/eylem.ts";
+
+/** Dosya büyük olabilir: sunucu eylemi (1 MB) yerine kimliği gövdeden önce doğrulayan uç. */
+const belgeGonder = async (_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> => {
+  try {
+    return await (await fetch("/belgeler/yukle", { method: "POST", body: f })).json();
+  } catch {
+    return { ok: false, mesaj: "Belge gönderilemedi; bağlantıyı kontrol edip yeniden deneyin." };
+  }
+};
 
 const TURLER = [
   ["bolge_plani", "Bölge planı"],
@@ -26,6 +36,7 @@ export function BelgeFormu({
 }) {
   const ajanslar = [...new Map(iller.map((x) => [x.ajansKod, x.ajans])).entries()].sort(([a], [b]) => a.localeCompare(b));
   const ilSirali = [...iller].sort((a, b) => a.ad.localeCompare(b.ad, "tr"));
+  const yonlendirici = useRouter();
   const [acik, setAcik] = useState(false);
   // Kapsam İKİ ADIMDA: önce tür (ulusal/ajans/il), gerekiyorsa ikinci seçim.
   // 108 seçenekli tek liste yanlış gruba gitmeyi kolaylaştırıyordu.
@@ -50,10 +61,11 @@ export function BelgeFormu({
 
   return (
     <EylemFormu
-      eylem={belgeEylemi}
+      eylem={belgeGonder}
       className="mt-5 border border-ink bg-surface"
       onSonuc={(s) => {
         if (s.ok) {
+          yonlendirici.refresh();
           setAcik(false);
           setMetin("");
         }
