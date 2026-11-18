@@ -485,6 +485,31 @@ geçer ve sonuç `/oneri/[id]` içinde canlı ilerlemeyle açılır: stratejik p
 (sekiz kriter, dönemin ağırlık seti), belge dayanağı, kriter başına alıntı,
 karşı görüş. Ayrı bir puan hesaplayıcı yazılmadı — iki hesap iki doğru demektir.
 
+### Yalnızca başlıkla uygunluk analizi
+
+"Konu puanla" formunda (ajans; yeni ekran yok) gerekçe yazmadan yalnızca
+başlık verilir: "bu konu bu ile uygun mu?" İlin TARANMIŞ kanıtlarından
+başlığın ayırt edici kökleriyle örtüşenler bulunur (en çok 40 yerel, belgeler
+arasında dengeli + 20 diğer) ve yargı modeli karar verir
+(`konu-uygunlugu-v1`): **uygun · kısmen · uygun değil**. Uygunsa gerekçeyi
+(olgu) ve etiketli çıkarımı hazırlar, dayandığı pasajları gösterir; "Gerekçeyi
+forma aktar" ile konu normal yoldan puanlanır. Değilse nedenini yazar.
+
+- Kurallar aday kurallarının AYNISI (`uygunluguDogrula`): "uygun" kararı ancak
+  gerekçe en az iki kanıta, biri yerel olmak üzere dayanıyor, kaynaksız sayı
+  taşımıyor ve her cümlesi kanıtta karşılık buluyorsa kalır; aksi hâlde
+  "belgelere bağlanamadı" ve neden mekanik kuralın kendisidir.
+- Model çağrılmadan cevaplanan durumlar: belgeler taranmamış; başlıkla örtüşen
+  kanıt yok; kanıt var ama hiçbiri bu ile özgü değil.
+- Puanlamaz, kaydetmez, sıralamaya dokunmaz; yalnızca denetime yazılır
+  (`konu_uygunlugu`). Sonuç taslaktır.
+- Ölçüldü (gpt-5.4-mini, 4–9 sn): Afyonkarahisar mermer atığı ve Aksaray
+  perlit "uygun"; Afyonkarahisar zeytinyağı ("kanıtlar Akhisar ve Manisa
+  bağlamında") ve Aksaray gemi inşa "uygun değil"; termal sağlık "kısmen".
+- Sınır: eşleşme sözcükseldir (5 harf kök); eşanlamlı yazılmış konu
+  ("airbag") kanıtını bulamaz. Yalnızca ajans/yönetici: kanıt defteri
+  yatırımcıya açık değil.
+
 ### Yakın kopya · AI yok
 
 Aynı (il, dönem) içinde başlıkları benzeşen öneriler `/onay` ekranında

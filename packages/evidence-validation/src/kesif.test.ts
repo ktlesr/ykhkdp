@@ -189,6 +189,30 @@ test("gerekçedeki atıf notu sayısal iddia değildir ve kayda girmez", () => {
   assert.equal(adaylariDogrula([{ baslik, gerekce: "İlde mermer sektörü yoğunlaşmıştır, 22 ocak vardır (kanıt 1).", kanit_no: [1, 22] }], defter).adaylar.length, 0);
 });
 
+test("konu uygunluğu: uygun kararı ancak gerekçe aday kurallarından geçerse kalır", async () => {
+  const { uygunluguDogrula } = await import("./index.ts");
+  const defter = [
+    { no: 1, kanitId: 11, yerel: true, metin: "İlde mermer sektörü yoğunlaşmıştır." },
+    { no: 2, kanitId: 12, yerel: false, metin: "Mermer atıkları mikronize öğütme faaliyetlerine odaklanılacaktır." },
+  ];
+  const ham = { baslik: "Mermer atığından mikronize kalsit", karar: "uygun" as const, sentez: "Yapay zekâ çıkarımı: Atık yerinde işlenebilir.", neden: "", kanit_no: [1, 2] };
+  const iyi = uygunluguDogrula({ ...ham, gerekce: "İlde mermer sektörü yoğunlaşmıştır. Mermer atıkları mikronize öğütme faaliyetlerine odaklanılacaktır." }, defter);
+  assert.equal(iyi.karar, "uygun");
+  assert.equal(iyi.sentez, "Atık yerinde işlenebilir.");
+  assert.deepEqual(iyi.kanitIdleri, [11, 12]);
+  // Kaynaksız sayı: karar düşer, neden mekanik kuralın kendisidir.
+  const kotu = uygunluguDogrula({ ...ham, gerekce: "İlde mermer sektörü yoğunlaşmıştır ve 400 ocak vardır." }, defter);
+  assert.equal(kotu.karar, "baglanamadi");
+  assert.match(kotu.neden, /kaynaksız sayı/);
+  assert.equal(kotu.gerekce, "");
+  // Yerel kanıt yoksa "uygun" kalamaz.
+  assert.equal(uygunluguDogrula({ ...ham, gerekce: "Mermer atıkları mikronize öğütme faaliyetlerine odaklanılacaktır.", kanit_no: [2] }, defter).karar, "baglanamadi");
+  // Uygun değil: gerekçe taşınmaz; kaynaksız sayılı neden silinip genel cümle yazılır.
+  const yok = uygunluguDogrula({ ...ham, karar: "uygun_degil", gerekce: "x", neden: "İlde 900 tesis başka sektörde.", kanit_no: [1] }, defter);
+  assert.deepEqual([yok.karar, yok.gerekce], ["uygun_degil", ""]);
+  assert.doesNotMatch(yok.neden, /900/);
+});
+
 test("dengeliSec: her belge pay alır, pay belge içinde yayılır", async () => {
   const { dengeliSec } = await import("./index.ts");
   const liste = [...Array.from({ length: 100 }, (_, i) => ({ b: "a", i })), ...Array.from({ length: 4 }, (_, i) => ({ b: "b", i })), { b: "c", i: 0 }];

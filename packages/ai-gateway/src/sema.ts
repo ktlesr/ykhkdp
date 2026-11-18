@@ -214,7 +214,26 @@ export const NaceKapsami = z
   })
   .strict();
 
+/**
+ * Konu uygunluğu — yalnızca başlık verilir; model ilin kanıt defterine bakıp
+ * konunun bu ile uygun olup olmadığını söyler. Uygunsa gerekçeyi (olgu) ve
+ * sentezi (çıkarım) hazırlar; değilse nedenini yazar.
+ */
+export const KonuUygunlugu = z
+  .object({
+    karar: z.enum(["uygun", "kismen", "uygun_degil"]),
+    /** "neden bu ilde?" — yalnızca atıf yapılan kanıtlarda yazanla; uygun değilse "" */
+    gerekce: z.string().max(1200),
+    /** uzman çıkarımı; olgu değil */
+    sentez: z.string().max(600),
+    /** uygun değilse ya da çekince varsa nedeni; atıf yapılan kanıtlara dayanır */
+    neden: z.string().max(800),
+    kanit_no: z.array(z.number().int().min(1).max(200)).max(8),
+  })
+  .strict();
+
 export const SEMALAR = {
+  konu_uygunlugu: KonuUygunlugu,
   degerlendirme: Degerlendirme,
   nace_onerisi: NaceOnerisi,
   karsi_gorus: KarsiGorus,

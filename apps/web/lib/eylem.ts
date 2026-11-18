@@ -12,7 +12,7 @@ import {
 import { gecisIzinli, onaylayabilir, ROL_ETIKET, ROLLER, type OneriDurumu, type Rol } from "@ykh/domain";
 import { log } from "@ykh/observability";
 import { KRITERLER, type Kriter } from "@ykh/scoring";
-import { degerlendirmeYap, MODEL_AYARI, modelOnbelleginiTemizle, SERVIS, TARAMA_MODEL_AYARI } from "@ykh/degerlendirme";
+import { degerlendirmeYap, konuUygunluguYap, SENTEZ_ETIKETI, type UygunlukSonucu, MODEL_AYARI, modelOnbelleginiTemizle, SERVIS, TARAMA_MODEL_AYARI } from "@ykh/degerlendirme";
 import { MODEL_SECENEKLERI } from "@ykh/ai-gateway";
 import { baglam, cerezSil, COOKIE, istemciIp, kullanici, oturumCerezi } from "./oturum.ts";
 import { paletGecerli } from "./palet.ts";
@@ -581,4 +581,30 @@ export async function oneriDuzeltEylemi(_o: EylemSonucu | null, f: FormData): Pr
   revalidatePath(`/oneri/${id}`);
   revalidatePath("/onay");
   redirect(`/oneri/${id}`);
+}
+
+/**
+ * Konu uygunluğu — yalnızca başlıkla. Puanlamaz, kaydetmez: sonuç ajansın
+ * forma taşıyacağı taslaktır. Bölge kontrolü veritabanında (`app_il_kapsaminda`).
+ */
+/** `taslak`: forma aktarılacak metin — gerekçe (olgu) + etiketli çıkarım. */
+export type UygunlukCevabi = UygunlukSonucu & { taslak: string };
+export async function uygunlukEylemi(ilKod: string, baslik: string): Promise<UygunlukCevabi> {
+  const bos = { gerekce: "", sentez: "", kanitlar: [], model: null, taslak: "" };
+  const k = await kullanici();
+  if (!k || !onaylayabilir(k.rol)) return { ...bos, karar: "hata", neden: "Bu analiz yalnızca ajans ve yönetici içindir." };
+  const temiz = String(baslik ?? "").trim().slice(0, 140);
+  if (temiz.length < 8) return { ...bos, karar: "hata", neden: "Başlık en az 8 karakter olmalı." };
+  const b = await baglam();
+  const [{ ok }] = await islem(b, (sql) => sql<{ ok: boolean }[]>`select app_il_kapsaminda(${String(ilKod)}) as ok`);
+  if (!ok) return { ...bos, karar: "hata", neden: "Bu il ajansınızın bölgesinde değil." };
+  try {
+    const s = await konuUygunluguYap(b, { ilKod: String(ilKod), baslik: temiz });
+    return { ...s, taslak: s.gerekce + (s.gerekce && s.sentez ? `
+
+${SENTEZ_ETIKETI} ${s.sentez}` : "") };
+  } catch (e) {
+    log.hata("uygunluk_hatasi", { il: ilKod, hata: e instanceof Error ? e.message : String(e) });
+    return { ...bos, karar: "hata", neden: "Analiz tamamlanamadı; biraz sonra yeniden deneyin." };
+  }
 }

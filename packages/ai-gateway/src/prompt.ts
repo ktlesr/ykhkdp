@@ -280,6 +280,45 @@ KURALLAR:
   hiç aday çıkmıyorsa "adaylar" BOŞ kalsın — bu meşru bir sonuçtur.
 - En fazla 8 aday.`,
   },
+  konu_uygunlugu: {
+    ad: "konu_uygunlugu",
+    surum: "konu-uygunlugu-v1",
+    sistem: `${ORTAK}
+
+GÖREV: Sana bir il ve yalnızca bir YATIRIM KONUSU BAŞLIĞI veriliyor; gerekçe
+yok. Bir yatırım uzmanı gibi, ilin KANIT DEFTERİNE bakarak bu konunun BU İLE
+uygun olup olmadığını değerlendir. Defter belgelerden çıkarılmış ve kaynakta
+birebir doğrulanmış pasajlardır; yeni alıntı yazamazsın, yalnızca "kanit_no"
+ile atıf yaparsın. Bu bir ön değerlendirmedir: puan vermez, karar vermez.
+
+KARAR:
+- uygun: defter, konunun bu ile YERE BAĞLI dayanağını gösteriyor — ilde ya da
+  ilçede var olan kaynak, hammadde, tesis, küme, işgücü, altyapı, doğal ya da
+  kültürel varlık. En az iki kanıt, en az biri yerel="evet".
+- kismen: yerel dayanak var ama zayıf ya da defter ciddi bir kısıt sayıyor.
+- uygun_degil: defterde konuyu bu ile bağlayan yerel kanıt yok; ya da kanıtlar
+  konuyu başka bir il/bölge için tanımlıyor; ya da kısıtlar belirleyici.
+Kendine sor: "Bu konu başka bir ilin adıyla da aynen savunulabilir mi?" Yalnızca
+ulusal önceliğe dayanan konu bu il için uygun DEĞİLDİR.
+
+ALANLAR:
+- "gerekce" (karar uygun ya da kismen ise): bu ilde neden yapılmalı — YALNIZCA
+  atıf yaptığın kanıtlarda yazan OLGULARLA. Her cümle "kanit_no" listesindeki
+  bir kanıta dayanmalı. Kendi çıkarımını ve "bu nedenle…" gibi bağlantı
+  cümlelerini buraya YAZMA. Kanıt numarası yazma. Kanıtta olmayan sayı,
+  kapasite, oran, firma ya da yer adı YAZMA. Uygun değilse "" bırak.
+- "sentez": uzman çıkarımın, 1–3 cümle: kanıtları nasıl birleştirdiğin ve
+  konunun mevzuattaki niteliklerden hangilerini taşıdığı (yerel kaynağı
+  değerlendirme, ileri-geri bağlantı, entegre üretim, ithalat bağımlılığını
+  azaltma, teknoloji, katma değer, pazar ve ihracat, istihdam) — yalnızca
+  kanıtların işaret ettiği kadar. Yeni olgu ve sayı ekleme. Ekranda "yapay
+  zekâ çıkarımı" diye etiketlenir.
+- "neden" (karar uygun_degil ya da kismen ise): neden uygun değil ya da çekince
+  ne — atıf yaptığın kanıtlara dayanarak, sayı uydurmadan. Defterde konuyla
+  ilgili hiçbir şey yoksa bunu açıkça söyle. Uygunsa "" bırak.
+- "kanit_no": dayandığın kanıtlar (en fazla 8). Uygun değil kararında da, varsa
+  kararı gösteren kanıtlara (kısıt, başka yer) atıf yap; yoksa boş bırak.`,
+  },
   nace_onerisi: {
     ad: "nace_onerisi",
     surum: "nace-onerisi-v3",

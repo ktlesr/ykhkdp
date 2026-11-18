@@ -242,6 +242,21 @@ test("keşif: bütün parçaları tarar, adayları yerel kanıtla ve kaynaktan b
   assert.equal(Number(kopya), 0);
 });
 
+test("konu uygunluğu: yalnızca başlıkla; kanıt yoksa model çağrılmadan söyler", async () => {
+  const { konuUygunluguYap } = await import("@ykh/degerlendirme");
+  const ajans: Baglam = { gonderenRef: await ref("ajans@ykh.local"), rol: "ajans" };
+  // Önceki test Uşak belgelerini taradı: defterde kanıt var.
+  const yok = await konuUygunluguYap(ajans, { ilKod: "usak", baslik: "Zqxwvk kuantum zımbırtısı" });
+  assert.equal(yok.karar, "kanit_yok");
+  assert.equal(yok.gerekce, "");
+  const var_ = await konuUygunluguYap(ajans, { ilKod: "usak", baslik: "Tekstil atıklarından geri dönüşüm elyaf üretimi" });
+  assert.ok(["uygun", "kismen", "uygun_degil", "baglanamadi"].includes(var_.karar), `${var_.karar} ${var_.neden}`);
+  // Uygunsa gerekçe yalnızca kanıt pasajlarından kurulur ve pasajlar gösterilir.
+  if (var_.karar === "uygun") {
+    assert.ok(var_.gerekce.length >= 40 && var_.kanitlar.length >= 2 && var_.kanitlar.some((k) => k.yerel));
+  }
+});
+
 test("yerel belgesi olmayan ilde keşif aday üretmez, nedenini yazar", async () => {
   const { birKesifAl, kesifYap } = await import("@ykh/degerlendirme");
   const [il] = await islem(SERVIS, (sql) => sql<{ kod: string }[]>`select kod from il where ajans_kod <> 'TR33' order by kod limit 1`);

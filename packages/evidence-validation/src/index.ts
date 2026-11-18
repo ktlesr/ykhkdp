@@ -917,7 +917,8 @@ export function adaylariDogrula(
      * söylemez) ve kayıtta öyle etiketlenir. Ama yeni sayı getiremez: kaynaksız
      * sayı taşıyan sentez düşer, aday kalır.
      */
-    let sentez = (ham.sentez ?? "").replace(ATIF_NOTU, "").trim();
+    // Model etiketi kendisi de yazabiliyor; etiket kayıtta bir kez durur.
+    let sentez = (ham.sentez ?? "").replace(ATIF_NOTU, "").replace(/^s*yapay zek[aâ] çıkarımı[^:]{0,30}:s*/iu, "").trim();
     const sentezSayisi = sayisalTokenlar(atifsiz(sentez)).find((t) => !sayiKaynakta(t, kaynak));
     if (sentezSayisi) {
       dusenler.push({ kod: "kaynaksiz_sayi", mesaj: `Çıkarım düşürüldü: ${ad} adayının çıkarımı kaynaksız sayı (“${sentezSayisi}”) taşıyor; aday çıkarımsız alındı.` });
@@ -932,6 +933,49 @@ export function adaylariDogrula(
     });
   }
   return { adaylar: sonuc, dusenler };
+}
+
+export type UygunlukKarari = "uygun" | "kismen" | "uygun_degil" | "baglanamadi";
+export type Uygunluk = {
+  karar: UygunlukKarari;
+  /** olgu: her cümlesi atıf yapılan kanıtta karşılık bulur; uygun değilse "" */
+  gerekce: string;
+  /** modelin çıkarımı (olgu değil) */
+  sentez: string;
+  /** uygun değilse ya da çekince varsa neden */
+  neden: string;
+  kanitIdleri: number[];
+};
+
+/**
+ * Konu uygunluğu çıktısını doğrular — aday kurallarının AYNISI.
+ *
+ * "Uygun" ya da "kısmen" kararı ancak gerekçe aday kurallarından geçerse
+ * ayakta kalır (≥2 kanıt, ≥1 yerel, kaynaksız sayı yok, her cümle kanıtta);
+ * geçmezse karar "baglanamadi" olur ve neden mekanik kuralın kendisidir.
+ * "Neden" metni modelin değerlendirmesidir; kaynaksız sayı taşıyorsa silinir.
+ */
+export function uygunluguDogrula(
+  ham: { baslik: string; karar: "uygun" | "kismen" | "uygun_degil"; gerekce: string; sentez: string; neden: string; kanit_no: readonly number[] },
+  defter: readonly DefterKaydi[],
+): Uygunluk {
+  const numara = new Map(defter.map((d) => [d.no, d]));
+  const cozulen = [...new Set(ham.kanit_no)].map((n) => numara.get(n)).filter((d): d is DefterKaydi => Boolean(d));
+  const kaynak = normalize(cozulen.map((d) => d.metin).join(" "));
+  const kanitIdleri = cozulen.map((d) => d.kanitId);
+  let neden = ham.neden.replace(ATIF_NOTU, "").trim();
+  if (sayisalTokenlar(neden.replace(CIPLAK_ATIF, (m) => ((m.match(/\d+/g) ?? []).every((n) => ham.kanit_no.includes(Number(n))) ? "" : m))).some((t) => !sayiKaynakta(t, kaynak))) {
+    neden = "";
+  }
+  if (ham.karar === "uygun_degil") {
+    return { karar: "uygun_degil", gerekce: "", sentez: "", neden: neden || "Belgelerde bu konuyu bu ile bağlayan dayanak bulunamadı.", kanitIdleri };
+  }
+  const d = adaylariDogrula([{ baslik: ham.baslik, gerekce: ham.gerekce, sentez: ham.sentez, kanit_no: ham.kanit_no }], defter);
+  const a = d.adaylar[0];
+  if (!a) {
+    return { karar: "baglanamadi", gerekce: "", sentez: "", neden: d.dusenler[0]?.mesaj ?? "Gerekçe kanıtlara bağlanamadı.", kanitIdleri };
+  }
+  return { karar: ham.karar, gerekce: a.gerekce, sentez: a.sentez, neden, kanitIdleri: a.kanitIdleri };
 }
 
 /**

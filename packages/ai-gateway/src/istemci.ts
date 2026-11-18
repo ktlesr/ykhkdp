@@ -129,6 +129,18 @@ function uret(istek: ModelIstegi): unknown {
     return { adaylar };
   }
 
+  if (istek.semaAdi === "konu_uygunlugu") {
+    // Çevrimdışı: yerel kanıt + bir kanıt daha varsa uygun; gerekçe kanıtların kendi cümleleri.
+    const k = [
+      ...istek.kullanici.matchAll(/<kanit no="(\d+)" yerel="(evet|hayir)"[^>]*>[\s\S]*?<icerik guvenilir="hayir">([\s\S]*?)<\/icerik>/g),
+    ].map((m) => ({ no: Number(m[1]), yerel: m[2] === "evet", metin: coz(m[3]) }));
+    const y = k.find((x) => x.yerel);
+    const es = y && k.find((x) => x.no !== y.no);
+    return y && es
+      ? { karar: "uygun", gerekce: `${y.metin} ${es.metin}`.slice(0, 1200), sentez: "", neden: "", kanit_no: [y.no, es.no] }
+      : { karar: "uygun_degil", gerekce: "", sentez: "", neden: "Defterde konuyu bu ile bağlayan yerel kanıt yok.", kanit_no: [] };
+  }
+
   if (istek.semaAdi === "nace_kapsami") {
     // Her grubun listesindeki ilk kod; aynı kod ikinci kez verilmez.
     const kullanilan = new Set<string>();

@@ -1,9 +1,89 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import { EylemFormu, Gonder } from "./eylem-formu.tsx";
 import { NaceSecici, type Kayit } from "./nace-secici.tsx";
-import { ALAN_ETIKET, GIRDI } from "./ui.tsx";
-import { oneriEylemi } from "@/lib/eylem.ts";
+import { ALAN_ETIKET, DUGME_STIL, DUGME_TABAN, GIRDI } from "./ui.tsx";
+import { oneriEylemi, uygunlukEylemi, type UygunlukCevabi } from "@/lib/eylem.ts";
+import { cn } from "@/lib/utils.ts";
+
+const KARAR: Record<UygunlukCevabi["karar"], { ad: string; renk: string }> = {
+  uygun: { ad: "Belgelere göre uygun", renk: "border-l-navy" },
+  kismen: { ad: "Kısmen uygun · çekince var", renk: "border-l-unverif" },
+  uygun_degil: { ad: "Belgelere göre uygun değil", renk: "border-l-conflict" },
+  baglanamadi: { ad: "Gerekçe belgelere bağlanamadı", renk: "border-l-conflict" },
+  kanit_yok: { ad: "Belgelerde bu konu geçmiyor", renk: "border-l-conflict" },
+  taranmadi: { ad: "Belgeler henüz taranmamış", renk: "border-l-unverif" },
+  hata: { ad: "Analiz yapılamadı", renk: "border-l-conflict" },
+};
+
+/**
+ * Yalnızca başlıkla uygunluk analizi (ajans). Sonuç bir TASLAKTIR: uygunsa
+ * hazırlanan gerekçe forma aktarılır ve konu normal yoldan puanlanır.
+ */
+function UygunlukAnalizi({ il, baslik, aktar }: { il: { kod: string; ad: string }; baslik: string; aktar: (metin: string) => void }) {
+  const [sonuc, setSonuc] = useState<UygunlukCevabi | null>(null);
+  const [surer, basla] = useTransition();
+  return (
+    <div className="mt-3">
+      <div className="flex flex-wrap items-center gap-2.5">
+        <button
+          type="button"
+          disabled={surer || baslik.trim().length < 8}
+          onClick={() => basla(async () => setSonuc(await uygunlukEylemi(il.kod, baslik)))}
+          className={cn(DUGME_TABAN, DUGME_STIL.cizgi)}
+        >
+          {surer ? "Belgelere bakılıyor…" : "Yalnızca başlıkla uygunluğu analiz et"}
+        </button>
+        <span className="max-w-[46ch] text-[12px] leading-[1.45] text-ink-mute">
+          Gerekçe yazmadan: {il.ad} belgelerinden çıkarılmış kanıtlara göre konu uygun mu, uygunsa gerekçesi ne?
+        </span>
+      </div>
+      {sonuc && !surer && (
+        <div aria-live="polite" className={cn("mt-3 border border-hairline border-l-[3px] bg-paper px-3.5 py-3", KARAR[sonuc.karar].renk)}>
+          <div className="etiket text-ink">{KARAR[sonuc.karar].ad} · taslak, puan değil</div>
+          {sonuc.neden && <p className="mt-1.5 max-w-[72ch] text-[13px] leading-[1.5] text-ink-soft text-pretty">{sonuc.neden}</p>}
+          {sonuc.gerekce && (
+            <>
+              <div className="mt-3 etiket text-ink-mute">Hazırlanan gerekçe · belgede yazan</div>
+              <p className="mt-1 max-w-[72ch] text-[13px] leading-[1.5] text-ink text-pretty">{sonuc.gerekce}</p>
+            </>
+          )}
+          {sonuc.sentez && (
+            <>
+              <div className="mt-3 etiket text-ink-mute">Yapay zekâ çıkarımı · belgede yazmaz</div>
+              <p className="mt-1 max-w-[72ch] text-[13px] leading-[1.5] text-ink-soft text-pretty">{sonuc.sentez}</p>
+            </>
+          )}
+          {sonuc.kanitlar.length > 0 && (
+            <details className="mt-3">
+              <summary className="cursor-pointer etiket text-ink-mute hover:text-ink">
+                Dayanılan pasajlar · <span className="num">{sonuc.kanitlar.length}</span>
+              </summary>
+              <ul className="mt-2 border-t border-t-hairline-soft">
+                {sonuc.kanitlar.map((k) => (
+                  <li key={k.alinti} className="border-b border-b-hairline-soft py-2 text-[12.5px] leading-[1.5] text-ink-soft">
+                    <span className="text-ink">&ldquo;{k.alinti}&rdquo;</span>
+                    <span className="mt-0.5 block text-ink-mute">
+                      {k.belge}
+                      {k.bolum ? ` · ${k.bolum}` : ""}
+                      {k.yerel ? " · bu ile özgü" : ""}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+          {sonuc.taslak && (
+            <button type="button" onClick={() => aktar(sonuc.taslak)} className={cn(DUGME_TABAN, DUGME_STIL.dolu, "mt-3")}>
+              Gerekçeyi forma aktar
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /**
  * Öneri formu — sihirbazın son adımı. Tüm dokunma hedefleri ≥44px.
@@ -61,6 +141,7 @@ export function OneriFormu({
           required
           minLength={8}
         />
+        {ajansModu && <UygunlukAnalizi il={il} baslik={baslik} aktar={setGerekce} />}
 
         <div className="mt-5">
           <label className={ALAN_ETIKET} htmlFor="gerekce">
