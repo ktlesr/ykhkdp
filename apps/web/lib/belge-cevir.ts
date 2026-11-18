@@ -64,6 +64,9 @@ export function zipSismesi(veri: Uint8Array, sinir = 150_000_000): string | null
   if (adet === 0 || adet === 0xffff || p === 0xffffffff || (son >= 20 && g.getUint32(son - 20, true) === 0x07064b50)) {
     return "Dosya geçerli bir Word/Excel dosyası değil.";
   }
+  // Dizin tam olarak kayıt sonunda bitmeli: araya/başa eklenmiş bayt varsa ayrıştırıcı
+  // ofsetleri kaydırarak BAŞKA bir dizin okur; öyle dosya reddedilir.
+  if (p + g.getUint32(son + 12, true) !== son) return "Dosya bozuk.";
   let toplam = 0;
   let bulunan = 0;
   for (; p + 46 <= veri.length && g.getUint32(p, true) === 0x02014b50; bulunan++) {
@@ -86,7 +89,7 @@ export function zipSismesi(veri: Uint8Array, sinir = 150_000_000): string | null
     if (toplam > sinir) return "Dosya açıldığında çok büyük; yüklenmedi.";
     p += 46 + g.getUint16(p + 28, true) + g.getUint16(p + 30, true) + g.getUint16(p + 32, true);
   }
-  return bulunan === adet ? null : "Dosya bozuk.";
+  return bulunan === adet && p === son ? null : "Dosya bozuk.";
 }
 
 // ───────────────────────── Word ─────────────────────────

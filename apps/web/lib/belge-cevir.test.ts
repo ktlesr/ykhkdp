@@ -73,4 +73,9 @@ test("zipSismesi: girdiler gerçekten açılarak ölçülür; sınırı aşan ar
   while (g.getUint32(son, true) !== 0x06054b50) son--;
   g.setUint16(son + 10, 1, true);
   assert.equal(zipSismesi(veri), "Dosya bozuk.");
+  // Başına bayt eklenmiş arşiv (ofsetler kayar): ayrıştırıcı başka dizin okurdu, reddedilir.
+  const temiz = new Uint8Array(await k.xlsx.writeBuffer());
+  const kayik = new Uint8Array(temiz.length + 8);
+  kayik.set(temiz, 8);
+  assert.equal(zipSismesi(kayik), "Dosya bozuk.");
 });
