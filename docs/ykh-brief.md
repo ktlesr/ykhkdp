@@ -37,7 +37,7 @@ Platform resmî Portal veya E-TUYS'un yerine geçmez; yatırımcı başvuruları
 | `/rapor` | ajans + yönetici | ekran değil, indirme ucu: toplu rapor `.xlsx`; `?tur=nihai&bicim=xlsx\|docx[&il=][&bolge=]` nihai liste |
 | `/onay` | ajans | AI puanladı, onay bekliyor: onayla · puanı düzelt · NACE'yi düzelt · reddet · yakın kopya işareti |
 | `/belgeler` | ajans | üst ölçekli belge yükleme + il bazlı kapsama — AI'nin dayanağı |
-| `/belgeler/yukle` | ajans | ekran değil, belge formunun gönderim ucu: önce oturum ve rol, sonra boyut (30 MB), gövde en son okunur |
+| `/belgeler/yukle` | ajans | ekran değil, belge formunun gönderim ucu: önce oturum ve rol, köken (CSRF), boyut (30 MB); gövde en son okunur |
 
 
 Ayrıca `/giris` ve `/kayit`. Başka ekran yok.
@@ -720,9 +720,8 @@ kilidi, künye çekmecesi) bu üründe **yok**.
   ölçerden geçti; 900 cümlenin %97,6'sı PDF ham metninde birebir — kalanı
   komşu tablo hücrelerinin birleşmesi. Kütüphane aktarımındaki PyMuPDF
   dönüştürücü (%99,75) daha iyidir; toplu aktarım için o kullanılır. Yüklemeden
-  önce önizleme yok. Word/Excel açılmadan önce beyan edilen açık boyutu
-  sınanır (300 MB); beyanı sahte ZIP'e karşı tam koruma değildir — dönüştürme
-  ayrı, bellek sınırlı süreçte koşmuyor.
+  önce önizleme yok. Word/Excel ayrıştırılmadan önce her iç parça gerçekten
+  açılarak ölçülür (toplam 150 MB sınırı; beyan edilen boyuta güvenilmez).
 - E-posta doğrulama SMTP'ye bağlı değil.
 - Hız sınırı süreç içi (tek web konteyneri varsayımı); birden çok kopyada
   paylaşılan sayaç gerekir. Öneri kotası veritabanında, kopyadan bağımsız.

@@ -56,16 +56,16 @@ test("htmldenMd: varlıklar çözülür, etiketler atılır", () => {
   assert.equal(htmldenMd("<p>Ar&amp;Ge <strong>payı</strong> &lt; %1</p><ul><li>madde</li></ul>"), "Ar&Ge payı < %1\n\n- madde");
 });
 
-test("zipSismesi: açık boyutu sınırı aşan arşiv açılmadan reddedilir", async () => {
+test("zipSismesi: girdiler gerçekten açılarak ölçülür; sınırı aşan arşiv ayrıştırıcıya gitmez", async () => {
   const k = new ExcelJS.Workbook();
-  k.addWorksheet("a").addRow(["x"]);
+  const s = k.addWorksheet("a");
+  for (let i = 0; i < 2000; i++) s.addRow([`satır ${i} ` + "aynı metin ".repeat(40)]); // satırlar farklı: ortak dizgi tablosu teke indirmesin
   const veri = new Uint8Array(await k.xlsx.writeBuffer());
   assert.equal(zipSismesi(veri), null);
-  // Merkezi dizindeki ilk girdinin beyan edilen açık boyutunu 4 GB'a yakın yap.
+  assert.ok(veri.length < 200_000, "sıkışık hâli küçük");
+  assert.match(zipSismesi(veri, 200_000) ?? "", /çok büyük/); // açık hâli sınırın üstünde
+  // Beyan edilen boyutu küçültmek sonucu değiştirmez: ölçülen gerçek açma.
   const g = new DataView(veri.buffer, veri.byteOffset, veri.byteLength);
-  let p = 0;
-  while (g.getUint32(p, true) !== 0x02014b50) p++;
-  g.setUint32(p + 24, 0xfffffff0, true);
-  assert.match(zipSismesi(veri) ?? "", /çok büyük/);
-  assert.equal((await dosyadanMetin("bomba.xlsx", veri)).ok, false);
+  for (let p = 0; p + 4 <= veri.length; p++) if (g.getUint32(p, true) === 0x02014b50) g.setUint32(p + 24, 1, true);
+  assert.match(zipSismesi(veri, 200_000) ?? "", /çok büyük/);
 });

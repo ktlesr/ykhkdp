@@ -11,6 +11,8 @@
  * Tablo ağırlıklı PDF ölçerden geçemez; tablo gerekiyorsa Excel yüklenir.
  */
 
+import { inflateRawSync } from "node:zlib";
+
 export type Ceviri = { ok: true; metin: string; ozet: string; tablo: boolean } | { ok: false; hata: string };
 
 const temizle = (s: string) =>
@@ -39,11 +41,11 @@ export async function dosyadanMetin(ad: string, veri: Uint8Array): Promise<Cevir
 
 /**
  * .docx/.xlsx bir ZIP'tir: 30 MB'lık dosya açılınca gigabaytlara şişebilir.
- * Açmadan önce merkezi dizindeki BEYAN EDİLEN açık boyutlar toplanır.
- * ponytail: beyan yalan olabilir (kasıtlı bozuk ZIP); yükleme yalnızca ajans
- * rolüne açık. Tam koruma için dönüştürme bellek sınırlı ayrı süreçte koşmalı.
+ * Beyan edilen boyuta GÜVENİLMEZ (sahte yazılabilir): her girdi burada gerçekten
+ * açılır ve `maxOutputLength` sınırı aşan açma işlemini keser. Ayrıştırıcı
+ * (mammoth/exceljs) ancak bu sınamadan geçen dosyayı görür.
  */
-export function zipSismesi(veri: Uint8Array): string | null {
+export function zipSismesi(veri: Uint8Array, sinir = 150_000_000): string | null {
   const g = new DataView(veri.buffer, veri.byteOffset, veri.byteLength);
   let son = -1;
   for (let i = veri.length - 22; i >= Math.max(0, veri.length - 66_000); i--) {
@@ -59,10 +61,25 @@ export function zipSismesi(veri: Uint8Array): string | null {
   let toplam = 0;
   for (let i = 0; i < adet; i++) {
     if (p + 46 > veri.length || g.getUint32(p, true) !== 0x02014b50) return "Dosya bozuk.";
-    toplam += g.getUint32(p + 24, true);
+    const yontem = g.getUint16(p + 10, true);
+    const sikisik = g.getUint32(p + 20, true);
+    const yerel = g.getUint32(p + 42, true);
+    if (yerel + 30 > veri.length || g.getUint32(yerel, true) !== 0x04034b50) return "Dosya bozuk.";
+    const bas = yerel + 30 + g.getUint16(yerel + 26, true) + g.getUint16(yerel + 28, true);
+    if (bas + sikisik > veri.length) return "Dosya bozuk.";
+    if (yontem === 8) {
+      try {
+        toplam += inflateRawSync(veri.subarray(bas, bas + sikisik), { maxOutputLength: sinir - toplam + 1 }).length;
+      } catch (e) {
+        if ((e as { code?: string }).code !== "ERR_BUFFER_TOO_LARGE") return "Dosya bozuk.";
+        toplam = sinir + 1;
+      }
+    } else if (yontem === 0) toplam += sikisik;
+    else return "Dosya desteklenmeyen bir sıkıştırma kullanıyor.";
+    if (toplam > sinir) return "Dosya açıldığında çok büyük; yüklenmedi.";
     p += 46 + g.getUint16(p + 28, true) + g.getUint16(p + 30, true) + g.getUint16(p + 32, true);
   }
-  return toplam > 300_000_000 ? "Dosya açıldığında çok büyük (300 MB üstü); yüklenmedi." : null;
+  return null;
 }
 
 // ───────────────────────── Word ─────────────────────────

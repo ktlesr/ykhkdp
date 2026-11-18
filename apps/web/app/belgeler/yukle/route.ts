@@ -17,6 +17,13 @@ export async function POST(istek: Request) {
   if (!k || !onaylayabilir(k.rol)) {
     return Response.json({ ok: false, mesaj: "Belge yüklemek yalnızca ajans rolünde." }, { status: 403 });
   }
+  // Siteler arası istek (CSRF): sunucu eylemlerindeki köken denetimi burada yok, elle yapılır.
+  const koken = istek.headers.get("origin");
+  const site = istek.headers.get("sec-fetch-site");
+  const sunucu = istek.headers.get("x-forwarded-host") ?? istek.headers.get("host");
+  if ((site && site !== "same-origin") || !koken || new URL(koken).host !== sunucu) {
+    return Response.json({ ok: false, mesaj: "İstek bu siteden gelmiyor." }, { status: 403 });
+  }
   const boy = Number(istek.headers.get("content-length"));
   if (!Number.isFinite(boy) || boy <= 0) return Response.json({ ok: false, mesaj: "İstek boyutu bildirilmedi." }, { status: 411 });
   if (boy > SINIR) return Response.json({ ok: false, mesaj: "Dosya en çok 30 MB olabilir." }, { status: 413 });
