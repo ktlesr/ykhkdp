@@ -359,7 +359,7 @@ export async function kutuphaneYukle(): Promise<{ eklenen: number; atlanan: numb
       await sahip()<{ ad: string }[]>`
         select distinct ad from belge
         union
-        select detay->>'ad' from denetim where eylem = 'belge_silindi' and detay->>'ad' is not null`
+        select detay->>'ad' from denetim where eylem = 'belge_silindi' and detay->>'ad' is not null and coalesce((detay->>'parca')::int, 1) > 0`
     ).map((r) => r.ad),
   );
   let eklenen = 0, atlanan = 0, parca = 0;
@@ -380,7 +380,7 @@ export async function kutuphaneYukle(): Promise<{ eklenen: number; atlanan: numb
   // İÇERİK ÖZETİ karşılaştırılır — yalnızca değişen belge yeniden yazılır.
   // Ajansın sildiği veri belgesi de geri gelmez.
   const silinen = new Set(
-    (await sahip()<{ ad: string }[]>`select detay->>'ad' as ad from denetim where eylem = 'belge_silindi' and detay->>'ad' is not null`).map((r) => r.ad),
+    (await sahip()<{ ad: string }[]>`select detay->>'ad' as ad from denetim where eylem = 'belge_silindi' and detay->>'ad' is not null and coalesce((detay->>'parca')::int, 1) > 0`).map((r) => r.ad),
   );
   let veri: KutuphaneGirdisi[] = [];
   try {

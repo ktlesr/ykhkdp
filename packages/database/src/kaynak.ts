@@ -111,7 +111,7 @@ export async function cografiIsaretGuncelle(
   }
   // Ajansın /belgeler'den sildiği belge geri gelmez (kütüphane ve veri belgeleriyle aynı kural).
   const silinen = new Set(
-    (await islem(b, (sql) => sql<{ ad: string }[]>`select detay->>'ad' as ad from denetim where eylem = 'belge_silindi' and detay->>'ad' is not null`)).map((r) => r.ad),
+    (await islem(b, (sql) => sql<{ ad: string }[]>`select detay->>'ad' as ad from denetim where eylem = 'belge_silindi' and detay->>'ad' is not null and coalesce((detay->>'parca')::int, 1) > 0`)).map((r) => r.ad),
   );
   let yazilan = 0, ayni = 0;
   for (const il of iller) {

@@ -997,7 +997,9 @@ export async function kaynakBelgesiYaz(
 export async function belgeSil(b: Baglam, ad: string): Promise<number> {
   return islem(b, async (sql) => {
     const silinen = await sql`delete from belge where ad = ${ad} returning id`;
-    await denetle(sql, b, "belge_silindi", "belge", null, { ad, parca: silinen.length });
+    // Var olmayan belge için kayıt düşülmez: silme kaydı "geri yükleme" mezar taşıdır ve
+    // henüz yüklenmemiş bir belgenin adını önceden kapatmak için kullanılamamalı.
+    if (silinen.length) await denetle(sql, b, "belge_silindi", "belge", null, { ad, parca: silinen.length });
     return silinen.length;
   });
 }
