@@ -68,4 +68,9 @@ test("zipSismesi: girdiler gerçekten açılarak ölçülür; sınırı aşan ar
   const g = new DataView(veri.buffer, veri.byteOffset, veri.byteLength);
   for (let p = 0; p + 4 <= veri.length; p++) if (g.getUint32(p, true) === 0x02014b50) g.setUint32(p + 24, 1, true);
   assert.match(zipSismesi(veri, 200_000) ?? "", /çok büyük/);
+  // Girdi sayacını küçültmek girdileri sınamadan kaçırmaz: sayı tutmazsa dosya reddedilir.
+  let son = veri.length - 22;
+  while (g.getUint32(son, true) !== 0x06054b50) son--;
+  g.setUint16(son + 10, 1, true);
+  assert.equal(zipSismesi(veri), "Dosya bozuk.");
 });

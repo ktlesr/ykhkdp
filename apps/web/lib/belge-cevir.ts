@@ -58,9 +58,16 @@ export function zipSismesi(veri: Uint8Array, sinir = 150_000_000): string | null
   const adet = g.getUint16(son + 10, true);
   let p = g.getUint32(son + 16, true);
   if (adet > 5000) return "Dosya çok fazla iç parça içeriyor.";
+  // Ayrıştırıcıyla AYNI girdileri görmek için sayaca güvenilmez: merkezi dizin imza
+  // sürdükçe yürünür (JSZip böyle okur) ve bulunan sayı beyanla tutmalıdır. zip64
+  // desteklenmez — ofis belgesinde gerekmez, sınamayı atlatmanın yoludur.
+  if (adet === 0 || adet === 0xffff || p === 0xffffffff || (son >= 20 && g.getUint32(son - 20, true) === 0x07064b50)) {
+    return "Dosya geçerli bir Word/Excel dosyası değil.";
+  }
   let toplam = 0;
-  for (let i = 0; i < adet; i++) {
-    if (p + 46 > veri.length || g.getUint32(p, true) !== 0x02014b50) return "Dosya bozuk.";
+  let bulunan = 0;
+  for (; p + 46 <= veri.length && g.getUint32(p, true) === 0x02014b50; bulunan++) {
+    if (bulunan >= adet) return "Dosya bozuk.";
     const yontem = g.getUint16(p + 10, true);
     const sikisik = g.getUint32(p + 20, true);
     const yerel = g.getUint32(p + 42, true);
@@ -79,7 +86,7 @@ export function zipSismesi(veri: Uint8Array, sinir = 150_000_000): string | null
     if (toplam > sinir) return "Dosya açıldığında çok büyük; yüklenmedi.";
     p += 46 + g.getUint16(p + 28, true) + g.getUint16(p + 30, true) + g.getUint16(p + 32, true);
   }
-  return null;
+  return bulunan === adet ? null : "Dosya bozuk.";
 }
 
 // ───────────────────────── Word ─────────────────────────
