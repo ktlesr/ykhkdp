@@ -893,7 +893,10 @@ export function adaylariDogrula(
       continue;
     }
     const kaynak = normalize(cozulen.map((d) => d.metin).join(" "));
-    const kaynaksiz = sayisalTokenlar(`${a.baslik} ${a.gerekce.replace(CIPLAK_ATIF, "")}`).find((t) => !sayiKaynakta(t, kaynak));
+    const kaynaksiz = sayisalTokenlar(
+      // Yalnızca adayın GERÇEKTEN atıf yaptığı numaralar yok sayılır: "kanıt 5000 ton" denetimden kaçamaz.
+      `${a.baslik} ${a.gerekce.replace(CIPLAK_ATIF, (m) => ((m.match(/\d+/g) ?? []).every((n) => a.kanit_no.includes(Number(n))) ? "" : m))}`,
+    ).find((t) => !sayiKaynakta(t, kaynak));
     if (kaynaksiz) {
       dusenler.push({ kod: "kaynaksiz_sayi", mesaj: `${ad} kaynaksız sayı (“${kaynaksiz}”) taşıyor; düşürüldü.` });
       continue;

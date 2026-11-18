@@ -170,6 +170,8 @@ test("gerekçedeki atıf notu sayısal iddia değildir ve kayda girmez", () => {
   assert.equal(s.adaylar[0].gerekce, "İlde mermer sektörü yoğunlaşmıştır. Mermer atıkları mikronize öğütme faaliyetlerine odaklanılacaktır.");
   // Parantezsiz ve karışık biçimler de atıftır.
   assert.equal(adaylariDogrula([{ baslik, gerekce: "Kanıt 1'e göre ilde mermer sektörü yoğunlaşmıştır (bkz. kanıt 1; kanıt 22). 22 numaralı kanıt mermer atıkları mikronize öğütme faaliyetlerine odaklanır.", kanit_no: [1, 22] }], defter).adaylar.length, 1);
+  // "kanıt" sözcüğü sayıyı aklamaz: atıf yapılmayan numara sayısal iddiadır.
+  assert.equal(adaylariDogrula([{ baslik, gerekce: "İlde mermer sektörü yoğunlaşmıştır; kanıt 5000 ton mermer atıkları mikronize öğütme kapasitesidir.", kanit_no: [1, 22] }], defter).adaylar.length, 0);
   // Gerçek sayı hâlâ kaynakta aranır.
   assert.equal(adaylariDogrula([{ baslik, gerekce: "İlde mermer sektörü yoğunlaşmıştır, 22 ocak vardır (kanıt 1).", kanit_no: [1, 22] }], defter).adaylar.length, 0);
 });
