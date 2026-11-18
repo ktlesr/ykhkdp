@@ -131,6 +131,21 @@ export function KesifPaneli({ il, kesif }: { il: string; kesif: KesifDurumu | nu
           </dl>
         )}
 
+        {kesif && !surer && kesif.alinmayan.length > 0 && (
+          <details className="mt-3">
+            <summary className="cursor-pointer etiket text-ink-mute hover:text-ink">
+              Alınmayanlar ve nedenleri · <span className="num">{kesif.alinmayan.length}</span>
+            </summary>
+            <ul className="mt-2 max-w-[78ch] border-t border-t-hairline-soft">
+              {kesif.alinmayan.map((m) => (
+                <li key={m} className="border-b border-b-hairline-soft py-2 text-[13px] leading-[1.5] text-ink-soft text-pretty">
+                  {m}
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
+
         <div className="mt-4 flex flex-wrap items-center gap-2.5">
           {!surer && (
             <EylemFormu eylem={kesifEylemi} onSonuc={(s) => s.ok && router.refresh()}>

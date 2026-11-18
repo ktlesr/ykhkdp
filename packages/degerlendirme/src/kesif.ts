@@ -321,7 +321,7 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
       }
     }
     await denetle(sql, tetikleyen, "kesif_adaylari_yazildi", "kesif", k.id, {
-      yazilan, atlananlar, desteklenen, tekrarlar, dusenler: a.dusenler.slice(0, 10), model: a.modelSnapshot, promptSurum: a.promptSurum,
+      yazilan, atlananlar, desteklenen, tekrarlar, dusenler: a.dusenler.slice(0, 30), model: a.modelSnapshot, promptSurum: a.promptSurum,
       not: "Adaylar doğrulanmamış; her biri ayrıca puanlanır ve ajans onayı bekler.",
     });
   });

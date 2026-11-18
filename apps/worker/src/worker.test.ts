@@ -230,6 +230,10 @@ test("keşif: bütün parçaları tarar, adayları yerel kanıtla ve kaynaktan b
     const [{ n: ikinci }] = await islem(SERVIS, (sql) => sql<{ n: string }[]>`select count(*) as n from oneri where kesif_id = ${id2} and koken = 'yeni'`);
     assert.equal(Number(ikinci), 0, "ikinci keşif aynı konuları yeniden kuyruğa almaz");
     assert.match(s2.mesaj, /zaten önerilmiş/);
+    // Hangi adayın neden alınmadığı ekrana giden kayıtta yazar.
+    const { sonKesif } = await import("@ykh/database");
+    const son = await sonKesif(ajans, d);
+    assert.ok(son?.alinmayan.some((m) => /zaten önerilmiş/.test(m)), JSON.stringify(son?.alinmayan));
   }
   // Aynı başlık ikinci kez yazılmaz (model başka başlık üretebilir; o yeni bir adaydır).
   const [{ n: kopya }] = await islem(SERVIS, (sql) => sql<{ n: string }[]>`

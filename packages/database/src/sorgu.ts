@@ -1210,20 +1210,35 @@ export type KesifDurumu = {
   toplam_parca: number; taranan_parca: number; kanit_sayisi: number; yerel_kanit: number;
   aday_sayisi: number; taranamayan: number; mesaj: string | null; model_snapshot: string | null; guncellendi: string;
   tarih: string;
+  /** Alınmayan adaylar ve düşen ürün grupları, nedeniyle — denetim kaydından. */
+  alinmayan: string[];
 };
 
 /** Dönemin en son keşif koşusu — ajans ekranında ilerleme ve sonuç. */
 export async function sonKesif(b: Baglam, donemId: number): Promise<KesifDurumu | null> {
   if (b.rol === "anonim" || !onaylayabilir(b.rol)) return null;
   const [r] = await islem(b, (sql) =>
-    sql<KesifDurumu[]>`
+    sql<(Omit<KesifDurumu, "alinmayan"> & { kayit: { dusenler?: string[]; atlananlar?: string[]; tekrarlar?: { baslik: string; neden: string }[] } | null })[]>`
       select id, durum, asama, toplam_parca, taranan_parca, kanit_sayisi, yerel_kanit, aday_sayisi, taranamayan,
              mesaj, model_snapshot, guncellendi::text,
-             to_char(olusturuldu at time zone 'Europe/Istanbul', 'DD.MM.YYYY HH24:MI') as tarih
+             to_char(olusturuldu at time zone 'Europe/Istanbul', 'DD.MM.YYYY HH24:MI') as tarih,
+             (select d.detay from denetim d
+              where d.nesne_tip = 'kesif' and d.nesne_id = kesif.id::text and d.eylem = 'kesif_adaylari_yazildi'
+              order by d.id desc limit 1) as kayit
       from kesif where donem_id = ${donemId} order by id desc limit 1
     `,
   );
-  return r ? { ...r, id: Number(r.id) } : null;
+  if (!r) return null;
+  const { kayit, ...k } = r;
+  return {
+    ...k,
+    id: Number(k.id),
+    alinmayan: [
+      ...(kayit?.dusenler ?? []),
+      ...(kayit?.tekrarlar ?? []).map((t) => `“${t.baslik}” bu dönemde zaten önerilmiş bir konuyla aynı (${t.neden}); alınmadı.`),
+      ...(kayit?.atlananlar ?? []).map((a) => `“${a}” bu dönemde zaten önerilmiş; alınmadı.`),
+    ],
+  };
 }
 
 export class KesifZatenAcik extends Error {}
