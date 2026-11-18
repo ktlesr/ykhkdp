@@ -76,7 +76,12 @@ export type KaynakSonucu = { kaynak: string; yazilan: number; ayni: number; atla
  * (başvuru → tescil) bir sonraki sayı değişiminde yakalanır. `zorla` atlar.
  */
 export async function cografiIsaretGuncelle(
-  b: Baglam, o: { zorla?: boolean; beklemeMs?: number; surdur?: () => boolean } = {},
+  b: Baglam,
+  o: {
+    zorla?: boolean; beklemeMs?: number; surdur?: () => boolean;
+    /** Her il belgesi için çağrılır — CLI metni depoya da yazar (canlı sunucu kaynağa erişemezse yedek yol). */
+    herBelge?: (il: { kod: string; ad: string; ajans_kod: string }, ad: string, metin: string) => void;
+  } = {},
 ): Promise<KaynakSonucu> {
   const ilk = await ciSayfa(1);
   // Sayısız ya da boş yanıt "liste tamam" sayılmasın: ilk dokuz kayıt il belgelerini ezerdi.
@@ -120,9 +125,11 @@ export async function cografiIsaretGuncelle(
     if (!liste?.length) continue;
     const ad = `${il.ad} Coğrafi İşaretleri (Türk Patent)`;
     if (silinen.has(ad)) continue;
+    const metin = ciMetni(il.ad, liste);
+    o.herBelge?.(il, ad, metin);
     const r = await kaynakBelgesiYaz(b, {
       ad, tur: "il_raporu", yil: null,
-      ajansKod: il.ajans_kod, ilKod: il.kod, kategori: "cografi_isaret", metin: ciMetni(il.ad, liste),
+      ajansKod: il.ajans_kod, ilKod: il.kod, kategori: "cografi_isaret", metin,
     });
     if (r === "yazildi") yazilan++; else ayni++;
   }

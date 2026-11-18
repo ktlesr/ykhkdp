@@ -276,6 +276,17 @@ açıktır; yedek devreye girerse künyeye YANITI VEREN model yazılır. Anahtar
 tanımlı olmayan sağlayıcı seçilemez; seçili sağlayıcının anahtarı çalışma
 anında yoksa çağrı açık hatayla durur, başka modele sessizce düşülmez.
 
+**Zafer AI Local LLM** (2026-11-18). Kurumun kendi sunucusundaki model
+(`gemma4-26b`, vLLM, OpenAI uyumlu `/chat/completions`; adres `ZAFER_AI_URL`,
+anahtar `ZAFER_AI_API_KEY`) yargı ve tarama için seçilebilir. Çıktı
+`response_format: json_schema` ile şemaya zorlanır, Zod yanıtta aynısını
+uygular; doğrulama zinciri değişmez. Sunucu sınırları (dakikada 30 istek, aynı
+anda 4 çağrı, cevap en çok 8.192 token) istemcide karşılanır: en çok 3
+eşzamanlı çağrı, 429'da geri çekilme, kesilen cevap açık hatadır. Limit yedeği
+YOK: yerel model seçildiyse metin başka sağlayıcıya sessizce gitmez. Kalitesi
+henüz ölçülmedi — yargıda kullanmadan önce `YKH_MODEL_SNAPSHOT=gemma4-26b`
+ile eval koşturulmalı. Gömme modeli (anlamsal arama) bağlanmadı.
+
 **Tarama önbelleği modelden bağımsızdır** (2026-11-18). Bir parça hangi modelle
 taranmış olursa olsun taranmış sayılır; tarama ya da yargı modeli değişince
 kütüphane baştan taranmaz, yalnızca henüz taranmamış parçalar yeni modelle

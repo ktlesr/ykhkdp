@@ -33,5 +33,7 @@ export const MODEL_SECENEKLERI = [
   { id: "anthropic:claude-opus-5-5", saglayici: "anthropic", model: "claude-opus-5-5", ad: "Claude Opus 5.5", anahtar: "ANTHROPIC_API_KEY" },
   { id: "anthropic:claude-sonnet-5-5", saglayici: "anthropic", model: "claude-sonnet-5-5", ad: "Claude Sonnet 5.5", anahtar: "ANTHROPIC_API_KEY" },
   { id: "anthropic:claude-haiku-5-5", saglayici: "anthropic", model: "claude-haiku-5-5", ad: "Claude Haiku 5.5", anahtar: "ANTHROPIC_API_KEY" },
+  // Kurumun kendi sunucusundaki model (vLLM, OpenAI uyumlu uç). Belge metni kurum dışına çıkmaz.
+  { id: "zafer:gemma4-26b", saglayici: "zafer", model: "gemma4-26b", ad: "Zafer AI Local LLM (Gemma 4)", anahtar: "ZAFER_AI_API_KEY" },
 ] as const;
 export type ModelSecenegi = (typeof MODEL_SECENEKLERI)[number];

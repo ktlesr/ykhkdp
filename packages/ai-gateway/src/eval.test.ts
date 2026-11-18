@@ -286,3 +286,34 @@ test("kriter payı dayanağa yansır — yerellik boşluğu daha pahalı", async
   const kucuk = await degerlendir(cikti({ surdurulebilirlik: [1] }), "claude-opus-5-20260101", girdi);
   assert.ok(yerellik.ok && kucuk.ok && yerellik.dayanak > kucuk.dayanak);
 });
+
+test("Zafer AI istemcisi: OpenAI uyumlu uç, şemalı çıktı, eşzamanlılık sınırı", async () => {
+  const { zaferIstemci } = await import("./istemci.ts");
+  const eskiFetch = globalThis.fetch;
+  const eskiAnahtar = process.env.ZAFER_AI_API_KEY;
+  process.env.ZAFER_AI_API_KEY = "sinama-anahtari";
+  let acik = 0, enCok = 0;
+  const istekler: Array<{ url: string; govde: Record<string, unknown>; yetki: string }> = [];
+  globalThis.fetch = (async (url: string, init: { body: string; headers: Record<string, string> }) => {
+    acik++; enCok = Math.max(enCok, acik);
+    istekler.push({ url, govde: JSON.parse(init.body), yetki: init.headers.authorization });
+    await new Promise((r) => setTimeout(r, 15));
+    acik--;
+    return new Response(JSON.stringify({ choices: [{ message: { content: '{"tamam":true}' }, finish_reason: "stop" }], usage: { prompt_tokens: 11, completion_tokens: 5 } }), { status: 200 });
+  }) as never;
+  try {
+    const istek = { modelSnapshot: "gemma4-26b", sistem: "s", kullanici: "k", semaAdi: "x", jsonSema: { type: "object" } };
+    const cevaplar = await Promise.all(Array.from({ length: 8 }, () => zaferIstemci().cagir(istek as never)));
+    assert.equal(cevaplar[0].metin, '{"tamam":true}');
+    assert.equal(cevaplar[0].girdiToken, 11);
+    assert.ok(enCok <= 3, `aynı anda en çok 3 çağrı (sunucu sınırı 4); görülen ${enCok}`);
+    assert.equal(istekler.length, 8);
+    assert.match(istekler[0].url, /\/api\/v1\/chat\/completions$/);
+    assert.equal(istekler[0].yetki, "Bearer sinama-anahtari");
+    assert.equal((istekler[0].govde.response_format as { type: string }).type, "json_schema");
+    assert.equal(istekler[0].govde.model, "gemma4-26b");
+  } finally {
+    globalThis.fetch = eskiFetch;
+    if (eskiAnahtar === undefined) delete process.env.ZAFER_AI_API_KEY; else process.env.ZAFER_AI_API_KEY = eskiAnahtar;
+  }
+});

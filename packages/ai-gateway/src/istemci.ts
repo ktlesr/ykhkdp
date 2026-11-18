@@ -17,12 +17,14 @@ import type { ModelCevabi, ModelIstegi, ModelIstemcisi } from "./gateway.ts";
  * Seçilen sağlayıcının anahtarı yoksa çağrı anında açık hata verir —
  * sessizce başka sağlayıcıya düşmek künyeyi yalanlardı.
  */
-export function istemciSec(saglayici?: "openai" | "anthropic" | "cevrimdisi"): ModelIstemcisi {
+export function istemciSec(saglayici?: "openai" | "anthropic" | "zafer" | "cevrimdisi"): ModelIstemcisi {
   if (saglayici === "anthropic") return yedekli(anthropicIstemci(eforSec));
+  if (saglayici === "zafer") return zaferIstemci();
   if (saglayici === "openai") return openAiIstemci();
   if (saglayici === "cevrimdisi") return cevrimdisiIstemci();
   // Ortamda Claude pinlendiyse (eval, sınama) sağlayıcı ondan çıkar.
   if (process.env.YKH_MODEL_SNAPSHOT?.startsWith("claude-")) return yedekli(anthropicIstemci(eforSec));
+  if (process.env.YKH_MODEL_SNAPSHOT?.startsWith("gemma")) return zaferIstemci();
   return process.env.OPENAI_API_KEY ? openAiIstemci() : cevrimdisiIstemci();
 }
 
@@ -265,6 +267,74 @@ export const openAiIstemci = (): ModelIstemcisi => ({
       metin: j.output_text ?? mesaj ?? "",
       girdiToken: j.usage?.input_tokens ?? 0,
       ciktiToken: j.usage?.output_tokens ?? 0,
+    };
+  },
+});
+
+/**
+ * Zafer AI Local LLM — kurumun kendi sunucusundaki model, OpenAI uyumlu
+ * `/chat/completions` ucu (vLLM; `response_format: json_schema` çıktıyı şemaya
+ * zorlar). Adres `ZAFER_AI_URL`, anahtar `ZAFER_AI_API_KEY`.
+ *
+ * Sunucunun sınırları: anahtar başına dakikada 30 istek, aynı anda 4 çağrı,
+ * çağrı başına 10 dakika, cevap en çok 8.192 token. Eşzamanlılık BURADA
+ * sınırlanır (tarama 10 çağrıyı birden açar); dakika sınırı 429 +
+ * `retry-after` ile geri çekilerek karşılanır. Limit yedeği YOK: yerel model
+ * seçildiyse metin başka sağlayıcıya sessizce gitmez; hata olduğu gibi görünür.
+ */
+const ZAFER_ESZAMANLI = Math.max(1, Number(process.env.ZAFER_AI_ESZAMANLI) || 3);
+let zaferAcik = 0;
+const zaferSira: Array<() => void> = [];
+async function zaferSirasi<S>(is: () => Promise<S>): Promise<S> {
+  if (zaferAcik >= ZAFER_ESZAMANLI) await new Promise<void>((ok) => zaferSira.push(ok));
+  else zaferAcik++;
+  try {
+    return await is();
+  } finally {
+    const sonraki = zaferSira.shift();
+    if (sonraki) sonraki(); // yer doğrudan sıradakine devredilir
+    else zaferAcik--;
+  }
+}
+
+export const zaferIstemci = (): ModelIstemcisi => ({
+  ad: "zafer",
+  async cagir(istek: ModelIstegi): Promise<ModelCevabi> {
+    const anahtar = process.env.ZAFER_AI_API_KEY;
+    if (!anahtar) throw new Error("ZAFER_AI_API_KEY tanımlı değil.");
+    const taban = (process.env.ZAFER_AI_URL || "https://ai.zafer.gov.tr/api/v1").replace(/\/+$/, "");
+    const yanit = await zaferSirasi(() =>
+      yenidenDene(() =>
+        fetch(`${taban}/chat/completions`, {
+          method: "POST",
+          headers: { "content-type": "application/json", authorization: `Bearer ${anahtar}` },
+          body: JSON.stringify({
+            model: istek.modelSnapshot,
+            messages: [
+              { role: "system", content: istek.sistem },
+              { role: "user", content: istek.kullanici },
+            ],
+            response_format: { type: "json_schema", json_schema: { name: istek.semaAdi, strict: true, schema: istek.jsonSema } },
+            max_tokens: 8192,
+            stream: false,
+          }),
+          // Yerel model bulut modellerinden yavaş; sunucunun kendi sınırı 10 dakika.
+          signal: AbortSignal.timeout(Number(process.env.ZAFER_AI_ZAMAN_ASIMI_MS) || 590_000),
+        }),
+      ),
+    );
+    if (!yanit.ok) throw new Error(`Zafer AI ${yanit.status}: ${(await yanit.text()).slice(0, 500)}`);
+    const j = (await yanit.json()) as {
+      choices?: Array<{ message?: { content?: string | null }; finish_reason?: string }>;
+      usage?: { prompt_tokens?: number; completion_tokens?: number };
+    };
+    const secim = j.choices?.[0];
+    // Kesilmiş cevap geçerli JSON değildir; nedeni açık yazılsın ("geçerli JSON değil" yerine).
+    if (secim?.finish_reason === "length") throw new Error("Zafer AI: cevap 8.192 token sınırında kesildi.");
+    return {
+      metin: secim?.message?.content ?? "",
+      girdiToken: j.usage?.prompt_tokens ?? 0,
+      ciktiToken: j.usage?.completion_tokens ?? 0,
     };
   },
 });

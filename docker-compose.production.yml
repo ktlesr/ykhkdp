@@ -52,6 +52,9 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       # /ayarlar'dan Claude seçilebilmesi için; web (seçim doğrulaması) ve worker (çağrı) ikisi de görmeli.
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Zafer AI Local LLM (kurum sunucusu, OpenAI uyumlu uç); /ayarlar'dan seçilir.
+      ZAFER_AI_API_KEY: ${ZAFER_AI_API_KEY:-}
+      ZAFER_AI_URL: ${ZAFER_AI_URL:-}
       YKH_MODEL_SNAPSHOT: ${YKH_MODEL_SNAPSHOT}
       YKH_MODEL_EFOR: ${YKH_MODEL_EFOR}
       YKH_LOG_SEVIYE: ${YKH_LOG_SEVIYE}
@@ -79,6 +82,9 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       # /ayarlar'dan Claude seçilebilmesi için; web (seçim doğrulaması) ve worker (çağrı) ikisi de görmeli.
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Zafer AI Local LLM (kurum sunucusu, OpenAI uyumlu uç); /ayarlar'dan seçilir.
+      ZAFER_AI_API_KEY: ${ZAFER_AI_API_KEY:-}
+      ZAFER_AI_URL: ${ZAFER_AI_URL:-}
       YKH_MODEL_SNAPSHOT: ${YKH_MODEL_SNAPSHOT}
       YKH_MODEL_EFOR: ${YKH_MODEL_EFOR}
       YKH_WORKER_ARALIK: ${YKH_WORKER_ARALIK}

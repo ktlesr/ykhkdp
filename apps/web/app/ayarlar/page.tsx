@@ -56,12 +56,14 @@ export default async function Ayarlar() {
     "anthropic:claude-opus-5-5": "Eval geçti; düşen alıntı %0, belge dayanağı en yüksek. Sonnet'in iki katı fiyat.",
     "anthropic:claude-sonnet-5-5": "Önerilen. Eval geçti; yerel/genel gerekçe ayrımı 78/36, belgeli/belgesiz konu 80/9. Opus'un yarı fiyatı.",
     "anthropic:claude-haiku-5-5": "Eval kırıldı: yerellik ayrımı zayıf (55/32). Yargı için önerilmez.",
+    "zafer:gemma4-26b": "Kurum sunucusundaki model: belge metni kurum dışına çıkmaz, çağrı ücreti yok. Yargı kalitesi henüz ölçülmedi (eval koşturulmadı).",
   };
   const TARAMA_ACIKLAMA: Record<string, string> = {
     "openai:gpt-5.4-mini-2026-03-17": "8 grupta 75 kanıt, 1 reddedilen çağrı, ort. 6,1 sn.",
     "anthropic:claude-opus-5-5": "8 grupta 66 kanıt, 0 ret, ort. 9,6 sn; ≈$0,41. Taramada gereğinden pahalı.",
     "anthropic:claude-sonnet-5-5": "8 grupta yalnızca 13 kanıt, 4 reddedilen çağrı. Tarama için önerilmez.",
     "anthropic:claude-haiku-5-5": "Önerilen. 8 grupta 57 kanıt, 0 ret, ort. 4 sn; ≈$0,009 — Opus'un ~45'te biri.",
+    "zafer:gemma4-26b": "Kurum sunucusundaki model: ücret yok, ama dakikada 30 istek sınırıyla tarama yavaş. Kanıt verimi henüz ölçülmedi.",
   };
   const anthropicSecenekleri = MODEL_SECENEKLERI.map((m) => ({
     id: m.id,

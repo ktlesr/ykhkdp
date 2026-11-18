@@ -1,5 +1,815 @@
 [
  {
+  "dosya": "docs/veri/cografi-isaret/adana.md",
+  "ad": "Adana Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR62",
+  "ilKod": "adana",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/adiyaman.md",
+  "ad": "Adıyaman Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRC1",
+  "ilKod": "adiyaman",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/afyonkarahisar.md",
+  "ad": "Afyonkarahisar Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR33",
+  "ilKod": "afyonkarahisar",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/agri.md",
+  "ad": "Ağrı Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRA2",
+  "ilKod": "agri",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/aksaray.md",
+  "ad": "Aksaray Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR71",
+  "ilKod": "aksaray",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/amasya.md",
+  "ad": "Amasya Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR83",
+  "ilKod": "amasya",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/ankara.md",
+  "ad": "Ankara Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR51",
+  "ilKod": "ankara",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/antalya.md",
+  "ad": "Antalya Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR61",
+  "ilKod": "antalya",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/ardahan.md",
+  "ad": "Ardahan Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRA2",
+  "ilKod": "ardahan",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/artvin.md",
+  "ad": "Artvin Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR90",
+  "ilKod": "artvin",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/aydin.md",
+  "ad": "Aydın Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR32",
+  "ilKod": "aydin",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/balikesir.md",
+  "ad": "Balıkesir Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR22",
+  "ilKod": "balikesir",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/bartin.md",
+  "ad": "Bartın Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR81",
+  "ilKod": "bartin",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/batman.md",
+  "ad": "Batman Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRC3",
+  "ilKod": "batman",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/bayburt.md",
+  "ad": "Bayburt Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRA1",
+  "ilKod": "bayburt",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/bilecik.md",
+  "ad": "Bilecik Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR41",
+  "ilKod": "bilecik",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/bingol.md",
+  "ad": "Bingöl Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRB1",
+  "ilKod": "bingol",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/bitlis.md",
+  "ad": "Bitlis Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRB2",
+  "ilKod": "bitlis",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/bolu.md",
+  "ad": "Bolu Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR42",
+  "ilKod": "bolu",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/burdur.md",
+  "ad": "Burdur Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR61",
+  "ilKod": "burdur",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/bursa.md",
+  "ad": "Bursa Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR41",
+  "ilKod": "bursa",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/canakkale.md",
+  "ad": "Çanakkale Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR22",
+  "ilKod": "canakkale",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/cankiri.md",
+  "ad": "Çankırı Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR82",
+  "ilKod": "cankiri",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/corum.md",
+  "ad": "Çorum Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR83",
+  "ilKod": "corum",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/denizli.md",
+  "ad": "Denizli Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR32",
+  "ilKod": "denizli",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/diyarbakir.md",
+  "ad": "Diyarbakır Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRC2",
+  "ilKod": "diyarbakir",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/duzce.md",
+  "ad": "Düzce Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR42",
+  "ilKod": "duzce",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/edirne.md",
+  "ad": "Edirne Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR21",
+  "ilKod": "edirne",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/elazig.md",
+  "ad": "Elâzığ Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRB1",
+  "ilKod": "elazig",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/erzincan.md",
+  "ad": "Erzincan Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRA1",
+  "ilKod": "erzincan",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/erzurum.md",
+  "ad": "Erzurum Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRA1",
+  "ilKod": "erzurum",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/eskisehir.md",
+  "ad": "Eskişehir Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR41",
+  "ilKod": "eskisehir",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/gaziantep.md",
+  "ad": "Gaziantep Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRC1",
+  "ilKod": "gaziantep",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/giresun.md",
+  "ad": "Giresun Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR90",
+  "ilKod": "giresun",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/gumushane.md",
+  "ad": "Gümüşhane Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR90",
+  "ilKod": "gumushane",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/hakkari.md",
+  "ad": "Hakkâri Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRB2",
+  "ilKod": "hakkari",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/hatay.md",
+  "ad": "Hatay Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR63",
+  "ilKod": "hatay",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/igdir.md",
+  "ad": "Iğdır Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRA2",
+  "ilKod": "igdir",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/isparta.md",
+  "ad": "Isparta Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR61",
+  "ilKod": "isparta",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/istanbul.md",
+  "ad": "İstanbul Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR10",
+  "ilKod": "istanbul",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/izmir.md",
+  "ad": "İzmir Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR31",
+  "ilKod": "izmir",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/kahramanmaras.md",
+  "ad": "Kahramanmaraş Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR63",
+  "ilKod": "kahramanmaras",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/karabuk.md",
+  "ad": "Karabük Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR81",
+  "ilKod": "karabuk",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/karaman.md",
+  "ad": "Karaman Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR52",
+  "ilKod": "karaman",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/kars.md",
+  "ad": "Kars Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRA2",
+  "ilKod": "kars",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/kastamonu.md",
+  "ad": "Kastamonu Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR82",
+  "ilKod": "kastamonu",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/kayseri.md",
+  "ad": "Kayseri Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR72",
+  "ilKod": "kayseri",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/kilis.md",
+  "ad": "Kilis Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRC1",
+  "ilKod": "kilis",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/kirikkale.md",
+  "ad": "Kırıkkale Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR71",
+  "ilKod": "kirikkale",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/kirklareli.md",
+  "ad": "Kırklareli Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR21",
+  "ilKod": "kirklareli",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/kirsehir.md",
+  "ad": "Kırşehir Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR71",
+  "ilKod": "kirsehir",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/kocaeli.md",
+  "ad": "Kocaeli Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR42",
+  "ilKod": "kocaeli",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/konya.md",
+  "ad": "Konya Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR52",
+  "ilKod": "konya",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/kutahya.md",
+  "ad": "Kütahya Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR33",
+  "ilKod": "kutahya",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/malatya.md",
+  "ad": "Malatya Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRB1",
+  "ilKod": "malatya",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/manisa.md",
+  "ad": "Manisa Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR33",
+  "ilKod": "manisa",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/mardin.md",
+  "ad": "Mardin Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRC3",
+  "ilKod": "mardin",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/mersin.md",
+  "ad": "Mersin Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR62",
+  "ilKod": "mersin",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/mugla.md",
+  "ad": "Muğla Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR32",
+  "ilKod": "mugla",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/mus.md",
+  "ad": "Muş Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRB2",
+  "ilKod": "mus",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/nevsehir.md",
+  "ad": "Nevşehir Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR71",
+  "ilKod": "nevsehir",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/nigde.md",
+  "ad": "Niğde Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR71",
+  "ilKod": "nigde",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/ordu.md",
+  "ad": "Ordu Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR90",
+  "ilKod": "ordu",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/osmaniye.md",
+  "ad": "Osmaniye Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR63",
+  "ilKod": "osmaniye",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/rize.md",
+  "ad": "Rize Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR90",
+  "ilKod": "rize",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/sakarya.md",
+  "ad": "Sakarya Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR42",
+  "ilKod": "sakarya",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/samsun.md",
+  "ad": "Samsun Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR83",
+  "ilKod": "samsun",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/sanliurfa.md",
+  "ad": "Şanlıurfa Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRC2",
+  "ilKod": "sanliurfa",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/siirt.md",
+  "ad": "Siirt Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRC3",
+  "ilKod": "siirt",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/sinop.md",
+  "ad": "Sinop Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR82",
+  "ilKod": "sinop",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/sirnak.md",
+  "ad": "Şırnak Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRC3",
+  "ilKod": "sirnak",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/sivas.md",
+  "ad": "Sivas Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR72",
+  "ilKod": "sivas",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/tekirdag.md",
+  "ad": "Tekirdağ Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR21",
+  "ilKod": "tekirdag",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/tokat.md",
+  "ad": "Tokat Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR83",
+  "ilKod": "tokat",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/trabzon.md",
+  "ad": "Trabzon Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR90",
+  "ilKod": "trabzon",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/tunceli.md",
+  "ad": "Tunceli Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRB1",
+  "ilKod": "tunceli",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/usak.md",
+  "ad": "Uşak Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR33",
+  "ilKod": "usak",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/van.md",
+  "ad": "Van Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRB2",
+  "ilKod": "van",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/yalova.md",
+  "ad": "Yalova Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR42",
+  "ilKod": "yalova",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/yozgat.md",
+  "ad": "Yozgat Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR72",
+  "ilKod": "yozgat",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/cografi-isaret/zonguldak.md",
+  "ad": "Zonguldak Coğrafi İşaretleri (Türk Patent)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR81",
+  "ilKod": "zonguldak",
+  "kategori": "cografi_isaret",
+  "kaynak": "https://ci.turkpatent.gov.tr"
+ },
+ {
   "dosya": "docs/veri/dis-ticaret/adana.md",
   "ad": "Adana İhracat İstatistikleri (TÜİK)",
   "tur": "il_raporu",

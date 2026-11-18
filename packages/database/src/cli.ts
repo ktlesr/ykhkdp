@@ -62,7 +62,27 @@ try {
     case "kaynak": {
       // Dış veri kaynaklarını ŞİMDİ çeker (işleyici bunu günde bir kendisi yapar).
       const { cografiIsaretGuncelle } = await import("./kaynak.ts");
-      const r = await cografiIsaretGuncelle({ gonderenRef: null, rol: "yonetici" }, { zorla: true });
+      // Metin depoya da yazılır (docs/veri/cografi-isaret): canlı sunucu Türk
+      // Patent'e erişemese de `db:kur` belgeleri yükler. Dosya içeriği işleyicinin
+      // yazdığı metnin AYNISIDIR (aynı özet) — iki yol birbirini ezmez.
+      const { mkdir, readFile, writeFile } = await import("node:fs/promises");
+      const girdiler: object[] = [];
+      const yazilacak: Array<[string, string]> = [];
+      const r = await cografiIsaretGuncelle({ gonderenRef: null, rol: "yonetici" }, {
+        zorla: true,
+        herBelge: (il, ad, metin) => {
+          yazilacak.push([`docs/veri/cografi-isaret/${il.kod}.md`, metin]);
+          girdiler.push({ dosya: `docs/veri/cografi-isaret/${il.kod}.md`, ad, tur: "il_raporu", yil: null, ajansKod: il.ajans_kod, ilKod: il.kod,
+            kategori: "cografi_isaret", kaynak: "https://ci.turkpatent.gov.tr" });
+        },
+      });
+      await mkdir(yolCoz("docs/veri/cografi-isaret"), { recursive: true });
+      for (const [yol, metin] of yazilacak) await writeFile(yolCoz(yol), metin, "utf8");
+      const manifestYolu = yolCoz("docs/veri/manifest.json");
+      const eski: Array<{ dosya: string }> = JSON.parse(await readFile(manifestYolu, "utf8").catch(() => "[]"));
+      const yeni = [...eski.filter((g) => !g.dosya.startsWith("docs/veri/cografi-isaret/")), ...(girdiler as Array<{ dosya: string }>)]
+        .sort((a, b) => (a.dosya < b.dosya ? -1 : 1));
+      await writeFile(manifestYolu, JSON.stringify(yeni, null, 1) + "\n", "utf8");
       console.log(`Coğrafi işaret: ${r.yazilan} il yazıldı · ${r.ayni} değişmedi${r.atlanan.length ? ` · eşleşmeyen: ${r.atlanan.join(", ")}` : ""}`);
       break;
     }
