@@ -119,7 +119,7 @@ test("değerlendirme kaydı model künyesi ve dayanak taşır", async () => {
   );
   assert.ok(d, "değerlendirme kaydı olmalı");
   assert.notEqual(d.model_snapshot, "latest");
-  assert.equal(d.prompt_surum, "degerlendirme-v8");
+  assert.equal(d.prompt_surum, "degerlendirme-v9");
   assert.ok(d.dayanak >= 0 && d.dayanak <= 100);
 });
 

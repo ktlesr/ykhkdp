@@ -107,7 +107,8 @@ export function sayiKaynakta(token: string, normalizeKaynak: string): boolean {
   const cekirdek = token.match(/\d[\d.,]*/)?.[0].replace(/[.,]+$/, "");
   if (!cekirdek) return true;
   // Yalnızca nokta kaçışlanır: "u" kipinde `\,` geçersiz bir kaçıştır.
-  const kacis = cekirdek.replace(/\./g, "\\.");
+  // Ayraç biçimi değer değildir: belgede "2,247" yazan sayıyı model "2.247" yazabiliyor.
+  const kacis = cekirdek.replace(/[.,]/g, "[.,]");
   return new RegExp(`(?<![\\p{N}])${kacis}(?![\\p{N}]|[.,]\\p{N})`, "u").test(normalizeKaynak);
 }
 
@@ -766,10 +767,11 @@ export function kanitlariDogrula(
 export type DefterKaydi = { no: number; kanitId: number; yerel: boolean; metin: string };
 
 export type HamUrunGrubu = { ad: string; kanit_no: readonly number[] };
-export type HamAday = { baslik: string; gerekce: string; kanit_no: readonly number[]; urun_gruplari?: readonly HamUrunGrubu[] };
+export type HamAday = { baslik: string; gerekce: string; sentez?: string; kanit_no: readonly number[]; urun_gruplari?: readonly HamUrunGrubu[] };
 /** Doğrulanmış ürün grubu: kendi kanıtına bağlı; `yerel` = kanıtlarından biri bu ile özgü. */
 export type UrunGrubu = { ad: string; kanitIdleri: number[]; yerel: boolean };
-export type DogrulanmisAday = { baslik: string; gerekce: string; kanitIdleri: number[]; urunGruplari: UrunGrubu[] };
+/** `sentez`: modelin çıkarımı (olgu değil). Kanıtta olmayan sayı taşıyorsa boşaltılır. */
+export type DogrulanmisAday = { baslik: string; gerekce: string; sentez: string; kanitIdleri: number[]; urunGruplari: UrunGrubu[] };
 
 /**
  * Ürün grubunda ayırt edici sayılmayan genel kökler — "otomotiv sanayi"
@@ -906,9 +908,21 @@ export function adaylariDogrula(
       dusenler.push({ kod: "alinti_eslesmiyor", mesaj: `${ad} gerekçesindeki “${desteksiz.slice(0, 80)}” cümlesi atıf yapılan kanıtlarda karşılık bulmuyor; düşürüldü.` });
       continue;
     }
+    /**
+     * Sentez modelin ÇIKARIMIDIR: kanıtta karşılık aranmaz (bağ kurar, olgu
+     * söylemez) ve kayıtta öyle etiketlenir. Ama yeni sayı getiremez: kaynaksız
+     * sayı taşıyan sentez düşer, aday kalır.
+     */
+    let sentez = (ham.sentez ?? "").replace(ATIF_NOTU, "").trim();
+    const sentezSayisi = sayisalTokenlar(sentez.replace(CIPLAK_ATIF, "")).find((t) => !sayiKaynakta(t, kaynak));
+    if (sentezSayisi) {
+      dusenler.push({ kod: "kaynaksiz_sayi", mesaj: `Çıkarım düşürüldü: ${ad} adayının çıkarımı kaynaksız sayı (“${sentezSayisi}”) taşıyor; aday çıkarımsız alındı.` });
+      sentez = "";
+    }
     sonuc.push({
       baslik: a.baslik.trim(),
       gerekce: a.gerekce.trim(),
+      sentez,
       kanitIdleri: cozulen.map((d) => d.kanitId),
       urunGruplari: urunGruplariniDogrula(a.baslik, a.urun_gruplari ?? [], cozulen, numara, dusenler),
     });

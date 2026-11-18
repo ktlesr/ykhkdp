@@ -153,7 +153,7 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
                 ? "Neden burada? · belgelerden keşif, yapay zekâ yazdı"
                 : "Neden burada? · yatırımcının gerekçesi"}
           </div>
-          <p className="px-4 py-4 text-[13.5px] leading-[1.6] text-ink text-pretty">{o.gerekce}</p>
+          <p className="whitespace-pre-line px-4 py-4 text-[13.5px] leading-[1.6] text-ink text-pretty">{o.gerekce}</p>
           {o.kesif_kanit && (
             <div className="border-t border-t-hairline-soft px-4 py-3.5">
               <div className="etiket text-ink-mute">

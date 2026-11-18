@@ -168,6 +168,8 @@ export const AdayKesfi = z
             baslik: z.string().min(8).max(140),
             /** "neden bu ilde?" — yalnızca atıf yapılan kanıtlarda yazanla */
             gerekce: z.string().min(40).max(1200),
+            /** Uzman çıkarımı — kanıtları birleştiren bağ; olgu değil, ekranda öyle etiketlenir. Boş olabilir. */
+            sentez: z.string().max(600),
             kanit_no: z.array(z.number().int().min(1).max(200)).min(2).max(8),
             /**
              * Ürün grupları — her grup KENDİ kanıtına (`kanit_no`) dayanır.

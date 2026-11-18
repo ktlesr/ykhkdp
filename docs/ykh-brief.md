@@ -392,6 +392,28 @@ Uydurmasızlık kuralları — hepsi mekanik, modelin beyanı değil:
   (`dengeliSec`). Ölçüldü (aynı il, Sonnet, 3 koşu): 0 → 5, 7, 7 aday; adaylar
   altı ayrı il raporuna dayanıyor. Sınır: 120'nin dışındaki kanıt o koşuda
   görülmez; özet mesajındaki "düşen aday" sayısı artık ürün gruplarını saymaz.
+- **Önce yer, sonra nitelik; hazır başlık değil sentez** (2026-11-18,
+  `aday-kesfi-v6`, `degerlendirme-v9`). Aday seçiminde belirleyici olan yere
+  bağlılıktır: yalnızca o ilde/ilçede bulunan varlığa (maden, jeotermal, doğal
+  ya da kültürel varlık, coğrafi işaret, küme, atıl kaynak) dayanan konu; niş
+  konu (alternatif turizm, tek ilçedeki maden) meşrudur. Yere bağlı konular
+  arasında mevzuattaki değerlendirme nitelikleri (YKH usul ve esasları md. 6:
+  yerel ihtiyaç ve çeşitlilik, atıl kaynak, ileri-geri bağlantı, entegre
+  üretim, kritik ihtiyaç ve ithalat bağımlılığı, teknoloji ve Ar-Ge, katma
+  değer, pazar ve ihracat, istihdam) kanıtıyla taşıyan öne alınır; puanlama
+  talimatı sekiz kriteri aynı niteliklerle okur. Proje sahibine ait ölçütler
+  (finansal yapı, geri dönüş, tutar, süre, kapasite) konu düzeyinde bilinmez,
+  kullanılmaz. Kriter seti ve ağırlıklar DEĞİŞMEDİ. Model belgenin adıyla
+  önerdiği yatırımı geri vermek yerine kanıtları birleştirir (varlık +
+  kabiliyet + talep/öncelik). Bunun için adayda iki ayrı alan var: **gerekçe**
+  olgudur ve her cümlesi kanıtta karşılık bulur; **sentez** modelin
+  çıkarımıdır, kanıtta aranmaz ama kanıtta olmayan sayı taşıyamaz (taşırsa
+  sentez düşer, aday kalır) ve kayıtta "Yapay zekâ çıkarımı (belgede yazmaz):"
+  etiketiyle gerekçenin sonuna eklenir. Ölçüldü (gpt-5.4-mini, Afyonkarahisar
+  ve Aksaray): 6'şar aday, çıkarım cümlesi yüzünden düşen yok; adayların bir
+  kısmı sentez (süt dışarı gidiyor + küme + yöresel ürün → koyun-keçi sütü
+  işleme), bir kısmı hâlâ fizibilite raporunun kendi başlığı. Sayı denetimi
+  ayraç biçimini fark saymaz ("2,247" ↔ "2.247").
 - **Tekrarlanan keşif kuyruğu şişirmez.** Model dönemde zaten önerilmiş
   başlıkları görür ve eşdeğerini önermez; kayıtta mekanik iki katman daha:
   dönemdeki herhangi bir öneriyle (reddedilen dahil) başlık benzerliği ≥ 0.50

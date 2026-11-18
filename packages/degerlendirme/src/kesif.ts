@@ -51,6 +51,8 @@ const TEKRAR_BENZERLIK = 0.5;
 /** Yeni adayın kanıtlarının en az yarısı önceki bir adayınkiyle aynıysa tekrar. */
 const TEKRAR_KANIT = 0.5;
 const ONCEKI_BASLIK_SINIRI = 40;
+/** Gerekçe olgudur (kanıtta karşılığı var); sentez modelin çıkarımıdır ve kayıtta bu etiketle ayrılır. */
+export const SENTEZ_ETIKETI = "Yapay zekâ çıkarımı (belgede yazmaz):";
 const DIGER_SINIR = 30;
 
 type Kesif = {
@@ -308,7 +310,9 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
       }
       const r = await sql`
         insert into oneri (donem_id, gonderen_ref, koken, baslik, gerekce, durum, kesif_id, kesif_kanit, kapsam)
-        values (${k.donem_id}, ${k.tetikleyen_ref}, 'yeni', ${aday.baslik}, ${aday.gerekce},
+        values (${k.donem_id}, ${k.tetikleyen_ref}, 'yeni', ${aday.baslik}, ${aday.gerekce + (aday.sentez ? `
+
+${SENTEZ_ETIKETI} ${aday.sentez}` : "")},
                 'degerlendiriliyor', ${k.id}, ${sql.json(kanit as never)},
                 ${aday.urunGruplari.length ? sql.json(aday.urunGruplari.map((g) => ({ ad: g.ad, kanit_id: g.kanitIdleri, yerel: g.yerel })) as never) : null})
         on conflict do nothing
@@ -328,7 +332,7 @@ export async function kesifYap(kesifId: number): Promise<KesifSonucu> {
   await durumYaz(k.id, { aday_sayisi: yazilan });
 
   // Düşen ürün grubu aday değildir; sayıya girmez (ayrıntısı denetimde).
-  const dusenAday = a.dusenler.filter((m) => !m.startsWith("Ürün grubu")).length;
+  const dusenAday = a.dusenler.filter((m) => !/^(Ürün grubu|Çıkarım düşürüldü)/.test(m)).length;
   const ozet =
     `${parcalar.length - basarisiz} parça tarandı, ${defterHam.length} kanıt (${yerel.length} yerel). ` +
     (yazilan ? `${yazilan} aday değerlendirmeye alındı.` : "Kanıtlara dayanan aday çıkmadı.") +

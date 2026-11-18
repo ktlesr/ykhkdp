@@ -148,6 +148,10 @@ test("sayı kaynakta SAYI olarak aranır: 120 varken 20 geçmez", async () => {
   assert.equal(sayiKaynakta("12", "oran %12,5 oldu"), false);
   assert.equal(sayiKaynakta("12,5", "oran %12,5 oldu"), true);
   assert.equal(sayiKaynakta("120 ton", "yılda 120 ton"), true);
+  // Binlik/ondalık ayracın biçimi fark değildir; rakamlar aynı kalmalı.
+  assert.equal(sayiKaynakta("2.247", "yaklaşık 2,247 metrede"), true);
+  assert.equal(sayiKaynakta("2.247", "yaklaşık 22,47 metrede"), false);
+  assert.equal(sayiKaynakta("2247", "yaklaşık 2,247 metrede"), false);
   const defter = [
     { no: 1, kanitId: 1, yerel: true, metin: "İlde 120 işletme faaliyet göstermektedir." },
     { no: 2, kanitId: 2, yerel: false, metin: "Sanayide döngüsel ekonomi uygulamaları yaygınlaştırılacaktır." },
@@ -168,6 +172,12 @@ test("gerekçedeki atıf notu sayısal iddia değildir ve kayda girmez", () => {
   );
   assert.equal(s.adaylar.length, 1, JSON.stringify(s.dusenler));
   assert.equal(s.adaylar[0].gerekce, "İlde mermer sektörü yoğunlaşmıştır. Mermer atıkları mikronize öğütme faaliyetlerine odaklanılacaktır.");
+  // Sentez çıkarımdır: kanıtta karşılık aranmaz ama yeni sayı getiremez.
+  const g = "İlde mermer sektörü yoğunlaşmıştır. Mermer atıkları mikronize öğütme faaliyetlerine odaklanılacaktır.";
+  const cikarim = "Atığın yerinde işlenmesi yapı kimyasalları üreticilerine yakın girdi sağlayabilir (kanıt 1).";
+  const u = adaylariDogrula([{ baslik, gerekce: g, sentez: cikarim, kanit_no: [1, 22] }, { baslik, gerekce: g, sentez: "Yılda 5000 ton işlenebilir.", kanit_no: [1, 22] }], defter);
+  assert.deepEqual(u.adaylar.map((a) => a.sentez), ["Atığın yerinde işlenmesi yapı kimyasalları üreticilerine yakın girdi sağlayabilir.", ""]);
+  assert.match(u.dusenler[0].mesaj, /^Çıkarım düşürüldü/);
   // Parantezsiz ve karışık biçimler de atıftır.
   assert.equal(adaylariDogrula([{ baslik, gerekce: "Kanıt 1'e göre ilde mermer sektörü yoğunlaşmıştır (bkz. kanıt 1; kanıt 22). 22 numaralı kanıt mermer atıkları mikronize öğütme faaliyetlerine odaklanır.", kanit_no: [1, 22] }], defter).adaylar.length, 1);
   // "kanıt" sözcüğü sayıyı aklamaz: atıf yapılmayan numara sayısal iddiadır.
