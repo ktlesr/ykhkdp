@@ -721,7 +721,11 @@ kilidi, künye çekmecesi) bu üründe **yok**.
   komşu tablo hücrelerinin birleşmesi. Kütüphane aktarımındaki PyMuPDF
   dönüştürücü (%99,75) daha iyidir; toplu aktarım için o kullanılır. Yüklemeden
   önce önizleme yok. Word/Excel ayrıştırılmadan önce her iç parça gerçekten
-  açılarak ölçülür (toplam 150 MB sınırı; beyan edilen boyuta güvenilmez).
+  açılarak ölçülür (toplam 150 MB sınırı; beyan edilen boyuta güvenilmez). Dönüştürme
+  ana süreçte değil AYRI iş parçacığında koşar (`lib/belge-cevir-surec.ts`):
+  yığın sınırı 768 MB, zaman aşımı 90 sn (`YKH_CEVIRI_YIGIN_MB`,
+  `YKH_CEVIRI_SURE_MS`); aşan dosyada yalnızca işçi sonlanır, site ayakta
+  kalır. Yığın dışı bellek için kapsayıcı düzeyinde sınır ayrıca önerilir.
 - E-posta doğrulama SMTP'ye bağlı değil.
 - Hız sınırı süreç içi (tek web konteyneri varsayımı); birden çok kopyada
   paylaşılan sayaç gerekir. Öneri kotası veritabanında, kopyadan bağımsız.

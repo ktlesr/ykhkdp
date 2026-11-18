@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { Document, HeadingLevel, Packer, Paragraph, Table, TableCell, TableRow } from "docx";
 import ExcelJS from "exceljs";
 import { dosyadanMetin, htmldenMd, zipSismesi } from "./belge-cevir.ts";
+import { ayriSurecteCevir } from "./belge-cevir-surec.ts";
 
 test("Word: başlık çıpa olur, paragraf TEK satırda ve birebir kalır, tablo satır satır gelir", async () => {
   const cumle = "Uşak'ta 2023 yılında tekstil ihracatı %12,5 arttı (kaynak: TÜİK); geri dönüşüm iplik üretimi 1.250 tona ulaştı.";
@@ -78,4 +79,15 @@ test("zipSismesi: girdiler gerçekten açılarak ölçülür; sınırı aşan ar
   const kayik = new Uint8Array(temiz.length + 8);
   kayik.set(temiz, 8);
   assert.equal(zipSismesi(kayik), "Dosya bozuk.");
+});
+
+test("ayrı iş parçacığı: aynı sonucu verir; zaman aşımında işçi durdurulur ve açık hata döner", async () => {
+  const k = new ExcelJS.Workbook();
+  k.addWorksheet("İstihdam").addRow(["Kütahya", 41250]);
+  const veri = new Uint8Array(await k.xlsx.writeBuffer());
+  const r = await ayriSurecteCevir("veri.xlsx", veri);
+  assert.ok(r.ok && r.metin.includes("| Kütahya | 41250 |"));
+  assert.deepEqual(await ayriSurecteCevir("eski.doc", new Uint8Array([1])), await dosyadanMetin("eski.doc", new Uint8Array([1])));
+  const gec = await ayriSurecteCevir("veri.xlsx", veri, 1);
+  assert.ok(!gec.ok && /çevrilemedi/.test(gec.hata));
 });

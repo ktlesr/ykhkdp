@@ -1,6 +1,6 @@
 "use server";
 
-import { dosyadanMetin } from "./belge-cevir.ts";
+import { ayriSurecteCevir } from "./belge-cevir-surec.ts";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
@@ -341,7 +341,7 @@ export async function belgeEylemi(_o: EylemSonucu | null, f: FormData): Promise<
   let ceviri = "";
   if (dosya instanceof File && dosya.size > 0) {
     if (dosya.size > 30_000_000) return { ok: false, mesaj: "Dosya en çok 30 MB olabilir." };
-    const c = await dosyadanMetin(dosya.name, new Uint8Array(await dosya.arrayBuffer()));
+    const c = await ayriSurecteCevir(dosya.name, new Uint8Array(await dosya.arrayBuffer()));
     if (!c.ok) return { ok: false, mesaj: c.hata };
     metin = c.metin;
     ceviri = c.ozet;

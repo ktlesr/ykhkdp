@@ -37,7 +37,13 @@ const nextConfig: NextConfig = {
     "@ykh/retrieval",
     "@ykh/scoring",
   ],
-  serverExternalPackages: ["postgres", "mammoth", "unpdf"],
+  // exceljs de dışarıda: dönüştürme işçisi onu paketlenmiş koddan değil node_modules'tan yükler.
+  serverExternalPackages: ["postgres", "mammoth", "unpdf", "exceljs"],
+  // Dönüştürme işçisi kaynak dosya olarak çalışır (iş parçacığı); paketleyici onu görmez.
+  outputFileTracingIncludes: {
+    "/belgeler/yukle": ["./lib/belge-cevir.ts", "./lib/belge-cevir-isci.mts"],
+    "/belgeler": ["./lib/belge-cevir.ts", "./lib/belge-cevir-isci.mts"],
+  },
 };
 
 export default nextConfig;
