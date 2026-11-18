@@ -1,8 +1,9 @@
 import { gecisIzinli, onaylayabilir, type Aday, type Koken, type NaceKaynagi, type OneriDurumu, type Rol } from "@ykh/domain";
 import { agirlikSetiGecerli, type AgirlikSeti, type Kriter } from "@ykh/scoring";
+import { createHash } from "node:crypto";
 import type postgres from "postgres";
 import { denetle, islem, type Baglam } from "./baglanti.ts";
-import { parcala } from "./belge-yukle.ts";
+import { parcala, type Kategori } from "./belge-yukle.ts";
 import { jetonOzeti, oturumJetonu, parolaDogrula, parolaOzetle } from "./parola.ts";
 
 /**
@@ -727,11 +728,13 @@ export async function kuyrukKopyalari(b: Baglam): Promise<Map<number, YakinKopya
  */
 export async function belgeKapsami(b: Baglam) {
   return islem(b, (sql) =>
-    sql<{ il: string; il_kod: string; ajans_kod: string; il_belgesi: number; ajans_belgesi: number; ulusal: number }[]>`
+    sql<{ il: string; il_kod: string; ajans_kod: string; il_belgesi: number; ajans_belgesi: number; ulusal: number; kategoriler: string[] }[]>`
       select i.ad as il, i.kod as il_kod, i.ajans_kod,
              count(distinct b.ad) filter (where b.il_kod = i.kod)::int as il_belgesi,
              count(distinct b.ad) filter (where b.il_kod is null and b.ajans_kod = i.ajans_kod)::int as ajans_belgesi,
-             count(distinct b.ad) filter (where b.il_kod is null and b.ajans_kod is null)::int as ulusal
+             count(distinct b.ad) filter (where b.il_kod is null and b.ajans_kod is null)::int as ulusal,
+             -- ilin kendi belgelerinde hangi konu kategorileri var (genel hariç)
+             coalesce(array_agg(distinct b.kategori) filter (where b.il_kod = i.kod and b.kategori <> 'genel'), '{}') as kategoriler
       from il i
       join donem d on d.il_kod = i.kod
       left join belge b on b.il_kod = i.kod
@@ -906,7 +909,7 @@ export async function naceDuzelt(b: Baglam, oneriId: number, naceKod: string): P
 // ── üst ölçekli belgeler ───────────────────────────────────────────────────
 
 export type BelgeKaydi = {
-  ad: string; tur: string; yil: string | null;
+  ad: string; tur: string; yil: string | null; kategori: string;
   ajans_kod: string | null; il_kod: string | null;
   /** kaç parçaya bölündü */
   parca: number;
@@ -922,7 +925,7 @@ export type BelgeKaydi = {
 export async function belgeleriListele(b: Baglam) {
   return islem(b, (sql) =>
     sql<BelgeKaydi[]>`
-      select ad, min(tur::text) as tur, min(yil) as yil,
+      select ad, min(tur::text) as tur, min(yil) as yil, min(kategori) as kategori,
              min(ajans_kod) as ajans_kod, min(il_kod) as il_kod,
              count(*)::int as parca,
              sum(char_length(metin))::int as uzunluk,
@@ -943,7 +946,8 @@ export async function belgeleriListele(b: Baglam) {
  */
 export async function belgeEkle(
   b: Baglam,
-  g: { ad: string; tur: string; yil: string | null; ajansKod: string | null; ilKod: string | null; metin: string },
+  g: { ad: string; tur: string; yil: string | null; ajansKod: string | null; ilKod: string | null; metin: string;
+       kategori?: Kategori; kaynakOzet?: string; degistir?: boolean },
 ): Promise<{ ok: true; id: number; parca: number } | { ok: false; hata: string }> {
   const parcalar = parcala(g.metin);
   if (!parcalar.length) return { ok: false, hata: "Metinden parça çıkarılamadı." };
@@ -951,14 +955,16 @@ export async function belgeEkle(
     // Ada özgü kilit: iki eşzamanlı yükleme de "yok" görüp ekleyemesin. CLI aynı kilidi alır.
     await sql`select pg_advisory_xact_lock(hashtext(${"belge:" + g.ad}))`;
     const [mevcut] = await sql`select 1 from belge where ad = ${g.ad} limit 1`;
-    if (mevcut) return { ok: false as const, hata: `“${g.ad}” adıyla bir belge zaten var; önce silin.` };
+    if (mevcut && !g.degistir) return { ok: false as const, hata: `“${g.ad}” adıyla bir belge zaten var; önce silin.` };
+    if (mevcut) await sql`delete from belge where ad = ${g.ad}`;
     const satirlar = await sql`
       insert into belge ${sql(
         parcalar.map((p) => ({
           ad: g.ad, bolum: p.bolum, tur: g.tur, yil: g.yil, ajans_kod: g.ajansKod, il_kod: g.ilKod,
           metin: p.metin, yukleyen_ref: b.gonderenRef,
+          kategori: g.kategori ?? "genel", kaynak_ozet: g.kaynakOzet ?? null,
         })),
-        "ad", "bolum", "tur", "yil", "ajans_kod", "il_kod", "metin", "yukleyen_ref",
+        "ad", "bolum", "tur", "yil", "ajans_kod", "il_kod", "metin", "yukleyen_ref", "kategori", "kaynak_ozet",
       )}
       returning id
     `;
@@ -971,6 +977,23 @@ export async function belgeEkle(
 }
 
 /** Belgeyi TÜM parçalarıyla siler — parça tek başına anlamsız. */
+/**
+ * Dış kaynaktan üretilen belge (Türk Patent, TÜİK…): içerik özeti aynıysa
+ * DOKUNMAZ, değiştiyse yeniden yazar. Yeniden yazılan belgenin parçaları yeni
+ * kimlik alır; kanıt taraması yalnızca onlar için yeniden koşar.
+ */
+export async function kaynakBelgesiYaz(
+  b: Baglam,
+  g: { ad: string; tur: string; yil: string | null; ajansKod: string | null; ilKod: string | null; metin: string; kategori: Kategori },
+): Promise<"ayni" | "yazildi"> {
+  const ozet = createHash("sha256").update(g.metin).digest("hex");
+  const [m] = await islem(b, (sql) => sql<{ kaynak_ozet: string | null }[]>`select kaynak_ozet from belge where ad = ${g.ad} limit 1`);
+  if (m?.kaynak_ozet === ozet) return "ayni";
+  const r = await belgeEkle(b, { ...g, kaynakOzet: ozet, degistir: true });
+  if (!r.ok) throw new Error(r.hata);
+  return "yazildi";
+}
+
 export async function belgeSil(b: Baglam, ad: string): Promise<number> {
   return islem(b, async (sql) => {
     const silinen = await sql`delete from belge where ad = ${ad} returning id`;

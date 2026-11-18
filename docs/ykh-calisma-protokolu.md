@@ -94,6 +94,7 @@ pnpm ai:test                            # bağlantı sınaması, tek çağrı, D
 pnpm ai:eval                            # eval kümesi, örnek × 3 koşu medyanı
 YKH_EVAL_TEKRAR=5 pnpm ai:eval          # gürültü şüphesinde tekrarı artır
 pnpm db:belgeler                        # docs/ altındaki plan belgelerini yükler
+pnpm db:kaynak                          # dış kaynakları (coğrafi işaret) ŞİMDİ çeker; işleyici günde bir kendisi yapar
 pnpm belge:dogrula [dosya…]             # YÜKLEMEDEN ÖNCE metin kalitesini ölçer
 ```
 

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { belgeKapsami, belgeleriListele, illeriListele } from "@ykh/database";
+import { belgeKapsami, belgeleriListele, illeriListele, KATEGORILER } from "@ykh/database";
 import { onaylayabilir } from "@ykh/domain";
 import { BelgeFormu } from "@/components/belge-formu.tsx";
 import { BelgeSil } from "@/components/belge-sil.tsx";
@@ -63,7 +63,7 @@ export default async function Belgeler() {
           Üst ölçekli belgeler
         </Baslik>
 
-        <BelgeFormu iller={iller.map((x) => ({ kod: x.il_kod, ad: x.il, ajansKod: x.ajans_kod, ajans: x.ajans }))} />
+        <BelgeFormu kategoriler={Object.entries(KATEGORILER)} iller={iller.map((x) => ({ kod: x.il_kod, ad: x.il, ajansKod: x.ajans_kod, ajans: x.ajans }))} />
 
         {/* Kapsama — 81 satır duvar değil, eyleme dönük olan öne */}
         {kapsam.length > 0 && (
@@ -144,6 +144,8 @@ export default async function Belgeler() {
                 <span className="min-w-0 flex-1 text-[13.5px]">{x.il}</span>
                 <span className="num etiket text-ink-mute">
                   il {x.il_belgesi} · ajans {x.ajans_belgesi} · ulusal {x.ulusal}
+                  {x.kategoriler.length > 0 &&
+                    ` · ${x.kategoriler.map((k) => KATEGORILER[k as keyof typeof KATEGORILER] ?? k).join(", ").toLocaleLowerCase("tr")}`}
                 </span>
                 {yerel === 0 ? (
                   <Rozet tur="amber" isaret="◌">
@@ -173,6 +175,7 @@ export default async function Belgeler() {
                   <div className="text-[14px] font-medium">{x.ad}</div>
                   <div className="mt-1 flex flex-wrap gap-2.5 etiket text-ink-mute">
                     <span>{TUR_ETIKET[x.tur] ?? x.tur}</span>
+                    {x.kategori !== "genel" && <span>{KATEGORILER[x.kategori as keyof typeof KATEGORILER] ?? x.kategori}</span>}
                     {x.yil && <span className="num">{x.yil}</span>}
                     <span className="num">{x.parca.toLocaleString("tr-TR")} parça</span>
                     <span className="num">{x.uzunluk.toLocaleString("tr-TR")} karakter</span>

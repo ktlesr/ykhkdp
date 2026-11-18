@@ -227,6 +227,7 @@ async function calistir(b: Baglam, oneriId: number, yaz: Yaz): Promise<Sonuc> {
     ajansKod: o.ajans_kod,
     sorgu: `${o.baslik}${kapsamMetni} ${o.gerekce}`,
     zorunlu: (o.kesif_kanit ?? []).map((x) => Number(x.belge_id)),
+    naceKod,
   });
   if (!belgeler.length) {
     return {

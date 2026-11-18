@@ -31,8 +31,10 @@ const TURLER = [
  */
 export function BelgeFormu({
   iller,
+  kategoriler,
 }: {
   iller: Array<{ kod: string; ad: string; ajansKod: string; ajans: string }>;
+  kategoriler: Array<[string, string]>;
 }) {
   const ajanslar = [...new Map(iller.map((x) => [x.ajansKod, x.ajans])).entries()].sort(([a], [b]) => a.localeCompare(b));
   const ilSirali = [...iller].sort((a, b) => a.ad.localeCompare(b.ad, "tr"));
@@ -104,6 +106,17 @@ export function BelgeFormu({
                 Tür seçin
               </option>
               {TURLER.map(([k, v]) => (
+                <option key={k} value={k}>
+                  {v}
+                </option>
+              ))}
+            </select>
+            {/* Kategori belgenin NEYİ anlattığıdır: konu madenle ilgiliyse maden belgesi öne alınır. */}
+            <label className={`${ALAN_ETIKET} mt-3`} htmlFor="kategori">
+              Kategori
+            </label>
+            <select id="kategori" name="kategori" className={GIRDI} defaultValue="genel">
+              {kategoriler.map(([k, v]) => (
                 <option key={k} value={k}>
                   {v}
                 </option>

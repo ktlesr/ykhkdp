@@ -430,8 +430,8 @@ Uydurmasızlık kuralları — hepsi mekanik, modelin beyanı değil:
   bağımlı girdisi), perlitten yalıtım ve hafif yapı malzemeleri, koyun-keçi
   sütü işleme, Ziga jeotermal sera. Aday sayısı düştü (3–5): kanıt yeni konu
   çıkarmaya yetmiyorsa bilinen doldurulmuyor. Sınır: "ilde zaten yapılan
-  üretim" yalnızca belgelerin söylediği kadar bilinir; ildeki mevcut firma
-  ve ürün verisi (kapasite raporları) yüklü değil.
+  üretim" belgelerin ve il ihracat verisinin söylediği kadar bilinir; ildeki
+  mevcut firma ve ürün verisi (kapasite raporları) yüklü değil.
 - **Tekrarlanan keşif kuyruğu şişirmez.** Model dönemde zaten önerilmiş
   başlıkları görür ve eşdeğerini önermez; kayıtta mekanik iki katman daha:
   dönemdeki herhangi bir öneriyle (reddedilen dahil) başlık benzerliği ≥ 0.50
@@ -477,6 +477,53 @@ rozetleri elle yenilemeden ilerler.
 
 Bölge: ajans yalnızca kendi bölgesinin illerinde keşif açar (`kesif_ac` RLS,
 `app_il_kapsaminda`). Aynı dönemde tek aktif koşu.
+
+### Dış veri kaynakları ve belge kategorisi
+
+Keşfin sınırı şuydu: "ilde ne var, ne eksik" yalnızca raporların söylediği
+kadar biliniyordu. Yapılandırılmış kaynaklar il başına birer belge olarak
+eklenir ve sıradan belge gibi taranır — ayrı bir veri hattı yok.
+
+| Kaynak | Kategori | Kapsam | Güncelleme |
+|---|---|---|---|
+| Türk Patent coğrafi işaretler (`ci.turkpatent.gov.tr`) | `cografi_isaret` | 81 il | **işleyici, günde bir** |
+| MTA il maden ve enerji kaynakları (PDF) | `maden_enerji` | MTA'nın yayımladığı iller | `python tools/veri/mta.py` |
+| TÜİK dış ticaret panosu: il × yıl × fasıl ihracat | `dis_ticaret` | 81 il, son üç yıl | `node tools/veri/dis-ticaret.ts` |
+| KTB turizm belgeli tesisler (il, ilçe, tür, sınıf) | `turizm` | 81 il | `python tools/veri/turizm.py <yıl> <bülten>` |
+| İl sütunlu herhangi bir Excel (teşvik belgeleri, kapasite dökümü…) | seçilir | dosyadaki iller | `python tools/veri/tablo.py …` |
+
+- **Tablo değil cümle.** Veri "Kütahya 2025 yılı ihracatında 69 - Seramik
+  mamulleri faslı … milyon dolar" gibi kendi başına okunur cümlelere çevrilir:
+  kanıt taraması pasajı birebir keser ve başlıksız bir tablo satırı kanıt
+  olamaz. Cümlede il adı geçtiği için pasaj yerel sayılır.
+- **Yalnızca değişen işlenir.** Belge `kaynak_ozet` (sha256) taşır. İşleyicinin
+  çektiği kaynakta (`kaynakBelgesiYaz`) ve depodaki veri dosyalarında
+  (`docs/veri/manifest.json`, `db:kur`) özet aynıysa belgeye dokunulmaz;
+  değiştiyse yalnızca o belge yeniden yazılır ve yalnızca onun parçaları
+  yeniden taranır. Ajansın sildiği veri belgesi geri gelmez.
+- **Periyodik denetim** işleyicidedir (`YKH_KAYNAK_SAAT`, varsayılan 24; 0
+  kapatır); son denetim zamanı `ayar`da, dağıtımda yeniden başlayan işleyici
+  kaynağa yeniden gitmez. Coğrafi işarette önce toplam kayıt sayısına bakılır,
+  değişmediyse liste çekilmez. `pnpm db:kaynak` elle, koşulsuz çeker.
+- **Kategori** (`belge.kategori`, 0022) kapsamdan bağımsızdır: kapsam belgenin
+  NEREYE ait olduğunu (il / ajans / ulusal), kategori NEYİ anlattığını söyler
+  (genel · sanayi · dış ticaret · maden ve enerji · turizm · tarım · coğrafi
+  işaret · teşvik · istatistik). `/belgeler` yüklemede sorar, listede ve il
+  kapsamasında gösterir.
+- **Yönlendirme** (`konuKategorileri`): konu metni ve NACE bölümünden kategori
+  çıkarılır; değerlendirme paketinde o kategorinin il belgelerinden en iyi
+  eşleşen en çok 3 parçaya yer ayrılır, başlıkla uygunluk analizinde o
+  kategorinin kanıtları öne alınır. Sözcükseldir (kök listesi); kaçırılan
+  kategori belgeyi dışlamaz, yalnızca öncelik vermez.
+- **Yatırım yeri kısıt değildir** (`degerlendirme-v10`, `karsi-gorus-v6`,
+  `aday-kesfi-v8`): her ilde yer (OSB parseli, arazi) bulunduğu kabul edilir;
+  uygulanabilirlik puanına, karşı görüşe ve darboğaz adaylarına girmez.
+- Sınırlar: TÜİK panosu il düzeyinde yalnızca **ihracat** verir (ithalat ve
+  GTİP 4+ yok), içinde bulunulan yıl tamamlanmamıştır ve öyle yazılır. TOBB
+  Sanayi Veritabanı bağlanmadı: sorgu uçları oturum ve reCAPTCHA arkasında.
+  TÜİK'in anahtarlı veri servisi (il düzeyinde girişim, nüfus, tarım) ve
+  girdi-çıktı tabloları da bağlı değil. MTA, dış ticaret ve turizm elle
+  yeniden üretilir (yılda bir-iki kez değişir); otomatik olan coğrafi işarettir.
 
 ### Konu kapsamı ve çoklu NACE
 

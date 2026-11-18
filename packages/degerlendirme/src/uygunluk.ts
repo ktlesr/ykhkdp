@@ -2,6 +2,7 @@ import { konuUygunlugu, PROMPTLAR } from "@ykh/ai-gateway";
 import { denetle, islem, type Baglam } from "@ykh/database";
 import { dengeliSec, yerelMi, type UygunlukKarari } from "@ykh/evidence-validation";
 import { aiMaliyeti } from "@ykh/observability";
+import { konuKategorileri } from "@ykh/retrieval";
 import { modelSec } from "./model-secimi.ts";
 
 /**
@@ -59,6 +60,7 @@ export async function konuUygunluguYap(b: Baglam, girdi: { ilKod: string; baslik
     and (p.il_kod = ${girdi.ilKod} or (p.il_kod is null and p.ajans_kod = ${il.ajans_kod}) or (p.il_kod is null and p.ajans_kod is null))`;
 
   const q = baslikSorgusu(girdi.baslik, hedef.adlar);
+  const kategoriler = konuKategorileri(girdi.baslik);
   const satirlar = q
     ? await islem(SERVIS, (sql) =>
         sql<{ id: string; tur: string; konu: string; alinti: string; ad: string; bolum: string | null; metin: string; il_kod: string | null }[]>`
@@ -66,7 +68,9 @@ export async function konuUygunluguYap(b: Baglam, girdi: { ilKod: string; baslik
           from kanit k join belge p on p.id = k.belge_id
           where ${kapsam(sql)}
             and to_tsvector('simple', k.konu || ' ' || k.alinti) @@ to_tsquery('simple', ${q})
-          order by ts_rank(to_tsvector('simple', k.konu || ' ' || k.alinti), to_tsquery('simple', ${q})) desc, k.id
+          -- Konunun kategorisindeki il belgeleri (maden → MTA, turizm → KTB…) öne alınır.
+          order by (p.il_kod = ${girdi.ilKod} and p.kategori = any(${kategoriler})) desc nulls last,
+                   ts_rank(to_tsvector('simple', k.konu || ' ' || k.alinti), to_tsquery('simple', ${q})) desc, k.id
           limit 400
         `,
       )

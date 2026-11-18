@@ -1,0 +1,2412 @@
+[
+ {
+  "dosya": "docs/veri/dis-ticaret/adana.md",
+  "ad": "Adana İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR62",
+  "ilKod": "adana",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/adiyaman.md",
+  "ad": "Adıyaman İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRC1",
+  "ilKod": "adiyaman",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/afyonkarahisar.md",
+  "ad": "Afyonkarahisar İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR33",
+  "ilKod": "afyonkarahisar",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/agri.md",
+  "ad": "Ağrı İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRA2",
+  "ilKod": "agri",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/aksaray.md",
+  "ad": "Aksaray İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR71",
+  "ilKod": "aksaray",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/amasya.md",
+  "ad": "Amasya İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR83",
+  "ilKod": "amasya",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/ankara.md",
+  "ad": "Ankara İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR51",
+  "ilKod": "ankara",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/antalya.md",
+  "ad": "Antalya İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR61",
+  "ilKod": "antalya",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/ardahan.md",
+  "ad": "Ardahan İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRA2",
+  "ilKod": "ardahan",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/artvin.md",
+  "ad": "Artvin İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR90",
+  "ilKod": "artvin",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/aydin.md",
+  "ad": "Aydın İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR32",
+  "ilKod": "aydin",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/balikesir.md",
+  "ad": "Balıkesir İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR22",
+  "ilKod": "balikesir",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/bartin.md",
+  "ad": "Bartın İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR81",
+  "ilKod": "bartin",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/batman.md",
+  "ad": "Batman İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRC3",
+  "ilKod": "batman",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/bayburt.md",
+  "ad": "Bayburt İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRA1",
+  "ilKod": "bayburt",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/bilecik.md",
+  "ad": "Bilecik İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR41",
+  "ilKod": "bilecik",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/bingol.md",
+  "ad": "Bingöl İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRB1",
+  "ilKod": "bingol",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/bitlis.md",
+  "ad": "Bitlis İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRB2",
+  "ilKod": "bitlis",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/bolu.md",
+  "ad": "Bolu İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR42",
+  "ilKod": "bolu",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/burdur.md",
+  "ad": "Burdur İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR61",
+  "ilKod": "burdur",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/bursa.md",
+  "ad": "Bursa İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR41",
+  "ilKod": "bursa",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/canakkale.md",
+  "ad": "Çanakkale İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR22",
+  "ilKod": "canakkale",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/cankiri.md",
+  "ad": "Çankırı İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR82",
+  "ilKod": "cankiri",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/corum.md",
+  "ad": "Çorum İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR83",
+  "ilKod": "corum",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/denizli.md",
+  "ad": "Denizli İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR32",
+  "ilKod": "denizli",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/diyarbakir.md",
+  "ad": "Diyarbakır İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRC2",
+  "ilKod": "diyarbakir",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/duzce.md",
+  "ad": "Düzce İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR42",
+  "ilKod": "duzce",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/edirne.md",
+  "ad": "Edirne İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR21",
+  "ilKod": "edirne",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/elazig.md",
+  "ad": "Elâzığ İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRB1",
+  "ilKod": "elazig",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/erzincan.md",
+  "ad": "Erzincan İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRA1",
+  "ilKod": "erzincan",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/erzurum.md",
+  "ad": "Erzurum İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRA1",
+  "ilKod": "erzurum",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/eskisehir.md",
+  "ad": "Eskişehir İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR41",
+  "ilKod": "eskisehir",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/gaziantep.md",
+  "ad": "Gaziantep İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRC1",
+  "ilKod": "gaziantep",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/giresun.md",
+  "ad": "Giresun İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR90",
+  "ilKod": "giresun",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/gumushane.md",
+  "ad": "Gümüşhane İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR90",
+  "ilKod": "gumushane",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/hakkari.md",
+  "ad": "Hakkâri İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRB2",
+  "ilKod": "hakkari",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/hatay.md",
+  "ad": "Hatay İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR63",
+  "ilKod": "hatay",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/igdir.md",
+  "ad": "Iğdır İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRA2",
+  "ilKod": "igdir",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/isparta.md",
+  "ad": "Isparta İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR61",
+  "ilKod": "isparta",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/istanbul.md",
+  "ad": "İstanbul İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR10",
+  "ilKod": "istanbul",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/izmir.md",
+  "ad": "İzmir İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR31",
+  "ilKod": "izmir",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/kahramanmaras.md",
+  "ad": "Kahramanmaraş İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR63",
+  "ilKod": "kahramanmaras",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/karabuk.md",
+  "ad": "Karabük İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR81",
+  "ilKod": "karabuk",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/karaman.md",
+  "ad": "Karaman İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR52",
+  "ilKod": "karaman",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/kars.md",
+  "ad": "Kars İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRA2",
+  "ilKod": "kars",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/kastamonu.md",
+  "ad": "Kastamonu İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR82",
+  "ilKod": "kastamonu",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/kayseri.md",
+  "ad": "Kayseri İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR72",
+  "ilKod": "kayseri",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/kilis.md",
+  "ad": "Kilis İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRC1",
+  "ilKod": "kilis",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/kirikkale.md",
+  "ad": "Kırıkkale İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR71",
+  "ilKod": "kirikkale",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/kirklareli.md",
+  "ad": "Kırklareli İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR21",
+  "ilKod": "kirklareli",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/kirsehir.md",
+  "ad": "Kırşehir İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR71",
+  "ilKod": "kirsehir",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/kocaeli.md",
+  "ad": "Kocaeli İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR42",
+  "ilKod": "kocaeli",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/konya.md",
+  "ad": "Konya İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR52",
+  "ilKod": "konya",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/kutahya.md",
+  "ad": "Kütahya İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR33",
+  "ilKod": "kutahya",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/malatya.md",
+  "ad": "Malatya İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRB1",
+  "ilKod": "malatya",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/manisa.md",
+  "ad": "Manisa İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR33",
+  "ilKod": "manisa",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/mardin.md",
+  "ad": "Mardin İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRC3",
+  "ilKod": "mardin",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/mersin.md",
+  "ad": "Mersin İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR62",
+  "ilKod": "mersin",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/mugla.md",
+  "ad": "Muğla İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR32",
+  "ilKod": "mugla",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/mus.md",
+  "ad": "Muş İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRB2",
+  "ilKod": "mus",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/nevsehir.md",
+  "ad": "Nevşehir İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR71",
+  "ilKod": "nevsehir",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/nigde.md",
+  "ad": "Niğde İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR71",
+  "ilKod": "nigde",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/ordu.md",
+  "ad": "Ordu İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR90",
+  "ilKod": "ordu",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/osmaniye.md",
+  "ad": "Osmaniye İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR63",
+  "ilKod": "osmaniye",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/rize.md",
+  "ad": "Rize İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR90",
+  "ilKod": "rize",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/sakarya.md",
+  "ad": "Sakarya İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR42",
+  "ilKod": "sakarya",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/samsun.md",
+  "ad": "Samsun İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR83",
+  "ilKod": "samsun",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/sanliurfa.md",
+  "ad": "Şanlıurfa İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRC2",
+  "ilKod": "sanliurfa",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/siirt.md",
+  "ad": "Siirt İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRC3",
+  "ilKod": "siirt",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/sinop.md",
+  "ad": "Sinop İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR82",
+  "ilKod": "sinop",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/sirnak.md",
+  "ad": "Şırnak İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRC3",
+  "ilKod": "sirnak",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/sivas.md",
+  "ad": "Sivas İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR72",
+  "ilKod": "sivas",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/tekirdag.md",
+  "ad": "Tekirdağ İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR21",
+  "ilKod": "tekirdag",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/tokat.md",
+  "ad": "Tokat İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR83",
+  "ilKod": "tokat",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/trabzon.md",
+  "ad": "Trabzon İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR90",
+  "ilKod": "trabzon",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/tunceli.md",
+  "ad": "Tunceli İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRB1",
+  "ilKod": "tunceli",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/usak.md",
+  "ad": "Uşak İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR33",
+  "ilKod": "usak",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/van.md",
+  "ad": "Van İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TRB2",
+  "ilKod": "van",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/yalova.md",
+  "ad": "Yalova İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR42",
+  "ilKod": "yalova",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/yozgat.md",
+  "ad": "Yozgat İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR72",
+  "ilKod": "yozgat",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/dis-ticaret/zonguldak.md",
+  "ad": "Zonguldak İhracat İstatistikleri (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2026",
+  "ajansKod": "TR81",
+  "ilKod": "zonguldak",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://bi.tuik.gov.tr/extensions/tuik-mashup/index.html"
+ },
+ {
+  "dosya": "docs/veri/mta/adana.md",
+  "ad": "Adana İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR62",
+  "ilKod": "adana",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/adana-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/adiyaman.md",
+  "ad": "Adıyaman İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRC1",
+  "ilKod": "adiyaman",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/adiyaman-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/afyonkarahisar.md",
+  "ad": "Afyonkarahisar İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR33",
+  "ilKod": "afyonkarahisar",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/afyon-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/agri.md",
+  "ad": "Ağrı İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRA2",
+  "ilKod": "agri",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/agri-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/aksaray.md",
+  "ad": "Aksaray İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR71",
+  "ilKod": "aksaray",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/aksaray-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/amasya.md",
+  "ad": "Amasya İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR83",
+  "ilKod": "amasya",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/amasya-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/ankara.md",
+  "ad": "Ankara İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR51",
+  "ilKod": "ankara",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/ankara-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/antalya.md",
+  "ad": "Antalya İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR61",
+  "ilKod": "antalya",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/antalya-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/artvin.md",
+  "ad": "Artvin İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR90",
+  "ilKod": "artvin",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/artvin-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/aydin.md",
+  "ad": "Aydın İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR32",
+  "ilKod": "aydin",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/aydin-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/balikesir.md",
+  "ad": "Balıkesir İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR22",
+  "ilKod": "balikesir",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/balikesir-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/bartin.md",
+  "ad": "Bartın İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR81",
+  "ilKod": "bartin",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/bartin-madenler_1.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/batman.md",
+  "ad": "Batman İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRC3",
+  "ilKod": "batman",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/batman-madenler_1.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/bayburt.md",
+  "ad": "Bayburt İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRA1",
+  "ilKod": "bayburt",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/bayburt-madenler_1.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/bilecik.md",
+  "ad": "Bilecik İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR41",
+  "ilKod": "bilecik",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/bilecik-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/bingol.md",
+  "ad": "Bingöl İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRB1",
+  "ilKod": "bingol",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/bingol-madenler_1.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/bitlis.md",
+  "ad": "Bitlis İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRB2",
+  "ilKod": "bitlis",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/bitlis-madenler_1.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/bolu.md",
+  "ad": "Bolu İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR42",
+  "ilKod": "bolu",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/bolu-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/burdur.md",
+  "ad": "Burdur İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR61",
+  "ilKod": "burdur",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/burdur-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/bursa.md",
+  "ad": "Bursa İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR41",
+  "ilKod": "bursa",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/bursa-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/canakkale.md",
+  "ad": "Çanakkale İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR22",
+  "ilKod": "canakkale",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/canakkale-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/cankiri.md",
+  "ad": "Çankırı İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR82",
+  "ilKod": "cankiri",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/cankiri-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/corum.md",
+  "ad": "Çorum İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR83",
+  "ilKod": "corum",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/corum-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/denizli.md",
+  "ad": "Denizli İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR32",
+  "ilKod": "denizli",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/denizli-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/diyarbakir.md",
+  "ad": "Diyarbakır İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRC2",
+  "ilKod": "diyarbakir",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/diyarbakir-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/duzce.md",
+  "ad": "Düzce İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR42",
+  "ilKod": "duzce",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/duzce-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/edirne.md",
+  "ad": "Edirne İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR21",
+  "ilKod": "edirne",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/edirne-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/elazig.md",
+  "ad": "Elâzığ İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRB1",
+  "ilKod": "elazig",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/elazig-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/erzincan.md",
+  "ad": "Erzincan İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRA1",
+  "ilKod": "erzincan",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/erzincan-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/erzurum.md",
+  "ad": "Erzurum İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRA1",
+  "ilKod": "erzurum",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/erzurum-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/eskisehir.md",
+  "ad": "Eskişehir İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR41",
+  "ilKod": "eskisehir",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/eskisehir-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/gaziantep.md",
+  "ad": "Gaziantep İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRC1",
+  "ilKod": "gaziantep",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/gaziantep-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/giresun.md",
+  "ad": "Giresun İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR90",
+  "ilKod": "giresun",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/giresun-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/gumushane.md",
+  "ad": "Gümüşhane İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR90",
+  "ilKod": "gumushane",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/gumushane-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/hakkari.md",
+  "ad": "Hakkâri İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRB2",
+  "ilKod": "hakkari",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/hakkari-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/hatay.md",
+  "ad": "Hatay İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR63",
+  "ilKod": "hatay",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/antakya-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/isparta.md",
+  "ad": "Isparta İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR61",
+  "ilKod": "isparta",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/isparta-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/istanbul.md",
+  "ad": "İstanbul İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR10",
+  "ilKod": "istanbul",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/istanbul-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/izmir.md",
+  "ad": "İzmir İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR31",
+  "ilKod": "izmir",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/izmir-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/kahramanmaras.md",
+  "ad": "Kahramanmaraş İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR63",
+  "ilKod": "kahramanmaras",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/kmaras-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/karabuk.md",
+  "ad": "Karabük İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR81",
+  "ilKod": "karabuk",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/karabuk-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/karaman.md",
+  "ad": "Karaman İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR52",
+  "ilKod": "karaman",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/karaman-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/kars.md",
+  "ad": "Kars İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRA2",
+  "ilKod": "kars",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/kars-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/kastamonu.md",
+  "ad": "Kastamonu İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR82",
+  "ilKod": "kastamonu",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/kastamonu-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/kayseri.md",
+  "ad": "Kayseri İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR72",
+  "ilKod": "kayseri",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/kayseri-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/kilis.md",
+  "ad": "Kilis İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRC1",
+  "ilKod": "kilis",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/kilis-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/kirikkale.md",
+  "ad": "Kırıkkale İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR71",
+  "ilKod": "kirikkale",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/kirikkale-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/kirklareli.md",
+  "ad": "Kırklareli İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR21",
+  "ilKod": "kirklareli",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/kirklareli-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/kirsehir.md",
+  "ad": "Kırşehir İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR71",
+  "ilKod": "kirsehir",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/kirsehir-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/kocaeli.md",
+  "ad": "Kocaeli İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR42",
+  "ilKod": "kocaeli",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/kocaeli-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/konya.md",
+  "ad": "Konya İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR52",
+  "ilKod": "konya",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/konya-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/kutahya.md",
+  "ad": "Kütahya İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR33",
+  "ilKod": "kutahya",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/kutahya-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/malatya.md",
+  "ad": "Malatya İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRB1",
+  "ilKod": "malatya",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/malatya-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/manisa.md",
+  "ad": "Manisa İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR33",
+  "ilKod": "manisa",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/manisa-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/mardin.md",
+  "ad": "Mardin İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRC3",
+  "ilKod": "mardin",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/mardin-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/mersin.md",
+  "ad": "Mersin İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR62",
+  "ilKod": "mersin",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/mersin-maden-potansiyeli.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/mugla.md",
+  "ad": "Muğla İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR32",
+  "ilKod": "mugla",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/mugla-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/mus.md",
+  "ad": "Muş İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRB2",
+  "ilKod": "mus",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/mus-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/nevsehir.md",
+  "ad": "Nevşehir İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR71",
+  "ilKod": "nevsehir",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/nevsehir-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/nigde.md",
+  "ad": "Niğde İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR71",
+  "ilKod": "nigde",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/nigde-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/ordu.md",
+  "ad": "Ordu İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR90",
+  "ilKod": "ordu",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/ordu-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/osmaniye.md",
+  "ad": "Osmaniye İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR63",
+  "ilKod": "osmaniye",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/osmaniye-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/rize.md",
+  "ad": "Rize İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR90",
+  "ilKod": "rize",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/rize-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/sakarya.md",
+  "ad": "Sakarya İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR42",
+  "ilKod": "sakarya",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/sakarya-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/samsun.md",
+  "ad": "Samsun İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR83",
+  "ilKod": "samsun",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/samsun-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/sanliurfa.md",
+  "ad": "Şanlıurfa İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRC2",
+  "ilKod": "sanliurfa",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/sanliurfa-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/siirt.md",
+  "ad": "Siirt İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRC3",
+  "ilKod": "siirt",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/siirt-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/sinop.md",
+  "ad": "Sinop İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR82",
+  "ilKod": "sinop",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/sinop-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/sirnak.md",
+  "ad": "Şırnak İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRC3",
+  "ilKod": "sirnak",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/sirnak-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/sivas.md",
+  "ad": "Sivas İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR72",
+  "ilKod": "sivas",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/sivas-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/tekirdag.md",
+  "ad": "Tekirdağ İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR21",
+  "ilKod": "tekirdag",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/tekirdag-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/tokat.md",
+  "ad": "Tokat İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR83",
+  "ilKod": "tokat",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/tokat-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/trabzon.md",
+  "ad": "Trabzon İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR90",
+  "ilKod": "trabzon",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/trabzon-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/tunceli.md",
+  "ad": "Tunceli İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRB1",
+  "ilKod": "tunceli",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/tunceli-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/usak.md",
+  "ad": "Uşak İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR33",
+  "ilKod": "usak",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/usak-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/van.md",
+  "ad": "Van İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TRB2",
+  "ilKod": "van",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/van-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/yalova.md",
+  "ad": "Yalova İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR42",
+  "ilKod": "yalova",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/yalova-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/yozgat.md",
+  "ad": "Yozgat İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR72",
+  "ilKod": "yozgat",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/yozgat-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/mta/zonguldak.md",
+  "ad": "Zonguldak İli Maden ve Enerji Kaynakları (MTA)",
+  "tur": "il_raporu",
+  "yil": null,
+  "ajansKod": "TR81",
+  "ilKod": "zonguldak",
+  "kategori": "maden_enerji",
+  "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/zonguldak-madenler.pdf"
+ },
+ {
+  "dosya": "docs/veri/turizm/adana.md",
+  "ad": "Adana Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR62",
+  "ilKod": "adana",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/adiyaman.md",
+  "ad": "Adıyaman Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC1",
+  "ilKod": "adiyaman",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/afyonkarahisar.md",
+  "ad": "Afyonkarahisar Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR33",
+  "ilKod": "afyonkarahisar",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/agri.md",
+  "ad": "Ağrı Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA2",
+  "ilKod": "agri",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/aksaray.md",
+  "ad": "Aksaray Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR71",
+  "ilKod": "aksaray",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/amasya.md",
+  "ad": "Amasya Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR83",
+  "ilKod": "amasya",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/ankara.md",
+  "ad": "Ankara Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR51",
+  "ilKod": "ankara",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/antalya.md",
+  "ad": "Antalya Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR61",
+  "ilKod": "antalya",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/ardahan.md",
+  "ad": "Ardahan Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA2",
+  "ilKod": "ardahan",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/artvin.md",
+  "ad": "Artvin Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "artvin",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/aydin.md",
+  "ad": "Aydın Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR32",
+  "ilKod": "aydin",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/balikesir.md",
+  "ad": "Balıkesir Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR22",
+  "ilKod": "balikesir",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/bartin.md",
+  "ad": "Bartın Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR81",
+  "ilKod": "bartin",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/batman.md",
+  "ad": "Batman Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC3",
+  "ilKod": "batman",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/bayburt.md",
+  "ad": "Bayburt Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA1",
+  "ilKod": "bayburt",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/bilecik.md",
+  "ad": "Bilecik Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR41",
+  "ilKod": "bilecik",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/bingol.md",
+  "ad": "Bingöl Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB1",
+  "ilKod": "bingol",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/bitlis.md",
+  "ad": "Bitlis Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB2",
+  "ilKod": "bitlis",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/bolu.md",
+  "ad": "Bolu Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR42",
+  "ilKod": "bolu",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/burdur.md",
+  "ad": "Burdur Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR61",
+  "ilKod": "burdur",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/bursa.md",
+  "ad": "Bursa Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR41",
+  "ilKod": "bursa",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/canakkale.md",
+  "ad": "Çanakkale Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR22",
+  "ilKod": "canakkale",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/cankiri.md",
+  "ad": "Çankırı Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR82",
+  "ilKod": "cankiri",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/corum.md",
+  "ad": "Çorum Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR83",
+  "ilKod": "corum",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/denizli.md",
+  "ad": "Denizli Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR32",
+  "ilKod": "denizli",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/diyarbakir.md",
+  "ad": "Diyarbakır Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC2",
+  "ilKod": "diyarbakir",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/duzce.md",
+  "ad": "Düzce Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR42",
+  "ilKod": "duzce",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/edirne.md",
+  "ad": "Edirne Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR21",
+  "ilKod": "edirne",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/elazig.md",
+  "ad": "Elâzığ Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB1",
+  "ilKod": "elazig",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/erzincan.md",
+  "ad": "Erzincan Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA1",
+  "ilKod": "erzincan",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/erzurum.md",
+  "ad": "Erzurum Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA1",
+  "ilKod": "erzurum",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/eskisehir.md",
+  "ad": "Eskişehir Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR41",
+  "ilKod": "eskisehir",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/gaziantep.md",
+  "ad": "Gaziantep Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC1",
+  "ilKod": "gaziantep",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/giresun.md",
+  "ad": "Giresun Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "giresun",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/gumushane.md",
+  "ad": "Gümüşhane Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "gumushane",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/hakkari.md",
+  "ad": "Hakkâri Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB2",
+  "ilKod": "hakkari",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/hatay.md",
+  "ad": "Hatay Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR63",
+  "ilKod": "hatay",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/igdir.md",
+  "ad": "Iğdır Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA2",
+  "ilKod": "igdir",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/isparta.md",
+  "ad": "Isparta Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR61",
+  "ilKod": "isparta",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/istanbul.md",
+  "ad": "İstanbul Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR10",
+  "ilKod": "istanbul",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/izmir.md",
+  "ad": "İzmir Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR31",
+  "ilKod": "izmir",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/kahramanmaras.md",
+  "ad": "Kahramanmaraş Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR63",
+  "ilKod": "kahramanmaras",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/karabuk.md",
+  "ad": "Karabük Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR81",
+  "ilKod": "karabuk",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/karaman.md",
+  "ad": "Karaman Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR52",
+  "ilKod": "karaman",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/kars.md",
+  "ad": "Kars Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA2",
+  "ilKod": "kars",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/kastamonu.md",
+  "ad": "Kastamonu Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR82",
+  "ilKod": "kastamonu",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/kayseri.md",
+  "ad": "Kayseri Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR72",
+  "ilKod": "kayseri",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/kilis.md",
+  "ad": "Kilis Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC1",
+  "ilKod": "kilis",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/kirikkale.md",
+  "ad": "Kırıkkale Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR71",
+  "ilKod": "kirikkale",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/kirklareli.md",
+  "ad": "Kırklareli Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR21",
+  "ilKod": "kirklareli",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/kirsehir.md",
+  "ad": "Kırşehir Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR71",
+  "ilKod": "kirsehir",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/kocaeli.md",
+  "ad": "Kocaeli Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR42",
+  "ilKod": "kocaeli",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/konya.md",
+  "ad": "Konya Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR52",
+  "ilKod": "konya",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/kutahya.md",
+  "ad": "Kütahya Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR33",
+  "ilKod": "kutahya",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/malatya.md",
+  "ad": "Malatya Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB1",
+  "ilKod": "malatya",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/manisa.md",
+  "ad": "Manisa Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR33",
+  "ilKod": "manisa",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/mardin.md",
+  "ad": "Mardin Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC3",
+  "ilKod": "mardin",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/mersin.md",
+  "ad": "Mersin Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR62",
+  "ilKod": "mersin",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/mugla.md",
+  "ad": "Muğla Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR32",
+  "ilKod": "mugla",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/mus.md",
+  "ad": "Muş Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB2",
+  "ilKod": "mus",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/nevsehir.md",
+  "ad": "Nevşehir Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR71",
+  "ilKod": "nevsehir",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/nigde.md",
+  "ad": "Niğde Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR71",
+  "ilKod": "nigde",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/ordu.md",
+  "ad": "Ordu Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "ordu",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/osmaniye.md",
+  "ad": "Osmaniye Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR63",
+  "ilKod": "osmaniye",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/rize.md",
+  "ad": "Rize Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "rize",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/sakarya.md",
+  "ad": "Sakarya Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR42",
+  "ilKod": "sakarya",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/samsun.md",
+  "ad": "Samsun Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR83",
+  "ilKod": "samsun",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/sanliurfa.md",
+  "ad": "Şanlıurfa Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC2",
+  "ilKod": "sanliurfa",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/siirt.md",
+  "ad": "Siirt Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC3",
+  "ilKod": "siirt",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/sinop.md",
+  "ad": "Sinop Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR82",
+  "ilKod": "sinop",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/sirnak.md",
+  "ad": "Şırnak Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC3",
+  "ilKod": "sirnak",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/sivas.md",
+  "ad": "Sivas Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR72",
+  "ilKod": "sivas",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/tekirdag.md",
+  "ad": "Tekirdağ Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR21",
+  "ilKod": "tekirdag",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/tokat.md",
+  "ad": "Tokat Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR83",
+  "ilKod": "tokat",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/trabzon.md",
+  "ad": "Trabzon Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "trabzon",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/tunceli.md",
+  "ad": "Tunceli Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB1",
+  "ilKod": "tunceli",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/usak.md",
+  "ad": "Uşak Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR33",
+  "ilKod": "usak",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/van.md",
+  "ad": "Van Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB2",
+  "ilKod": "van",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/yalova.md",
+  "ad": "Yalova Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR42",
+  "ilKod": "yalova",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/yozgat.md",
+  "ad": "Yozgat Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR72",
+  "ilKod": "yozgat",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ },
+ {
+  "dosya": "docs/veri/turizm/zonguldak.md",
+  "ad": "Zonguldak Turizm Belgeli Tesis İstatistikleri (KTB)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR81",
+  "ilKod": "zonguldak",
+  "kategori": "turizm",
+  "kaynak": "https://yigm.ktb.gov.tr/Eklenti/145776,yillik-bulten-2025xlsx.xlsx?0"
+ }
+]

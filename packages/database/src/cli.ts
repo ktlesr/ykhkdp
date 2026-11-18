@@ -59,6 +59,13 @@ try {
       }
       break;
     }
+    case "kaynak": {
+      // Dış veri kaynaklarını ŞİMDİ çeker (işleyici bunu günde bir kendisi yapar).
+      const { cografiIsaretGuncelle } = await import("./kaynak.ts");
+      const r = await cografiIsaretGuncelle({ gonderenRef: null, rol: "yonetici" }, { zorla: true });
+      console.log(`Coğrafi işaret: ${r.yazilan} il yazıldı · ${r.ayni} değişmedi${r.atlanan.length ? ` · eşleşmeyen: ${r.atlanan.join(", ")}` : ""}`);
+      break;
+    }
     case "kur": {
       // ÜRETİM kurulumu. `seed` DEĞİL: hiçbir şeyi silmez, demo veri yazmaz,
       // tekrar çalıştırılabilir. Her dağıtımda koşturulmak üzere tasarlandı.

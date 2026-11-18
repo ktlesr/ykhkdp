@@ -1,0 +1,23 @@
+1 / 3
+
+## GAZİANTEP İLİ MADEN VE ENERJİ KAYNAKLARI
+
+Coğrafi konum olarak Gaziantep ili, Akdeniz ile Güneydoğu Anadolu Bölgesi'nin birleştiği noktada yer alır. Suriye'ye komşu bir sınır ili olan Gaziantep'in büyük bir bölümü Akdeniz Bölgesinin doğu kesiminde, bir bölümü de Güney Doğu Anadolu bölgesinin batısında yer alır. Bölgede allokton ve otokton kaya birimleri gözlenir. Bölgede yüzeyleyen allokton kaya birimleri Karadut ve Koçali karmaşıkları ile bunları tektonik olarak üzerleyen ofiyolit napından ibarettir. Otokton birimler ise Maastrihtiyen-Alt Miyosen yaşlı ve yaklaşık 1800 m kalınlıkta bir istifle temsil edilir. İstif tabanda Besni formasyonu ile başlar. Bu birim uyumlu olarak kumtaşı ve killi kiraçtaşı ara katkılı marndan oluşan Germav formasyonu tarafından izlenir. Beşenli formasyonu yerel bir uyumsuzlukla önceki birimleri üzerler. Alttan üste doğru; Alt Eosen yaşlı, Gerciş formasyonu; Eosen yaşlı, killi çakıllı marn ve çakıllı kireçtaşından oluşan Ardıçlı Tepe formasyonu ve dolomitikçörtlü kireçtaşından oluşan Hoya formasyonu; Üst Eosen-Oligosen yaşlı kireçtaşı ile tebeşirli kireçtaşından oluşan Gaziantep formasyonu ve Oligosen-Alt Miyosen yaşlı Fırat formasyonu yerel bir uyumsuzlukla önceki birimleri izler. Orta-Üst Miyosen akarsu-göl çökellerinden oluşan Şelmo Formasyonu, Üst Miyosen yaşlı Yavuzeli Bazaltı ve Pliyosen akarsu-göl çökellerinden oluşan Harabe Formasyonu yaşlı birimler üzerinde uyumsuz olarak yer alır.
+
+Gaziantep ilinin başlıca metalik madenleri manganez, demir, krom ve aluminyumdur. Manganez ve demir cevherleşmeleri genellikle Şahinbey ilçesinde yer alırken, krom cevherleşmelerine İslahiye ve Nurdağı ilçelerinde rastlanmaktadır. Bu yörelerdeki krom cevherleşmelerinin sayısı çok fazla olmakla birlikte, çoğunlukla rezervleri birkaç bin tonla sınırlı küçük boyutlu zuhurlar şeklindedir. Ayrıca İslahiye ilçesindeki bir diğer metalik maden cevherleşmeleri ise boksit yatak ve zuhurlarıdır. İlçedeki boksit yataklarının % Al2O3 ve % Fe2O3 tenörleri 28-45 ve 28-35 arasında değişmekte olup, yataklarda toplam 95.800.000 ton mümkün boksit rezervi tespit edilmiştir. Islahiye-Dörtyol-Payas arasında uzanan kuşak boyunca sedimanter tip demirli boksit yatakları belirlenmiş olup, potansiyelleri yüksek olmasına karşın yatak içinde homojen dağılım göstermeyen demir ile alüminyumun birbirlerinden ayrılması konusunda teknolojik sorunlar söz konusudur. Şahinbey ilçesindeki manganez cevherleşmeleri % 30-49 arasında değişen Mn tenörüne sahip olup, bu ilçede toplam 45.200 ton manganez rezervi tespit edilmiştir. Şahinbey-Şemlik Köyü’nde de ortalama % 59.25 Fe, % 3.75 SiO2 ve % 11.75 S tenörlü 13.650 ton görünür demir rezervi belirlenmiştir ancak kükürt ve silis içeriğinden dolayı ekonomik değildir. Bölgede tuğla-kiremit, dolomit ve yapı malzemelerine yönelik bazı çalışmalar yapılmıştır. Fakat ekonomik olabilecek özellikte bir yatağa rastlanmamıştır. Genel Müdürlüğümüzün yaptığı çalışmalarla Nurdağı ilçesi, Kartalköy sahasında 27ºC sıcaklık ve 1 lt/sn debiye sahip bir jeotermal kaynak tespit edilmiş olup, alanın yeterli potansiyeli bulunmamaktadır ancak alanda bulunan sıcak su kaynağının kaptajı yapılarak kaplıca ve içmece amaçlı kullanılmaktadır.
+
+ALUMİNYUM (Al) İslahiye-Cabbar Dağ, Hopuz, Gözkayası Sahaları Tenör : % 50 Al2O3 + TiO2, % 35 Fe2O3 , % 7.50 SiO2 Rezerv : 2.300.000 görünür+muhtemel+mümkün rezerv. İslahiye-Kaplan Banısı Sahası Tenör : % 28.32-34.23 Al2O3, % 28.40-33.56 Fe2O3 Rezerv : 16.500.000 ton mümkün rezerv. İslahiye-Şahinlik-Akçadağ Tepe Sahaları Tenör : % 28.50 Al2O3, % 29.48 Fe2O3, Rezerv : 27.000.000 ton mümkün rezerv. İslahiye-Kurudağ-Toprak Tepe-Sulumağara Tepe zuhurları Tenör : % 45.00 Al2O3, % 33.00 Fe2O3, % 9.00 SiO2 Rezerv : 50.000.000 ton mümkün rezerv.
+
+ASBEST (Asb) Nurdağı-Durmuşlar Köyü zuhurları Tenör : % 1 asbest, lif boyları 1-2 mm, Rezerv : Zuhur olduğundan rezerve yönelik çalışma yoktur.
+
+2 / 3
+
+DEMİR (Fe) Burç-Şemlik Demir yatağı Tenör : Ortalama % 59.25 Fe; % 3.17 SiO2 ve % 11.75 S Rezerv :13.650 ton görünür rezerv.
+
+KROM (Cr) Islahiye (Kartalköy, Sarıkaya, Kalaycık, Ağalarabazı, Çolaklar, Yesemek, Küçükkatranlı, Büyükkatranlı, Çubuk, Alacaköy, Melikanlı, Şemlik, Kazıklıköy, Martavan) yatak ve zuhurları Tenör : % 30-50 Cr2O3 Rezerv :18.226 ton görünür, 20.725 ton muhtemel rezerv. Yatakların çoğundan geçmiş yıllarda üretim yapılmıştır.
+
+MANGANEZ (Mn) Şahinbey-Burç- Çakal,Zülfikar,Güllüce,Bekişli,Belenköy,Narlıca,Hezek,Yaylacık,Şipke,Yeniyapan sahaları Tenör : % 30-49 Mn Rezerv : 45.000 ton görünür+muhtemel rezerv.
+
+TUĞLA-KİREMİT (TğKi) Merkez-Karahüyük Köyü Kalite : Orta ve iyi Rezerv :Zuhur olduğundan rezerve yönelik çalışma yoktur.
+
+JEOTERMAL Kartalköy’de 27 ºC sıcaklıkta ve 1 lt/sn debili jeotermal kaynak bulunmaktadır (MTA, 2005).

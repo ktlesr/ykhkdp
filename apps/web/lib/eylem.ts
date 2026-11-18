@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import {
-  belgeEkle, belgeSil, metinDenetle, cikisYap, donemGetir, girisYap, islem, kayitOl, naceAra, naceDuzelt,
+  belgeEkle, belgeSil, KATEGORILER, type Kategori, metinDenetle, cikisYap, donemGetir, girisYap, islem, kayitOl, naceAra, naceDuzelt,
   ayarYaz, kimlikAc, kimlikSil, KotaAsildi, misafirAc, oneriOlustur, puanDuzelt, durumDegistir, rolAta,
   kesifAc, kesifDonemleri, kesifDurdur, KesifZatenAcik, resmiKonulariDegerlendir, oneriGuncelle, oneriSil,
 } from "@ykh/database";
@@ -376,9 +376,13 @@ export async function belgeEylemi(_o: EylemSonucu | null, f: FormData): Promise<
     return { ok: false, mesaj: "Bölge planı ulusal kapsamda yüklenemez; ajans bölgesini seçin." };
   }
 
+  const kategori = String(f.get("kategori") || "genel");
+  if (!(kategori in KATEGORILER)) return { ok: false, mesaj: "Geçersiz kategori." };
+
   const r = await belgeEkle(await baglam(), {
     ad,
     tur,
+    kategori: kategori as Kategori,
     yil: String(f.get("yil") ?? "") || null,
     ajansKod: kapsamTur === "ajans" ? kapsamKod : null,
     ilKod: kapsamTur === "il" ? kapsamKod : null,

@@ -278,9 +278,9 @@ test("KVKK: kimlik pseudonimleşir, öneri zinciri korunur", async () => {
 // ── migration geri alma ────────────────────────────────────────────────────
 
 test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
-  const geri = await asagi(21);
+  const geri = await asagi(22);
   assert.deepEqual(geri, [
-    "0021_oneri_silme", "0020_kapsam_coklu_nace", "0019_model_ayari", "0018_tarama_reddi", "0017_aday_kesfi", "0016_degerlendirme_asamasi", "0015_kimlik_silme_yetkisi", "0014_rol_atama", "0013_gonderen_ajans", "0012_oneri_gizlilik", "0011_ulusal_agirlik", "0010_ayar", "0009_yatirim_konusu", "0008_ajans_kisa_ad", "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus",
+    "0022_belge_kategori", "0021_oneri_silme", "0020_kapsam_coklu_nace", "0019_model_ayari", "0018_tarama_reddi", "0017_aday_kesfi", "0016_degerlendirme_asamasi", "0015_kimlik_silme_yetkisi", "0014_rol_atama", "0013_gonderen_ajans", "0012_oneri_gizlilik", "0011_ulusal_agirlik", "0010_ayar", "0009_yatirim_konusu", "0008_ajans_kisa_ad", "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus",
     "0004_kriter_dayanagi", "0003_kurallar", "0002_rls", "0001_sema",
   ]);
   const [{ n }] = await sahip()<{ n: string }[]>`
@@ -291,7 +291,7 @@ test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
   assert.deepEqual(await yukari(), [
     "0001_sema", "0002_rls", "0003_kurallar", "0004_kriter_dayanagi",
     "0005_karsi_gorus", "0006_yakin_kopya", "0007_misafir", "0008_ajans_kisa_ad", "0009_yatirim_konusu", "0010_ayar", "0011_ulusal_agirlik", "0012_oneri_gizlilik", "0013_gonderen_ajans", "0014_rol_atama",
-    "0015_kimlik_silme_yetkisi", "0016_degerlendirme_asamasi", "0017_aday_kesfi", "0018_tarama_reddi", "0019_model_ayari", "0020_kapsam_coklu_nace", "0021_oneri_silme",
+    "0015_kimlik_silme_yetkisi", "0016_degerlendirme_asamasi", "0017_aday_kesfi", "0018_tarama_reddi", "0019_model_ayari", "0020_kapsam_coklu_nace", "0021_oneri_silme", "0022_belge_kategori",
   ]);
   await seed();
 });
@@ -766,4 +766,27 @@ test("kuyruktaki öneriyi yalnızca yönetici siler; görüntü denetimde kalır
     select detay from denetim where eylem = 'oneri_duzeltildi' and nesne_id = ${String(id3)}`);
   assert.equal(dz.detay.onceki.baslik, "Silme sınaması konusu", "önceki metin denetimde");
   assert.equal((await oneriGuncelle(ajans, id3, { baslik: "x".repeat(10), gerekce: "y".repeat(45), ilce: null, kapsam: [] }, "ajans deniyor ama yetkisi yok")).ok, false);
+});
+
+test("kaynak belgesi: aynı içerik dokunmaz, değişen içerik yeniden yazılır; kategori taşınır", async () => {
+  const { kaynakBelgesiYaz } = await import("./sorgu.ts");
+  const { ciMetni } = await import("./kaynak.ts");
+  const servis: Baglam = { gonderenRef: null, rol: "yonetici" };
+  const isaret = (ad: string) => ({
+    Name: ad, TypeName: "Mahreç İşareti ", ProductGroupName: "Halılar ve kilimler", CityName: "Uşak", DistrictName: "Eşme",
+    StatusName: "Tescilli", RegistrationDate: "/Date(1591822800000)/", ApplicantOrRegistrant: "Eşme Belediyesi",
+  });
+  const metin = ciMetni("Uşak", [isaret("Eşme Kilimi")]);
+  assert.match(metin, /Eşme Kilimi, Uşak ilinde Eşme ilçesinde tescilli bir coğrafi işarettir \(mahreç işareti\)\. Ürün grubu: Halılar ve kilimler\. Tescil yılı 2020\./);
+  const g = { ad: "Sınama Coğrafi İşaretleri", tur: "il_raporu", yil: null, ajansKod: "TR33", ilKod: "usak", kategori: "cografi_isaret" as const };
+  assert.equal(await kaynakBelgesiYaz(servis, { ...g, metin: metin + "\n\n" + "Dolgu cümlesi. ".repeat(20) }), "yazildi");
+  const [ilk] = await sahip()<{ id: string; kategori: string }[]>`select id, kategori from belge where ad = ${g.ad}`;
+  assert.equal(ilk.kategori, "cografi_isaret");
+  assert.equal(await kaynakBelgesiYaz(servis, { ...g, metin: metin + "\n\n" + "Dolgu cümlesi. ".repeat(20) }), "ayni");
+  const [ayni] = await sahip()<{ id: string }[]>`select id from belge where ad = ${g.ad}`;
+  assert.equal(ayni.id, ilk.id, "değişmeyen belge yeniden yazılmaz: tarama önbelleği korunur");
+  assert.equal(await kaynakBelgesiYaz(servis, { ...g, metin: ciMetni("Uşak", [isaret("Eşme Kilimi"), isaret("Uşak Halısı")]) + "\n\n" + "Dolgu cümlesi. ".repeat(20) }), "yazildi");
+  const yeni = await sahip()<{ id: string; metin: string }[]>`select id, metin from belge where ad = ${g.ad}`;
+  assert.ok(yeni.every((r) => r.id !== ilk.id) && yeni.some((r) => r.metin.includes("Uşak Halısı")));
+  await sahip()`delete from belge where ad = ${g.ad}`;
 });

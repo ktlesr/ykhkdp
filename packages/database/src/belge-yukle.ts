@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -31,7 +32,23 @@ export type YuklemeGirdisi = {
   ilKod?: string | null;
   /** hedef parça uzunluğu (karakter) */
   parcaBoyu?: number;
+  /** belgenin NEYİ anlattığı (0022); verilmezse 'genel' */
+  kategori?: Kategori;
 };
+
+/** Belge kategorileri — 0022 `check` kısıtıyla aynı liste. */
+export const KATEGORILER = {
+  genel: "Genel",
+  sanayi: "Sanayi ve üretim",
+  dis_ticaret: "Dış ticaret",
+  maden_enerji: "Maden ve enerji",
+  turizm: "Turizm",
+  tarim: "Tarım ve hayvancılık",
+  cografi_isaret: "Coğrafi işaret",
+  tesvik: "Yatırım teşvik",
+  istatistik: "İstatistik",
+} as const;
+export type Kategori = keyof typeof KATEGORILER;
 
 export type Parca = { bolum: string; metin: string };
 
@@ -220,8 +237,23 @@ export function yolCoz(dosya: string): string {
 
 /** Belgeyi parçalayıp veritabanına yazar. Aynı `ad` varsa önce siler. */
 export async function belgeYukle(g: YuklemeGirdisi): Promise<{ parca: number; karakter: number }> {
-  const yol = yolCoz(g.dosya);
-  const ham = await readFile(yol, "utf8");
+  return metinYukle(g, await readFile(yolCoz(g.dosya), "utf8"));
+}
+
+const ozetle = (metin: string) => createHash("sha256").update(metin).digest("hex");
+
+/** Dosyadan üretilmiş veri belgesi: içerik özeti aynıysa dokunmaz. */
+async function veriYukle(g: YuklemeGirdisi): Promise<number | null> {
+  const ham = await readFile(yolCoz(g.dosya), "utf8");
+  const ozet = ozetle(ham);
+  const [m] = await sahip()<{ kaynak_ozet: string | null }[]>`select kaynak_ozet from belge where ad = ${g.ad} limit 1`;
+  if (m?.kaynak_ozet === ozet) return null;
+  // Veri belgesinin yılı kaynakla birlikte ilerler (ihracat 2026 → 2027); yıl değişimi çakışma değildir.
+  return (await metinYukle(g, ham, ozet, true)).parca;
+}
+
+async function metinYukle(g: YuklemeGirdisi, ham: string, ozet: string | null = null, yilSerbest = false): Promise<{ parca: number; karakter: number }> {
+  const yol = g.dosya;
   const parcalar = parcala(ham, g.parcaBoyu ?? 2500);
   if (!parcalar.length) throw new Error(`${yol}: ayrıştırılabilir metin bulunamadı.`);
 
@@ -232,7 +264,7 @@ export async function belgeYukle(g: YuklemeGirdisi): Promise<{ parca: number; ka
   const [cakisan] = await sql`
     select 1 from belge where ad = ${g.ad}
       and (ajans_kod is distinct from ${g.ajansKod ?? null} or il_kod is distinct from ${g.ilKod ?? null}
-           or yil is distinct from ${g.yil ?? null})
+           or (${!yilSerbest} and yil is distinct from ${g.yil ?? null}))
     limit 1
   `;
   if (cakisan) throw new Error(`“${g.ad}” başka bir kapsam/yılla zaten yüklü; önce o kaydı silin.`);
@@ -250,7 +282,11 @@ export async function belgeYukle(g: YuklemeGirdisi): Promise<{ parca: number; ka
           ajans_kod: g.ajansKod ?? null,
           il_kod: g.ilKod ?? null,
           metin: p.metin,
+          kategori: g.kategori ?? "genel",
+          kaynak_ozet: ozet,
         })),
+        "kategori",
+        "kaynak_ozet",
         "ad",
         "bolum",
         "tur",
@@ -336,6 +372,29 @@ export async function kutuphaneYukle(): Promise<{ eklenen: number; atlanan: numb
       eklenen++;
     } catch (e) {
       // Tek belgenin hatası kurulumu durdurmaz; neden rapora yazılır.
+      hatalar.push(`${g.ad}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  // Veri belgeleri (`docs/veri/manifest.json`: MTA, dış ticaret, turizm…):
+  // kaynak güncellendikçe yeniden üretilir, bu yüzden "varsa atla" değil
+  // İÇERİK ÖZETİ karşılaştırılır — yalnızca değişen belge yeniden yazılır.
+  // Ajansın sildiği veri belgesi de geri gelmez.
+  const silinen = new Set(
+    (await sahip()<{ ad: string }[]>`select detay->>'ad' as ad from denetim where eylem = 'belge_silindi' and detay->>'ad' is not null`).map((r) => r.ad),
+  );
+  let veri: KutuphaneGirdisi[] = [];
+  try {
+    veri = JSON.parse(await readFile(yolCoz("docs/veri/manifest.json"), "utf8"));
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code !== "ENOENT") hatalar.push(`veri manifesti okunamadı: ${e instanceof Error ? e.message : String(e)}`);
+  }
+  for (const g of veri) {
+    if (silinen.has(g.ad)) { atlanan++; continue; }
+    try {
+      const n = await veriYukle(g);
+      if (n === null) atlanan++;
+      else { eklenen++; parca += n; }
+    } catch (e) {
       hatalar.push(`${g.ad}: ${e instanceof Error ? e.message : String(e)}`);
     }
   }

@@ -1,4 +1,4 @@
-import { islem, kapat, type Baglam } from "@ykh/database";
+import { islem, kapat, kaynaklariDenetle, type Baglam } from "@ykh/database";
 import { birKesifAl, degerlendirmeYap, kesifHatasi, kesifYap, KILIT, onTarama } from "@ykh/degerlendirme";
 import { log } from "@ykh/observability";
 
@@ -123,9 +123,27 @@ async function surekli(ad: string, tur: () => Promise<boolean>): Promise<void> {
   }
 }
 
+/**
+ * Dış veri kaynakları (coğrafi işaretler…): günde bir yoklanır, yalnızca
+ * değişen il belgesi yeniden yazılır. `YKH_KAYNAK_SAAT=0` kapatır.
+ */
+const KAYNAK_SAAT = Number(process.env.YKH_KAYNAK_SAAT || 24);
+async function kaynakDongusu(): Promise<void> {
+  while (calisiyor && KAYNAK_SAAT > 0) {
+    try {
+      const r = await kaynaklariDenetle(SERVIS, KAYNAK_SAAT, () => calisiyor);
+      if (r) log.info("kaynak_denetlendi", { sonuc: r });
+    } catch (e) {
+      log.hata("kaynak_hatasi", { hata: e instanceof Error ? e.message : String(e) });
+    }
+    // 10 dk; kapanış sinyalini bekletmemek için kısa dilimlerle uyur.
+    for (let i = 0; i < 300 && calisiyor; i++) await new Promise((r) => setTimeout(r, 2000));
+  }
+}
+
 export async function dongu(): Promise<void> {
   log.info("worker_basladi", { aralik: ARALIK, maksDeneme: MAKS_DENEME, eszamanli: ESZAMANLI });
-  await Promise.all([...Array.from({ length: ESZAMANLI }, () => surekli("oneri", turAt)), surekli("kesif", kesifTuru)]);
+  await Promise.all([...Array.from({ length: ESZAMANLI }, () => surekli("oneri", turAt)), surekli("kesif", kesifTuru), kaynakDongusu()]);
   await kapat();
   log.info("worker_durdu", {});
 }
