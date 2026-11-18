@@ -184,9 +184,12 @@ export const AdayKesfi = z
       .array(
         z
           .object({
-            baslik: z.string().min(8).max(140),
+            // Alt uzunluk sınırı ŞEMADA DEĞİL, aday başına doğrulayıcıdadır
+            // (`adaylariDogrula`): canlıda tek bir kısa başlık bütün ilin
+            // adaylarını reddettirdi. Kötü aday iyileri batırmaz.
+            baslik: z.string().min(1).max(140),
             /** "neden bu ilde?" — yalnızca atıf yapılan kanıtlarda yazanla */
-            gerekce: z.string().min(40).max(1200),
+            gerekce: z.string().min(1).max(1200),
             /** Uzman çıkarımı — kanıtları birleştiren bağ; olgu değil, ekranda öyle etiketlenir. Boş olabilir. */
             sentez: z.string().max(600),
             /** Ana çerçeve: adayın girdiği temel unsur (1–10, `TEMEL_UNSURLAR`). */

@@ -135,15 +135,23 @@ export async function cografiIsaretGuncelle(
 /**
  * Periyodik denetim: son denetimden `saat` geçtiyse kaynakları yoklar.
  * Zaman damgası veritabanında — dağıtımda yeniden başlayan işleyici her
- * seferinde kaynağa gitmez. Hata da damgalanır: çöken kaynak dakikada bir
- * yoklanmaz, bir sonraki periyotta yeniden denenir.
+ * seferinde kaynağa gitmez. Başarısız ya da yarıda kesilen denetim (dağıtım
+ * sırasında kapanan işleyici) günü yakmaz: damga geri çekilir, bir saat sonra
+ * yeniden denenir — çöken kaynak yine de dakikada bir yoklanmaz.
  */
 export async function kaynaklariDenetle(b: Baglam, saat = 24, surdur?: () => boolean): Promise<KaynakSonucu[] | null> {
   const [alindi] = await islem(b, (sql) => sql<{ anahtar: string }[]>`
-    insert into ayar (anahtar, deger) values ('kaynak_son_denetim', now()::text)
+    insert into ayar (anahtar, deger) values ('kaynak_denetim_zamani', now()::text)
     on conflict (anahtar) do update set deger = now()::text, guncellendi = now()
       where ayar.guncellendi < now() - make_interval(hours => ${Math.max(1, Math.round(saat))})
     returning anahtar`);
   if (!alindi) return null;
-  return [await cografiIsaretGuncelle(b, { surdur })];
+  try {
+    return [await cografiIsaretGuncelle(b, { surdur })];
+  } catch (e) {
+    await islem(b, (sql) => sql`
+      update ayar set guncellendi = now() - make_interval(hours => ${Math.max(0, Math.round(saat) - 1)})
+      where anahtar = 'kaynak_denetim_zamani'`);
+    throw e;
+  }
 }

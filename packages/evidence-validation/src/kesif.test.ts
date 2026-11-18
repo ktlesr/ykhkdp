@@ -306,3 +306,15 @@ test("ürün grubu olmayan dar konu meşrudur", () => {
   assert.equal(s.adaylar.length, 1);
   assert.deepEqual(s.adaylar[0].urunGruplari, []);
 });
+
+test("kısa başlıklı aday yalnızca kendisi düşer; iyi aday kalır", () => {
+  const defter = [
+    { no: 1, kanitId: 1, belgeId: 1, metin: "Uşak ilinde tekstil geri dönüşüm tesisleri yoğunlaşmıştır.", yerel: true },
+    { no: 2, kanitId: 2, belgeId: 2, metin: "Geri dönüştürülmüş elyaf üretimi bölgenin öncelikli alanıdır.", yerel: false },
+  ];
+  const iyi = { baslik: "Geri dönüştürülmüş elyaf üretimi", gerekce: "Uşak ilinde tekstil geri dönüşüm tesisleri yoğunlaşmıştır. Geri dönüştürülmüş elyaf üretimi bölgenin öncelikli alanıdır.", kanit_no: [1, 2] };
+  const r = adaylariDogrula([{ ...iyi, baslik: "Elyaf" }, iyi], defter as never);
+  assert.equal(r.adaylar.length, 1);
+  assert.equal(r.adaylar[0].baslik, iyi.baslik);
+  assert.match(r.dusenler[0].mesaj, /kısa/);
+});

@@ -879,6 +879,11 @@ export function adaylariDogrula(
   for (const ham of adaylar) {
     const a = { ...ham, gerekce: ham.gerekce.replace(ATIF_NOTU, "").trim() };
     const ad =`“${a.baslik.slice(0, 60)}”`;
+    // Biçim alt sınırları aday başına: şemada olsaydı tek kısa başlık bütün çıktıyı reddettirirdi.
+    if (a.baslik.trim().length < 8 || a.gerekce.length < 40) {
+      dusenler.push({ kod: "alinti_eslesmiyor", mesaj: `${ad} başlığı ya da gerekçesi konu sayılamayacak kadar kısa; düşürüldü.` });
+      continue;
+    }
     const tekil = [...new Set(a.kanit_no)];
     // Aynı metin iki kanıt sayılmaz (çakışan pencere, eşzamanlı tarama).
     const metinler = new Set<string>();
