@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { oneriGetir, donemGetir, parcaMetinleri } from "@ykh/database";
 import { alintininMaddesi } from "@ykh/evidence-validation";
+import { TEMEL_UNSURLAR } from "@ykh/ai-gateway";
 import {
   KARSI_GORUS_ETIKET,
   NACE_KAYNAK_ETIKET,
@@ -305,6 +306,24 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
               <div className="serit px-4 py-3 etiket text-ink">
                 Kriter kırılımı · ağırlık seti {d.set.surum}
               </div>
+              {/* Ana çerçeve: on temel unsurla ilişki. Modelin sınıflaması; puana girmez. */}
+              {o.cerceve && (
+                <div className="border-b border-b-ink bg-unverif-tint px-4 py-3">
+                  <div className="etiket text-unverif">
+                    <span aria-hidden>◌</span> Ana çerçeve · yapay zekâ sınıflaması, puana etki etmez
+                  </div>
+                  <p className="mt-1.5 text-[13.5px] leading-[1.45] font-medium text-ink text-pretty">
+                    {o.cerceve.unsur > 0 && TEMEL_UNSURLAR[o.cerceve.unsur] ? (
+                      <>
+                        Unsur <span className="num">{o.cerceve.unsur}</span> — {TEMEL_UNSURLAR[o.cerceve.unsur]}
+                      </>
+                    ) : (
+                      "On temel unsurdan hiçbirine doğrudan girmiyor"
+                    )}
+                  </p>
+                  <p className="mt-1 text-[13px] leading-[1.5] text-ink-soft text-pretty">{o.cerceve.aciklama}</p>
+                </div>
+              )}
               {gruplaraGore(d.set.agirliklar).map(({ grup, agirlik, kriterler }) => (
                 <div key={grup} className="border-b border-b-ink last:border-b-0">
                   <div
@@ -346,6 +365,14 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
                             ağırlık {Math.round(d.set.agirliklar[kr] * 100)}%
                           </span>
                         </div>
+                        {/* Kısa not: puanı ne yükseltti, ne düşürdü. Yapay zekânın yorumudur;
+                            ajans puanı düzelttiyse not HAM puana aittir ve öyle yazar. */}
+                        {o.kriter_notlari?.[kr] && (
+                          <p className="mt-1.5 text-[12.5px] leading-[1.45] text-ink-soft text-pretty">
+                            {o.kriter_notlari[kr]}
+                            {o.duzeltildi && <span className="text-ink-mute"> (Not, ajans düzeltmesinden önceki yapay zekâ puanına aittir.)</span>}
+                          </p>
+                        )}
                         {/* Bu puanı hangi alıntı taşıyor — dayanaksız kriter açıkça yazar. */}
                         {dayanak && dayanak.length > 0 ? (
                           <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 etiket text-ink-mute">

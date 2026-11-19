@@ -49,6 +49,7 @@ test("EVAL 1 — kaynaksız sayı reddedilir", async () => {
       alintilar: [],
       eksik_veri: [],
       kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
+      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." },
     }),
     "claude-opus-5-20260101",
     GIRDI,
@@ -68,6 +69,7 @@ test("EVAL 2 — belgede geçmeyen alıntı reddedilir", async () => {
       alintilar: [{ no: 1, belge_id: 1, alinti: "Bu cümle belgede kesinlikle yok ve uydurulmuştur." }],
       eksik_veri: [],
       kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
+      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." },
     }),
     "claude-opus-5-20260101",
     GIRDI,
@@ -84,6 +86,7 @@ test("EVAL 3 — paket dışı numara adres hatasıdır, metin bulunursa atıf d
       alintilar: [{ no: 1, belge_id: 9, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek" }],
       eksik_veri: [],
       kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
+      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." },
     }),
     "claude-opus-5-20260101",
     GIRDI,
@@ -101,6 +104,7 @@ test("EVAL 3b — adresi ve metni birlikte uydurulmuş alıntı reddedilir", asy
       alintilar: [{ no: 1, belge_id: 9, alinti: "Bu cümle hiçbir belgede geçmiyor ve uydurulmuştur." }],
       eksik_veri: [],
       kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
+      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." },
     }),
     "claude-opus-5-20260101",
     GIRDI,
@@ -116,6 +120,7 @@ test("birebir alıntı kabul edilir ve dayanak puanı üretir", async () => {
       alintilar: [{ no: 1, belge_id: 1, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek dönüşüm alanı" }],
       eksik_veri: [],
       kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
+      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." },
     }),
     "claude-opus-5-20260101",
     GIRDI,
@@ -133,6 +138,7 @@ test("alıntısız çıktı geçerli ama dayanak 0 — slot dolduramaz", async (
       alintilar: [],
       eksik_veri: ["Belgelerde eşleşme yok."],
       kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
+      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." },
     }),
     "claude-opus-5-20260101",
     GIRDI,
@@ -150,6 +156,7 @@ test("sekiz kriterden azı şema katmanında düşer", () => {
     alintilar: [],
     eksik_veri: [],
     kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
+    cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." },
   });
   assert.equal(r.success, false);
 });
@@ -162,6 +169,7 @@ test("şema dışı alan reddedilir (strict)", async () => {
       alintilar: [],
       eksik_veri: [],
       kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
+      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." },
       fazladan: 1,
     }),
     "claude-opus-5-20260101",
@@ -195,7 +203,7 @@ test("'latest' alias reddedilir", () => {
 test("model snapshot ve prompt sürümü her sonuçta taşınır", async () => {
   const s = await degerlendir(cevrimdisiIstemci(), "claude-opus-5-20260101", GIRDI);
   assert.equal(s.modelSnapshot, "claude-opus-5-20260101");
-  assert.equal(s.promptSurum, "degerlendirme-v10");
+  assert.equal(s.promptSurum, "degerlendirme-v11");
 });
 
 // ── prompt injection ───────────────────────────────────────────────────────
@@ -257,6 +265,7 @@ test("EVAL 4 — çözülemeyen alıntı numarası eşlemeden düşer, çıktı 
       alintilar: [{ no: 1, belge_id: 1, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek dönüşüm alanı" }],
       eksik_veri: [],
       kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
+      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." },
     }),
     "claude-opus-5-20260101",
     GIRDI,
@@ -279,6 +288,7 @@ test("kriter payı dayanağa yansır — yerellik boşluğu daha pahalı", async
       alintilar: [{ no: 1, belge_id: 1, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek dönüşüm alanı" }],
       eksik_veri: [],
       kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
+      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." },
     });
   const girdi = { ...GIRDI, agirliklar: AGIRLIKLAR };
 
@@ -368,4 +378,27 @@ test("Zafer AI: boşluk döngüsüne giren akış kesilir ve çağrı yeniden de
     if (eskiAnahtar === undefined) delete process.env.ZAFER_AI_API_KEY; else process.env.ZAFER_AI_API_KEY = eskiAnahtar;
     if (eskiAdres === undefined) delete process.env.ZAFER_AI_URL; else process.env.ZAFER_AI_URL = eskiAdres;
   }
+});
+
+test("açıklama notları: kaynaksız sayı taşıyan not kaydedilmez, diğerleri ve çerçeve kalır", async () => {
+  const { aciklamalariSuz } = await import("./gateway.ts");
+  // Belgede geçen bir sayı aklanır, geçmeyen düşer.
+  const belgedeki = (BELGE_METNI.match(/\d{2,}/) ?? [""])[0];
+  const veri = {
+    puanlar: puanlar().map((p) =>
+      p.kriter === "plan_uyumu" ? { ...p, not: "İlde 987654 tesis olduğu için yüksek." }
+      : p.kriter === "pazar_talep" && belgedeki ? { ...p, not: `Belgede ${belgedeki} değeri anılıyor.` }
+      : { ...p, not: "Gerekçe ile özgü bir olguya dayanıyor." }),
+    gerekce: "x".repeat(40), alintilar: [], eksik_veri: [],
+    kapsam: { tur: "dar" as const, aciklama: "Sınama çıktısı." },
+    cerceve: { unsur: 6, aciklama: "Üretim atığını değerlendiren döngüsel bir konu." },
+  };
+  const a = aciklamalariSuz(veri as never, PAKET);
+  assert.equal(a.kriterNotlari.plan_uyumu, undefined, "uydurma sayı taşıyan not ekrana çıkmaz");
+  assert.equal(a.kriterNotlari.yerel_potansiyel, "Gerekçe ile özgü bir olguya dayanıyor.");
+  if (belgedeki) assert.ok(a.kriterNotlari.pazar_talep, "belgede geçen sayı notu düşürmez");
+  assert.deepEqual(a.cerceve, { unsur: 6, aciklama: "Üretim atığını değerlendiren döngüsel bir konu." });
+  assert.match(a.dusenler[0], /plan_uyumu notu kaynaksız sayı/);
+  // Çerçeve notu da aynı kurala tabi; düşerse çerçeve hiç kaydedilmez.
+  assert.equal(aciklamalariSuz({ ...veri, cerceve: { unsur: 4, aciklama: "Yılda 987654 ton işlenir." } } as never, PAKET).cerceve, null);
 });

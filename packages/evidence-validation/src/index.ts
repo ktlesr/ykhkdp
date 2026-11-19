@@ -339,6 +339,17 @@ export function paketteGeciyor(paket: Paket, alinti: string): boolean {
  * Dayanak = puanın hangi kısmı belgeye bağlandı. Hiç alıntı yoksa 0 — puanı
  * yüksek olsa da slot dolduramaz.
  */
+/**
+ * Açıklama metinlerindeki (kriter notu, ana çerçeve notu) kaynaksız sayı.
+ * Bu metinler puana girmez ama EKRANA çıkar; gerekçeyle aynı kural geçerli:
+ * her sayı pakette geçmek zorunda. Fark: ihlal çıktıyı reddettirmez, yalnızca
+ * o not kaydedilmez — puan zaten geçerlidir (sentezdeki kuralın aynısı).
+ */
+export function kaynaksizSayi(metin: string, paket: Paket): string | null {
+  const kaynak = normalize(paket.belgeler.filter((b) => b.pakete_dahil).map((b) => b.metin).join(" "));
+  return sayisalTokenlar(metin).find((t) => !sayiKaynakta(t, kaynak)) ?? null;
+}
+
 export function degerlendirmeyiDogrula(
   cikti: {
     gerekce: string;

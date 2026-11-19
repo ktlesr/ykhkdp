@@ -777,10 +777,14 @@ export async function oneriGetir(b: Baglam, id: number) {
         ek_nace: Array<{ kod: string; tanim: string; urun_grubu: string; kaynak: string; guven: string | null }> | null;
         /** konu ölçeği notu — PUANA ETKİ ETMEZ */
         kapsam_notu: { tur: "dar" | "urun_ailesi" | "asiri_genis" | "kanit_yetersiz"; aciklama: string } | null;
+        /** kriter → AI notu; puana etki etmez. Eski kayıtlarda ve notu düşen kriterde yok. */
+        kriter_notlari: Partial<Record<Kriter, string>> | null;
+        /** on temel unsurla ilişki; unsur 0 = hiçbirine girmiyor. Modelin sınıflaması. */
+        cerceve: { unsur: number; aciklama: string } | null;
       })[]
     >`
       select o.id, o.donem_id, o.gonderen_ref, o.baslik, o.koken, o.gerekce, o.ilce, o.kesif_id, o.kesif_kanit,
-             o.kapsam, g.kapsam_notu,
+             o.kapsam, g.kapsam_notu, g.kriter_notlari, g.cerceve,
              (select json_agg(json_build_object('kod', x.nace_kod, 'tanim', n2.tanim, 'urun_grubu', x.urun_grubu,
                                                 'kaynak', x.kaynak, 'guven', x.guven) order by x.sira)
                 from oneri_nace x join nace n2 on n2.kod = x.nace_kod where x.oneri_id = o.id) as ek_nace,

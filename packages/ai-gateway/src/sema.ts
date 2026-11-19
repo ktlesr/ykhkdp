@@ -64,6 +64,17 @@ export const Degerlendirme = z
       }),
     /** özet gerekçe — yatırımcıya gösterilen metin */
     gerekce: z.string().min(40).max(1200),
+    /**
+     * Ana çerçeve — konunun on temel unsurla (`TEMEL_UNSURLAR`) ilişkisi.
+     * `unsur` 0 = hiçbirine doğrudan girmiyor. Modelin SINIFLAMASIDIR;
+     * PUANA ETKİ ETMEZ, ajansın okuyacağı açıklamadır.
+     */
+    cerceve: z
+      .object({
+        unsur: z.number().int().min(0).max(10),
+        aciklama: z.string().min(10).max(300),
+      })
+      .strict(),
     /** üst ölçekli belgelerden alıntılar; boşsa dayanak puanı 0 olur */
     alintilar: z.array(Alinti).max(8),
     eksik_veri: z.array(z.string().max(200)).max(6),

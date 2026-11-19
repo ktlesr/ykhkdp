@@ -24,6 +24,9 @@ kullanır. Türkçe terim kanoniktir.
 | dayanaksız kriter | boş `alinti_no` | "Dayanaksız kriter · belgeye bağlanamadı" |
 | örtüşme | `belge.sira` (`ts_rank`) | görünmez (dayanak girdisi) |
 | karşı görüş | `karsi_gorus` | "Karşı görüş" |
+| kriter notu | `degerlendirme.kriter_notlari` | kriter satırında puanın altındaki kısa yorum |
+| ana çerçeve | `degerlendirme.cerceve` · `TEMEL_UNSURLAR` | "Ana çerçeve · yapay zekâ sınıflaması" |
+| temel unsur | `unsur` (1–10; değerlendirmede 0 = hiçbiri) | "Unsur 4 — …" |
 | atıf düzeltmesi | `duzeltilenler` | denetimde; ekranda gösterilmez |
 | paket numarası | `belge.yerel` (1…n) | görünmez (modelin gördüğü adres) |
 | yakın kopya | `yakinKopyalar()` · `pg_trgm` | "Aynı dönemde benzer başlık" |

@@ -119,7 +119,7 @@ test("değerlendirme kaydı model künyesi ve dayanak taşır", async () => {
   );
   assert.ok(d, "değerlendirme kaydı olmalı");
   assert.notEqual(d.model_snapshot, "latest");
-  assert.equal(d.prompt_surum, "degerlendirme-v10");
+  assert.equal(d.prompt_surum, "degerlendirme-v11");
   assert.ok(d.dayanak >= 0 && d.dayanak <= 100);
 });
 
@@ -346,13 +346,15 @@ test("ürün gruplu öneri: ek NACE gruplara bağlanır, kapsam notu yazılır, 
     returning id`);
   const s = await degerlendirmeYap(SERVIS, Number(o.id));
   assert.ok(s.ok, s.mesaj);
-  const [r] = await islem(SERVIS, (sql) => sql<{ nace_kod: string; kapsam_notu: unknown; ek: number; gecersiz: number }[]>`
-    select o.nace_kod, g.kapsam_notu,
+  const [r] = await islem(SERVIS, (sql) => sql<{ nace_kod: string; kapsam_notu: unknown; kriter_notlari: Record<string, string> | null; cerceve: { unsur: number } | null; ek: number; gecersiz: number }[]>`
+    select o.nace_kod, g.kapsam_notu, g.kriter_notlari, g.cerceve,
            (select count(*)::int from oneri_nace x where x.oneri_id = o.id) as ek,
            (select count(*)::int from oneri_nace x where x.oneri_id = o.id and x.nace_kod = o.nace_kod) as gecersiz
     from oneri o join degerlendirme g on g.oneri_id = o.id where o.id = ${o.id}`);
   assert.equal(r.nace_kod, "13.10", "kullanıcının ana kodu ezilmez");
   assert.ok(r.kapsam_notu, "kapsam notu kaydedilir (puana etki etmez)");
+  assert.ok(r.kriter_notlari && Object.keys(r.kriter_notlari).length >= 1, "kriter notları kaydedilir");
+  assert.ok(r.cerceve && r.cerceve.unsur >= 0 && r.cerceve.unsur <= 10, "ana çerçeve notu kaydedilir");
   assert.equal(r.gecersiz, 0, "ek kod ana kodla aynı olamaz");
   if (!process.env.OPENAI_API_KEY) assert.ok(r.ek >= 1, "çevrimdışı istemci en az bir ek kod eşler");
 });

@@ -2,6 +2,7 @@ import {
   adaylariDogrula,
   degerlendirmeyiDogrula,
   kanitlariDogrula,
+  kaynaksizSayi,
   karsiGorusuDogrula,
   uygunluguDogrula,
   type DefterKaydi,
@@ -142,6 +143,28 @@ export async function degerlendir(
     maliyet: r.maliyet,
     ...meta,
   };
+}
+
+/**
+ * Ekrana çıkacak AÇIKLAMA metinleri: kriter notları ve ana çerçeve notu.
+ * Puana, dayanağa ve sıralamaya girmezler. Belgede geçmeyen sayı taşıyan not
+ * KAYDEDİLMEZ (o kriterin notu yok görünür); çıktının tamamı reddedilmez,
+ * çünkü puan zaten doğrulandı. Düşen her not denetime yazılır.
+ */
+export function aciklamalariSuz(
+  veri: z.infer<typeof SEMALAR.degerlendirme>,
+  paket: Paket,
+): { kriterNotlari: Record<string, string>; cerceve: { unsur: number; aciklama: string } | null; dusenler: string[] } {
+  const dusenler: string[] = [];
+  const kriterNotlari: Record<string, string> = {};
+  for (const p of veri.puanlar) {
+    const sayi = kaynaksizSayi(p.not, paket);
+    if (sayi) dusenler.push(`${p.kriter} notu kaynaksız sayı (“${sayi}”) taşıyor; not kaydedilmedi.`);
+    else kriterNotlari[p.kriter] = p.not.trim();
+  }
+  const sayi = kaynaksizSayi(veri.cerceve.aciklama, paket);
+  if (sayi) dusenler.push(`Ana çerçeve notu kaynaksız sayı (“${sayi}”) taşıyor; not kaydedilmedi.`);
+  return { kriterNotlari, cerceve: sayi ? null : { unsur: veri.cerceve.unsur, aciklama: veri.cerceve.aciklama.trim() }, dusenler };
 }
 
 /** Kullanıcı NACE girmediyse aday kodlardan birini önerir. */

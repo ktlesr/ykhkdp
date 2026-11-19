@@ -1,4 +1,4 @@
-import { degerlendir, istemciSec, karsiGorus, modelSnapshot, naceKapsami, naceOner } from "@ykh/ai-gateway";
+import { aciklamalariSuz, degerlendir, istemciSec, karsiGorus, modelSnapshot, naceKapsami, naceOner } from "@ykh/ai-gateway";
 import { ayrilmisIslem, denetle, islem, kilitHavuzu, type Baglam } from "@ykh/database";
 import { aiMaliyeti, log } from "@ykh/observability";
 import { belgePaketi, naceAdaylari } from "@ykh/retrieval";
@@ -292,6 +292,10 @@ async function calistir(b: Baglam, oneriId: number, yaz: Yaz): Promise<Sonuc> {
     alinti: a.alinti,
   }));
 
+  // Açıklama metinleri (kriter notu, ana çerçeve): puana girmez, ekrana çıkar.
+  // Kaynaksız sayı taşıyan not kaydedilmez; nedeni denetime yazılır.
+  const aciklama = aciklamalariSuz(s.veri, paket);
+
   // ── 3b. Karşı görüş · EN İYİ ÇABA ────────────────────────────────────────
   await asama("karsi_gorus");
   //
@@ -362,11 +366,13 @@ async function calistir(b: Baglam, oneriId: number, yaz: Yaz): Promise<Sonuc> {
     await sql`
       insert into degerlendirme
         (oneri_id, puanlar, kriter_dayanagi, dayanak, gerekce, alintilar,
-         karsi_gorus, karsi_gorus_surum, model_snapshot, prompt_surum, kapsam_notu)
+         karsi_gorus, karsi_gorus_surum, model_snapshot, prompt_surum, kapsam_notu,
+         kriter_notlari, cerceve)
       values (${oneriId}, ${sql.json(puanlar as never)}, ${sql.json(s.kriterDayanagi as never)},
               ${s.dayanak}, ${s.veri.gerekce}, ${sql.json(alintiKaydi as never)},
               ${sql.json(karsiGorusKaydi as never)}, ${k.ok ? k.promptSurum : null},
-              ${s.modelSnapshot}, ${s.promptSurum}, ${sql.json(s.veri.kapsam as never)})
+              ${s.modelSnapshot}, ${s.promptSurum}, ${sql.json(s.veri.kapsam as never)},
+              ${sql.json(aciklama.kriterNotlari as never)}, ${aciklama.cerceve ? sql.json(aciklama.cerceve as never) : null})
     `;
     // Puan hazır ama DOĞRULANMADI → ajans onayı bekler.
     await sql`
@@ -382,6 +388,8 @@ async function calistir(b: Baglam, oneriId: number, yaz: Yaz): Promise<Sonuc> {
         .filter(([, v]) => !v.length)
         .map(([k]) => k),
       dusenAlinti: s.dusenler,
+      dusenNot: aciklama.dusenler,
+      cerceveUnsur: aciklama.cerceve?.unsur ?? null,
       duzeltilenAtif: s.duzeltilenler,
       karsiGorus: k.ok
         ? { adet: k.gorusler.length, turler: k.gorusler.map((g) => g.tur), dusenler: k.dusenler }

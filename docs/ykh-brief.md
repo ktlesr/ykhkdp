@@ -369,6 +369,37 @@ yeni ekran yok.
   engellemez (puan zaten geçerli); ama doğrulanmamış alıntı taşıyan bir itiraz
   kaydedilmez.
 
+### Kriter notu ve ana çerçeve notu
+
+Puan alanında yalnızca puan, yüzde ve kaynak referansı vardı; "bu puan neden
+bu" sorusunun cevabı yoktu (2026-11-19, `degerlendirme-v11`, migration 0023).
+`/oneri/[id]` kriter kırılımında — yeni ekran yok:
+
+- **Kriter notu.** Her kriterin altında modelin bir-iki cümlelik notu: puanı ne
+  yükseltti, ne düşürdü. Model bunu zaten üretiyordu; artık saklanıyor.
+- **Ana çerçeve.** Kırılımın başında konunun on temel unsurdan hangisine
+  girdiği ve nedeni. Hiçbirine girmiyorsa unsur 0'dır ve ekran "on temel
+  unsurdan hiçbirine doğrudan girmiyor" yazar. Böylece yatırımcının ve ajansın
+  elle girdiği konularda da çerçeveyle ilişki görünür; önceden yalnızca keşif
+  adaylarında vardı.
+
+Kurallar:
+
+- **Puana, dayanağa ve sıralamaya ETKİ ETMEZ.** Kriter seti ve ağırlıklar
+  değişmedi; unsur bir sınıflamadır, hiçbir kriteri kendiliğinden yükseltmez.
+  Karşı görüş ve kapsam notu gibi ajansın okuyacağı açıklamadır. Unsura
+  girmeyen konunun slot dolduramaması istenirse bu ayrı bir ürün kararı olur.
+- **Sınıflama modelin yargısıdır.** Mekanik olarak denetlenen unsur numarasının
+  aralığıdır; konunun o unsura gerçekten girip girmediğini ajans tartar ve
+  ekran bunu "yapay zekâ sınıflaması" diye yazar.
+- **Kaynaksız sayı taşıyan not kaydedilmez** (`aciklamalariSuz`). Notlar ekrana
+  çıktığı için gerekçeyle aynı kural geçerli: her sayı pakette geçmeli. Fark:
+  ihlal çıktıyı reddettirmez, yalnızca o not düşer (kriter notsuz görünür) ve
+  denetime yazılır — puan zaten doğrulanmıştır.
+- **Notlar ham puana aittir** ve onunla birlikte donar (trigger). Ajans puanı
+  düzelttiyse ekran notun düzeltmeden önceki yapay zekâ puanına ait olduğunu
+  yazar.
+
 ### Aday keşfi · belgelerden konu çıkarma
 
 `/il/[il]` içinde bölüm (yeni ekran yok); `/iller` bölge veya 81 il için toplu
@@ -576,6 +607,7 @@ eklenir ve sıradan belge gibi taranır — ayrı bir veri hattı yok.
 | TÜİK dış ticaret panosu: il × yıl × fasıl ihracat | `dis_ticaret` | 81 il, son üç yıl | `node tools/veri/dis-ticaret.ts` |
 | KTB turizm belgeli tesisler (il, ilçe, tür, sınıf) | `turizm` | 81 il | `python tools/veri/turizm.py <yıl> <bülten>` |
 | TÜİK veri servisi (SDMX): ekonomik faaliyete göre girişim sayısı (il × NACE sınıfı, 2020–2024) | `tarim` · `sanayi` | 81 il | `node --env-file=.env tools/veri/tuik.ts` |
+| RDA veri API'si (rda.ktlsr.com): ürün bazında tarım ve hayvancılık; sektör bazında ihracat ve **ithalat**; OSB, enerji, il ekonomisi; konaklama | `tarim` · `dis_ticaret` · `sanayi` · `turizm` | 81 il, dört belge | `node --env-file=.env tools/veri/rda.ts` |
 | İl sütunlu herhangi bir Excel (teşvik belgeleri, kapasite dökümü…) | seçilir | dosyadaki iller | `python tools/veri/tablo.py …` |
 
 - **Tablo değil cümle.** Veri "Kütahya 2025 yılı ihracatında 69 - Seramik
@@ -615,7 +647,20 @@ eklenir ve sıradan belge gibi taranır — ayrı bir veri hattı yok.
   Servis il düzeyinde bitkisel üretim miktarı ve hayvan sayısı VERMİYOR
   (katalogdaki 517 veri kümesi tarandı). İl GSYH'si, nüfus, müze ziyaretçisi
   ve belediye atık verileri serviste var ama bağlanmadı; girdi-çıktı tabloları
-  da bağlı değil. MTA, dış ticaret ve turizm elle
+  da bağlı değil.
+- **RDA veri API'si** (2026-11-19) TÜİK servisinin vermediğini kapatır: il
+  başına ürün bazında üretim miktarı ve hayvan sayısı (397 doğrulanmış
+  gösterge, 2014–2025) ve il düzeyinde sektör bazında İTHALAT. Her cümle
+  değeri, Türkiye payını, 81 il içindeki sırayı ve beş yıl önceki değeri taşır.
+  API'nin işaretlerine uyulur: teyit bekleyen gösterge, toplamı kırılımlarıyla
+  tutmayan ve gizli gözlem alınmaz; yalnızca toplam satırları kullanılır.
+  Tarım belgesine ilin ülke sıralamasında ilk 25'e girdiği ürünler girer ve
+  100 tonun / 1.000 başın / 10.000 adedin altındaki üretim alınmaz (gürültü
+  süzgeci; belge başlığında yazar). Sınırlar: Türkiye toplamı tarımda 81 ilin
+  toplamıdır; göstergeler farklı yıllarda bitiyor (süt 2019) ve cümle yılını
+  söyler; kaynak dipnotu "TÜİK ve ilgili kurum verilerinden derlenmiştir"
+  biçimindedir, çünkü API'deki istatistik adı tek tek doğrulanmadı. Çevre,
+  eğitim ve sağlık başlıkları API'de var ama bağlanmadı. MTA, dış ticaret ve turizm elle
   yeniden üretilir (yılda bir-iki kez değişir); otomatik olan coğrafi işarettir.
 
 ### Konu kapsamı ve çoklu NACE
@@ -984,8 +1029,9 @@ kilidi, künye çekmecesi) bu üründe **yok**.
   paylaşılan sayaç gerekir. Öneri kotası veritabanında, kopyadan bağımsız.
 - Belge çeşitliliği `belge.ad` ile sayılır: aynı adlı farklı yıl/kapsam
   belgeleri tek kaynak görünür. Kalıcı kaynak kimliği ayrı bir şema işidir.
-- Model kriter başına `not` ve `eksik_veri` üretiyor ama saklanmıyor; saklamak
-  şema değişikliği ister, ayrı plan (inceleme raporu §6.2).
+- Model `eksik_veri` üretiyor ama saklanmıyor. Kriter notları 2026-11-19'dan
+  beri saklanıyor (0023); daha eski değerlendirmelerde not ve ana çerçeve boş
+  görünür, öneri yeniden değerlendirilince dolar.
 - CI yok. Plan: PostgreSQL 17 servisi, `_test` veritabanı, çevrimdışı istemci,
   sıralı testler, typecheck, build, `pnpm audit --prod`.
 - Aday keşfinde üretici ile puanlayıcı aynı model; ayrı çağrı ama kendi
