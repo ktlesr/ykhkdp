@@ -328,3 +328,44 @@ test("Zafer AI istemcisi: OpenAI uyumlu uç, şemalı çıktı, eşzamanlılık 
     if (eskiAdres === undefined) delete process.env.ZAFER_AI_URL; else process.env.ZAFER_AI_URL = eskiAdres;
   }
 });
+
+test("Zafer AI: boşluk döngüsüne giren akış kesilir ve çağrı yeniden denenir", async () => {
+  const { zaferIstemci } = await import("./istemci.ts");
+  const { createServer } = await import("node:http");
+  const eskiAnahtar = process.env.ZAFER_AI_API_KEY;
+  const eskiAdres = process.env.ZAFER_AI_URL;
+  process.env.ZAFER_AI_API_KEY = "sinama-anahtari";
+  const parca = (icerik: string, bitis: string | null = null) =>
+    `data: ${JSON.stringify({ choices: [{ delta: { content: icerik }, finish_reason: bitis }] })}\n\n`;
+  let istek = 0, kesildi = false;
+  const sunucu = createServer((q, r) => {
+    q.resume();
+    const n = ++istek;
+    r.writeHead(200, { "content-type": "text/event-stream; charset=utf-8" });
+    if (n === 1) {
+      // Canlıda görülen biçim: geçerli bir başlangıç, sonra bitmeyen boşluk.
+      r.write(parca('{"tamam":'));
+      const t = setInterval(() => r.write(parca("  \n")), 1);
+      r.on("close", () => { kesildi = true; clearInterval(t); });
+      return;
+    }
+    r.write(parca('{\n  "tamam"'));
+    r.write(parca(": true\n}"));
+    r.write(parca("", "stop"));
+    r.end(`data: ${JSON.stringify({ choices: [], usage: { prompt_tokens: 7, completion_tokens: 9 } })}\n\ndata: [DONE]\n\n`);
+  });
+  await new Promise<void>((ok) => sunucu.listen(0, "127.0.0.1", ok));
+  process.env.ZAFER_AI_URL = `http://127.0.0.1:${(sunucu.address() as { port: number }).port}/api/v1`;
+  try {
+    const c = await zaferIstemci().cagir({ modelSnapshot: "gemma4-26b", sistem: "s", kullanici: "k", semaAdi: "x", jsonSema: { type: "object" } } as never);
+    assert.equal(c.metin, '{\n  "tamam": true\n}', "girintili geçerli JSON döngü sayılmaz");
+    assert.equal(istek, 2, "döngüye giren ilk çağrı yeniden denendi");
+    assert.equal(kesildi, true, "döngüdeki bağlantı beklenmeden kesildi");
+    assert.deepEqual([c.girdiToken, c.ciktiToken], [7, 9]);
+  } finally {
+    sunucu.closeAllConnections();
+    sunucu.close();
+    if (eskiAnahtar === undefined) delete process.env.ZAFER_AI_API_KEY; else process.env.ZAFER_AI_API_KEY = eskiAnahtar;
+    if (eskiAdres === undefined) delete process.env.ZAFER_AI_URL; else process.env.ZAFER_AI_URL = eskiAdres;
+  }
+});

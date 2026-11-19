@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { EylemFormu, Gonder } from "./eylem-formu.tsx";
+import { OtoYenile } from "./oto-yenile.tsx";
 import { Isaret } from "./ui.tsx";
 import { degerlendirEylemi } from "@/lib/eylem.ts";
 import { cn } from "@/lib/utils.ts";
@@ -62,12 +63,8 @@ export function DegerlendirmeDurumu({
   useEffect(() => {
     setSimdi(Date.now());
     const saat = setInterval(() => setSimdi(Date.now()), 1000);
-    const tazele = setInterval(() => router.refresh(), 4000);
-    return () => {
-      clearInterval(saat);
-      clearInterval(tazele);
-    };
-  }, [router]);
+    return () => clearInterval(saat);
+  }, []);
 
   const aktif = (ADIMLAR.find((a) => a.id === asama)?.id ?? null) as AdimId | null;
   const aktifSira = aktif ? ADIMLAR.findIndex((a) => a.id === aktif) : -1;
@@ -116,6 +113,9 @@ export function DegerlendirmeDurumu({
       aria-labelledby="degerlendirme-baslik"
       className="mt-8 border border-hairline border-l-[3px] border-l-unverif [border-left-style:dashed] bg-surface"
     >
+      {/* Sekme arka plandayken tarayıcı zamanlayıcıyı dakikada bire indirir; ortak
+          bileşen sekmeye dönülünce HEMEN tazeler (koşu bitmişse sonuç beklemeden görünür). */}
+      <OtoYenile aktif />
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2 px-5 pt-5">
         <div className="min-w-0">
           <h2 id="degerlendirme-baslik" className="flex items-center gap-2.5 text-[18px] font-semibold tracking-[-.01em] text-ink">

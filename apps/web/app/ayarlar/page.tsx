@@ -63,7 +63,7 @@ export default async function Ayarlar() {
     "anthropic:claude-opus-5-5": "8 grupta 66 kanıt, 0 ret, ort. 9,6 sn; ≈$0,41. Taramada gereğinden pahalı.",
     "anthropic:claude-sonnet-5-5": "8 grupta yalnızca 13 kanıt, 4 reddedilen çağrı. Tarama için önerilmez.",
     "anthropic:claude-haiku-5-5": "Önerilen. 8 grupta 57 kanıt, 0 ret, ort. 4 sn; ≈$0,009 — Opus'un ~45'te biri.",
-    "zafer:gemma4-26b": "Kurum sunucusundaki model: ücret yok, ama dakikada 30 istek sınırıyla tarama yavaş. Kanıt verimi henüz ölçülmedi.",
+    "zafer:gemma4-26b": "Kurum sunucusundaki model: ücret yok, ama model aynı anda 4 çağrı işlediği için tarama yavaş. Kanıt verimi henüz ölçülmedi.",
   };
   const anthropicSecenekleri = MODEL_SECENEKLERI.map((m) => ({
     id: m.id,

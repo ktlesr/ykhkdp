@@ -276,8 +276,10 @@ export const openAiIstemci = (): ModelIstemcisi => ({
  * `/chat/completions` ucu (vLLM; `response_format: json_schema` çıktıyı şemaya
  * zorlar). Adres `ZAFER_AI_URL`, anahtar `ZAFER_AI_API_KEY`.
  *
- * Sunucunun sınırları: anahtar başına dakikada 30 istek, aynı anda 4 çağrı,
- * çağrı başına 10 dakika, cevap en çok 8.192 token. Eşzamanlılık BURADA
+ * Sunucunun sınırları (2026-11-19): anahtar başına dakikada 120 istek, aynı
+ * anda en çok 8 süren istek; model aynı anda 4 çağrı işler (fazlası sunucuda
+ * sırada bekler); çağrı başına 10 dakika, cevap en çok 8.192 token. Sınır
+ * SÜREÇ başınadır: web ve işleyici aynı anahtarı ayrı sayar. Eşzamanlılık BURADA
  * sınırlanır (tarama 10 çağrıyı birden açar); dakika sınırı 429 +
  * `retry-after` ile geri çekilerek karşılanır. Limit yedeği YOK: yerel model
  * seçildiyse metin başka sağlayıcıya sessizce gitmez; hata olduğu gibi görünür.
@@ -296,6 +298,74 @@ async function zaferSirasi<S>(is: () => Promise<S>): Promise<S> {
     if (sonraki) sonraki(); // yer doğrudan sıradakine devredilir
     else zaferAcik--;
   }
+}
+
+/**
+ * BOŞLUK DÖNGÜSÜ. Şemaya zorlanan çıktıda model, JSON'un iki ögesi arasında
+ * sonsuz boşluk ve satır sonu yazmaya başlayabiliyor (dilbilgisi boşluğa izin
+ * verir, sınırlamaz) ve cevap 8.192 token sınırına dayanıp kesiliyor. Yerelde
+ * yeniden üretildi (2026-11-19): AYNI öneri bir çağrıda 922 token'la bitti,
+ * ikincisinde 280 saniye boşluk yazıp kesildi — içerik hatası değil, rastgele.
+ * Döngü iki yerde başlıyor: model nesneyi kapatmak isterken şema bir alan daha
+ * zorunlu kılıyor, ya da bir metin alanı uzunluk sınırına çarpıyor. Alan sırasını
+ * değiştirmek döngüyü önlemedi (ölçüldü), bu yüzden şemaya dokunulmadı.
+ * Canlıda 870 önerinin 16'sı üç denemede de buna takıldı. Sunucu boşluğu
+ * sınırlayan ayarları (`guided_whitespace_pattern`…) yok sayıyor; bu yüzden
+ * cevap AKIŞ olarak okunur, döngü başladığı anda bağlantı kesilir ve çağrı
+ * yeniden denenir. Geçerli JSON'da girinti birkaç karakterdir; bu kadar uzun
+ * kesintisiz boşluk yalnızca döngüde görülür.
+ */
+const BOSLUK_DONGUSU = 200;
+/**
+ * Döngüye giren ya da kesilen cevap için toplam deneme. Ölçüldü (aynı öneri, 27
+ * çağrı): çağrıların yaklaşık üçte biri döngüye girdi ve bir kez üç deneme art arda
+ * tutmadı; beş denemede hepsinin tutmama olasılığı yüzde birin altında. Akış
+ * erken kesildiği için başarısız deneme dakikalar değil ~20–30 saniye sürer.
+ */
+const ZAFER_DENEME = 5;
+
+type ZaferCevabi = { metin: string; bitis: string | null; girdi: number; cikti: number; dongu: boolean };
+
+/** Akış (SSE) ya da tek parça JSON gövdesini okur; boşluk döngüsünde akışı keser. */
+export async function zaferCevabiOku(yanit: Response): Promise<ZaferCevabi> {
+  if (!yanit.headers.get("content-type")?.includes("text/event-stream")) {
+    const j = (await yanit.json()) as {
+      choices?: Array<{ message?: { content?: string | null }; finish_reason?: string }>;
+      usage?: { prompt_tokens?: number; completion_tokens?: number };
+    };
+    return {
+      metin: j.choices?.[0]?.message?.content ?? "", bitis: j.choices?.[0]?.finish_reason ?? null,
+      girdi: j.usage?.prompt_tokens ?? 0, cikti: j.usage?.completion_tokens ?? 0, dongu: false,
+    };
+  }
+  const c: ZaferCevabi = { metin: "", bitis: null, girdi: 0, cikti: 0, dongu: false };
+  const okuyucu = yanit.body!.getReader();
+  const coz = new TextDecoder();
+  let tampon = "";
+  for (;;) {
+    const { done, value } = await okuyucu.read();
+    if (done) break;
+    tampon += coz.decode(value, { stream: true });
+    const satirlar = tampon.split("\n");
+    tampon = satirlar.pop() ?? "";
+    for (const satir of satirlar) {
+      if (!satir.startsWith("data:") || satir.includes("[DONE]")) continue;
+      let p: {
+        choices?: Array<{ delta?: { content?: string | null }; finish_reason?: string | null }>;
+        usage?: { prompt_tokens?: number; completion_tokens?: number };
+      };
+      try { p = JSON.parse(satir.slice(5)); } catch { continue; }
+      c.metin += p.choices?.[0]?.delta?.content ?? "";
+      c.bitis = p.choices?.[0]?.finish_reason ?? c.bitis;
+      if (p.usage) { c.girdi = p.usage.prompt_tokens ?? 0; c.cikti = p.usage.completion_tokens ?? 0; }
+    }
+    if (c.metin.length - c.metin.trimEnd().length >= BOSLUK_DONGUSU) {
+      c.dongu = true;
+      await okuyucu.cancel().catch(() => {});
+      break;
+    }
+  }
+  return c;
 }
 
 export const zaferIstemci = (): ModelIstemcisi => ({
@@ -317,7 +387,9 @@ export const zaferIstemci = (): ModelIstemcisi => ({
             ],
             response_format: { type: "json_schema", json_schema: { name: istek.semaAdi, strict: true, schema: sema } },
             max_tokens: 8192,
-            stream: false,
+            // Akış: boşluk döngüsü başladığı anda kesilebilsin (bkz. BOSLUK_DONGUSU).
+            stream: true,
+            stream_options: { include_usage: true },
           }),
           // Yerel model bulut modellerinden yavaş; sunucunun kendi sınırı 10 dakika.
           signal: AbortSignal.timeout(Number(process.env.ZAFER_AI_ZAMAN_ASIMI_MS) || 590_000),
@@ -329,28 +401,28 @@ export const zaferIstemci = (): ModelIstemcisi => ({
      * (Claude'a gidenle aynı) bir kez daha denenir ve süreç boyunca sade şema
      * kullanılır. Güvence değişmez: Zod yanıtta tam şemayı uygular.
      */
-    const yanit = await zaferSirasi(async () => {
-      if (zaferSadeSema) return gonder(semayiSadelestir(istek.jsonSema));
-      const ilk = await gonder(istek.jsonSema);
-      if (ilk.status !== 400) return ilk;
-      await ilk.body?.cancel();
-      const ikinci = await gonder(semayiSadelestir(istek.jsonSema));
-      if (ikinci.ok) zaferSadeSema = true;
-      return ikinci;
-    });
-    if (!yanit.ok) throw new Error(`Zafer AI ${yanit.status}: ${(await yanit.text()).slice(0, 500)}`);
-    const j = (await yanit.json()) as {
-      choices?: Array<{ message?: { content?: string | null }; finish_reason?: string }>;
-      usage?: { prompt_tokens?: number; completion_tokens?: number };
-    };
-    const secim = j.choices?.[0];
-    // Kesilmiş cevap geçerli JSON değildir; nedeni açık yazılsın ("geçerli JSON değil" yerine).
-    if (secim?.finish_reason === "length") throw new Error("Zafer AI: cevap 8.192 token sınırında kesildi.");
-    return {
-      metin: secim?.message?.content ?? "",
-      girdiToken: j.usage?.prompt_tokens ?? 0,
-      ciktiToken: j.usage?.completion_tokens ?? 0,
-    };
+    const birDeneme = () =>
+      // Eşzamanlılık yeri gövde okunana kadar tutulur: akışta çağrı başlık gelince bitmez.
+      zaferSirasi(async () => {
+        let yanit = await gonder(zaferSadeSema ? semayiSadelestir(istek.jsonSema) : istek.jsonSema);
+        if (yanit.status === 400 && !zaferSadeSema) {
+          await yanit.body?.cancel();
+          yanit = await gonder(semayiSadelestir(istek.jsonSema));
+          if (yanit.ok) zaferSadeSema = true;
+        }
+        if (!yanit.ok) throw new Error(`Zafer AI ${yanit.status}: ${(await yanit.text()).slice(0, 500)}`);
+        return zaferCevabiOku(yanit);
+      });
+    for (let i = 1; ; i++) {
+      const c = await birDeneme();
+      if (!c.dongu && c.bitis !== "length") return { metin: c.metin, girdiToken: c.girdi, ciktiToken: c.cikti };
+      // Kesilmiş cevap geçerli JSON değildir; nedeni açık yazılsın ("geçerli JSON değil" yerine).
+      if (i >= ZAFER_DENEME) {
+        throw new Error(c.dongu
+          ? `Zafer AI: model ${ZAFER_DENEME} denemede de boşluk döngüsüne girdi; cevap tamamlanmadı.`
+          : "Zafer AI: cevap 8.192 token sınırında kesildi.");
+      }
+    }
   },
 });
 
