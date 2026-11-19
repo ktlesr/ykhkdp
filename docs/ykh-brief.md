@@ -388,7 +388,12 @@ Uydurmasızlık kuralları — hepsi mekanik, modelin beyanı değil:
 - **Gerekçenin her cümlesi atıf yapılan kanıtta karşılık bulur**
   (içerik köklerinin ≥ yarısı). Ölçüldü: model defterde olup atıf yapmadığı
   bir kanıtı gerekçeye yazıyordu. Sözcüksel kontrol — yeniden ifade edilmiş
-  doğru cümleyi düşürebilir, fail-closed yönde.
+  doğru cümleyi düşürebilir, fail-closed yönde. **Düşen cümledir, aday
+  değil** (2026-11-19): karşılık bulmayan cümle kayda girmez, aday kalan
+  gerekçeyle alınır ve "Cümle düşürüldü" diye ekranda yazar. Cümlelerin
+  yarısından fazlası desteksizse ya da kalan gerekçe 40 karakterden kısaysa
+  aday düşer. Canlıda ölçüldü (81 il, gemma4-26b): düşen adayların 69'u tek bir
+  ek cümle ("Ayrıca bölgede … yaygındır.") yüzünden bütünüyle gidiyordu.
 - **Kaynaksız sayı** başlıkta veya gerekçede aday düşürür.
 - Kurallar **aday başına**: kötü aday iyileri batırmaz, iyiler kötüyü örtmez.
 - **Okunamayan parça keşfi kilitlemez, gizlenmez de.** Önceki kural ("tarama
@@ -476,6 +481,14 @@ Uydurmasızlık kuralları — hepsi mekanik, modelin beyanı değil:
   kanıt yetmiyorsa sayı tutmaz ve özet mesajı "hedef en az N adaydı; … turda
   kanıtlar M adaya yetti" yazar. Ölçüldü (gpt-5.4-mini, Afyonkarahisar, iki
   koşu): ilk turda 5 ve 5 aday; tamamlama turu canlı modelle henüz gözlenmedi.
+  Görülmemiş yerel kanıt kalmadıysa tamamlama turu AYNI defterle koşar
+  (2026-11-19): önceki kural orada kesiyordu ve yerel kanıtı 120'nin altındaki
+  illerde tur hiç koşmadı (canlıda 10 il slot sayısının altında kaldı).
+- **Modele ulaşılamayan koşu bitmez, sıraya döner** (2026-11-19). Aday
+  üretiminde ağ kopması, zaman aşımı ya da 5xx çıktı reddi değildir: koşu en
+  çok üç kez yeniden denenir ve hiç denenmemiş illerin arkasına geçer. Canlıda
+  7 il tek bir "fetch failed" ile aday vermeden kapanmıştı; hata mesajı artık
+  ağ nedenini de (ECONNRESET…) taşır.
 - **Aday çıkmayan il kendiliğinden yeniden koşar** (2026-11-18). Keşif kuyruğu
   boşalınca (toplu koşu bitti) işleyici, son keşfi aday vermeden biten dönemler
   için yeni koşu açar (`adaysizKesifleriYenidenAc`); tarama önbellekten gelir.
@@ -531,9 +544,12 @@ gösterir ve durdurur; il ekranında da "Keşfi durdur" var. Durdurma
 (`kesifDurdur`): sıradakiler alınmaz, süren koşu bir sonraki ilerleme adımında
 kendini keser, aday yazmaz, yeniden sıraya girmez; taranmış parçalar
 önbellekte kalır. Durum `hata` + "Keşif durduruldu" mesajıyla tutulur (ayrı
-durum değeri eklenmedi). Süren iş olan sayfalar (`/il/[il]`, `/onay`,
-`/onerilerim`, `/iller`) 4 saniyede bir kendiliğinden tazelenir; aşama
-rozetleri elle yenilemeden ilerler.
+durum değeri eklenmedi). `/il/[il]`, `/onay`, `/onerilerim` ve `/iller`
+kendiliğinden tazelenir: süren iş varken 4, yokken 15 saniyede bir (iş sayfa
+açıldıktan sonra da başlayabilir) ve sekmeye dönülünce hemen. Elle
+"Yeniden değerlendir" koşuyu beklemez (2026-11-19): ilk adımı yazıp döner,
+koşu yanıttan sonra sürer — bekleyen sunucu eylemi tazelemeleri arkasında
+tutuyor, ekran koşu boyunca donuk kalıyordu.
 
 Bölge: ajans yalnızca kendi bölgesinin illerinde keşif açar (`kesif_ac` RLS,
 `app_il_kapsaminda`). Aynı dönemde tek aktif koşu.

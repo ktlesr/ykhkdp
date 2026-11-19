@@ -841,7 +841,8 @@ function urunGruplariniDogrula(
  *  - bunlardan en az biri YEREL ("neden burada?"),
  *  - başlık ve gerekçedeki her sayı atıf yapılan kanıtlardan birinde geçer,
  *  - çözülemeyen numaralar çözülenleri aşamaz,
- *  - gerekçenin her cümlesi atıf yapılan kanıtlarda karşılık bulur.
+ *  - gerekçenin her cümlesi atıf yapılan kanıtlarda karşılık bulur
+ *    (bulmayan cümle kayda girmez; çoğu bulmuyorsa aday düşer).
  */
 /**
  * Modelin gerekçeye yazdığı atıf notu — "(kanıt 22)", "(kanıt 9 ve 31)", "[4, 7]".
@@ -912,10 +913,28 @@ export function adaylariDogrula(
       dusenler.push({ kod: "kaynaksiz_sayi", mesaj: `${ad} kaynaksız sayı (“${kaynaksiz}”) taşıyor; düşürüldü.` });
       continue;
     }
-    const desteksiz = desteksizCumle(a.gerekce, cozulen.map((d) => d.metin).join(" "));
-    if (desteksiz) {
-      dusenler.push({ kod: "alinti_eslesmiyor", mesaj: `${ad} gerekçesindeki “${desteksiz.slice(0, 80)}” cümlesi atıf yapılan kanıtlarda karşılık bulmuyor; düşürüldü.` });
+    /**
+     * Desteksiz CÜMLE düşer, aday değil — alıntıdaki kısmi kredinin aynısı.
+     * Canlıda ölçüldü (81 il, gemma4-26b): düşen adayların 69'u tek bir ek
+     * cümle ("Ayrıca bölgede … yaygındır.") yüzünden bütünüyle gidiyordu ve
+     * 10 il slot sayısının altında kaldı. Kural gevşemedi: KAYDA GİREN her
+     * cümle yine kanıtta karşılık bulur. Cümlelerin yarısından fazlası
+     * desteksizse ya da kalan gerekçe konu sayılamayacak kadar kısaysa model
+     * uyduruyor sayılır ve aday düşer.
+     */
+    const kanitMetni = cozulen.map((d) => d.metin).join(" ");
+    const cumleSayisi = a.gerekce.split(/(?<=[.!?;])\s+/).length;
+    const atilan: string[] = [];
+    for (let d = desteksizCumle(a.gerekce, kanitMetni); d; d = desteksizCumle(a.gerekce, kanitMetni)) {
+      atilan.push(d);
+      a.gerekce = a.gerekce.replace(d, "").replace(/\s{2,}/g, " ").trim();
+    }
+    if (atilan.length && (atilan.length * 2 > cumleSayisi || a.gerekce.length < 40)) {
+      dusenler.push({ kod: "alinti_eslesmiyor", mesaj: `${ad} gerekçesindeki “${atilan[0].slice(0, 80)}” cümlesi atıf yapılan kanıtlarda karşılık bulmuyor; düşürüldü.` });
       continue;
+    }
+    for (const c of atilan) {
+      dusenler.push({ kod: "alinti_eslesmiyor", mesaj: `Cümle düşürüldü: ${ad} gerekçesindeki “${c.slice(0, 80)}” cümlesi atıf yapılan kanıtlarda karşılık bulmuyor; aday kalan gerekçeyle alındı.` });
     }
     /**
      * Sentez modelin ÇIKARIMIDIR: kanıtta karşılık aranmaz (bağ kurar, olgu

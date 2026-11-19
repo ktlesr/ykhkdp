@@ -382,7 +382,14 @@ async function yenidenDene(cagri: () => Promise<Response>, deneme = 4): Promise<
       await r.body?.cancel();
       await new Promise((ok) => setTimeout(ok, Math.min(bekle, 30_000)));
     } catch (e) {
-      if (i >= deneme) throw e;
+      // Ağ hatasında `fetch` yalnızca "fetch failed" der; asıl neden (ECONNRESET,
+      // UND_ERR_SOCKET, ENOTFOUND…) `cause` içindedir. Canlıda 7 il bu çıplak mesajla
+      // durdu ve neden kayıttan okunamadı.
+      if (i >= deneme) {
+        const n = (e as { cause?: { code?: string; message?: string } }).cause;
+        const ek = n?.code ?? n?.message;
+        throw ek && e instanceof Error ? new Error(`${e.message} (${ek})`, { cause: e }) : e;
+      }
       await new Promise((ok) => setTimeout(ok, 2000 * 2 ** (i - 1)));
     }
   }

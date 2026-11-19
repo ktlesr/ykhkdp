@@ -289,31 +289,42 @@ test("kriter payı dayanağa yansır — yerellik boşluğu daha pahalı", async
 
 test("Zafer AI istemcisi: OpenAI uyumlu uç, şemalı çıktı, eşzamanlılık sınırı", async () => {
   const { zaferIstemci } = await import("./istemci.ts");
-  const eskiFetch = globalThis.fetch;
+  // Gerçek HTTP sunucusu: sahte `fetch` yerine taşıma da sınanır.
+  const { createServer } = await import("node:http");
   const eskiAnahtar = process.env.ZAFER_AI_API_KEY;
+  const eskiAdres = process.env.ZAFER_AI_URL;
   process.env.ZAFER_AI_API_KEY = "sinama-anahtari";
   let acik = 0, enCok = 0;
   const istekler: Array<{ url: string; govde: Record<string, unknown>; yetki: string }> = [];
-  globalThis.fetch = (async (url: string, init: { body: string; headers: Record<string, string> }) => {
+  const sunucu = createServer((q, r) => {
     acik++; enCok = Math.max(enCok, acik);
-    istekler.push({ url, govde: JSON.parse(init.body), yetki: init.headers.authorization });
-    await new Promise((r) => setTimeout(r, 15));
-    acik--;
-    return new Response(JSON.stringify({ choices: [{ message: { content: '{"tamam":true}' }, finish_reason: "stop" }], usage: { prompt_tokens: 11, completion_tokens: 5 } }), { status: 200 });
-  }) as never;
+    let govde = "";
+    q.on("data", (p) => (govde += p));
+    q.on("end", () => setTimeout(() => {
+      istekler.push({ url: q.url ?? "", govde: JSON.parse(govde), yetki: q.headers.authorization ?? "" });
+      acik--;
+      r.writeHead(200, { "content-type": "application/json" });
+      r.end(JSON.stringify({ choices: [{ message: { content: '{"tamam":true}' }, finish_reason: "stop" }], usage: { prompt_tokens: 11, completion_tokens: 5 } }));
+    }, 15));
+  });
+  await new Promise<void>((ok) => sunucu.listen(0, "127.0.0.1", ok));
+  process.env.ZAFER_AI_URL = `http://127.0.0.1:${(sunucu.address() as { port: number }).port}/api/v1`;
   try {
     const istek = { modelSnapshot: "gemma4-26b", sistem: "s", kullanici: "k", semaAdi: "x", jsonSema: { type: "object" } };
     const cevaplar = await Promise.all(Array.from({ length: 8 }, () => zaferIstemci().cagir(istek as never)));
     assert.equal(cevaplar[0].metin, '{"tamam":true}');
     assert.equal(cevaplar[0].girdiToken, 11);
-    assert.ok(enCok <= 3, `aynı anda en çok 3 çağrı (sunucu sınırı 4); görülen ${enCok}`);
+    // Sınır ayardan gelir (`ZAFER_AI_ESZAMANLI`, varsayılan 3); sabit 3 beklemek .env'e göre kırılıyordu.
+    const sinir = Math.max(1, Number(process.env.ZAFER_AI_ESZAMANLI) || 3);
+    assert.ok(enCok <= sinir, `aynı anda en çok ${sinir} çağrı; görülen ${enCok}`);
     assert.equal(istekler.length, 8);
     assert.match(istekler[0].url, /\/api\/v1\/chat\/completions$/);
     assert.equal(istekler[0].yetki, "Bearer sinama-anahtari");
     assert.equal((istekler[0].govde.response_format as { type: string }).type, "json_schema");
     assert.equal(istekler[0].govde.model, "gemma4-26b");
   } finally {
-    globalThis.fetch = eskiFetch;
+    sunucu.close();
     if (eskiAnahtar === undefined) delete process.env.ZAFER_AI_API_KEY; else process.env.ZAFER_AI_API_KEY = eskiAnahtar;
+    if (eskiAdres === undefined) delete process.env.ZAFER_AI_URL; else process.env.ZAFER_AI_URL = eskiAdres;
   }
 });

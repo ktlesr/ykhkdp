@@ -123,6 +123,29 @@ test("aday: iki kanıt, biri yerel; aksi hâlde yalnızca o aday düşer", () =>
   assert.equal(s.dusenler.length, 4);
 });
 
+test("desteksiz cümle düşer, aday kalır; cümlelerin çoğu desteksizse aday düşer", () => {
+  const defter = [
+    { no: 1, kanitId: 11, yerel: true, metin: "İlde mermer sektörü yoğunlaşmıştır." },
+    { no: 2, kanitId: 12, yerel: false, metin: "Mermer atıkları mikronize öğütme faaliyetlerine odaklanılacaktır." },
+  ];
+  const baslik = "Mermer atıklarından mikronize ürün üretimi";
+  const olgu = "İlde mermer sektörü yoğunlaşmıştır. Mermer atıkları mikronize öğütme faaliyetlerine odaklanılacaktır.";
+  // Canlıdaki kalıp: doğru gerekçenin sonuna eklenmiş, kanıtta olmayan tek cümle.
+  const s = adaylariDogrula([{ baslik, gerekce: `${olgu} Ayrıca bölgede seramik hammaddesi rezervleri yaygındır.`, kanit_no: [1, 2] }], defter);
+  assert.equal(s.adaylar.length, 1, JSON.stringify(s.dusenler));
+  assert.equal(s.adaylar[0].gerekce, olgu, "kayda yalnızca kanıtta karşılığı olan cümleler girer");
+  assert.match(s.dusenler[0].mesaj, /^Cümle düşürüldü.*Ayrıca bölgede seramik/);
+  // Cümlelerin çoğu desteksiz: model uyduruyor, aday düşer.
+  const u = adaylariDogrula(
+    [{ baslik, gerekce: "İlde mermer sektörü yoğunlaşmıştır. Seramik hammaddesi rezervleri zengindir. Tekstil ihracatı yüksek düzeydedir.", kanit_no: [1, 2] }],
+    defter,
+  );
+  assert.equal(u.adaylar.length, 0);
+  assert.doesNotMatch(u.dusenler[0].mesaj, /^Cümle düşürüldü/);
+  // Kalan gerekçe konu sayılamayacak kadar kısa: aday düşer.
+  assert.equal(adaylariDogrula([{ baslik, gerekce: "İlde mermer sektörü yoğunlaşmıştır. Seramik hammaddesi rezervleri oldukça zengindir.", kanit_no: [1, 2] }], defter).adaylar.length, 0);
+});
+
 test("gerekçe cümlesi atıf yapılan kanıtta karşılık bulmalı", () => {
   const kanit = "Uşak'ta deri ihtisas organize sanayi bölgesinde arıtma kapasitesi ilave yatırıma açıktır.";
   assert.equal(desteksizCumle("Deri ihtisas organize sanayi bölgesinde arıtma kapasitesi yatırıma açıktır.", kanit), null);

@@ -239,9 +239,12 @@ async function kesifKos(kesifId: number): Promise<KesifSonucu> {
   for (; tur < TUR_SINIRI; tur++) {
   if (tur > 0) {
     if (yazilan >= k.slot_sayisi) break;
+    // Görülmemiş yerel kanıt kalmadıysa AYNI defterle yeniden denenir: model o
+    // ana kadar yazılan başlıkları görür ve farklı konu çıkarır. Önceki kural
+    // burada kesiyordu; canlıda yerel kanıtı 120'nin altındaki illerde
+    // tamamlama turu hiç koşmadı (10 il slot sayısının altında kaldı).
     const kalan = yerelHepsi.filter((d) => !gorulen.has(d.kanitId));
-    if (!kalan.length) break;
-    yerel = dengeliSec(kalan, (d) => parcaHaritasi.get(d.belgeId)!.ad, YEREL_SINIR);
+    yerel = dengeliSec(kalan.length ? kalan : yerelHepsi, (d) => parcaHaritasi.get(d.belgeId)!.ad, YEREL_SINIR);
     await surdur({ asama: "aday" });
   }
   yerel.forEach((d) => gorulen.add(d.kanitId));
@@ -306,6 +309,11 @@ async function kesifKos(kesifId: number): Promise<KesifSonucu> {
   if (!a.ok && tur > 0) break; // tamamlama turunun reddi ilk turun adaylarını geri almaz
   if (!a.ok) {
     await islem(SERVIS, (sql) => denetle(sql, SERVIS, "aday_kesfi_reddedildi", "kesif", k.id, { asama: a.asama, hatalar: a.hatalar.slice(0, 5) }));
+    // Modele ULAŞILAMADI (ağ kopması, zaman aşımı, 5xx): çıktı reddi değil.
+    // Koşu burada bitirilmez, yeniden sıraya girer (`kesifHatasi`, en çok 3
+    // deneme; tarama önbellekten gelir). Canlıda 7 il tek bir "fetch failed"
+    // ile aday vermeden kapanmıştı.
+    if (a.asama === "model") throw new Error(`Aday üretimi tamamlanmadı (model): ${a.hatalar[0] ?? ""}`);
     return bitir(false, `Aday üretimi reddedildi (${a.asama}): ${a.hatalar[0] ?? ""}`);
   }
 
@@ -419,7 +427,7 @@ ${UNSUR_ETIKETI} ${aday.unsur} — ${TEMEL_UNSURLAR[aday.unsur]}.` : "")},
   } // tur
 
   // Düşen ürün grubu aday değildir; sayıya girmez (ayrıntısı denetimde).
-  const dusenAday = dusenler.filter((m) => !/^(Ürün grubu|Çıkarım düşürüldü)/.test(m)).length;
+  const dusenAday = dusenler.filter((m) => !/^(Ürün grubu|Çıkarım düşürüldü|Cümle düşürüldü)/.test(m)).length;
   const ozet =
     `${parcalar.length - basarisiz} parça tarandı, ${defterHam.length} kanıt (${yerel.length} yerel). ` +
     (yazilan ? `${yazilan} aday değerlendirmeye alındı.` : "Kanıtlara dayanan aday çıkmadı.") +
@@ -609,7 +617,9 @@ export async function birKesifAl(): Promise<number | null> {
         select id from kesif
         where deneme < 3
           and (durum = 'bekliyor' or (durum = 'calisiyor' and guncellendi < now() - interval '15 minutes'))
-        order by id
+        -- Yarıda kalıp sıraya dönen koşu, hiç denenmemişlerin ARKASINA geçer:
+        -- geçici bir kesintide üç deneme art arda aynı dakikada tükenmesin.
+        order by (deneme > 0), id
         for update skip locked
         limit 1
       )
