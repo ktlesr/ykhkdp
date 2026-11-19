@@ -1610,6 +1610,43 @@ export async function kesifAdaylariniSil(
   });
 }
 
+/**
+ * Hatayla durmuş değerlendirmeleri topluca yeniden sıraya alır — ajans ve
+ * yönetici. Deneme hakkı dolmuş öneriyi işleyici bir daha almaz (`deneme < 3`);
+ * geçici bir model arızasından (canlıda: Zafer AI boşluk döngüsü, 16 öneri)
+ * sonra her birini tek tek açıp "Yeniden değerlendir"e basmak gerekiyordu.
+ *
+ * Yalnızca `degerlendiriliyor` durumunda ve SON HATASI olan öneriler: süren
+ * koşu (hata yok) ve karar verilmiş kayıt etkilenmez; puan, durum ve metin
+ * değişmez — sıfırlanan yalnızca deneme sayacı ve hata. Kapsam veritabanında
+ * (`app_il_kapsaminda`): ajans kendi bölgesi. Her öneri denetime yazılır.
+ */
+export async function takilanlariYenidenSirala(
+  b: Baglam, kapsam: { ajansKod?: string | null; ilKod?: string | null },
+): Promise<{ ok: true; adet: number } | { ok: false; mesaj: string }> {
+  if (b.rol === "anonim" || !onaylayabilir(b.rol)) return { ok: false, mesaj: "Bu işlem yalnızca ajans ve yönetici rolünde." };
+  return islem(b, async (sql) => {
+    const r = await sql<{ id: string; deneme: number; son_hata: string }[]>`
+      update oneri o set deneme = 0, asama = null, asama_zamani = null, son_hata = null, guncellendi = now()
+      from (
+        select o2.id, o2.deneme, o2.son_hata from oneri o2
+        join donem dn on dn.id = o2.donem_id
+        join il i on i.kod = dn.il_kod
+        where o2.durum = 'degerlendiriliyor' and o2.son_hata is not null and app_il_kapsaminda(i.kod)
+          ${kapsam.ilKod ? sql`and i.kod = ${kapsam.ilKod}` : sql``}
+          ${kapsam.ajansKod ? sql`and i.ajans_kod = ${kapsam.ajansKod}` : sql``}
+        for update of o2
+      ) eski
+      where o.id = eski.id
+      returning o.id, eski.deneme, eski.son_hata
+    `;
+    for (const x of r) {
+      await denetle(sql, b, "oneri_yeniden_siraya", "oneri", Number(x.id), { toplu: true, oncekiDeneme: x.deneme, oncekiHata: x.son_hata.slice(0, 300) });
+    }
+    return { ok: true as const, adet: r.length };
+  });
+}
+
 export type OneriDuzeltme = { baslik: string; gerekce: string; ilce: string | null; kapsam: string[] };
 
 /**

@@ -831,6 +831,49 @@ test("toplu silme: yalnızca kuyruktaki keşif adayları; elle girilen, onaylana
   await sql`delete from oneri where id in ${sql([elle, onayli])}`;
 });
 
+test("hatayla duran değerlendirmeler topluca yeniden sıraya girer; süren koşu, karar ve başka bölge etkilenmez", async () => {
+  const { takilanlariYenidenSirala } = await import("./sorgu.ts");
+  const ajans = await girisBaglami("ajans@ykh.local"); // TR33
+  const yonetici = await girisBaglami("yonetici@ykh.local");
+  // Yatırımcı hesabı önceki bir testte silinmiş olabilir (KVKK sınaması); rol bağlamı yeter.
+  const yatirimci = { gonderenRef: yonetici.gonderenRef, rol: "yatirimci" } as const;
+  const sql = sahip();
+  const donem = async (il: string) => (await sql<{ id: string }[]>`select id from donem where il_kod = ${il} limit 1`)[0].id;
+  const ekle = async (il: string, baslik: string, durum: string, deneme: number, hata: string | null, asama: string | null) => {
+    const [o] = await sql<{ id: string }[]>`
+      insert into oneri (donem_id, gonderen_ref, koken, baslik, gerekce, durum, deneme, son_hata, asama)
+      values (${await donem(il)}, ${yonetici.gonderenRef}, 'yeni', ${baslik}, ${"Yeniden sıraya alma sınaması için yeterince uzun bir gerekçe."},
+              ${durum}::oneri_durumu, ${deneme}, ${hata}, ${asama})
+      returning id`;
+    return Number(o.id);
+  };
+  const takili = await ekle("usak", "Yeniden sıra sınaması takılı öneri", "degerlendiriliyor", 3, "model: cevap kesildi", "model");
+  const suren = await ekle("usak", "Yeniden sıra sınaması süren öneri", "degerlendiriliyor", 1, null, "model");
+  const bekleyen = await ekle("usak", "Yeniden sıra sınaması puanı hazır öneri", "onay_bekliyor", 1, null, null);
+  const baskaBolge = await ekle("ankara", "Yeniden sıra sınaması başka bölge", "degerlendiriliyor", 3, "model: cevap kesildi", "model");
+  const oku = async (id: number) => (await sql<{ deneme: number; son_hata: string | null; asama: string | null; durum: string }[]>`
+    select deneme, son_hata, asama, durum::text from oneri where id = ${id}`)[0];
+  try {
+    assert.equal((await takilanlariYenidenSirala(yatirimci, {})).ok, false, "yatırımcı yapamaz");
+
+    const r = await takilanlariYenidenSirala(ajans, {});
+    assert.ok(r.ok && r.adet >= 1);
+    assert.deepEqual(await oku(takili), { deneme: 0, son_hata: null, asama: null, durum: "degerlendiriliyor" }, "takılı öneri sıfırdan sıraya döner");
+    assert.deepEqual(await oku(suren), { deneme: 1, son_hata: null, asama: "model", durum: "degerlendiriliyor" }, "süren koşuya dokunulmaz");
+    assert.equal((await oku(bekleyen)).durum, "onay_bekliyor", "puanı hazır öneri kuyruğa geri çekilmez");
+    assert.equal((await oku(baskaBolge)).deneme, 3, "ajans başka bölgenin önerisini sıraya alamaz");
+    const iz = await sql<{ detay: { oncekiDeneme: number; oncekiHata: string } }[]>`
+      select detay from denetim where eylem = 'oneri_yeniden_siraya' and nesne_id = ${String(takili)}`;
+    assert.deepEqual([iz[0]?.detay.oncekiDeneme, iz[0]?.detay.oncekiHata], [3, "model: cevap kesildi"], "önceki hata denetimde");
+
+    const y = await takilanlariYenidenSirala(yonetici, { ilKod: "ankara" });
+    assert.ok(y.ok && y.adet >= 1);
+    assert.equal((await oku(baskaBolge)).deneme, 0, "yönetici her ilde");
+  } finally {
+    await sql`delete from oneri where id in ${sql([takili, suren, bekleyen, baskaBolge])}`;
+  }
+});
+
 test("aday çıkmayan il kendiliğinden yeniden sıraya girer; durdurulan ve sınırı aşan girmez", async () => {
   const { adaysizKesifleriYenidenAc } = await import("./sorgu.ts");
   const yonetici = await girisBaglami("yonetici@ykh.local");

@@ -8,7 +8,7 @@ import { cookies } from "next/headers";
 import {
   belgeEkle, belgeSil, KATEGORILER, type Kategori, metinDenetle, cikisYap, donemGetir, girisYap, islem, kayitOl, naceAra, naceDuzelt,
   ayarYaz, kimlikAc, kimlikSil, KotaAsildi, misafirAc, oneriOlustur, puanDuzelt, durumDegistir, rolAta,
-  kesifAc, kesifDonemleri, kesifGerekenDonemler, kesifDurdur, KesifZatenAcik, resmiKonulariDegerlendir, oneriGuncelle, oneriSil, kesifAdaylariniSil,
+  kesifAc, kesifDonemleri, kesifGerekenDonemler, kesifDurdur, KesifZatenAcik, resmiKonulariDegerlendir, oneriGuncelle, oneriSil, kesifAdaylariniSil, takilanlariYenidenSirala,
 } from "@ykh/database";
 import { gecisIzinli, onaylayabilir, ROL_ETIKET, ROLLER, type OneriDurumu, type Rol } from "@ykh/domain";
 import { log } from "@ykh/observability";
@@ -608,6 +608,25 @@ export async function kesifAdaylariniSilEylemi(_o: EylemSonucu | null, f: FormDa
   log.info("kesif_adaylari_silindi", { silinen: s.silinen });
   revalidatePath("/onay");
   return { ok: true, mesaj: `${s.silinen} keşif adayı kalıcı olarak silindi; kayıtları denetimde.` };
+}
+
+/** Hatayla durmuş değerlendirmeleri yeniden sıraya alır; işleyici kendisi alır (bkz. `takilanlariYenidenSirala`). */
+export async function takilanlariSiralaEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
+  const k = await kullanici();
+  if (!k || !onaylayabilir(k.rol)) return { ok: false, mesaj: "Bu işlem yalnızca ajans ve yönetici rolünde." };
+  const s = await takilanlariYenidenSirala(await baglam(), {
+    ajansKod: String(f.get("bolge") ?? "") || null,
+    ilKod: String(f.get("il") ?? "") || null,
+  });
+  if (!s.ok) return s;
+  log.info("takilanlar_yeniden_siraya", { adet: s.adet });
+  revalidatePath("/onay");
+  return {
+    ok: true,
+    mesaj: s.adet
+      ? `${s.adet} öneri yeniden sıraya alındı; arka plan işleyicisi sırayla değerlendirecek.`
+      : "Hatayla durmuş öneri kalmamış.",
+  };
 }
 
 export async function oneriDuzeltEylemi(_o: EylemSonucu | null, f: FormData): Promise<EylemSonucu> {
