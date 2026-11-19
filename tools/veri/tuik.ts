@@ -1,4 +1,4 @@
-// TÜİK veri servisi (SDMX) → docs/veri/tuik-tarim/{il}.md ve docs/veri/tuik-sanayi/{il}.md
+// TÜİK veri servisi (SDMX) → docs/veri/tuik-sanayi/{il}.md
 //
 // Kaynak: "Ekonomik Faaliyete Göre Girişim Sayısı" (DF_BR_FAALIYET_GIRISIM_V1,
 // İş Kayıtları): il × NACE Rev.2 sınıfı × yıl. "İlde ne yapılıyor, ne
@@ -13,8 +13,9 @@
 // Servisin VERMEDİĞİ: il düzeyinde bitkisel üretim miktarı ve hayvan sayısı
 // (2026-11-19'da katalogdaki 517 veri kümesi tarandı; tarım tarafında yalnızca
 // Türkiye geneli süt ve kümes ürünleri ile 35 il için tarım işçisi ücreti var).
-// Buradaki tarım belgesi ÜRETİM değil, tarım-hayvancılık faaliyetinde kayıtlı
-// GİRİŞİM sayısıdır ve belge bunu kendi içinde söyler.
+// Tarım için ayrı belge ÜRETİLMEZ: kayıtlı tarım girişimi sayısı ilin tarımını
+// yansıtmıyordu (Erzurum'da 26 süt sığırı girişimi, 612 bin baş sığır) ve
+// 2026-11-19'da emekliye ayrıldı; ürün bazında üretim `tools/veri/rda.ts` ile gelir.
 import { mkdirSync, rmSync, writeFileSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
@@ -25,7 +26,7 @@ const SURUM = "1.0";
 /** Bir sınıfın belgeye girmesi için en az girişim sayısı: 1–2 girişim gürültüdür. */
 const EN_AZ = 3;
 /** Belge başına en çok sınıf cümlesi; yoğunlaşmaya göre sıralı. */
-const SINIF_SINIRI = { tarim: 40, sanayi: 70 } as const;
+const SINIF_SINIRI = { sanayi: 70 } as const;
 
 const anahtar = process.env.TUIK_API_KEY;
 if (!anahtar) throw new Error("TUIK_API_KEY tanımlı değil (node --env-file=.env tools/veri/tuik.ts).");
@@ -111,11 +112,10 @@ const kucuk = (s: string) => s.charAt(0).toLocaleLowerCase("tr") + s.slice(1);
 const naceKod = (k: string) => `${k.slice(1, 3)}.${k.slice(3)}`;
 
 const BELGELER = [
-  { klasor: "tuik-tarim", kategori: "tarim", kisim: ["A"], baslik: "tarım, ormancılık ve balıkçılık girişimleri", sinir: SINIF_SINIRI.tarim },
   { klasor: "tuik-sanayi", kategori: "sanayi", kisim: ["B", "C"], baslik: "madencilik ve imalat girişimleri", sinir: SINIF_SINIRI.sanayi },
 ] as const;
 
-const girdiler: Record<string, object[]> = { "tuik-tarim": [], "tuik-sanayi": [] };
+const girdiler: Record<string, object[]> = { "tuik-sanayi": [] };
 const taninmayan: string[] = [];
 for (const b of BELGELER) {
   const cikti = path.join(KOK, "docs", "veri", b.klasor);
@@ -162,7 +162,7 @@ for (const alan of [...alanAdi.keys()].filter((k) => /^TR[0-9A-Z]\d{2}$/.test(k)
     writeFileSync(path.join(KOK, "docs", "veri", b.klasor, `${il.kod}.md`), p.join("\n\n") + "\n");
     girdiler[b.klasor].push({
       dosya: `docs/veri/${b.klasor}/${il.kod}.md`,
-      ad: `${il.ad} ${b.kategori === "tarim" ? "Tarım ve Hayvancılık" : "Sanayi ve Madencilik"} Girişim Sayıları (TÜİK)`,
+      ad: `${il.ad} Sanayi ve Madencilik Girişim Sayıları (TÜİK)`,
       tur: "il_raporu", yil: son, ajansKod: il.ajans, ilKod: il.kod, kategori: b.kategori, kaynak: "https://nsiws.tuik.gov.tr",
     });
   }

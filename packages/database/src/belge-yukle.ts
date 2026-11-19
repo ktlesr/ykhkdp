@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { sahip } from "./baglanti.ts";
+import { denetle, sahip } from "./baglanti.ts";
 
 /** Depo kökü — belge yolları buna göre çözülür, cwd'ye bağlı kalmaz. */
 const KOK = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
@@ -337,19 +337,19 @@ export const RESMI_BELGELER: YuklemeGirdisi[] = [
  */
 export type KutuphaneGirdisi = YuklemeGirdisi & { kaynak?: string };
 
-export async function kutuphaneYukle(): Promise<{ eklenen: number; atlanan: number; parca: number; hatalar: string[] }> {
+export async function kutuphaneYukle(): Promise<{ eklenen: number; atlanan: number; parca: number; hatalar: string[]; emekli: number }> {
   let manifest: KutuphaneGirdisi[];
   let ham: string;
   try {
     ham = await readFile(yolCoz("docs/kutuphane/manifest.json"), "utf8");
   } catch {
-    return { eklenen: 0, atlanan: 0, parca: 0, hatalar: [] }; // manifest yok: yapılacak iş yok
+    return { eklenen: 0, atlanan: 0, parca: 0, hatalar: [], emekli: 0 }; // manifest yok: yapılacak iş yok
   }
   try {
     manifest = JSON.parse(ham);
   } catch (e) {
     // Bozuk manifest "iş yok" değildir: sessizce geçmek eksik yüklemeyi gizlerdi.
-    return { eklenen: 0, atlanan: 0, parca: 0, hatalar: [`manifest okunamadı: ${e instanceof Error ? e.message : String(e)}`] };
+    return { eklenen: 0, atlanan: 0, parca: 0, emekli: 0, hatalar: [`manifest okunamadı: ${e instanceof Error ? e.message : String(e)}`] };
   }
   // Var olan belge yeniden yazılmaz; ajansın /belgeler'den SİLDİĞİ belge de geri
   // gelmez (denetimdeki `belge_silindi` kaydı mezar taşıdır). Geri almak için
@@ -362,7 +362,7 @@ export async function kutuphaneYukle(): Promise<{ eklenen: number; atlanan: numb
         select detay->>'ad' from denetim where eylem = 'belge_silindi' and detay->>'ad' is not null and coalesce((detay->>'parca')::int, 1) > 0`
     ).map((r) => r.ad),
   );
-  let eklenen = 0, atlanan = 0, parca = 0;
+  let eklenen = 0, atlanan = 0, parca = 0, emekli = 0;
   const hatalar: string[] = [];
   for (const g of manifest) {
     if (mevcut.has(g.ad)) { atlanan++; continue; }
@@ -398,5 +398,46 @@ export async function kutuphaneYukle(): Promise<{ eklenen: number; atlanan: numb
       hatalar.push(`${g.ad}: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
-  return { eklenen, atlanan, parca, hatalar };
+  try {
+    emekli = await emekliVeriyiKaldir();
+  } catch (err) {
+    hatalar.push(`emekli veri belgesi: ${err instanceof Error ? err.message : String(err)}`);
+  }
+  return { eklenen, atlanan, parca, hatalar, emekli };
 }
+
+/**
+ * Artık üretilmeyen veri belgeleri (`ad` üzerinde Postgres düzenli ifadesi).
+ * Listeye ekleme bilinçli bir karardır; manifestten düşen her belgeyi silmek
+ * işleyicinin kendi yazdığı kaynak belgelerini (coğrafi işaret) de götürebilirdi.
+ */
+export async function emekliVeriyiKaldir(): Promise<number> {
+  let adet = 0;
+  for (const e of EMEKLI_VERI) {
+    adet += await sahip().begin(async (sql) => {
+      const r = await sql<{ ad: string; n: number }[]>`
+        with s as (delete from belge where ad ~ ${e.desen} returning ad)
+        select ad, count(*)::int as n from s group by ad`;
+      for (const x of r) {
+        await denetle(sql as never, { gonderenRef: null, rol: "yonetici" }, "belge_silindi", "belge", null, { ad: x.ad, parca: x.n, neden: e.neden });
+      }
+      return r.length;
+    });
+  }
+  return adet;
+}
+
+/**
+ * Emekli veri belgeleri. Depodan çıkarmak canlıda yüklenmiş olanı silmez; bu
+ * yüzden `emekliVeriyiKaldir` her kurulumda açıkça siler. Kanıtlar ve tarama
+ * kayıtları belgeyle birlikte gider (cascade), silme denetime yazılır ve mezar
+ * taşı olur. Tekrar çalıştırılabilir: belge yoksa hiçbir şey yapmaz.
+ */
+const EMEKLI_VERI: ReadonlyArray<{ desen: string; neden: string }> = [
+  {
+    desen: " Tarım ve Hayvancılık Girişim Sayıları \\(TÜİK\\)$",
+    neden:
+      "Kayıtlı tarım girişimi sayısı ilin tarımını yansıtmıyordu (Erzurum'da 26 süt sığırı girişimi, 612 bin baş sığır); " +
+      "yerini ürün bazında üretim verisi (RDA) aldı.",
+  },
+];

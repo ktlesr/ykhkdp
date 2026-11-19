@@ -13,7 +13,7 @@ manifest.json   dosya, ad, tür, yıl, ajansKod, ilKod, kategori, kaynak
 | `mta/` | MTA İl Maden Potansiyelleri (PDF) | `maden_enerji` | `python tools/veri/mta.py` |
 | `dis-ticaret/` | TÜİK dış ticaret panosu, il × yıl × fasıl ihracat | `dis_ticaret` | `node tools/veri/dis-ticaret.ts [localdocs yolu]` |
 | `turizm/` | KTB Turizm Belgeli Tesis İstatistikleri (yıllık bülten) | `turizm` | `python tools/veri/turizm.py <yıl> <bülten.xlsx ya da adresi>` |
-| `tuik-tarim/` · `tuik-sanayi/` | TÜİK veri servisi (SDMX): ekonomik faaliyete göre girişim sayısı, il × NACE sınıfı | `tarim` · `sanayi` | `node --env-file=.env tools/veri/tuik.ts` (`TUIK_API_KEY`) |
+| `tuik-sanayi/` | TÜİK veri servisi (SDMX): madencilik ve imalatta ekonomik faaliyete göre girişim sayısı, il × NACE sınıfı | `sanayi` | `node --env-file=.env tools/veri/tuik.ts` (`TUIK_API_KEY`) |
 | `rda-tarim/` · `rda-dis-ticaret/` · `rda-sanayi/` · `rda-turizm/` | RDA veri API'si (rda.ktlsr.com): ürün bazında tarım, sektör bazında ihracat ve ithalat, OSB/enerji/ekonomi, konaklama | `tarim` · `dis_ticaret` · `sanayi` · `turizm` | `node --env-file=.env tools/veri/rda.ts [--zorla]` (`RDA_API_KEY`) |
 | seçilir | il sütunlu herhangi bir Excel (teşvik belgeleri…) | seçilir | `python tools/veri/tablo.py <dosya> --klasor … --kategori … --ad …` |
 

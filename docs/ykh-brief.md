@@ -640,10 +640,14 @@ eklenir ve sıradan belge gibi taranır — ayrı bir veri hattı yok.
   GTİP 4+ yok), içinde bulunulan yıl tamamlanmamıştır ve öyle yazılır. TOBB
   Sanayi Veritabanı bağlanmadı: sorgu uçları oturum ve reCAPTCHA arkasında.
   TÜİK'in anahtarlı veri servisinden (2026-11-19) yalnızca girişim sayıları
-  bağlandı: il başına iki belge (tarım-hayvancılık; madencilik-imalat), ilin
-  Türkiye ortalamasına göre yoğunlaştığı faaliyetler önde, en az 3 girişimli
-  sınıflar. Sayı KAYITLI GİRİŞİM sayısıdır, üretim ya da kapasite değil; tarımda
-  kayıt dışı aile işletmeleri sayılmaz ve belge bunu kendi içinde söyler.
+  bağlandı: il başına bir belge (madencilik-imalat), ilin Türkiye ortalamasına
+  göre yoğunlaştığı faaliyetler önde, en az 3 girişimli sınıflar. Sayı KAYITLI
+  GİRİŞİM sayısıdır, üretim ya da kapasite değil. Aynı kaynaktan üretilen tarım
+  belgesi aynı gün EMEKLİYE ayrıldı: kayıtlı tarım girişimi sayısı ilin tarımını
+  yansıtmıyordu (Erzurum'da 26 süt sığırı girişimi, 612 bin baş sığır); yerini
+  RDA'nın ürün bazında üretim verisi aldı. Emekli belge depodan çıkarılmakla
+  canlıdan silinmez; `emekliVeriyiKaldir` her kurulumda açıkça siler (kanıtları
+  da gider, neden denetime yazılır).
   Servis il düzeyinde bitkisel üretim miktarı ve hayvan sayısı VERMİYOR
   (katalogdaki 517 veri kümesi tarandı). İl GSYH'si, nüfus, müze ziyaretçisi
   ve belediye atık verileri serviste var ama bağlanmadı; girdi-çıktı tabloları

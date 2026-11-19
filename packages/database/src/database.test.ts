@@ -899,3 +899,25 @@ test("aday çıkmayan il kendiliğinden yeniden sıraya girer; durdurulan ve sı
   assert.equal(await adaysizKesifleriYenidenAc(), 0, "24 saatte en çok üç koşu");
   await sql`delete from kesif`;
 });
+
+test("emekli veri belgesi kurulumda kaldırılır; kanıtı da gider, benzer adlı belge kalır", async () => {
+  const { emekliVeriyiKaldir } = await import("./belge-yukle.ts");
+  const sql = sahip();
+  const metin = "Sınama ilinde süt sığırı yetiştiriciliği faaliyetinde girişim kayıtlıdır. ".repeat(4);
+  const emekli = "Sınama Tarım ve Hayvancılık Girişim Sayıları (TÜİK)";
+  const kalan = "Sınama Sanayi ve Madencilik Girişim Sayıları (TÜİK)";
+  const [b] = await sql<{ id: string }[]>`insert into belge (ad, tur, metin) values (${emekli}, 'il_raporu', ${metin}) returning id`;
+  await sql`insert into belge (ad, tur, metin) values (${kalan}, 'il_raporu', ${metin})`;
+  await sql`insert into kanit (belge_id, prompt_surum, model_snapshot, tur, konu, alinti) values (${b.id}, 'sinama', 'sinama-model', 'yerel_olgu', 'süt sığırı', 'Sınama ilinde süt sığırı yetiştiriciliği faaliyetinde girişim kayıtlıdır.')`;
+  try {
+    assert.equal(await emekliVeriyiKaldir(), 1);
+    assert.equal((await sql`select 1 from belge where ad = ${emekli}`).length, 0, "emekli belge silindi");
+    assert.equal((await sql`select 1 from kanit where belge_id = ${b.id}`).length, 0, "kanıtı da gitti");
+    assert.equal((await sql`select 1 from belge where ad = ${kalan}`).length, 1, "sanayi belgesi kalır");
+    const iz = await sql<{ detay: { neden: string; parca: number } }[]>`select detay from denetim where eylem = 'belge_silindi' and detay->>'ad' = ${emekli}`;
+    assert.ok(iz[0]?.detay.neden.length > 20 && iz[0].detay.parca === 1, "neden denetimde");
+    assert.equal(await emekliVeriyiKaldir(), 0, "ikinci koşu hiçbir şey yapmaz");
+  } finally {
+    await sql`delete from belge where ad in (${emekli}, ${kalan})`;
+  }
+});

@@ -279,6 +279,7 @@ export async function kur(): Promise<string> {
 
   // ── 7 · kütüphane belgeleri (manifest varsa; yalnızca eksik olanlar) ──────
   const k = await kutuphaneYukle();
+  if (k.emekli) rapor.push(`${k.emekli} emekli veri belgesi kaldırıldı`);
   if (k.eklenen || k.atlanan || k.hatalar.length) {
     rapor.push(`kütüphane: ${k.eklenen} belge eklendi (${k.parca} parça), ${k.atlanan} zaten vardı` + (k.hatalar.length ? `, ${k.hatalar.length} HATA: ${k.hatalar.slice(0, 3).join(" | ")}` : ""));
   }
