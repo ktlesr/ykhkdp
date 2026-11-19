@@ -2410,6 +2410,3246 @@
   "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/zonguldak-madenler.pdf"
  },
  {
+  "dosya": "docs/veri/rda-dis-ticaret/adana.md",
+  "ad": "Adana İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR62",
+  "ilKod": "adana",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/adiyaman.md",
+  "ad": "Adıyaman İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC1",
+  "ilKod": "adiyaman",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/afyonkarahisar.md",
+  "ad": "Afyonkarahisar İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR33",
+  "ilKod": "afyonkarahisar",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/agri.md",
+  "ad": "Ağrı İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA2",
+  "ilKod": "agri",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/aksaray.md",
+  "ad": "Aksaray İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR71",
+  "ilKod": "aksaray",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/amasya.md",
+  "ad": "Amasya İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR83",
+  "ilKod": "amasya",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/ankara.md",
+  "ad": "Ankara İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR51",
+  "ilKod": "ankara",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/antalya.md",
+  "ad": "Antalya İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR61",
+  "ilKod": "antalya",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/ardahan.md",
+  "ad": "Ardahan İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA2",
+  "ilKod": "ardahan",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/artvin.md",
+  "ad": "Artvin İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "artvin",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/aydin.md",
+  "ad": "Aydın İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR32",
+  "ilKod": "aydin",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/balikesir.md",
+  "ad": "Balıkesir İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR22",
+  "ilKod": "balikesir",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/bartin.md",
+  "ad": "Bartın İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR81",
+  "ilKod": "bartin",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/batman.md",
+  "ad": "Batman İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC3",
+  "ilKod": "batman",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/bayburt.md",
+  "ad": "Bayburt İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA1",
+  "ilKod": "bayburt",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/bilecik.md",
+  "ad": "Bilecik İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR41",
+  "ilKod": "bilecik",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/bingol.md",
+  "ad": "Bingöl İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB1",
+  "ilKod": "bingol",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/bitlis.md",
+  "ad": "Bitlis İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB2",
+  "ilKod": "bitlis",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/bolu.md",
+  "ad": "Bolu İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR42",
+  "ilKod": "bolu",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/burdur.md",
+  "ad": "Burdur İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR61",
+  "ilKod": "burdur",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/bursa.md",
+  "ad": "Bursa İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR41",
+  "ilKod": "bursa",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/canakkale.md",
+  "ad": "Çanakkale İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR22",
+  "ilKod": "canakkale",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/cankiri.md",
+  "ad": "Çankırı İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR82",
+  "ilKod": "cankiri",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/corum.md",
+  "ad": "Çorum İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR83",
+  "ilKod": "corum",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/denizli.md",
+  "ad": "Denizli İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR32",
+  "ilKod": "denizli",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/diyarbakir.md",
+  "ad": "Diyarbakır İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC2",
+  "ilKod": "diyarbakir",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/duzce.md",
+  "ad": "Düzce İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR42",
+  "ilKod": "duzce",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/edirne.md",
+  "ad": "Edirne İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR21",
+  "ilKod": "edirne",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/elazig.md",
+  "ad": "Elâzığ İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB1",
+  "ilKod": "elazig",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/erzincan.md",
+  "ad": "Erzincan İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA1",
+  "ilKod": "erzincan",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/erzurum.md",
+  "ad": "Erzurum İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA1",
+  "ilKod": "erzurum",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/eskisehir.md",
+  "ad": "Eskişehir İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR41",
+  "ilKod": "eskisehir",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/gaziantep.md",
+  "ad": "Gaziantep İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC1",
+  "ilKod": "gaziantep",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/giresun.md",
+  "ad": "Giresun İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "giresun",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/gumushane.md",
+  "ad": "Gümüşhane İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "gumushane",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/hakkari.md",
+  "ad": "Hakkâri İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB2",
+  "ilKod": "hakkari",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/hatay.md",
+  "ad": "Hatay İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR63",
+  "ilKod": "hatay",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/igdir.md",
+  "ad": "Iğdır İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA2",
+  "ilKod": "igdir",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/isparta.md",
+  "ad": "Isparta İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR61",
+  "ilKod": "isparta",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/istanbul.md",
+  "ad": "İstanbul İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR10",
+  "ilKod": "istanbul",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/izmir.md",
+  "ad": "İzmir İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR31",
+  "ilKod": "izmir",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/kahramanmaras.md",
+  "ad": "Kahramanmaraş İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR63",
+  "ilKod": "kahramanmaras",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/karabuk.md",
+  "ad": "Karabük İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR81",
+  "ilKod": "karabuk",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/karaman.md",
+  "ad": "Karaman İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR52",
+  "ilKod": "karaman",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/kars.md",
+  "ad": "Kars İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA2",
+  "ilKod": "kars",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/kastamonu.md",
+  "ad": "Kastamonu İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR82",
+  "ilKod": "kastamonu",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/kayseri.md",
+  "ad": "Kayseri İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR72",
+  "ilKod": "kayseri",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/kilis.md",
+  "ad": "Kilis İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC1",
+  "ilKod": "kilis",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/kirikkale.md",
+  "ad": "Kırıkkale İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR71",
+  "ilKod": "kirikkale",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/kirklareli.md",
+  "ad": "Kırklareli İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR21",
+  "ilKod": "kirklareli",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/kirsehir.md",
+  "ad": "Kırşehir İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR71",
+  "ilKod": "kirsehir",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/kocaeli.md",
+  "ad": "Kocaeli İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR42",
+  "ilKod": "kocaeli",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/konya.md",
+  "ad": "Konya İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR52",
+  "ilKod": "konya",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/kutahya.md",
+  "ad": "Kütahya İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR33",
+  "ilKod": "kutahya",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/malatya.md",
+  "ad": "Malatya İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB1",
+  "ilKod": "malatya",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/manisa.md",
+  "ad": "Manisa İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR33",
+  "ilKod": "manisa",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/mardin.md",
+  "ad": "Mardin İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC3",
+  "ilKod": "mardin",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/mersin.md",
+  "ad": "Mersin İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR62",
+  "ilKod": "mersin",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/mugla.md",
+  "ad": "Muğla İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR32",
+  "ilKod": "mugla",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/mus.md",
+  "ad": "Muş İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB2",
+  "ilKod": "mus",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/nevsehir.md",
+  "ad": "Nevşehir İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR71",
+  "ilKod": "nevsehir",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/nigde.md",
+  "ad": "Niğde İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR71",
+  "ilKod": "nigde",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/ordu.md",
+  "ad": "Ordu İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "ordu",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/osmaniye.md",
+  "ad": "Osmaniye İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR63",
+  "ilKod": "osmaniye",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/rize.md",
+  "ad": "Rize İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "rize",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/sakarya.md",
+  "ad": "Sakarya İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR42",
+  "ilKod": "sakarya",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/samsun.md",
+  "ad": "Samsun İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR83",
+  "ilKod": "samsun",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/sanliurfa.md",
+  "ad": "Şanlıurfa İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC2",
+  "ilKod": "sanliurfa",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/siirt.md",
+  "ad": "Siirt İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC3",
+  "ilKod": "siirt",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/sinop.md",
+  "ad": "Sinop İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR82",
+  "ilKod": "sinop",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/sirnak.md",
+  "ad": "Şırnak İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC3",
+  "ilKod": "sirnak",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/sivas.md",
+  "ad": "Sivas İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR72",
+  "ilKod": "sivas",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/tekirdag.md",
+  "ad": "Tekirdağ İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR21",
+  "ilKod": "tekirdag",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/tokat.md",
+  "ad": "Tokat İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR83",
+  "ilKod": "tokat",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/trabzon.md",
+  "ad": "Trabzon İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "trabzon",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/tunceli.md",
+  "ad": "Tunceli İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB1",
+  "ilKod": "tunceli",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/usak.md",
+  "ad": "Uşak İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR33",
+  "ilKod": "usak",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/van.md",
+  "ad": "Van İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB2",
+  "ilKod": "van",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/yalova.md",
+  "ad": "Yalova İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR42",
+  "ilKod": "yalova",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/yozgat.md",
+  "ad": "Yozgat İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR72",
+  "ilKod": "yozgat",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-dis-ticaret/zonguldak.md",
+  "ad": "Zonguldak İhracat ve İthalat (Sektörlere Göre) (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR81",
+  "ilKod": "zonguldak",
+  "kategori": "dis_ticaret",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/adana.md",
+  "ad": "Adana Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR62",
+  "ilKod": "adana",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/adiyaman.md",
+  "ad": "Adıyaman Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC1",
+  "ilKod": "adiyaman",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/afyonkarahisar.md",
+  "ad": "Afyonkarahisar Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR33",
+  "ilKod": "afyonkarahisar",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/agri.md",
+  "ad": "Ağrı Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA2",
+  "ilKod": "agri",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/aksaray.md",
+  "ad": "Aksaray Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR71",
+  "ilKod": "aksaray",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/amasya.md",
+  "ad": "Amasya Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR83",
+  "ilKod": "amasya",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/ankara.md",
+  "ad": "Ankara Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR51",
+  "ilKod": "ankara",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/antalya.md",
+  "ad": "Antalya Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR61",
+  "ilKod": "antalya",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/ardahan.md",
+  "ad": "Ardahan Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA2",
+  "ilKod": "ardahan",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/artvin.md",
+  "ad": "Artvin Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "artvin",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/aydin.md",
+  "ad": "Aydın Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR32",
+  "ilKod": "aydin",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/balikesir.md",
+  "ad": "Balıkesir Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR22",
+  "ilKod": "balikesir",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/bartin.md",
+  "ad": "Bartın Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR81",
+  "ilKod": "bartin",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/batman.md",
+  "ad": "Batman Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC3",
+  "ilKod": "batman",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/bayburt.md",
+  "ad": "Bayburt Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA1",
+  "ilKod": "bayburt",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/bilecik.md",
+  "ad": "Bilecik Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR41",
+  "ilKod": "bilecik",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/bingol.md",
+  "ad": "Bingöl Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB1",
+  "ilKod": "bingol",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/bitlis.md",
+  "ad": "Bitlis Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB2",
+  "ilKod": "bitlis",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/bolu.md",
+  "ad": "Bolu Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR42",
+  "ilKod": "bolu",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/burdur.md",
+  "ad": "Burdur Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR61",
+  "ilKod": "burdur",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/bursa.md",
+  "ad": "Bursa Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR41",
+  "ilKod": "bursa",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/canakkale.md",
+  "ad": "Çanakkale Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR22",
+  "ilKod": "canakkale",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/cankiri.md",
+  "ad": "Çankırı Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR82",
+  "ilKod": "cankiri",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/corum.md",
+  "ad": "Çorum Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR83",
+  "ilKod": "corum",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/denizli.md",
+  "ad": "Denizli Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR32",
+  "ilKod": "denizli",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/diyarbakir.md",
+  "ad": "Diyarbakır Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC2",
+  "ilKod": "diyarbakir",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/duzce.md",
+  "ad": "Düzce Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR42",
+  "ilKod": "duzce",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/edirne.md",
+  "ad": "Edirne Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR21",
+  "ilKod": "edirne",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/elazig.md",
+  "ad": "Elâzığ Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB1",
+  "ilKod": "elazig",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/erzincan.md",
+  "ad": "Erzincan Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA1",
+  "ilKod": "erzincan",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/erzurum.md",
+  "ad": "Erzurum Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA1",
+  "ilKod": "erzurum",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/eskisehir.md",
+  "ad": "Eskişehir Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR41",
+  "ilKod": "eskisehir",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/gaziantep.md",
+  "ad": "Gaziantep Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC1",
+  "ilKod": "gaziantep",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/giresun.md",
+  "ad": "Giresun Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "giresun",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/gumushane.md",
+  "ad": "Gümüşhane Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "gumushane",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/hakkari.md",
+  "ad": "Hakkâri Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB2",
+  "ilKod": "hakkari",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/hatay.md",
+  "ad": "Hatay Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR63",
+  "ilKod": "hatay",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/igdir.md",
+  "ad": "Iğdır Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA2",
+  "ilKod": "igdir",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/isparta.md",
+  "ad": "Isparta Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR61",
+  "ilKod": "isparta",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/istanbul.md",
+  "ad": "İstanbul Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR10",
+  "ilKod": "istanbul",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/izmir.md",
+  "ad": "İzmir Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR31",
+  "ilKod": "izmir",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/kahramanmaras.md",
+  "ad": "Kahramanmaraş Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR63",
+  "ilKod": "kahramanmaras",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/karabuk.md",
+  "ad": "Karabük Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR81",
+  "ilKod": "karabuk",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/karaman.md",
+  "ad": "Karaman Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR52",
+  "ilKod": "karaman",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/kars.md",
+  "ad": "Kars Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA2",
+  "ilKod": "kars",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/kastamonu.md",
+  "ad": "Kastamonu Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR82",
+  "ilKod": "kastamonu",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/kayseri.md",
+  "ad": "Kayseri Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR72",
+  "ilKod": "kayseri",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/kilis.md",
+  "ad": "Kilis Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC1",
+  "ilKod": "kilis",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/kirikkale.md",
+  "ad": "Kırıkkale Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR71",
+  "ilKod": "kirikkale",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/kirklareli.md",
+  "ad": "Kırklareli Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR21",
+  "ilKod": "kirklareli",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/kirsehir.md",
+  "ad": "Kırşehir Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR71",
+  "ilKod": "kirsehir",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/kocaeli.md",
+  "ad": "Kocaeli Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR42",
+  "ilKod": "kocaeli",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/konya.md",
+  "ad": "Konya Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR52",
+  "ilKod": "konya",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/kutahya.md",
+  "ad": "Kütahya Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR33",
+  "ilKod": "kutahya",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/malatya.md",
+  "ad": "Malatya Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB1",
+  "ilKod": "malatya",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/manisa.md",
+  "ad": "Manisa Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR33",
+  "ilKod": "manisa",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/mardin.md",
+  "ad": "Mardin Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC3",
+  "ilKod": "mardin",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/mersin.md",
+  "ad": "Mersin Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR62",
+  "ilKod": "mersin",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/mugla.md",
+  "ad": "Muğla Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR32",
+  "ilKod": "mugla",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/mus.md",
+  "ad": "Muş Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB2",
+  "ilKod": "mus",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/nevsehir.md",
+  "ad": "Nevşehir Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR71",
+  "ilKod": "nevsehir",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/nigde.md",
+  "ad": "Niğde Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR71",
+  "ilKod": "nigde",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/ordu.md",
+  "ad": "Ordu Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "ordu",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/osmaniye.md",
+  "ad": "Osmaniye Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR63",
+  "ilKod": "osmaniye",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/rize.md",
+  "ad": "Rize Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "rize",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/sakarya.md",
+  "ad": "Sakarya Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR42",
+  "ilKod": "sakarya",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/samsun.md",
+  "ad": "Samsun Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR83",
+  "ilKod": "samsun",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/sanliurfa.md",
+  "ad": "Şanlıurfa Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC2",
+  "ilKod": "sanliurfa",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/siirt.md",
+  "ad": "Siirt Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC3",
+  "ilKod": "siirt",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/sinop.md",
+  "ad": "Sinop Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR82",
+  "ilKod": "sinop",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/sirnak.md",
+  "ad": "Şırnak Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC3",
+  "ilKod": "sirnak",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/sivas.md",
+  "ad": "Sivas Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR72",
+  "ilKod": "sivas",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/tekirdag.md",
+  "ad": "Tekirdağ Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR21",
+  "ilKod": "tekirdag",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/tokat.md",
+  "ad": "Tokat Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR83",
+  "ilKod": "tokat",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/trabzon.md",
+  "ad": "Trabzon Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "trabzon",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/tunceli.md",
+  "ad": "Tunceli Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB1",
+  "ilKod": "tunceli",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/usak.md",
+  "ad": "Uşak Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR33",
+  "ilKod": "usak",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/van.md",
+  "ad": "Van Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB2",
+  "ilKod": "van",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/yalova.md",
+  "ad": "Yalova Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR42",
+  "ilKod": "yalova",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/yozgat.md",
+  "ad": "Yozgat Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR72",
+  "ilKod": "yozgat",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-sanayi/zonguldak.md",
+  "ad": "Zonguldak Sanayi, Enerji ve Ekonomi Göstergeleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR81",
+  "ilKod": "zonguldak",
+  "kategori": "sanayi",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/adana.md",
+  "ad": "Adana Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR62",
+  "ilKod": "adana",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/adiyaman.md",
+  "ad": "Adıyaman Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC1",
+  "ilKod": "adiyaman",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/afyonkarahisar.md",
+  "ad": "Afyonkarahisar Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR33",
+  "ilKod": "afyonkarahisar",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/agri.md",
+  "ad": "Ağrı Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA2",
+  "ilKod": "agri",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/aksaray.md",
+  "ad": "Aksaray Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR71",
+  "ilKod": "aksaray",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/amasya.md",
+  "ad": "Amasya Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR83",
+  "ilKod": "amasya",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/ankara.md",
+  "ad": "Ankara Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR51",
+  "ilKod": "ankara",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/antalya.md",
+  "ad": "Antalya Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR61",
+  "ilKod": "antalya",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/ardahan.md",
+  "ad": "Ardahan Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA2",
+  "ilKod": "ardahan",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/artvin.md",
+  "ad": "Artvin Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "artvin",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/aydin.md",
+  "ad": "Aydın Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR32",
+  "ilKod": "aydin",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/balikesir.md",
+  "ad": "Balıkesir Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR22",
+  "ilKod": "balikesir",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/bartin.md",
+  "ad": "Bartın Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR81",
+  "ilKod": "bartin",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/batman.md",
+  "ad": "Batman Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC3",
+  "ilKod": "batman",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/bayburt.md",
+  "ad": "Bayburt Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA1",
+  "ilKod": "bayburt",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/bilecik.md",
+  "ad": "Bilecik Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR41",
+  "ilKod": "bilecik",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/bingol.md",
+  "ad": "Bingöl Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB1",
+  "ilKod": "bingol",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/bitlis.md",
+  "ad": "Bitlis Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB2",
+  "ilKod": "bitlis",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/bolu.md",
+  "ad": "Bolu Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR42",
+  "ilKod": "bolu",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/burdur.md",
+  "ad": "Burdur Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR61",
+  "ilKod": "burdur",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/bursa.md",
+  "ad": "Bursa Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR41",
+  "ilKod": "bursa",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/canakkale.md",
+  "ad": "Çanakkale Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR22",
+  "ilKod": "canakkale",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/cankiri.md",
+  "ad": "Çankırı Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR82",
+  "ilKod": "cankiri",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/corum.md",
+  "ad": "Çorum Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR83",
+  "ilKod": "corum",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/denizli.md",
+  "ad": "Denizli Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR32",
+  "ilKod": "denizli",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/diyarbakir.md",
+  "ad": "Diyarbakır Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC2",
+  "ilKod": "diyarbakir",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/duzce.md",
+  "ad": "Düzce Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR42",
+  "ilKod": "duzce",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/edirne.md",
+  "ad": "Edirne Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR21",
+  "ilKod": "edirne",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/elazig.md",
+  "ad": "Elâzığ Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB1",
+  "ilKod": "elazig",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/erzincan.md",
+  "ad": "Erzincan Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA1",
+  "ilKod": "erzincan",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/erzurum.md",
+  "ad": "Erzurum Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA1",
+  "ilKod": "erzurum",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/eskisehir.md",
+  "ad": "Eskişehir Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR41",
+  "ilKod": "eskisehir",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/gaziantep.md",
+  "ad": "Gaziantep Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC1",
+  "ilKod": "gaziantep",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/giresun.md",
+  "ad": "Giresun Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "giresun",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/gumushane.md",
+  "ad": "Gümüşhane Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "gumushane",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/hakkari.md",
+  "ad": "Hakkâri Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB2",
+  "ilKod": "hakkari",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/hatay.md",
+  "ad": "Hatay Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR63",
+  "ilKod": "hatay",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/igdir.md",
+  "ad": "Iğdır Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA2",
+  "ilKod": "igdir",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/isparta.md",
+  "ad": "Isparta Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR61",
+  "ilKod": "isparta",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/istanbul.md",
+  "ad": "İstanbul Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR10",
+  "ilKod": "istanbul",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/izmir.md",
+  "ad": "İzmir Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR31",
+  "ilKod": "izmir",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/kahramanmaras.md",
+  "ad": "Kahramanmaraş Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR63",
+  "ilKod": "kahramanmaras",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/karabuk.md",
+  "ad": "Karabük Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR81",
+  "ilKod": "karabuk",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/karaman.md",
+  "ad": "Karaman Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR52",
+  "ilKod": "karaman",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/kars.md",
+  "ad": "Kars Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRA2",
+  "ilKod": "kars",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/kastamonu.md",
+  "ad": "Kastamonu Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR82",
+  "ilKod": "kastamonu",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/kayseri.md",
+  "ad": "Kayseri Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR72",
+  "ilKod": "kayseri",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/kilis.md",
+  "ad": "Kilis Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC1",
+  "ilKod": "kilis",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/kirikkale.md",
+  "ad": "Kırıkkale Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR71",
+  "ilKod": "kirikkale",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/kirklareli.md",
+  "ad": "Kırklareli Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR21",
+  "ilKod": "kirklareli",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/kirsehir.md",
+  "ad": "Kırşehir Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR71",
+  "ilKod": "kirsehir",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/kocaeli.md",
+  "ad": "Kocaeli Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR42",
+  "ilKod": "kocaeli",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/konya.md",
+  "ad": "Konya Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR52",
+  "ilKod": "konya",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/kutahya.md",
+  "ad": "Kütahya Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR33",
+  "ilKod": "kutahya",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/malatya.md",
+  "ad": "Malatya Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB1",
+  "ilKod": "malatya",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/manisa.md",
+  "ad": "Manisa Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR33",
+  "ilKod": "manisa",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/mardin.md",
+  "ad": "Mardin Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC3",
+  "ilKod": "mardin",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/mersin.md",
+  "ad": "Mersin Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR62",
+  "ilKod": "mersin",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/mugla.md",
+  "ad": "Muğla Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR32",
+  "ilKod": "mugla",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/mus.md",
+  "ad": "Muş Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB2",
+  "ilKod": "mus",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/nevsehir.md",
+  "ad": "Nevşehir Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR71",
+  "ilKod": "nevsehir",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/nigde.md",
+  "ad": "Niğde Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR71",
+  "ilKod": "nigde",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/ordu.md",
+  "ad": "Ordu Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "ordu",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/osmaniye.md",
+  "ad": "Osmaniye Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR63",
+  "ilKod": "osmaniye",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/rize.md",
+  "ad": "Rize Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "rize",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/sakarya.md",
+  "ad": "Sakarya Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR42",
+  "ilKod": "sakarya",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/samsun.md",
+  "ad": "Samsun Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR83",
+  "ilKod": "samsun",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/sanliurfa.md",
+  "ad": "Şanlıurfa Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC2",
+  "ilKod": "sanliurfa",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/siirt.md",
+  "ad": "Siirt Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC3",
+  "ilKod": "siirt",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/sinop.md",
+  "ad": "Sinop Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR82",
+  "ilKod": "sinop",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/sirnak.md",
+  "ad": "Şırnak Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRC3",
+  "ilKod": "sirnak",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/sivas.md",
+  "ad": "Sivas Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR72",
+  "ilKod": "sivas",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/tekirdag.md",
+  "ad": "Tekirdağ Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR21",
+  "ilKod": "tekirdag",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/tokat.md",
+  "ad": "Tokat Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR83",
+  "ilKod": "tokat",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/trabzon.md",
+  "ad": "Trabzon Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR90",
+  "ilKod": "trabzon",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/tunceli.md",
+  "ad": "Tunceli Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB1",
+  "ilKod": "tunceli",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/usak.md",
+  "ad": "Uşak Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR33",
+  "ilKod": "usak",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/van.md",
+  "ad": "Van Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TRB2",
+  "ilKod": "van",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/yalova.md",
+  "ad": "Yalova Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR42",
+  "ilKod": "yalova",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/yozgat.md",
+  "ad": "Yozgat Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR72",
+  "ilKod": "yozgat",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-tarim/zonguldak.md",
+  "ad": "Zonguldak Tarım ve Hayvancılık Üretimi (RDA)",
+  "tur": "il_raporu",
+  "yil": "2025",
+  "ajansKod": "TR81",
+  "ilKod": "zonguldak",
+  "kategori": "tarim",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/adana.md",
+  "ad": "Adana Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR62",
+  "ilKod": "adana",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/adiyaman.md",
+  "ad": "Adıyaman Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC1",
+  "ilKod": "adiyaman",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/afyonkarahisar.md",
+  "ad": "Afyonkarahisar Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR33",
+  "ilKod": "afyonkarahisar",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/agri.md",
+  "ad": "Ağrı Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRA2",
+  "ilKod": "agri",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/aksaray.md",
+  "ad": "Aksaray Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR71",
+  "ilKod": "aksaray",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/amasya.md",
+  "ad": "Amasya Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR83",
+  "ilKod": "amasya",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/ankara.md",
+  "ad": "Ankara Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR51",
+  "ilKod": "ankara",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/antalya.md",
+  "ad": "Antalya Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR61",
+  "ilKod": "antalya",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/ardahan.md",
+  "ad": "Ardahan Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRA2",
+  "ilKod": "ardahan",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/artvin.md",
+  "ad": "Artvin Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR90",
+  "ilKod": "artvin",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/aydin.md",
+  "ad": "Aydın Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR32",
+  "ilKod": "aydin",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/balikesir.md",
+  "ad": "Balıkesir Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR22",
+  "ilKod": "balikesir",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/bartin.md",
+  "ad": "Bartın Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR81",
+  "ilKod": "bartin",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/batman.md",
+  "ad": "Batman Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC3",
+  "ilKod": "batman",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/bayburt.md",
+  "ad": "Bayburt Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRA1",
+  "ilKod": "bayburt",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/bilecik.md",
+  "ad": "Bilecik Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR41",
+  "ilKod": "bilecik",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/bingol.md",
+  "ad": "Bingöl Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB1",
+  "ilKod": "bingol",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/bitlis.md",
+  "ad": "Bitlis Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB2",
+  "ilKod": "bitlis",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/bolu.md",
+  "ad": "Bolu Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR42",
+  "ilKod": "bolu",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/burdur.md",
+  "ad": "Burdur Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR61",
+  "ilKod": "burdur",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/bursa.md",
+  "ad": "Bursa Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR41",
+  "ilKod": "bursa",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/canakkale.md",
+  "ad": "Çanakkale Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR22",
+  "ilKod": "canakkale",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/cankiri.md",
+  "ad": "Çankırı Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR82",
+  "ilKod": "cankiri",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/corum.md",
+  "ad": "Çorum Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR83",
+  "ilKod": "corum",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/denizli.md",
+  "ad": "Denizli Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR32",
+  "ilKod": "denizli",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/diyarbakir.md",
+  "ad": "Diyarbakır Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC2",
+  "ilKod": "diyarbakir",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/duzce.md",
+  "ad": "Düzce Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR42",
+  "ilKod": "duzce",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/edirne.md",
+  "ad": "Edirne Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR21",
+  "ilKod": "edirne",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/elazig.md",
+  "ad": "Elâzığ Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB1",
+  "ilKod": "elazig",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/erzincan.md",
+  "ad": "Erzincan Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRA1",
+  "ilKod": "erzincan",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/erzurum.md",
+  "ad": "Erzurum Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRA1",
+  "ilKod": "erzurum",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/eskisehir.md",
+  "ad": "Eskişehir Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR41",
+  "ilKod": "eskisehir",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/gaziantep.md",
+  "ad": "Gaziantep Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC1",
+  "ilKod": "gaziantep",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/giresun.md",
+  "ad": "Giresun Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR90",
+  "ilKod": "giresun",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/gumushane.md",
+  "ad": "Gümüşhane Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR90",
+  "ilKod": "gumushane",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/hakkari.md",
+  "ad": "Hakkâri Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB2",
+  "ilKod": "hakkari",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/hatay.md",
+  "ad": "Hatay Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR63",
+  "ilKod": "hatay",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/igdir.md",
+  "ad": "Iğdır Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRA2",
+  "ilKod": "igdir",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/isparta.md",
+  "ad": "Isparta Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR61",
+  "ilKod": "isparta",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/istanbul.md",
+  "ad": "İstanbul Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR10",
+  "ilKod": "istanbul",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/izmir.md",
+  "ad": "İzmir Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR31",
+  "ilKod": "izmir",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/kahramanmaras.md",
+  "ad": "Kahramanmaraş Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR63",
+  "ilKod": "kahramanmaras",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/karabuk.md",
+  "ad": "Karabük Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR81",
+  "ilKod": "karabuk",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/karaman.md",
+  "ad": "Karaman Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR52",
+  "ilKod": "karaman",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/kars.md",
+  "ad": "Kars Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRA2",
+  "ilKod": "kars",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/kastamonu.md",
+  "ad": "Kastamonu Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR82",
+  "ilKod": "kastamonu",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/kayseri.md",
+  "ad": "Kayseri Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR72",
+  "ilKod": "kayseri",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/kilis.md",
+  "ad": "Kilis Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC1",
+  "ilKod": "kilis",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/kirikkale.md",
+  "ad": "Kırıkkale Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR71",
+  "ilKod": "kirikkale",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/kirklareli.md",
+  "ad": "Kırklareli Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR21",
+  "ilKod": "kirklareli",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/kirsehir.md",
+  "ad": "Kırşehir Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR71",
+  "ilKod": "kirsehir",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/kocaeli.md",
+  "ad": "Kocaeli Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR42",
+  "ilKod": "kocaeli",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/konya.md",
+  "ad": "Konya Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR52",
+  "ilKod": "konya",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/kutahya.md",
+  "ad": "Kütahya Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR33",
+  "ilKod": "kutahya",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/malatya.md",
+  "ad": "Malatya Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB1",
+  "ilKod": "malatya",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/manisa.md",
+  "ad": "Manisa Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR33",
+  "ilKod": "manisa",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/mardin.md",
+  "ad": "Mardin Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC3",
+  "ilKod": "mardin",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/mersin.md",
+  "ad": "Mersin Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR62",
+  "ilKod": "mersin",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/mugla.md",
+  "ad": "Muğla Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR32",
+  "ilKod": "mugla",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/mus.md",
+  "ad": "Muş Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB2",
+  "ilKod": "mus",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/nevsehir.md",
+  "ad": "Nevşehir Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR71",
+  "ilKod": "nevsehir",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/nigde.md",
+  "ad": "Niğde Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR71",
+  "ilKod": "nigde",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/ordu.md",
+  "ad": "Ordu Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR90",
+  "ilKod": "ordu",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/osmaniye.md",
+  "ad": "Osmaniye Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR63",
+  "ilKod": "osmaniye",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/rize.md",
+  "ad": "Rize Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR90",
+  "ilKod": "rize",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/sakarya.md",
+  "ad": "Sakarya Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR42",
+  "ilKod": "sakarya",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/samsun.md",
+  "ad": "Samsun Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR83",
+  "ilKod": "samsun",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/sanliurfa.md",
+  "ad": "Şanlıurfa Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC2",
+  "ilKod": "sanliurfa",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/siirt.md",
+  "ad": "Siirt Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC3",
+  "ilKod": "siirt",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/sinop.md",
+  "ad": "Sinop Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR82",
+  "ilKod": "sinop",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/sirnak.md",
+  "ad": "Şırnak Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC3",
+  "ilKod": "sirnak",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/sivas.md",
+  "ad": "Sivas Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR72",
+  "ilKod": "sivas",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/tekirdag.md",
+  "ad": "Tekirdağ Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR21",
+  "ilKod": "tekirdag",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/tokat.md",
+  "ad": "Tokat Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR83",
+  "ilKod": "tokat",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/trabzon.md",
+  "ad": "Trabzon Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR90",
+  "ilKod": "trabzon",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/tunceli.md",
+  "ad": "Tunceli Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB1",
+  "ilKod": "tunceli",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/usak.md",
+  "ad": "Uşak Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR33",
+  "ilKod": "usak",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/van.md",
+  "ad": "Van Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB2",
+  "ilKod": "van",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/yalova.md",
+  "ad": "Yalova Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR42",
+  "ilKod": "yalova",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/yozgat.md",
+  "ad": "Yozgat Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR72",
+  "ilKod": "yozgat",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
+  "dosya": "docs/veri/rda-turizm/zonguldak.md",
+  "ad": "Zonguldak Turizm Konaklama İstatistikleri (RDA)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR81",
+  "ilKod": "zonguldak",
+  "kategori": "turizm",
+  "kaynak": "https://rda.ktlsr.com"
+ },
+ {
   "dosya": "docs/veri/tuik-sanayi/adana.md",
   "ad": "Adana Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
   "tur": "il_raporu",
