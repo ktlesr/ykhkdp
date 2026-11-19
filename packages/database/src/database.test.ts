@@ -950,3 +950,41 @@ test("dayanak eşiği yönetici ayarı: varsa setin yerine geçer, yoksa ya da g
     await sql`delete from ayar where anahtar = 'dayanak_esigi'`;
   }
 });
+
+test("eski talimatla puanlananlar yeniden puanlamaya alınır; güncel, düzeltilmiş ve karar verilmiş kayıt kalır", async () => {
+  const { eskiPuanlariYenile } = await import("./sorgu.ts");
+  const yonetici = await girisBaglami("yonetici@ykh.local");
+  const ajans = await girisBaglami("ajans@ykh.local");
+  const sql = sahip();
+  const [d] = await sql<{ id: string }[]>`select id from donem where il_kod = 'usak' limit 1`;
+  const ekle = async (baslik: string, durum: string, surum: string, duzeltilmis: boolean) => {
+    const [o] = await sql<{ id: string }[]>`
+      insert into oneri (donem_id, gonderen_ref, koken, baslik, gerekce, durum, onaylayan_ref, onay_zamani)
+      values (${d.id}, ${yonetici.gonderenRef}, 'yeni', ${baslik}, ${"Yeniden puanlama sınaması için yeterince uzun bir gerekçe metni."},
+              ${durum}::oneri_durumu, ${durum === "listede" ? yonetici.gonderenRef : null}, ${durum === "listede" ? sql`now()` : null})
+      returning id`;
+    await sql`
+      insert into degerlendirme (oneri_id, puanlar, kriter_dayanagi, dayanak, gerekce, alintilar, model_snapshot, prompt_surum, duzeltilmis_puanlar, duzelten_ref)
+      values (${o.id}, ${sql.json({ plan_uyumu: 50 })}, ${sql.json({})}, 10, 'Sınama gerekçesi.', ${sql.json([])}, 'sinama-model', ${surum},
+              ${duzeltilmis ? sql.json({ plan_uyumu: 70 }) : null}, ${duzeltilmis ? yonetici.gonderenRef : null})`;
+    return Number(o.id);
+  };
+  const eski = await ekle("Yeniden puan sınaması eski sürüm", "onay_bekliyor", "degerlendirme-v1", false);
+  const guncel = await ekle("Yeniden puan sınaması güncel sürüm", "onay_bekliyor", "degerlendirme-v99", false);
+  const duzeltilmis = await ekle("Yeniden puan sınaması ajans düzeltmiş", "onay_bekliyor", "degerlendirme-v1", true);
+  const onayli = await ekle("Yeniden puan sınaması onaylanmış", "listede", "degerlendirme-v1", false);
+  const durum = async (id: number) => (await sql<{ durum: string }[]>`select durum::text from oneri where id = ${id}`)[0].durum;
+  try {
+    assert.equal((await eskiPuanlariYenile(ajans, {}, "degerlendirme-v99")).ok, false, "ajans başlatamaz");
+    const r = await eskiPuanlariYenile(yonetici, { ilKod: "usak" }, "degerlendirme-v99");
+    assert.ok(r.ok && r.adet >= 1);
+    assert.equal(await durum(eski), "degerlendiriliyor", "eski sürümle puanlanan kuyruğa döner");
+    assert.equal(await durum(guncel), "onay_bekliyor", "güncel sürüm yeniden puanlanmaz");
+    assert.equal(await durum(duzeltilmis), "onay_bekliyor", "ajansın düzelttiği puan silinmez");
+    assert.equal(await durum(onayli), "listede", "onaylanmış karar geri çekilmez");
+    const iz = await sql<{ detay: { oncekiSurum: string } }[]>`select detay from denetim where eylem = 'oneri_yeniden_puanlaniyor' and nesne_id = ${String(eski)}`;
+    assert.equal(iz[0]?.detay.oncekiSurum, "degerlendirme-v1");
+  } finally {
+    await sql`delete from oneri where id in ${sql([eski, guncel, duzeltilmis, onayli])}`;
+  }
+});

@@ -9,6 +9,8 @@ import { AsamaRozeti } from "@/components/degerlendirme-durumu.tsx";
 import { SatirIslemleri } from "@/components/satir-islemleri.tsx";
 import { TopluSil } from "@/components/toplu-sil.tsx";
 import { TakilanlariSirala } from "@/components/takilanlari-sirala.tsx";
+import { EskiPuanlar } from "@/components/eski-puanlar.tsx";
+import { PROMPTLAR } from "@ykh/ai-gateway";
 import { Bag, Baslik, Bos, Rozet, Sayfa, UstBar } from "@/components/ui.tsx";
 import { baglam, kullanici } from "@/lib/oturum.ts";
 import { KAPALI } from "@/lib/site.ts";
@@ -145,6 +147,14 @@ export default async function Onay({ searchParams }: { searchParams: Promise<{ b
           />
         )}
 
+        {yonetici && (
+          <EskiPuanlar
+            adet={kuyruk.filter((o) => o.durum === "onay_bekliyor" && o.prompt_surum && o.prompt_surum !== PROMPTLAR.degerlendirme.surum && !o.duzeltildi).length}
+            surum={PROMPTLAR.degerlendirme.surum}
+            bolge={bolge ?? ""}
+            il={il ?? ""}
+          />
+        )}
         <TakilanlariSirala
           adet={kuyruk.filter((o) => o.durum === "degerlendiriliyor" && o.hatali).length}
           bolge={bolge ?? ""}

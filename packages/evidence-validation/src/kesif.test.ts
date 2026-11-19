@@ -391,3 +391,16 @@ test("tamamlayıcı eşleme: notu doğrulanmış alıntıyla örtüşen boş kri
   assert.deepEqual(s.kriterDayanagi.plan_uyumu, [], "alıntıyla örtüşmeyen not bağlanmaz");
   assert.equal(s.duzeltilenler.filter((d) => d.kod === "esleme_tamamlandi").length, 1);
 });
+
+test("boşluk farkı birebirliği bozmaz: kaynakta yapışık yazılmış kelimeler doğru boşlukla alıntılanabilir", async () => {
+  const { alintilariDogrula } = await import("./index.ts");
+  // Canlıdaki kaynak (TR33 Bölge Planı): PDF çıkarımı satır sonlarında kelimeleri yapıştırmış.
+  const kaynak = "ağırlık geri dönüşüm iplik üzerinedir. İlde40 numaradan (ince) 2 numaraya (kalın) kadar geniş bir yelpazedeiplik üretilmesine rağmen örme konusunda ilde bir girişimbulunmamaktadır.";
+  const paket = paketKur("p", [{ id: 5, ad: "Bölge Planı", metin: kaynak }]);
+  const dogru = "İlde 40 numaradan (ince) 2 numaraya (kalın) kadar geniş bir yelpazede iplik üretilmesine rağmen örme konusunda ilde bir girişim bulunmamaktadır.";
+  const s = alintilariDogrula([{ no: 1, belge_id: 1, alinti: dogru }], paket);
+  assert.equal(s.dogrulanan.length, 1, JSON.stringify(s.dusenler));
+  // Harf değişirse boşluk toleransı kurtarmaz.
+  const degismis = dogru.replace("geniş bir yelpazede", "dar bir yelpazede").replace("rağmen örme", "rağmen dokuma");
+  assert.equal(alintilariDogrula([{ no: 1, belge_id: 1, alinti: degismis }], paket).dogrulanan.length, 0);
+});

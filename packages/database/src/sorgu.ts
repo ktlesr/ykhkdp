@@ -620,7 +620,7 @@ export async function adaylariGetir(b: Baglam, d: DonemKaydi): Promise<Aday[]> {
 export async function onayKuyrugu(b: Baglam, donemId?: number) {
   if (b.rol === "anonim" || !onaylayabilir(b.rol)) return [];
   return islem(b, (sql) =>
-    sql<(ListeSatiri & { il: string; il_kod: string; yil: string; dayanak_esigi: number;
+    sql<(ListeSatiri & { il: string; il_kod: string; yil: string; dayanak_esigi: number; prompt_surum: string | null;
       asama: string | null; hatali: boolean; gonderildi: string; kesif_id: number | null; resmi_yillar: string | null;
       ajans_kod: string; ajans: string; kisa_ad: string | null; gonderen_rol: string; misafir: boolean })[]>`
       select o.id, o.baslik, o.kesif_id,
@@ -631,7 +631,7 @@ export async function onayKuyrugu(b: Baglam, donemId?: number) {
              o.nace_kaynagi, o.durum, o.olusturuldu::text,
              -- Ekran saati: ürün Türkiye'de, oturum saat diliminden bağımsız.
              to_char(o.olusturuldu at time zone 'Europe/Istanbul', 'DD.MM.YYYY HH24:MI') as gonderildi,
-             coalesce(g.dayanak, 0) as dayanak,
+             coalesce(g.dayanak, 0) as dayanak, g.prompt_surum,
              g.gerekce as ai_gerekce,
              (g.duzeltilmis_puanlar is not null) as duzeltildi,
              -- Stratejik puan: "en iyi en üstte" sıralaması ve öngörü için.
@@ -1654,6 +1654,49 @@ export async function takilanlariYenidenSirala(
     `;
     for (const x of r) {
       await denetle(sql, b, "oneri_yeniden_siraya", "oneri", Number(x.id), { toplu: true, oncekiDeneme: x.deneme, oncekiHata: x.son_hata.slice(0, 300) });
+    }
+    return { ok: true as const, adet: r.length };
+  });
+}
+
+/**
+ * Eski talimatla puanlanmış, onay bekleyen önerileri yeniden puanlamaya alır —
+ * yalnızca yönetici.
+ *
+ * Puanlama talimatı ya da belge seçimi değişince kuyruktaki puanlar eski
+ * kuralla kalır. Tek yol kuyruğu silip keşfi baştan koşturmaktı; oysa değişen
+ * yalnızca puanlamadır. Bu işlem keşfin ürettiği ADAYLARI korur: öneri
+ * `degerlendiriliyor`a döner, işleyici yeniden puanlar; önceki değerlendirme
+ * yeni kayıt yazılırken denetime taşınır (`degerlendirme_degistirildi`).
+ *
+ * Yalnızca `onay_bekliyor` ve değerlendirmesinin talimat sürümü güncel
+ * OLMAYAN öneriler: onaylanmış ya da reddedilmiş karar ve ajansın puanını
+ * düzelttiği kayıt etkilenmez (düzeltme emeği silinmesin).
+ */
+export async function eskiPuanlariYenile(
+  b: Baglam, kapsam: { ajansKod?: string | null; ilKod?: string | null }, guncelSurum: string,
+): Promise<{ ok: true; adet: number } | { ok: false; mesaj: string }> {
+  if (b.rol !== "yonetici") return { ok: false, mesaj: "Toplu yeniden puanlamayı yalnızca yönetici başlatabilir." };
+  return islem(b, async (sql) => {
+    const r = await sql<{ id: string; surum: string | null }[]>`
+      update oneri o set durum = 'degerlendiriliyor', deneme = 0, asama = null, asama_zamani = null, son_hata = null,
+        guncellendi = now()
+      from (
+        select o2.id, g.prompt_surum as surum from oneri o2
+        join degerlendirme g on g.oneri_id = o2.id
+        join donem dn on dn.id = o2.donem_id
+        join il i on i.kod = dn.il_kod
+        where o2.durum = 'onay_bekliyor' and g.prompt_surum is distinct from ${guncelSurum}
+          and g.duzeltilmis_puanlar is null and app_il_kapsaminda(i.kod)
+          ${kapsam.ilKod ? sql`and i.kod = ${kapsam.ilKod}` : sql``}
+          ${kapsam.ajansKod ? sql`and i.ajans_kod = ${kapsam.ajansKod}` : sql``}
+        for update of o2
+      ) eski
+      where o.id = eski.id
+      returning o.id, eski.surum
+    `;
+    for (const x of r) {
+      await denetle(sql, b, "oneri_yeniden_puanlaniyor", "oneri", Number(x.id), { toplu: true, oncekiSurum: x.surum, yeniSurum: guncelSurum });
     }
     return { ok: true as const, adet: r.length };
   });

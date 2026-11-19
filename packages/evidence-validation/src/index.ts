@@ -164,20 +164,35 @@ function alintiGeciyor(belgeMetni: string, alinti: string): boolean {
   // tutulduğu için uydurma ek de kayda giriyordu).
   if (!parcalar.length) return false;
 
-  let konum = 0;
-  for (const p of parcalar) {
-    const i = metin.indexOf(p, konum);
-    if (i === -1) return false;
-    konum = i + p.length;
-  }
-  return true;
+  const sirayla = (kaynak: string, aranan: readonly string[]) => {
+    let konum = 0;
+    for (const p of aranan) {
+      const i = kaynak.indexOf(p, konum);
+      if (i === -1) return false;
+      konum = i + p.length;
+    }
+    return true;
+  };
+  if (sirayla(metin, parcalar)) return true;
+  /**
+   * BOŞLUK FARKI birebirliği bozmaz. PDF çıkarımı satır sonlarında kelimeleri
+   * yapıştırabiliyor (ölçüldü, TR33 Bölge Planı s. 137: "İlde40 numaradan …
+   * yelpazedeiplik … girişimbulunmamaktadır"); model cümleyi doğru boşluklarla
+   * yazınca harfi harfine aynı alıntı düşüyordu. İkinci denemede iki taraftan
+   * da boşluklar atılır: harfler, rakamlar ve noktalama aynı sırada geçmek
+   * zorunda. Çok kısa parça boşluksuz aramada rastlantıyla eşleşebileceği için
+   * bu yol yalnızca 20+ karakterlik parçalarda kullanılır.
+   */
+  const sikistir = (x: string) => x.replace(/ /g, "");
+  const dar = parcalar.map(sikistir);
+  return dar.every((p) => p.length >= 20) && sirayla(sikistir(metin), dar);
 }
 
 /** Notun kendisi belgede dayanak olmadığını söylüyorsa tamamlayıcı eşleme yapılmaz. */
 const DAYANAK_YOK = /bulunmamakta|bulunamam|bulunmuyor|yer almamakta|yer almıyor|veri yok|dayanak yok|belirtilmemi|değinilmemi/iu;
 
 /** Kısaltılmış alıntının en az boyu ve özgün alıntıya oranı; altı uydurma sayılır ve düşer. */
-const KISMI_EN_AZ = 60;
+const KISMI_EN_AZ = 40;
 const KISMI_ORAN = 0.6;
 
 /**

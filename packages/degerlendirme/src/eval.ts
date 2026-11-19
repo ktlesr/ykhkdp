@@ -77,6 +77,7 @@ async function birKosu(o: Ornek): Promise<{ olcum: Olcum; ret: string | null }> 
     ilKod: o.ilKod,
     ajansKod: o.ajansKod,
     sorgu: `${o.baslik} ${o.gerekce}`,
+    baslik: o.baslik,
   });
   if (!belgeler.length) {
     throw new Error(`${o.ad}: belge paketi boş. 'pnpm db:belgeler' çalıştırın.`);

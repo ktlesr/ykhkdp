@@ -203,7 +203,7 @@ test("'latest' alias reddedilir", () => {
 test("model snapshot ve prompt sürümü her sonuçta taşınır", async () => {
   const s = await degerlendir(cevrimdisiIstemci(), "claude-opus-5-20260101", GIRDI);
   assert.equal(s.modelSnapshot, "claude-opus-5-20260101");
-  assert.equal(s.promptSurum, "degerlendirme-v13");
+  assert.equal(s.promptSurum, "degerlendirme-v15");
 });
 
 // ── prompt injection ───────────────────────────────────────────────────────
@@ -420,10 +420,10 @@ test("yerellik tavanı mekanik: gerekçede birebir geçen yerel olgu yoksa üç 
   assert.deepEqual([oku(bos).yerel_potansiyel, oku(bos).deger_zinciri, oku(bos).uygulanabilirlik], [YERELLIK_TAVANI, YERELLIK_TAVANI, YERELLIK_TAVANI]);
   assert.equal(oku(bos).pazar_talep, 80, "yerellik dışındaki kriterlere dokunulmaz");
 
-  // Model belgeden ya da kendinden yazarsa (gerekçede geçmiyor) tavan yine uygulanır.
-  const uydurma = kur(["İlde tekstil organize sanayi bölgesi ve boyahane kapasitesi mevcuttur"]);
-  assert.ok(yerellikTavani(uydurma, gerekce));
-  assert.equal(oku(uydurma).yerel_potansiyel, YERELLIK_TAVANI);
+  // Gerekçeyle hiçbir içerik kökü paylaşmayan ifade (belgeden, başka konu) tavanı kaldıramaz.
+  const ilgisiz = kur(["Bor türevleri ve ileri malzeme için girdi avantajı sağlar"]);
+  assert.ok(yerellikTavani(ilgisiz, gerekce));
+  assert.equal(oku(ilgisiz).yerel_potansiyel, YERELLIK_TAVANI);
 
   // Zaten tavanın altındaki puan yükseltilmez.
   const dusuk = { puanlar: puanlar(20), yerel_olgu: [] } as never as Parameters<typeof yerellikTavani>[0];

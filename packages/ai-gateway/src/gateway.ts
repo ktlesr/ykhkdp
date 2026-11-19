@@ -175,7 +175,7 @@ const yereAtif = (gerekce: string, yerler: readonly string[]) =>
  *
  *  a) ifadelerden biri gerekçede BİREBİR geçiyor; ya da
  *  b) gerekçe bir yere atıf yapıyor (il/ilçe adı, "ilde", "il içinde"…) VE
- *     ifadelerden birinin içerik köklerinin en az yüzde 60'ı gerekçede geçiyor.
+ *     ifadelerden biri gerekçeyle en az bir içerik kökünü paylaşıyor.
  *
  * (b) şunun için var: model ifadeyi gerekçe yerine belgeden kopyalayabiliyor
  * ("Kaolen ve feldspat rezervleri il içindedir" ↔ gerekçe: "kaolen ve feldspat
@@ -191,8 +191,11 @@ export function yerellikTavani(veri: z.infer<typeof SEMALAR.degerlendirme>, gere
   const gecen = veri.yerel_olgu.filter((o) => {
     const s2 = sade(o);
     if (s2.length >= 3 && metin.includes(s2)) return true;
-    const k = kokler(o);
-    return atif && k.length >= 2 && k.filter((x) => gKok.has(x)).length / k.length >= 0.6;
+    // (b): gerekçe yere atıf yapıyorsa, modelin gösterdiği olgunun gerekçeyle en az
+    // bir içerik kökünü paylaşması yeter. Model ifadeyi çoğunlukla BELGEDEN, sayısıyla
+    // kopyalıyor ("badem üretim miktarı 18.235 ton"); yüzde 60 örtüşme şartı yerele
+    // bağlı gerekçeye yanlışlıkla tavan uygulatıyordu (ölçüldü: iki koşunun biri).
+    return atif && kokler(o).some((x) => gKok.has(x));
   });
   if (gecen.length) return null;
   let indirilen = 0;

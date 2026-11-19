@@ -410,6 +410,46 @@ alıntı %50'den %0'a; belge dayanağı 55–59. Kalan zayıflık: model sekiz
 kriterin 3–4'ünü belgeye bağlıyor ve karşı görüş üretimi tutarsız (bazı
 koşularda hiç yok); eval'in bu iki kontrolü hâlâ kırık.
 
+### Belge paketi · konu ilgisi belirler
+
+Canlıda yeniden koşulan keşifte dayanak yine düşük geldi (ilk 15 adayın
+ortancası 39) ve neden modelde değil pakette çıktı (2026-11-19): Adıyaman'da
+BADEM adayının 12 parçalık paketinin 9'u ARICILIK raporundandı. Model dürüstçe
+"belgelerde badem işleme hakkında veri yok" diyor, kriterleri bağlamıyordu.
+`belgePaketi` üç yerden değişti:
+
+- **Konunun kökleri sıralamayı belirler.** Başlığın ayırt edici kökleri
+  (`konuSorgusu`: kalıp kelimeler ve yer adları atılır, önek eşleşmesi —
+  "badem" kökü "bademin"i de bulur) genel kelimelerin dört katı sayılır. Eski
+  sorgu başlık ve gerekçenin İLK 12 kelimesini OR'luyordu; "üretim, ürün,
+  Türkiye, ilde" gibi her raporda geçen kelimeler belirleyici oluyordu. Keşif
+  gerekçesindeki etiketli ekler (çıkarım, temel unsur) aramaya girmez.
+- **Kapsam mutlak öncelik değildir.** Eski sıra "önce il, sonra ajans, sonra
+  ulusal" idi; kütüphane yüklenince her ilin onlarca raporu paketi tek başına
+  doldurdu, konunun kendi raporu (ajans kapsamlı) ve plan belgeleri giremedi.
+  Şimdi bütün kapsamlar tek sıralamada yarışır (il ×1,5, ajans ×1,2) ve plan
+  belgelerine (ajans, ulusal) en çok ikişer yer ayrılır.
+- **Konuyla eşleşen parça ezilmez.** Dayanak hesabındaki örtüşme pakette en iyi
+  parçaya oranlanıyordu; çok güçlü tek bir parça diğerlerini 0,1'e indiriyordu.
+  Konu köküyle eşleşen (ya da zorunlu) parça en az 0,7 örtüşme alır; yalnızca
+  genel kelimelerle örtüşen parça için eski kural geçerlidir.
+
+Talimata **işlenmiş örnek** eklendi (`degerlendirme-v15`): dört uydurma
+cümlenin beş kritere nasıl dağıtıldığını gösterir. Zayıf modelde eşlemeyi
+tutarlı kılan bu oldu. Ölçüldü (gemma, aynı aday): canlıda dayanak 20; yeni
+paketle 16–50 (oynak); işlenmiş örnekle dört koşuda 35, 37, 42, 48.
+
+### Eski talimatla puanlananları yeniden puanlama
+
+`/onay` içinde, yalnızca yönetici: değerlendirmesinin talimat sürümü güncel
+olmayan, onay bekleyen öneri varsa "Eskileri yeniden puanla". Öneri
+`degerlendiriliyor`a döner ve işleyici yeniden puanlar; keşfin ürettiği adaylar
+ve metinleri kalır, önceki değerlendirme yeni kayıt yazılırken denetime
+taşınır. Onaylanmış, reddedilmiş ve ajansın puanını düzelttiği kayıt
+etkilenmez. Talimat ya da belge seçimi değişince kuyruğu silip keşfi baştan
+koşturmanın yerini alır. Durum makinesine yeni bir geçiş eklenmedi: geçiş
+yalnızca bu toplu işlemle ve yalnızca eski sürümlü kayıtlar için yapılır.
+
 ### Dayanak eşiği yönetici ayarı
 
 Eşik ağırlık setinde duruyordu ve değiştirmek yeni set sürümü gerektiriyordu.
