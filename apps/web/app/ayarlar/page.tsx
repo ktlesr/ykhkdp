@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ayarGetir, bolgeler, kayitliKullanicilar, raporSatirlari } from "@ykh/database";
 import { onaylayabilir } from "@ykh/domain";
 import { KullaniciListesi } from "@/components/kullanici-listesi.tsx";
 import { PaletSecici } from "@/components/palet-secici.tsx";
 import { ModelSecici } from "@/components/model-secici.tsx";
+import { EsikAyari } from "@/components/esik-ayari.tsx";
 import { MODEL_SECENEKLERI } from "@ykh/ai-gateway";
 import { RaporTablosu } from "@/components/rapor-tablosu.tsx";
 import { Bag, Baslik, Bos, Sayfa, UstBar, Uyari } from "@/components/ui.tsx";
@@ -35,17 +37,30 @@ import { paletGecerli } from "@/lib/palet.ts";
  */
 export const metadata: Metadata = { title: "Ayarlar", robots: KAPALI };
 
-export default async function Ayarlar() {
+export default async function Ayarlar({ searchParams }: {
+  searchParams: Promise<{ bolum?: string | string[] }>;
+}) {
   const k = await kullanici();
   if (!k) redirect("/giris?hedef=%2Fayarlar");
   if (!onaylayabilir(k.rol)) redirect("/oneri");
 
   const yonetici = k.rol === "yonetici";
+  const menu = [
+    { id: "rapor", ad: "Toplu rapor" },
+    ...(yonetici ? [
+      { id: "kullanicilar", ad: "Kullanıcılar" },
+      { id: "gorunum", ad: "Görünüm" },
+      { id: "model", ad: "Yargı modeli" },
+      { id: "tarama", ad: "Tarama modeli" },
+    ] : []),
+  ];
+  const { bolum: istenen } = await searchParams;
+  const bolum = menu.find((m) => m.id === istenen)?.id ?? "rapor";
   const b = await baglam();
   const [secili, satirlar, kullanicilar, modelAyari, taramaAyari] = await Promise.all([
-    yonetici ? ayarGetir(b, "palet").then(paletGecerli) : Promise.resolve(null),
-    raporSatirlari(b),
-    yonetici ? kayitliKullanicilar(b) : Promise.resolve([]),
+    yonetici && bolum === "gorunum" ? ayarGetir(b, "palet").then(paletGecerli) : Promise.resolve(null),
+    bolum === "rapor" ? raporSatirlari(b) : Promise.resolve([]),
+    yonetici && bolum === "kullanicilar" ? kayitliKullanicilar(b) : Promise.resolve([]),
     yonetici ? ayarGetir(b, "ai_model") : Promise.resolve(null),
     yonetici ? ayarGetir(b, "ai_tarama_model") : Promise.resolve(null),
   ]);
@@ -96,7 +111,7 @@ export default async function Ayarlar() {
   // ponytail: ajans listesi için ayrı sorgu yazılmadı — `bolgeler()` zaten
   // 26 ajansı getiriyor. İl listesi fazladan geliyor; ölçülebilir bir yük
   // olursa dar bir sorgu eklenir.
-  const ajanslar = yonetici ? (await bolgeler(b)).map((x) => ({ kod: x.ajans_kod, ad: x.ajans })) : [];
+  const ajanslar = yonetici && bolum === "kullanicilar" ? (await bolgeler(b)).map((x) => ({ kod: x.ajans_kod, ad: x.ajans })) : [];
 
   const raporBolgeleri = [...new Set(satirlar.map((r) => r.ajans_kod))];
   const degerlendirilen = satirlar.filter((r) => r.dayanak !== null).length;
@@ -132,8 +147,23 @@ export default async function Ayarlar() {
           {yonetici ? "Ayarlar" : "Bölge raporu"}
         </Baslik>
 
+        <div className="mt-8 grid items-start gap-6 md:grid-cols-[190px_minmax(0,1fr)]">
+          <nav aria-label="Ayar bölümleri" className="flex flex-wrap gap-1 border border-hairline bg-surface p-2 md:sticky md:top-6 md:flex-col">
+            {menu.map((m) => (
+              <Link
+                key={m.id}
+                href={`/ayarlar?bolum=${m.id}`}
+                aria-current={bolum === m.id ? "page" : undefined}
+                className={`min-h-11 px-3 py-3 text-[13.5px] ${bolum === m.id ? "bg-navy font-medium text-white" : "text-ink-soft hover:bg-paper"}`}
+              >
+                {m.ad}
+              </Link>
+            ))}
+          </nav>
+          <div className="min-w-0">
         {/* ── Toplu rapor ─────────────────────────────────────────────── */}
-        <section className="mt-9">
+        {bolum === "rapor" && (
+        <section>
           <h2 className="font-display text-[24px] font-medium leading-[1.15]">Toplu öneri raporu</h2>
           <p className="mt-2 max-w-[78ch] text-[13.5px] leading-[1.55] text-ink-soft">
             {yonetici ? (
@@ -172,10 +202,11 @@ export default async function Ayarlar() {
             <RaporTablosu satirlar={satirlar} />
           )}
         </section>
+        )}
 
         {/* ── Kayıtlı kullanıcılar · KVKK ─────────────────────────────── */}
-        {yonetici && (
-          <section className="mt-12 border-t border-t-hairline pt-9">
+        {yonetici && bolum === "kullanicilar" && (
+          <section>
             <h2 className="font-display text-[24px] font-medium leading-[1.15]">Kayıtlı kullanıcılar</h2>
             <p className="mt-2 max-w-[78ch] text-[13.5px] leading-[1.55] text-ink-soft">
               Kişisel veri <b className="font-medium">maskeli</b> gösterilir; açık değer veritabanından bu ekrana
@@ -189,26 +220,22 @@ export default async function Ayarlar() {
               kişisel veri gidince sıralama ve denetim izi bozulmaz.
             </Uyari>
 
-            {kullanicilar.length === 0 ? (
-              <Bos baslik="Kayıtlı hesap yok.">Misafir gönderenlerin kimlik satırı hiç oluşturulmaz.</Bos>
-            ) : (
-              <KullaniciListesi kullanicilar={kullanicilar} ajanslar={ajanslar} />
-            )}
+            <KullaniciListesi kullanicilar={kullanicilar} ajanslar={ajanslar} />
           </section>
         )}
 
         {/* ── Görünüm ─────────────────────────────────────────────────── */}
-        {yonetici && secili && (
-          <section className="mt-12 border-t border-t-hairline pt-9">
+        {yonetici && bolum === "gorunum" && secili && (
+          <section>
             <h2 className="font-display text-[24px] font-medium leading-[1.15]">Görünüm</h2>
             <PaletSecici secili={secili} />
           </section>
         )}
 
         {/* ── Yapay zekâ modeli ───────────────────────────────────────── */}
-        {yonetici && (
-          <section className="mt-12 border-t border-t-hairline pt-9">
-            <h2 className="font-display text-[24px] font-medium leading-[1.15]">Yapay zekâ modeli</h2>
+        {yonetici && (bolum === "model" || bolum === "tarama") && (
+          <section>
+            <h2 className="font-display text-[24px] font-medium leading-[1.15]">{bolum === "tarama" ? "Tarama modeli" : "Yargı modeli"}</h2>
             <p className="mt-3 max-w-[78ch] text-[13.5px] leading-[1.55] text-ink-soft text-pretty">
               İki iş, iki model. <b className="font-medium text-ink">Yargı</b> az çağrı yapar ama muhakeme ister.{" "}
               <b className="font-medium text-ink">Tarama</b> çağrıların büyük çoğunluğudur (her belge parçası bir kez)
@@ -218,6 +245,7 @@ export default async function Ayarlar() {
               otomatik olarak OpenAI GPT-5.4 mini devralır ve künyeye o yazılır; ret ya da kimlik hatası devredilmez.
               Değişiklik arka plan işleyicisine en geç yarım dakikada yansır.
             </p>
+            {bolum === "model" && <>
             <ModelSecici
               gorev="yargi"
               baslik="Yargı · değerlendirme, karşı görüş, NACE, aday üretimi"
@@ -225,15 +253,19 @@ export default async function Ayarlar() {
               secili={modelAyari ?? "varsayilan"}
               secenekler={modelSecenekleri}
             />
-            <ModelSecici
+            <div className="mt-6">{yonetici && <EsikAyari />}</div>
+            </>}
+            {bolum === "tarama" && <ModelSecici
               gorev="tarama"
               baslik="Tarama · kanıt çıkarımı"
               aciklama="Belgelerden pasaj seçer; seçilen her pasaj kaynakta birebir doğrulanır. Bir parça hangi modelle taranmış olursa olsun bir kez taranır: model değişince yalnızca henüz taranmamış parçalar yeni modelle taranır."
               secili={taramaAyari ?? "ayni"}
               secenekler={taramaSecenekleri}
-            />
+            />}
           </section>
         )}
+          </div>
+        </div>
       </Sayfa>
     </>
   );

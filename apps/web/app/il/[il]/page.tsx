@@ -244,7 +244,15 @@ export default async function IlSiralamasi({ params }: { params: Promise<{ il: s
                 {d.yil} için en çok {d.set.slotSayisi} asıl ve {d.set.slotSayisi} yedek yatırım konusu. Puanın en
                 büyük payı (<b>%{yerellik}</b>) “neden burada?” sorusuna ait; resmî konulara{" "}
                 <b className="num">+{h.pay}</b> devamlılık payı, dayanak eşiği{" "}
-                <span className="num">{d.set.dayanakEsigi}</span>, sürüm <span className="num">{d.set.surum}</span>.{" "}
+                <span className="num">{d.set.dayanakEsigi}</span>
+                {/* Gizli katsayı yok: eşik yönetici ayarından geliyorsa setteki değerle birlikte yazar. */}
+                {d.setEsigi !== d.set.dayanakEsigi && (
+                  <>
+                    {" "}
+                    (yönetici ayarı; ağırlık setindeki değer <span className="num">{d.setEsigi}</span>)
+                  </>
+                )}
+                , sürüm <span className="num">{d.set.surum}</span>.{" "}
                 {d.kalibre ? (
                   <>Ağırlıkları {d.ajans} yayımladı.</>
                 ) : (

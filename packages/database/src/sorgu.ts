@@ -127,6 +127,11 @@ export type DonemKaydi = {
    * katsayı yok" — hangi sayının nereden geldiği görünmeli.
    */
   kalibre: boolean;
+  /**
+   * Ağırlık setinin KENDİ dayanak eşiği. `set.dayanakEsigi` geçerli eşiktir;
+   * ikisi farklıysa yönetici ayarı devrededir ve ekran bunu yazar.
+   */
+  setEsigi: number;
 };
 
 export async function donemGetir(b: Baglam, ilKod: string, yil?: string): Promise<DonemKaydi | null> {
@@ -134,11 +139,13 @@ export async function donemGetir(b: Baglam, ilKod: string, yil?: string): Promis
     const [d] = await sql<
       { donem_id: number; il_kod: string; il: string; ajans_kod: string; ajans: string; yil: string;
         surum: string; set_ajans_kod: string | null; agirliklar: Record<Kriter, number>;
-        devamlilik_payi: number; dayanak_esigi: number; devir_siniri: number; slot_sayisi: number }[]
+        devamlilik_payi: number; dayanak_esigi: number; set_esigi: number; devir_siniri: number; slot_sayisi: number }[]
     >`
       select d.id as donem_id, i.kod as il_kod, i.ad as il, a.kod as ajans_kod, a.ad as ajans, d.yil,
              s.surum, s.ajans_kod as set_ajans_kod, s.agirliklar, s.devamlilik_payi,
-             s.dayanak_esigi, s.devir_siniri, s.slot_sayisi
+             -- Geçerli eşik: yönetici ayarı varsa o, yoksa setin kendi değeri (0024).
+             dayanak_esigi_gecerli(s.dayanak_esigi) as dayanak_esigi, s.dayanak_esigi as set_esigi,
+             s.devir_siniri, s.slot_sayisi
       from donem d
       join il i on i.kod = d.il_kod
       join ajans a on a.kod = i.ajans_kod
@@ -164,6 +171,7 @@ export async function donemGetir(b: Baglam, ilKod: string, yil?: string): Promis
       ajansKod: d.ajans_kod, ajans: d.ajans, yil: d.yil, set,
       /** false ise ulusal varsayılan uygulanıyor; ekran bunu yazmak zorunda */
       kalibre: d.set_ajans_kod !== null,
+      setEsigi: d.set_esigi,
     };
   });
 }
@@ -630,8 +638,8 @@ export async function onayKuyrugu(b: Baglam, donemId?: number) {
              case when g.oneri_id is null then 0
                   else oneri_taban_puani(o.id, s.agirliklar) end as taban,
              i.ad as il, i.kod as il_kod, d.yil,
-             -- Eşik dönemin ağırlık setinden: detay ekranıyla aynı etiket.
-             s.dayanak_esigi,
+             -- Geçerli eşik (yönetici ayarı ya da set): detay ekranıyla aynı etiket.
+             dayanak_esigi_gecerli(s.dayanak_esigi) as dayanak_esigi,
              o.asama, (o.son_hata is not null) as hatali
       from oneri o
       join donem d on d.id = o.donem_id

@@ -278,9 +278,9 @@ test("KVKK: kimlik pseudonimleşir, öneri zinciri korunur", async () => {
 // ── migration geri alma ────────────────────────────────────────────────────
 
 test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
-  const geri = await asagi(23);
+  const geri = await asagi(24);
   assert.deepEqual(geri, [
-    "0023_kriter_notlari", "0022_belge_kategori", "0021_oneri_silme", "0020_kapsam_coklu_nace", "0019_model_ayari", "0018_tarama_reddi", "0017_aday_kesfi", "0016_degerlendirme_asamasi", "0015_kimlik_silme_yetkisi", "0014_rol_atama", "0013_gonderen_ajans", "0012_oneri_gizlilik", "0011_ulusal_agirlik", "0010_ayar", "0009_yatirim_konusu", "0008_ajans_kisa_ad", "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus",
+    "0024_dayanak_esigi_ayari", "0023_kriter_notlari", "0022_belge_kategori", "0021_oneri_silme", "0020_kapsam_coklu_nace", "0019_model_ayari", "0018_tarama_reddi", "0017_aday_kesfi", "0016_degerlendirme_asamasi", "0015_kimlik_silme_yetkisi", "0014_rol_atama", "0013_gonderen_ajans", "0012_oneri_gizlilik", "0011_ulusal_agirlik", "0010_ayar", "0009_yatirim_konusu", "0008_ajans_kisa_ad", "0007_misafir", "0006_yakin_kopya", "0005_karsi_gorus",
     "0004_kriter_dayanagi", "0003_kurallar", "0002_rls", "0001_sema",
   ]);
   const [{ n }] = await sahip()<{ n: string }[]>`
@@ -291,7 +291,7 @@ test("migration geri alınabilir ve yeniden uygulanabilir", async () => {
   assert.deepEqual(await yukari(), [
     "0001_sema", "0002_rls", "0003_kurallar", "0004_kriter_dayanagi",
     "0005_karsi_gorus", "0006_yakin_kopya", "0007_misafir", "0008_ajans_kisa_ad", "0009_yatirim_konusu", "0010_ayar", "0011_ulusal_agirlik", "0012_oneri_gizlilik", "0013_gonderen_ajans", "0014_rol_atama",
-    "0015_kimlik_silme_yetkisi", "0016_degerlendirme_asamasi", "0017_aday_kesfi", "0018_tarama_reddi", "0019_model_ayari", "0020_kapsam_coklu_nace", "0021_oneri_silme", "0022_belge_kategori", "0023_kriter_notlari",
+    "0015_kimlik_silme_yetkisi", "0016_degerlendirme_asamasi", "0017_aday_kesfi", "0018_tarama_reddi", "0019_model_ayari", "0020_kapsam_coklu_nace", "0021_oneri_silme", "0022_belge_kategori", "0023_kriter_notlari", "0024_dayanak_esigi_ayari",
   ]);
   await seed();
 });
@@ -919,5 +919,34 @@ test("emekli veri belgesi kurulumda kaldırılır; kanıtı da gider, benzer adl
     assert.equal(await emekliVeriyiKaldir(), 0, "ikinci koşu hiçbir şey yapmaz");
   } finally {
     await sql`delete from belge where ad in (${emekli}, ${kalan})`;
+  }
+});
+
+test("dayanak eşiği yönetici ayarı: varsa setin yerine geçer, yoksa ya da geçersizse setin değeri", async () => {
+  const { donemGetir, ayarYaz } = await import("./sorgu.ts");
+  const yonetici = await girisBaglami("yonetici@ykh.local");
+  const ajans = await girisBaglami("ajans@ykh.local");
+  const anonim = { gonderenRef: null, rol: "anonim" } as const;
+  const sql = sahip();
+  const oku = async (b: Baglam) => (await donemGetir(b, "usak"))!;
+  try {
+    const once = await oku(yonetici);
+    assert.equal(once.set.dayanakEsigi, once.setEsigi, "ayar yokken geçerli eşik setin eşiğidir");
+
+    assert.equal(await ayarYaz(yonetici, "dayanak_esigi", "45"), true);
+    const sonra = await oku(yonetici);
+    assert.equal(sonra.set.dayanakEsigi, 45);
+    assert.equal(sonra.setEsigi, once.setEsigi, "setin kendi değeri değişmez ve ayrıca görünür");
+    // Eşik herkes için AYNI: ayar satırını okuyamayan bağlam da geçerli eşiği görür.
+    assert.equal((await oku(ajans)).set.dayanakEsigi, 45);
+    assert.equal((await oku(anonim)).set.dayanakEsigi, 45);
+
+    for (const gecersiz of ["", "abc", "150", "-5"]) {
+      await ayarYaz(yonetici, "dayanak_esigi", gecersiz);
+      assert.equal((await oku(yonetici)).set.dayanakEsigi, once.setEsigi, `geçersiz ayar (“${gecersiz}”) yok sayılır`);
+    }
+    await assert.rejects(ayarYaz(ajans, "dayanak_esigi", "10"), "ajans eşiği değiştiremez");
+  } finally {
+    await sql`delete from ayar where anahtar = 'dayanak_esigi'`;
   }
 });
