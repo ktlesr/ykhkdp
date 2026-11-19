@@ -2410,6 +2410,1626 @@
   "kaynak": "https://www.mta.gov.tr/api/files/view/cms-files/folders/1155/zonguldak-madenler.pdf"
  },
  {
+  "dosya": "docs/veri/tuik-sanayi/adana.md",
+  "ad": "Adana Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR62",
+  "ilKod": "adana",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/adiyaman.md",
+  "ad": "Adıyaman Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC1",
+  "ilKod": "adiyaman",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/afyonkarahisar.md",
+  "ad": "Afyonkarahisar Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR33",
+  "ilKod": "afyonkarahisar",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/agri.md",
+  "ad": "Ağrı Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRA2",
+  "ilKod": "agri",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/aksaray.md",
+  "ad": "Aksaray Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR71",
+  "ilKod": "aksaray",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/amasya.md",
+  "ad": "Amasya Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR83",
+  "ilKod": "amasya",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/ankara.md",
+  "ad": "Ankara Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR51",
+  "ilKod": "ankara",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/antalya.md",
+  "ad": "Antalya Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR61",
+  "ilKod": "antalya",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/ardahan.md",
+  "ad": "Ardahan Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRA2",
+  "ilKod": "ardahan",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/artvin.md",
+  "ad": "Artvin Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR90",
+  "ilKod": "artvin",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/aydin.md",
+  "ad": "Aydın Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR32",
+  "ilKod": "aydin",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/balikesir.md",
+  "ad": "Balıkesir Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR22",
+  "ilKod": "balikesir",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/bartin.md",
+  "ad": "Bartın Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR81",
+  "ilKod": "bartin",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/batman.md",
+  "ad": "Batman Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC3",
+  "ilKod": "batman",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/bayburt.md",
+  "ad": "Bayburt Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRA1",
+  "ilKod": "bayburt",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/bilecik.md",
+  "ad": "Bilecik Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR41",
+  "ilKod": "bilecik",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/bingol.md",
+  "ad": "Bingöl Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB1",
+  "ilKod": "bingol",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/bitlis.md",
+  "ad": "Bitlis Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB2",
+  "ilKod": "bitlis",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/bolu.md",
+  "ad": "Bolu Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR42",
+  "ilKod": "bolu",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/burdur.md",
+  "ad": "Burdur Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR61",
+  "ilKod": "burdur",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/bursa.md",
+  "ad": "Bursa Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR41",
+  "ilKod": "bursa",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/canakkale.md",
+  "ad": "Çanakkale Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR22",
+  "ilKod": "canakkale",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/cankiri.md",
+  "ad": "Çankırı Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR82",
+  "ilKod": "cankiri",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/corum.md",
+  "ad": "Çorum Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR83",
+  "ilKod": "corum",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/denizli.md",
+  "ad": "Denizli Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR32",
+  "ilKod": "denizli",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/diyarbakir.md",
+  "ad": "Diyarbakır Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC2",
+  "ilKod": "diyarbakir",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/duzce.md",
+  "ad": "Düzce Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR42",
+  "ilKod": "duzce",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/edirne.md",
+  "ad": "Edirne Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR21",
+  "ilKod": "edirne",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/elazig.md",
+  "ad": "Elâzığ Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB1",
+  "ilKod": "elazig",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/erzincan.md",
+  "ad": "Erzincan Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRA1",
+  "ilKod": "erzincan",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/erzurum.md",
+  "ad": "Erzurum Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRA1",
+  "ilKod": "erzurum",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/eskisehir.md",
+  "ad": "Eskişehir Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR41",
+  "ilKod": "eskisehir",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/gaziantep.md",
+  "ad": "Gaziantep Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC1",
+  "ilKod": "gaziantep",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/giresun.md",
+  "ad": "Giresun Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR90",
+  "ilKod": "giresun",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/gumushane.md",
+  "ad": "Gümüşhane Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR90",
+  "ilKod": "gumushane",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/hakkari.md",
+  "ad": "Hakkâri Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB2",
+  "ilKod": "hakkari",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/hatay.md",
+  "ad": "Hatay Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR63",
+  "ilKod": "hatay",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/igdir.md",
+  "ad": "Iğdır Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRA2",
+  "ilKod": "igdir",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/isparta.md",
+  "ad": "Isparta Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR61",
+  "ilKod": "isparta",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/istanbul.md",
+  "ad": "İstanbul Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR10",
+  "ilKod": "istanbul",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/izmir.md",
+  "ad": "İzmir Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR31",
+  "ilKod": "izmir",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/kahramanmaras.md",
+  "ad": "Kahramanmaraş Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR63",
+  "ilKod": "kahramanmaras",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/karabuk.md",
+  "ad": "Karabük Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR81",
+  "ilKod": "karabuk",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/karaman.md",
+  "ad": "Karaman Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR52",
+  "ilKod": "karaman",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/kars.md",
+  "ad": "Kars Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRA2",
+  "ilKod": "kars",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/kastamonu.md",
+  "ad": "Kastamonu Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR82",
+  "ilKod": "kastamonu",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/kayseri.md",
+  "ad": "Kayseri Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR72",
+  "ilKod": "kayseri",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/kilis.md",
+  "ad": "Kilis Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC1",
+  "ilKod": "kilis",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/kirikkale.md",
+  "ad": "Kırıkkale Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR71",
+  "ilKod": "kirikkale",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/kirklareli.md",
+  "ad": "Kırklareli Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR21",
+  "ilKod": "kirklareli",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/kirsehir.md",
+  "ad": "Kırşehir Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR71",
+  "ilKod": "kirsehir",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/kocaeli.md",
+  "ad": "Kocaeli Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR42",
+  "ilKod": "kocaeli",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/konya.md",
+  "ad": "Konya Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR52",
+  "ilKod": "konya",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/kutahya.md",
+  "ad": "Kütahya Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR33",
+  "ilKod": "kutahya",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/malatya.md",
+  "ad": "Malatya Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB1",
+  "ilKod": "malatya",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/manisa.md",
+  "ad": "Manisa Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR33",
+  "ilKod": "manisa",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/mardin.md",
+  "ad": "Mardin Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC3",
+  "ilKod": "mardin",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/mersin.md",
+  "ad": "Mersin Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR62",
+  "ilKod": "mersin",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/mugla.md",
+  "ad": "Muğla Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR32",
+  "ilKod": "mugla",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/mus.md",
+  "ad": "Muş Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB2",
+  "ilKod": "mus",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/nevsehir.md",
+  "ad": "Nevşehir Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR71",
+  "ilKod": "nevsehir",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/nigde.md",
+  "ad": "Niğde Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR71",
+  "ilKod": "nigde",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/ordu.md",
+  "ad": "Ordu Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR90",
+  "ilKod": "ordu",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/osmaniye.md",
+  "ad": "Osmaniye Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR63",
+  "ilKod": "osmaniye",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/rize.md",
+  "ad": "Rize Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR90",
+  "ilKod": "rize",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/sakarya.md",
+  "ad": "Sakarya Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR42",
+  "ilKod": "sakarya",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/samsun.md",
+  "ad": "Samsun Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR83",
+  "ilKod": "samsun",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/sanliurfa.md",
+  "ad": "Şanlıurfa Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC2",
+  "ilKod": "sanliurfa",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/siirt.md",
+  "ad": "Siirt Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC3",
+  "ilKod": "siirt",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/sinop.md",
+  "ad": "Sinop Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR82",
+  "ilKod": "sinop",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/sirnak.md",
+  "ad": "Şırnak Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC3",
+  "ilKod": "sirnak",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/sivas.md",
+  "ad": "Sivas Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR72",
+  "ilKod": "sivas",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/tekirdag.md",
+  "ad": "Tekirdağ Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR21",
+  "ilKod": "tekirdag",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/tokat.md",
+  "ad": "Tokat Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR83",
+  "ilKod": "tokat",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/trabzon.md",
+  "ad": "Trabzon Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR90",
+  "ilKod": "trabzon",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/tunceli.md",
+  "ad": "Tunceli Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB1",
+  "ilKod": "tunceli",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/usak.md",
+  "ad": "Uşak Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR33",
+  "ilKod": "usak",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/van.md",
+  "ad": "Van Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB2",
+  "ilKod": "van",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/yalova.md",
+  "ad": "Yalova Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR42",
+  "ilKod": "yalova",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/yozgat.md",
+  "ad": "Yozgat Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR72",
+  "ilKod": "yozgat",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-sanayi/zonguldak.md",
+  "ad": "Zonguldak Sanayi ve Madencilik Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR81",
+  "ilKod": "zonguldak",
+  "kategori": "sanayi",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/adana.md",
+  "ad": "Adana Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR62",
+  "ilKod": "adana",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/adiyaman.md",
+  "ad": "Adıyaman Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC1",
+  "ilKod": "adiyaman",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/afyonkarahisar.md",
+  "ad": "Afyonkarahisar Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR33",
+  "ilKod": "afyonkarahisar",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/agri.md",
+  "ad": "Ağrı Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRA2",
+  "ilKod": "agri",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/aksaray.md",
+  "ad": "Aksaray Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR71",
+  "ilKod": "aksaray",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/amasya.md",
+  "ad": "Amasya Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR83",
+  "ilKod": "amasya",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/ankara.md",
+  "ad": "Ankara Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR51",
+  "ilKod": "ankara",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/antalya.md",
+  "ad": "Antalya Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR61",
+  "ilKod": "antalya",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/ardahan.md",
+  "ad": "Ardahan Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRA2",
+  "ilKod": "ardahan",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/artvin.md",
+  "ad": "Artvin Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR90",
+  "ilKod": "artvin",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/aydin.md",
+  "ad": "Aydın Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR32",
+  "ilKod": "aydin",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/balikesir.md",
+  "ad": "Balıkesir Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR22",
+  "ilKod": "balikesir",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/bartin.md",
+  "ad": "Bartın Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR81",
+  "ilKod": "bartin",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/batman.md",
+  "ad": "Batman Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC3",
+  "ilKod": "batman",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/bayburt.md",
+  "ad": "Bayburt Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRA1",
+  "ilKod": "bayburt",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/bilecik.md",
+  "ad": "Bilecik Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR41",
+  "ilKod": "bilecik",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/bingol.md",
+  "ad": "Bingöl Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB1",
+  "ilKod": "bingol",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/bitlis.md",
+  "ad": "Bitlis Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB2",
+  "ilKod": "bitlis",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/bolu.md",
+  "ad": "Bolu Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR42",
+  "ilKod": "bolu",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/burdur.md",
+  "ad": "Burdur Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR61",
+  "ilKod": "burdur",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/bursa.md",
+  "ad": "Bursa Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR41",
+  "ilKod": "bursa",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/canakkale.md",
+  "ad": "Çanakkale Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR22",
+  "ilKod": "canakkale",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/cankiri.md",
+  "ad": "Çankırı Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR82",
+  "ilKod": "cankiri",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/corum.md",
+  "ad": "Çorum Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR83",
+  "ilKod": "corum",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/denizli.md",
+  "ad": "Denizli Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR32",
+  "ilKod": "denizli",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/diyarbakir.md",
+  "ad": "Diyarbakır Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC2",
+  "ilKod": "diyarbakir",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/duzce.md",
+  "ad": "Düzce Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR42",
+  "ilKod": "duzce",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/edirne.md",
+  "ad": "Edirne Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR21",
+  "ilKod": "edirne",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/elazig.md",
+  "ad": "Elâzığ Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB1",
+  "ilKod": "elazig",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/erzincan.md",
+  "ad": "Erzincan Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRA1",
+  "ilKod": "erzincan",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/erzurum.md",
+  "ad": "Erzurum Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRA1",
+  "ilKod": "erzurum",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/eskisehir.md",
+  "ad": "Eskişehir Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR41",
+  "ilKod": "eskisehir",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/gaziantep.md",
+  "ad": "Gaziantep Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC1",
+  "ilKod": "gaziantep",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/giresun.md",
+  "ad": "Giresun Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR90",
+  "ilKod": "giresun",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/gumushane.md",
+  "ad": "Gümüşhane Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR90",
+  "ilKod": "gumushane",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/hakkari.md",
+  "ad": "Hakkâri Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB2",
+  "ilKod": "hakkari",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/hatay.md",
+  "ad": "Hatay Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR63",
+  "ilKod": "hatay",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/igdir.md",
+  "ad": "Iğdır Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRA2",
+  "ilKod": "igdir",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/isparta.md",
+  "ad": "Isparta Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR61",
+  "ilKod": "isparta",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/istanbul.md",
+  "ad": "İstanbul Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR10",
+  "ilKod": "istanbul",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/izmir.md",
+  "ad": "İzmir Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR31",
+  "ilKod": "izmir",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/kahramanmaras.md",
+  "ad": "Kahramanmaraş Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR63",
+  "ilKod": "kahramanmaras",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/karabuk.md",
+  "ad": "Karabük Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR81",
+  "ilKod": "karabuk",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/karaman.md",
+  "ad": "Karaman Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR52",
+  "ilKod": "karaman",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/kars.md",
+  "ad": "Kars Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRA2",
+  "ilKod": "kars",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/kastamonu.md",
+  "ad": "Kastamonu Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR82",
+  "ilKod": "kastamonu",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/kayseri.md",
+  "ad": "Kayseri Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR72",
+  "ilKod": "kayseri",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/kilis.md",
+  "ad": "Kilis Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC1",
+  "ilKod": "kilis",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/kirikkale.md",
+  "ad": "Kırıkkale Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR71",
+  "ilKod": "kirikkale",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/kirklareli.md",
+  "ad": "Kırklareli Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR21",
+  "ilKod": "kirklareli",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/kirsehir.md",
+  "ad": "Kırşehir Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR71",
+  "ilKod": "kirsehir",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/kocaeli.md",
+  "ad": "Kocaeli Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR42",
+  "ilKod": "kocaeli",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/konya.md",
+  "ad": "Konya Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR52",
+  "ilKod": "konya",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/kutahya.md",
+  "ad": "Kütahya Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR33",
+  "ilKod": "kutahya",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/malatya.md",
+  "ad": "Malatya Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB1",
+  "ilKod": "malatya",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/manisa.md",
+  "ad": "Manisa Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR33",
+  "ilKod": "manisa",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/mardin.md",
+  "ad": "Mardin Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC3",
+  "ilKod": "mardin",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/mersin.md",
+  "ad": "Mersin Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR62",
+  "ilKod": "mersin",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/mugla.md",
+  "ad": "Muğla Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR32",
+  "ilKod": "mugla",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/mus.md",
+  "ad": "Muş Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB2",
+  "ilKod": "mus",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/nevsehir.md",
+  "ad": "Nevşehir Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR71",
+  "ilKod": "nevsehir",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/nigde.md",
+  "ad": "Niğde Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR71",
+  "ilKod": "nigde",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/ordu.md",
+  "ad": "Ordu Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR90",
+  "ilKod": "ordu",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/osmaniye.md",
+  "ad": "Osmaniye Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR63",
+  "ilKod": "osmaniye",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/rize.md",
+  "ad": "Rize Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR90",
+  "ilKod": "rize",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/sakarya.md",
+  "ad": "Sakarya Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR42",
+  "ilKod": "sakarya",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/samsun.md",
+  "ad": "Samsun Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR83",
+  "ilKod": "samsun",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/sanliurfa.md",
+  "ad": "Şanlıurfa Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC2",
+  "ilKod": "sanliurfa",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/siirt.md",
+  "ad": "Siirt Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC3",
+  "ilKod": "siirt",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/sinop.md",
+  "ad": "Sinop Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR82",
+  "ilKod": "sinop",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/sirnak.md",
+  "ad": "Şırnak Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRC3",
+  "ilKod": "sirnak",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/sivas.md",
+  "ad": "Sivas Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR72",
+  "ilKod": "sivas",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/tekirdag.md",
+  "ad": "Tekirdağ Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR21",
+  "ilKod": "tekirdag",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/tokat.md",
+  "ad": "Tokat Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR83",
+  "ilKod": "tokat",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/trabzon.md",
+  "ad": "Trabzon Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR90",
+  "ilKod": "trabzon",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/tunceli.md",
+  "ad": "Tunceli Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB1",
+  "ilKod": "tunceli",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/usak.md",
+  "ad": "Uşak Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR33",
+  "ilKod": "usak",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/van.md",
+  "ad": "Van Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TRB2",
+  "ilKod": "van",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/yalova.md",
+  "ad": "Yalova Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR42",
+  "ilKod": "yalova",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/yozgat.md",
+  "ad": "Yozgat Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR72",
+  "ilKod": "yozgat",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
+  "dosya": "docs/veri/tuik-tarim/zonguldak.md",
+  "ad": "Zonguldak Tarım ve Hayvancılık Girişim Sayıları (TÜİK)",
+  "tur": "il_raporu",
+  "yil": "2024",
+  "ajansKod": "TR81",
+  "ilKod": "zonguldak",
+  "kategori": "tarim",
+  "kaynak": "https://nsiws.tuik.gov.tr"
+ },
+ {
   "dosya": "docs/veri/turizm/adana.md",
   "ad": "Adana Turizm Belgeli Tesis İstatistikleri (KTB)",
   "tur": "il_raporu",

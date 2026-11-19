@@ -280,9 +280,18 @@ anında yoksa çağrı açık hatayla durur, başka modele sessizce düşülmez.
 (`gemma4-26b`, vLLM, OpenAI uyumlu `/chat/completions`; adres `ZAFER_AI_URL`,
 anahtar `ZAFER_AI_API_KEY`) yargı ve tarama için seçilebilir. Çıktı
 `response_format: json_schema` ile şemaya zorlanır, Zod yanıtta aynısını
-uygular; doğrulama zinciri değişmez. Sunucu sınırları (dakikada 30 istek, aynı
-anda 4 çağrı, cevap en çok 8.192 token) istemcide karşılanır: en çok 3
-eşzamanlı çağrı, 429'da geri çekilme, kesilen cevap açık hatadır. Limit yedeği
+uygular; doğrulama zinciri değişmez. Sunucu sınırları (2026-11-19'da doğrulandı: anahtar başına dakikada 120 istek
+ve aynı anda en çok 8 süren istek; model aynı anda 4 çağrı işler, fazlası
+sunucuda sırada bekler; cevap en çok 8.192 token) istemcide karşılanır:
+süreç başına en çok `ZAFER_AI_ESZAMANLI` (varsayılan 3) eşzamanlı çağrı — web
+ve işleyici aynı anahtarı AYRI sayar, toplamı 8'i aşarsa fazlası 429 alır —
+429'da geri çekilme, **boşluk döngüsü** kesilip yeniden denenir (2026-11-19):
+şemaya zorlanan çıktıda model JSON'un ortasında sonsuz boşluk yazmaya
+başlayıp 8.192 token sınırında kesilebiliyor — içerik hatası değil, rastgele
+(aynı öneri bir çağrıda 922 token'la bitti, ikincisinde 280 sn boşluk yazdı;
+canlıda 870 önerinin 16'sı üç denemede de takıldı). Sunucu boşluğu sınırlayan
+ayarları yok saydığı için cevap akış olarak okunur, 200 karakterlik kesintisiz
+boşlukta bağlantı kesilir ve çağrı en çok beş kez denenir; kesilen cevap açık hatadır. Limit yedeği
 YOK: yerel model seçildiyse metin başka sağlayıcıya sessizce gitmez. Kalitesi
 henüz ölçülmedi — yargıda kullanmadan önce `YKH_MODEL_SNAPSHOT=gemma4-26b`
 ile eval koşturulmalı. Gömme modeli (anlamsal arama) bağlanmadı.
@@ -566,6 +575,7 @@ eklenir ve sıradan belge gibi taranır — ayrı bir veri hattı yok.
 | MTA il maden ve enerji kaynakları (PDF) | `maden_enerji` | MTA'nın yayımladığı iller | `python tools/veri/mta.py` |
 | TÜİK dış ticaret panosu: il × yıl × fasıl ihracat | `dis_ticaret` | 81 il, son üç yıl | `node tools/veri/dis-ticaret.ts` |
 | KTB turizm belgeli tesisler (il, ilçe, tür, sınıf) | `turizm` | 81 il | `python tools/veri/turizm.py <yıl> <bülten>` |
+| TÜİK veri servisi (SDMX): ekonomik faaliyete göre girişim sayısı (il × NACE sınıfı, 2020–2024) | `tarim` · `sanayi` | 81 il | `node --env-file=.env tools/veri/tuik.ts` |
 | İl sütunlu herhangi bir Excel (teşvik belgeleri, kapasite dökümü…) | seçilir | dosyadaki iller | `python tools/veri/tablo.py …` |
 
 - **Tablo değil cümle.** Veri "Kütahya 2025 yılı ihracatında 69 - Seramik
@@ -597,8 +607,15 @@ eklenir ve sıradan belge gibi taranır — ayrı bir veri hattı yok.
 - Sınırlar: TÜİK panosu il düzeyinde yalnızca **ihracat** verir (ithalat ve
   GTİP 4+ yok), içinde bulunulan yıl tamamlanmamıştır ve öyle yazılır. TOBB
   Sanayi Veritabanı bağlanmadı: sorgu uçları oturum ve reCAPTCHA arkasında.
-  TÜİK'in anahtarlı veri servisi (il düzeyinde girişim, nüfus, tarım) ve
-  girdi-çıktı tabloları da bağlı değil. MTA, dış ticaret ve turizm elle
+  TÜİK'in anahtarlı veri servisinden (2026-11-19) yalnızca girişim sayıları
+  bağlandı: il başına iki belge (tarım-hayvancılık; madencilik-imalat), ilin
+  Türkiye ortalamasına göre yoğunlaştığı faaliyetler önde, en az 3 girişimli
+  sınıflar. Sayı KAYITLI GİRİŞİM sayısıdır, üretim ya da kapasite değil; tarımda
+  kayıt dışı aile işletmeleri sayılmaz ve belge bunu kendi içinde söyler.
+  Servis il düzeyinde bitkisel üretim miktarı ve hayvan sayısı VERMİYOR
+  (katalogdaki 517 veri kümesi tarandı). İl GSYH'si, nüfus, müze ziyaretçisi
+  ve belediye atık verileri serviste var ama bağlanmadı; girdi-çıktı tabloları
+  da bağlı değil. MTA, dış ticaret ve turizm elle
   yeniden üretilir (yılda bir-iki kez değişir); otomatik olan coğrafi işarettir.
 
 ### Konu kapsamı ve çoklu NACE
@@ -673,6 +690,17 @@ keşfin ürettiği, `koken = 'yeni'`, kuyruktaki (değerlendiriliyor / onay
 bekliyor) öneriler. Elle girilen öneri, onaylanmış ya da reddedilmiş kayıt ve
 resmî konu silinmez. İki adımlıdır, gerekçe ister; her kaydın tam görüntüsü
 tek tek denetime yazılır.
+
+### Hatayla duranları yeniden sıraya alma
+
+`/onay` içinde, ajans ve yönetici: değerlendirmesi hatayla durmuş öneri varsa
+"Hepsini yeniden değerlendir". Deneme hakkı dolan öneriyi işleyici bir daha
+almaz; bu işlem deneme sayacını ve hatayı sıfırlar, işleyici sırayla yeniden
+dener. Yalnızca `degerlendiriliyor` durumunda ve son hatası olan öneriler:
+süren koşu ve karar verilmiş kayıt etkilenmez, metin ve puan değişmez. Kapsam
+ekrandaki süzgeç ve veritabanında `app_il_kapsaminda` (ajans kendi bölgesi).
+Silme olmadığı için onay adımı yok; her öneri önceki hatasıyla denetime yazılır
+(`oneri_yeniden_siraya`).
 
 ### Yakın kopya · AI yok
 
