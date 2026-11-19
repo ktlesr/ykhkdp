@@ -449,3 +449,12 @@ test("yerellik tavanı: belgeden kopyalanan ifade gerekçeyle örtüşüyorsa ve
   const c = kur(["Bor türevleri ve ileri malzeme üretimi için girdi avantajı sağlar"]);
   assert.ok(yerellikTavani(c, yerel, ["Kütahya"]));
 });
+
+test("yerellik tavanı: cümle başındaki büyük İ ile yazılmış 'İlde' yere atıftır", async () => {
+  const { yerellikTavani } = await import("./gateway.ts");
+  // Canlıdaki keşif adayı (Adıyaman, badem): gerekçe il adını anmıyor, "İlde" diye başlıyor.
+  const gerekce = "İlde badem ekim alanı büyüklüğü bakımından Türkiye'de ilk sırada yer almaktadır. İklim karakteri badem üretimine son derece uygundur.";
+  const v = { puanlar: puanlar(80), yerel_olgu: ["İlimiz badem ekim alanında Türkiye'de ilk sırada yer almaktadır"] } as never as Parameters<typeof yerellikTavani>[0];
+  assert.equal(yerellikTavani(v, gerekce, ["Adıyaman", ""]), null);
+  assert.equal(v.puanlar.find((p) => p.kriter === "yerel_potansiyel")!.puan, 80);
+});

@@ -160,7 +160,9 @@ const katla = (x: string) => x.toLocaleLowerCase("tr-TR").replace(/ı/g, "i").re
 /** Gerekçe bir YERE atıf yapıyor mu: il ya da ilçe adı, ya da "ilde / il içinde / ilimiz / ilçe / yöre". */
 const YER_SOZU = /(?<![\p{L}])(ilde|ilin|ilimiz\p{L}*|il içinde|il sınırları|ilçe\p{L}*|yöre\p{L}*)(?![\p{L}])/iu;
 const yereAtif = (gerekce: string, yerler: readonly string[]) =>
-  YER_SOZU.test(gerekce) || yerler.some((y) => y.length >= 3 && katla(gerekce).includes(katla(y)));
+  // tr-TR küçük harfle: JavaScript'te /i bayrağı "İ"yi "i" ile eşlemez ve cümle başındaki
+  // "İlde …" yere atıf sayılmıyordu (canlıda: keşif adaylarına yanlışlıkla tavan uygulandı).
+  YER_SOZU.test(gerekce.toLocaleLowerCase("tr-TR")) || yerler.some((y) => y.length >= 3 && katla(gerekce).includes(katla(y)));
 
 /**
  * "Neden burada?" tavanını MEKANİK uygular ve uygulandıysa nedenini döndürür.
