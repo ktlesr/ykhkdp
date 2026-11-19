@@ -369,6 +369,64 @@ yeni ekran yok.
   engellemez (puan zaten geçerli); ama doğrulanmamış alıntı taşıyan bir itiraz
   kaydedilmez.
 
+### Zayıf modelde puanlama · mekanik destekler
+
+Yargı modeli olarak Zafer AI (gemma4-26b) eval'i geçemedi (2026-11-19):
+yerele bağlı gerekçeye de tavan puanı verdi (40 ↔ genel 33), alıntıların
+yarısını birebir yazamadı, kriterleri henüz yazmadığı alıntı numaralarına
+dayandırdı; canlıda puanlanan 399 adayın 255'i dayanak eşiğinin altında kaldı.
+Kurum bu modelde kalmayı seçti; modelin takdirine bırakılan üç şey koda alındı
+(`degerlendirme-v13`). Hepsi denetime yazılır; GPT aynı talimatla eval'i
+geçer.
+
+- **Yerellik tavanı mekaniktir** (`yerellikTavani`). Model yalnızca kanıtı
+  gösterir: yatırımcının gerekçesindeki ile özgü olgu ifadeleri (`yerel_olgu`).
+  Tavan (üç yerellik kriteri en fazla 40) şu ikisinden biri sağlanmazsa KODLA
+  uygulanır: ifade gerekçede birebir geçer; ya da gerekçe bir yere atıf yapar
+  (il/ilçe adı, "ilde", "il içinde"…) ve ifadenin içerik köklerinin en az
+  %60'ı gerekçede geçer. İkinci yol şunun için var: model ifadeyi gerekçe
+  yerine belgeden kopyalayabiliyor (ölçüldü: üç koşunun ikisinde yerele bağlı
+  gerekçeye yanlışlıkla tavan uygulandı). Hangi ifadenin "ile özgü" olduğu
+  hâlâ modelin yargısıdır.
+- **Kopyalama kayması kısaltılır, onarılmaz** (`birebirKismi`). Model uzun
+  cümleyi alıntılarken tek kelimeyi değiştirebiliyor. Alıntının pakette
+  BİREBİR geçen en uzun kesintisiz kısmı (en az 60 karakter ve alıntının
+  %60'ı) kaynaktan kesilerek kaydedilir; daha kısaysa alıntı düşer. Kayda
+  modelin yazmadığı ya da belgede olmayan tek karakter girmez; "kaydedilen
+  her alıntı pakette birebir geçer" kuralı aynen durur.
+- **Tamamlayıcı eşleme.** Model bir kriterin notunu doğrulanmış bir alıntıdaki
+  olguya dayandırıp eşlemeyi boş bırakabiliyor. Boş kalan kriterde notun
+  içerik köklerinin en az yarısı doğrulanmış bir alıntıda geçiyorsa eşleme
+  kodla kurulur. Modelin verdiği eşleme değiştirilmez; "belgede veri
+  bulunmamaktadır" diyen not bağlanmaz. Sözcüksel bir ölçüdür: alıntının o
+  kriteri gerçekten destekleyip desteklemediği yine ajansın yargısıdır. Bu,
+  "eşlemeyi yalnızca model beyan eder" kuralından bilinçli bir ayrılmadır.
+- **Alıntılar puanlardan önce yazılır** (şema alan sırası); talimat, belgede
+  veri bulunmamasının puanı sıfırlamadığını söyler (dayanak ayrıca ölçülür).
+
+Ölçüldü (gemma4-26b, örnek başına üç koşu): yerele bağlı ↔ genel gerekçe
+40 ↔ 33'ten 87 ↔ 35'e; belgeli ↔ belgesiz konu 35 ↔ 10'dan 75 ↔ 32'ye; düşen
+alıntı %50'den %0'a; belge dayanağı 55–59. Kalan zayıflık: model sekiz
+kriterin 3–4'ünü belgeye bağlıyor ve karşı görüş üretimi tutarsız (bazı
+koşularda hiç yok); eval'in bu iki kontrolü hâlâ kırık.
+
+### Dayanak eşiği yönetici ayarı
+
+Eşik ağırlık setinde duruyordu ve değiştirmek yeni set sürümü gerektiriyordu.
+Oysa eşik puanlayan MODELE bağlı çıkıyor: aynı belgelerle GPT sekiz kriterin
+sekizini belgeye bağlıyor (dayanak 83–95), gemma yalnızca ilgili gördüğü
+üç-dördünü (55–59); 55'lik eşik birine rahat, diğerine yazı-tura.
+
+Yönetici eşiği `ayar.dayanak_esigi` olarak yazar (0–100; `EsikAyari`
+bileşeni, `esikEylemi`). Değer varsa BÜTÜN ağırlık setlerinin eşiğinin yerine
+geçer; boşsa ya da geçersizse setin kendi değeri kullanılır
+(`dayanak_esigi_gecerli`, migration 0024). Gizli katsayı değildir: il ekranı
+geçerli eşiği kaynağıyla yazar ("yönetici ayarı; ağırlık setindeki değer N"),
+değişiklik denetime düşer. Sıralama hesapla oluştuğu için değişiklik hemen
+etkilidir; hiçbir puan, dayanak ya da karar değişmez. Eşik herkes için aynıdır:
+fonksiyon `security definer`, çünkü ayar satırını okuyamayan yatırımcı kendi
+önerisinde farklı bir eşik görürdü.
+
 ### Kriter notu ve ana çerçeve notu
 
 Puan alanında yalnızca puan, yüzde ve kaynak referansı vardı; "bu puan neden

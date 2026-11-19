@@ -55,7 +55,9 @@ export type HataKodu =
   | "kriter_kumesi"
   | "alinti_no_gecersiz"
   | "alinti_no_tekrar"
-  | "alinti_atif_duzeltildi";
+  | "alinti_atif_duzeltildi"
+  | "alinti_kisaltildi"
+  | "esleme_tamamlandi";
 
 export type Hata = { kod: HataKodu; mesaj: string };
 
@@ -171,6 +173,44 @@ function alintiGeciyor(belgeMetni: string, alinti: string): boolean {
   return true;
 }
 
+/** Notun kendisi belgede dayanak olmadığını söylüyorsa tamamlayıcı eşleme yapılmaz. */
+const DAYANAK_YOK = /bulunmamakta|bulunamam|bulunmuyor|yer almamakta|yer almıyor|veri yok|dayanak yok|belirtilmemi|değinilmemi/iu;
+
+/** Kısaltılmış alıntının en az boyu ve özgün alıntıya oranı; altı uydurma sayılır ve düşer. */
+const KISMI_EN_AZ = 60;
+const KISMI_ORAN = 0.6;
+
+/**
+ * Alıntının pakette BİREBİR geçen en uzun kesintisiz kısmı — kelime sınırında
+ * başlar ve biter, kaynağın özgün metniyle döner. "…" ile birleştirilmiş
+ * alıntıda denenmez. Yeterince uzun bir kısım yoksa `null`: o alıntı düşer.
+ */
+function birebirKismi(alinti: string, paket: Paket): string | null {
+  const temiz = alinti.replace(/^[\s"'“”«»]+|[\s"'“”«»]+$/g, "");
+  if (/…|\.{3,}/.test(temiz)) return null;
+  const q = normalize(temiz);
+  const esik = Math.max(KISMI_EN_AZ, Math.ceil(q.length * KISMI_ORAN));
+  if (q.length < esik) return null;
+  const baslar = [0, ...[...q.matchAll(/ /g)].map((m) => m.index + 1)];
+  const sonlar = [...[...q.matchAll(/ /g)].map((m) => m.index), q.length];
+  let en: { belge: Paket["belgeler"][number]; parca: string } | null = null;
+  for (const b of paket.belgeler) {
+    if (!b.pakete_dahil) continue;
+    const metin = normalize(b.metin);
+    for (const s of baslar) {
+      if (q.length - s < Math.max(esik, (en?.parca.length ?? 0) + 1)) break;
+      let bitis = -1;
+      for (const e of sonlar) {
+        if (e <= s) continue;
+        if (!metin.includes(q.slice(s, e))) break;
+        bitis = e;
+      }
+      if (bitis - s >= esik && bitis - s > (en?.parca.length ?? 0)) en = { belge: b, parca: q.slice(s, bitis) };
+    }
+  }
+  return en ? kaynaktanCikar(en.belge.metin, en.parca) : null;
+}
+
 /**
  * Alıntı listesini paket metnine karşı doğrular ve `no` → konum haritası kurar.
  *
@@ -214,8 +254,29 @@ export function alintilariDogrula(
   const metniBul = (alinti: string) =>
     paket.belgeler.find((b) => b.pakete_dahil && alintiGeciyor(b.metin, alinti));
 
+  /**
+   * KOPYALAMA KAYMASI. Model uzun bir cümleyi alıntılarken tek bir kelimeyi
+   * değiştirebiliyor (ölçüldü, gemma4-26b: "tekstil sektöründe geri dönüşümün"
+   * yerine "tekstil geri dönüşümünün"; 19 alıntının 4'ü, hepsinde metnin yarıdan
+   * fazlası birebir). Alıntı bütünüyle düşünce kriter dayanaksız kalıyordu.
+   * Çözüm onarmak DEĞİL kısaltmak: alıntının pakette BİREBİR geçen en uzun
+   * kesintisiz kısmı kaydedilir ve metin kaynaktan kesilir. Kayda modelin
+   * yazmadığı ya da belgede olmayan tek karakter girmez; kural ("kaydedilen her
+   * alıntı pakette birebir geçer") aynen durur. Kısaltma denetime yazılır.
+   */
+  const hazir = alintilar.map((a) => {
+    if (metniBul(a.alinti)) return a;
+    const k = birebirKismi(a.alinti, paket);
+    if (!k) return a;
+    duzeltilenler.push({
+      kod: "alinti_kisaltildi",
+      mesaj: `Alıntı “${a.alinti.slice(0, 60)}…” belgede bütünüyle geçmiyor; birebir geçen kısmı (“${k.slice(0, 60)}…”) kaynaktan kesilerek alındı.`,
+    });
+    return { ...a, alinti: k };
+  });
+
   const konum = new Map<number, number>();
-  for (const a of alintilar) {
+  for (const a of hazir) {
     let belge = paket.belgeler.find((b) => b.yerel === a.belge_id);
 
     // Paket dışı belge GÜVENLİK ihlalidir: model onu görmüş olamaz → sert ret.
@@ -354,7 +415,7 @@ export function degerlendirmeyiDogrula(
   cikti: {
     gerekce: string;
     alintilar: readonly Alinti[];
-    puanlar: readonly { kriter: string; puan: number; alinti_no?: readonly number[] }[];
+    puanlar: readonly { kriter: string; puan: number; alinti_no?: readonly number[]; not?: string }[];
   },
   paket: Paket,
   /** kriter → puandaki pay; dayanak kapsamasını ağırlıklandırır */
@@ -391,6 +452,39 @@ export function degerlendirmeyiDogrula(
       konum,
       dusenler,
     );
+  }
+
+  /**
+   * TAMAMLAYICI EŞLEME. Model bir kriterin notunu doğrulanmış bir alıntıdaki
+   * olguya dayandırıp "alinti_no"yu boş bırakabiliyor (ölçüldü, gemma4-26b:
+   * sekiz kriterin yalnızca üçünü bağladı; notlar belgeden söz ettiği hâlde
+   * dayanak eşiğin çevresinde kaldı). Boş kalan kriterde not, doğrulanmış bir
+   * alıntıyla sözcüksel olarak örtüşüyorsa (notun içerik köklerinin en az
+   * yarısı o alıntıda) eşleme kodla kurulur ve denetime yazılır.
+   *
+   * Yalnızca BOŞ eşleme tamamlanır; modelin verdiği eşleme değiştirilmez.
+   * "Belgede veri bulunmamaktadır" diyen not hiçbir alıntıya bağlanmaz.
+   * ponytail: sözcüksel örtüşme, anlamsal destek değil (gerekçe kuralıyla aynı
+   * ölçü); alıntının o kriteri gerçekten destekleyip desteklemediği yine ajansın
+   * yargısıdır ve kriter satırında alıntının kaynağı görünür.
+   */
+  for (const p of cikti.puanlar) {
+    if (kriterDayanagi[p.kriter]?.length || !p.not || DAYANAK_YOK.test(p.not)) continue;
+    const k = [...new Set(kokler(p.not))];
+    if (k.length < 3) continue;
+    let en = -1;
+    let enOran = 0;
+    dogrulanan.forEach((a, i) => {
+      const kaynak = new Set(kokler(a.alinti));
+      const oran = k.filter((x) => kaynak.has(x)).length / k.length;
+      if (oran > enOran) { enOran = oran; en = i; }
+    });
+    if (en < 0 || enOran < GEREKCE_ORTUSME_ESIGI) continue;
+    kriterDayanagi[p.kriter] = [en];
+    duzeltilenler.push({
+      kod: "esleme_tamamlandi",
+      mesaj: `${p.kriter} kriterinin notu “${dogrulanan[en].alinti.slice(0, 60)}…” alıntısıyla örtüşüyor; model eşlemeyi boş bırakmıştı, tamamlandı.`,
+    });
   }
 
   // Uydurma eşiği YALNIZCA belgede bulunamayan alıntıları sayar; numaralandırma

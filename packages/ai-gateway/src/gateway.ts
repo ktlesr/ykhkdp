@@ -127,6 +127,10 @@ export async function degerlendir(
   if (r.maliyet) meta.modelSnapshot = r.maliyet.model;
   if (!r.ok) return { ...r, ...meta };
 
+  // Yerellik tavanı MEKANİK: modelin gösterdiği yerel olgu gerekçede birebir yoksa
+  // üç yerellik kriteri tavana indirilir (bkz. `yerellikTavani`).
+  const tavan = yerellikTavani(r.veri, girdi.gerekce, [girdi.il, girdi.ilce ?? ""]);
+
   const dogrulama = degerlendirmeyiDogrula(r.veri, girdi.paket, girdi.agirliklar ?? {});
   if (!dogrulama.gecerli) {
     return { ok: false, asama: "dayanak", hatalar: dogrulama.hatalar.map((h) => h.mesaj), maliyet: r.maliyet, ...meta };
@@ -139,10 +143,66 @@ export async function degerlendir(
     dogrulanan: dogrulama.dogrulanan,
     kriterDayanagi: dogrulama.kriterDayanagi,
     dusenler: dogrulama.dusenler.map((h) => h.mesaj),
-    duzeltilenler: dogrulama.duzeltilenler.map((h) => h.mesaj),
+    duzeltilenler: [...dogrulama.duzeltilenler.map((h) => h.mesaj), ...(tavan ? [tavan] : [])],
     maliyet: r.maliyet,
     ...meta,
   };
+}
+
+/** Yerellik tavanı: gerekçede ile özgü somut olgu yoksa bu üç kriter en fazla bu kadar alır. */
+export const YERELLIK_TAVANI = 40;
+const YERELLIK_KRITERLERI = ["yerel_potansiyel", "deger_zinciri", "uygulanabilirlik"];
+const sade = (x: string) => x.toLocaleLowerCase("tr-TR").replace(/[’‘`´ʼ]/g, "'").replace(/[\s"“”«».,;:!?()]+/g, " ").trim();
+
+/** İçerik kelimesi kökleri (5+ harfli kelimelerin ilk 5 harfi); doğrulayıcıdaki ölçünün aynısı. */
+const kokler = (x: string) => [...new Set(x.toLocaleLowerCase("tr-TR").split(/[^\p{L}\p{N}]+/u).filter((w) => w.length >= 5).map((w) => w.slice(0, 5)))];
+const katla = (x: string) => x.toLocaleLowerCase("tr-TR").replace(/ı/g, "i").replace(/ğ/g, "g").replace(/ü/g, "u").replace(/ş/g, "s").replace(/ö/g, "o").replace(/ç/g, "c");
+/** Gerekçe bir YERE atıf yapıyor mu: il ya da ilçe adı, ya da "ilde / il içinde / ilimiz / ilçe / yöre". */
+const YER_SOZU = /(?<![\p{L}])(ilde|ilin|ilimiz\p{L}*|il içinde|il sınırları|ilçe\p{L}*|yöre\p{L}*)(?![\p{L}])/iu;
+const yereAtif = (gerekce: string, yerler: readonly string[]) =>
+  YER_SOZU.test(gerekce) || yerler.some((y) => y.length >= 3 && katla(gerekce).includes(katla(y)));
+
+/**
+ * "Neden burada?" tavanını MEKANİK uygular ve uygulandıysa nedenini döndürür.
+ *
+ * Tavan talimatta yazıyordu ama uygulaması modele kalmıştı ve model tutarsızdı
+ * (ölçüldü, gemma4-26b: bir sürümde yerele bağlı gerekçeye de tavan uyguladı —
+ * 40; düzeltilince genel gerekçeye de yüksek puan verdi — 67). Şimdi model
+ * yalnızca KANITI gösterir: yatırımcının gerekçesindeki ile özgü olgu
+ * ifadeleri (`yerel_olgu`). Tavan şu iki durumdan biri sağlanırsa UYGULANMAZ:
+ *
+ *  a) ifadelerden biri gerekçede BİREBİR geçiyor; ya da
+ *  b) gerekçe bir yere atıf yapıyor (il/ilçe adı, "ilde", "il içinde"…) VE
+ *     ifadelerden birinin içerik köklerinin en az yüzde 60'ı gerekçede geçiyor.
+ *
+ * (b) şunun için var: model ifadeyi gerekçe yerine belgeden kopyalayabiliyor
+ * ("Kaolen ve feldspat rezervleri il içindedir" ↔ gerekçe: "kaolen ve feldspat
+ * il içinde çıkarılıyor"); olgu aynı, harfler değil — yalnızca (a) ile yerele
+ * bağlı gerekçeye yanlışlıkla tavan uygulanıyordu (ölçüldü: üç koşunun ikisi).
+ * Hiçbir yere atıf yapmayan genel gerekçe ("ülkemiz için stratejiktir") (b)'den
+ * geçemez. Hangi ifadenin "ile özgü" olduğu hâlâ modelin yargısıdır.
+ */
+export function yerellikTavani(veri: z.infer<typeof SEMALAR.degerlendirme>, gerekce: string, yerler: readonly string[] = []): string | null {
+  const metin = sade(gerekce);
+  const gKok = new Set(kokler(gerekce));
+  const atif = yereAtif(gerekce, yerler);
+  const gecen = veri.yerel_olgu.filter((o) => {
+    const s2 = sade(o);
+    if (s2.length >= 3 && metin.includes(s2)) return true;
+    const k = kokler(o);
+    return atif && k.length >= 2 && k.filter((x) => gKok.has(x)).length / k.length >= 0.6;
+  });
+  if (gecen.length) return null;
+  let indirilen = 0;
+  for (const p of veri.puanlar) {
+    if (YERELLIK_KRITERLERI.includes(p.kriter) && p.puan > YERELLIK_TAVANI) {
+      p.puan = YERELLIK_TAVANI;
+      indirilen++;
+    }
+  }
+  return indirilen
+    ? `Yerellik tavanı uygulandı: gerekçede ile özgü somut olgu gösterilemedi; ${indirilen} kriter tavana indirildi.`
+    : null;
 }
 
 /**

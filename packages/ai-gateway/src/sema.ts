@@ -40,6 +40,23 @@ const Alinti = z
 /** Öneriyi sekiz kriterle puanlar ve her kriteri belgeye bağlar. */
 export const Degerlendirme = z
   .object({
+    /**
+     * Üst ölçekli belgelerden alıntılar; boşsa dayanak puanı 0 olur.
+     *
+     * ALAN SIRASI BİLEREK: alıntılar puanlardan ÖNCE. Şemaya zorlanan çıktıda
+     * alan sırası şemadaki sıradır; alıntılar sonda olunca model kriterleri
+     * henüz YAZMADIĞI numaralara dayandırıyordu (ölçüldü, gemma4-26b: 8 alıntı
+     * varken 9 ve 10 numaraya atıf; eşleme düşüyor, dayanak 0'a iniyordu).
+     * Önce alıntılar numaralanır, sonra puanlar o numaralara atıf yapar.
+     */
+    alintilar: z.array(Alinti).max(8),
+    /**
+     * Yatırımcının GEREKÇESİNDEN birebir alınmış, bu ile özgü somut olgu
+     * ifadeleri; yoksa boş dizi. "Neden burada?" kararını puanlardan ÖNCE ve
+     * açıkça verdirir. Mekanik kullanılır: gerekçede birebir geçen tek bir
+     * ifade bile yoksa yerellik tavanını KOD uygular (`yerellikTavani`).
+     */
+    yerel_olgu: z.array(z.string().min(3).max(200)).max(5),
     puanlar: z
       .array(
         z
@@ -75,8 +92,6 @@ export const Degerlendirme = z
         aciklama: z.string().min(10).max(300),
       })
       .strict(),
-    /** üst ölçekli belgelerden alıntılar; boşsa dayanak puanı 0 olur */
-    alintilar: z.array(Alinti).max(8),
     eksik_veri: z.array(z.string().max(200)).max(6),
     /**
      * Konu ölçeği — PUANA ETKİ ETMEZ. Kapsamın genişliği talep kanıtı

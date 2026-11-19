@@ -213,6 +213,8 @@ function uret(istek: ModelIstegi): unknown {
     eksik_veri: alintilar.length ? [] : ["Belgelerde öneriyle eşleşen ifade bulunamadı."],
     kapsam: { tur: "kanit_yetersiz", aciklama: "Çevrimdışı değerlendirme konu ölçeğini yorumlamaz." },
     cerceve: { unsur: 0, aciklama: "Çevrimdışı değerlendirme ana çerçeveyi yorumlamaz." },
+    // Çevrimdışı istemci gerekçeyi yorumlamaz; boş liste yerellik tavanını uygulatır.
+    yerel_olgu: [],
   };
 }
 

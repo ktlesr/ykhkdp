@@ -49,7 +49,7 @@ test("EVAL 1 — kaynaksız sayı reddedilir", async () => {
       alintilar: [],
       eksik_veri: [],
       kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
-      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." },
+      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." }, yerel_olgu: ["Kırpık arzı il içinde toplanıyor"],
     }),
     "claude-opus-5-20260101",
     GIRDI,
@@ -69,7 +69,7 @@ test("EVAL 2 — belgede geçmeyen alıntı reddedilir", async () => {
       alintilar: [{ no: 1, belge_id: 1, alinti: "Bu cümle belgede kesinlikle yok ve uydurulmuştur." }],
       eksik_veri: [],
       kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
-      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." },
+      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." }, yerel_olgu: ["Kırpık arzı il içinde toplanıyor"],
     }),
     "claude-opus-5-20260101",
     GIRDI,
@@ -86,7 +86,7 @@ test("EVAL 3 — paket dışı numara adres hatasıdır, metin bulunursa atıf d
       alintilar: [{ no: 1, belge_id: 9, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek" }],
       eksik_veri: [],
       kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
-      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." },
+      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." }, yerel_olgu: ["Kırpık arzı il içinde toplanıyor"],
     }),
     "claude-opus-5-20260101",
     GIRDI,
@@ -104,7 +104,7 @@ test("EVAL 3b — adresi ve metni birlikte uydurulmuş alıntı reddedilir", asy
       alintilar: [{ no: 1, belge_id: 9, alinti: "Bu cümle hiçbir belgede geçmiyor ve uydurulmuştur." }],
       eksik_veri: [],
       kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
-      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." },
+      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." }, yerel_olgu: ["Kırpık arzı il içinde toplanıyor"],
     }),
     "claude-opus-5-20260101",
     GIRDI,
@@ -120,7 +120,7 @@ test("birebir alıntı kabul edilir ve dayanak puanı üretir", async () => {
       alintilar: [{ no: 1, belge_id: 1, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek dönüşüm alanı" }],
       eksik_veri: [],
       kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
-      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." },
+      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." }, yerel_olgu: ["Kırpık arzı il içinde toplanıyor"],
     }),
     "claude-opus-5-20260101",
     GIRDI,
@@ -138,7 +138,7 @@ test("alıntısız çıktı geçerli ama dayanak 0 — slot dolduramaz", async (
       alintilar: [],
       eksik_veri: ["Belgelerde eşleşme yok."],
       kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
-      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." },
+      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." }, yerel_olgu: ["Kırpık arzı il içinde toplanıyor"],
     }),
     "claude-opus-5-20260101",
     GIRDI,
@@ -156,7 +156,7 @@ test("sekiz kriterden azı şema katmanında düşer", () => {
     alintilar: [],
     eksik_veri: [],
     kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
-    cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." },
+    cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." }, yerel_olgu: ["Kırpık arzı il içinde toplanıyor"],
   });
   assert.equal(r.success, false);
 });
@@ -169,7 +169,7 @@ test("şema dışı alan reddedilir (strict)", async () => {
       alintilar: [],
       eksik_veri: [],
       kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
-      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." },
+      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." }, yerel_olgu: ["Kırpık arzı il içinde toplanıyor"],
       fazladan: 1,
     }),
     "claude-opus-5-20260101",
@@ -203,7 +203,7 @@ test("'latest' alias reddedilir", () => {
 test("model snapshot ve prompt sürümü her sonuçta taşınır", async () => {
   const s = await degerlendir(cevrimdisiIstemci(), "claude-opus-5-20260101", GIRDI);
   assert.equal(s.modelSnapshot, "claude-opus-5-20260101");
-  assert.equal(s.promptSurum, "degerlendirme-v11");
+  assert.equal(s.promptSurum, "degerlendirme-v13");
 });
 
 // ── prompt injection ───────────────────────────────────────────────────────
@@ -265,7 +265,7 @@ test("EVAL 4 — çözülemeyen alıntı numarası eşlemeden düşer, çıktı 
       alintilar: [{ no: 1, belge_id: 1, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek dönüşüm alanı" }],
       eksik_veri: [],
       kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
-      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." },
+      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." }, yerel_olgu: ["Kırpık arzı il içinde toplanıyor"],
     }),
     "claude-opus-5-20260101",
     GIRDI,
@@ -288,7 +288,7 @@ test("kriter payı dayanağa yansır — yerellik boşluğu daha pahalı", async
       alintilar: [{ no: 1, belge_id: 1, alinti: "Tekstil geri dönüşümü katma değeri yükseltecek dönüşüm alanı" }],
       eksik_veri: [],
       kapsam: { tur: "urun_ailesi", aciklama: "Sınama çıktısı; ölçek notu." },
-      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." },
+      cerceve: { unsur: 4, aciklama: "Sınama çıktısı; çerçeve notu." }, yerel_olgu: ["Kırpık arzı il içinde toplanıyor"],
     });
   const girdi = { ...GIRDI, agirliklar: AGIRLIKLAR };
 
@@ -401,4 +401,51 @@ test("açıklama notları: kaynaksız sayı taşıyan not kaydedilmez, diğerler
   assert.match(a.dusenler[0], /plan_uyumu notu kaynaksız sayı/);
   // Çerçeve notu da aynı kurala tabi; düşerse çerçeve hiç kaydedilmez.
   assert.equal(aciklamalariSuz({ ...veri, cerceve: { unsur: 4, aciklama: "Yılda 987654 ton işlenir." } } as never, PAKET).cerceve, null);
+});
+
+test("yerellik tavanı mekanik: gerekçede birebir geçen yerel olgu yoksa üç kriter tavana iner", async () => {
+  const { yerellikTavani, YERELLIK_TAVANI } = await import("./gateway.ts");
+  const gerekce = "Uşak'ta konfeksiyon atölyelerinden çıkan kırpık atığı il içinde toplanıyor. Tekstil ülkemiz için stratejiktir.";
+  const kur = (yerel_olgu: string[]) => ({ puanlar: puanlar(80), yerel_olgu }) as never as Parameters<typeof yerellikTavani>[0];
+  const oku = (v: ReturnType<typeof kur>) => Object.fromEntries(v.puanlar.map((p) => [p.kriter, p.puan]));
+
+  // Gerekçeden birebir (noktalama ve harf büyüklüğü dışında) alınmış olgu: tavan yok.
+  const yerel = kur(["kırpık atığı il içinde toplanıyor"]);
+  assert.equal(yerellikTavani(yerel, gerekce), null);
+  assert.equal(oku(yerel).yerel_potansiyel, 80);
+
+  // Boş liste: üç yerellik kriteri tavana iner, diğerleri değişmez.
+  const bos = kur([]);
+  assert.match(yerellikTavani(bos, gerekce) ?? "", /3 kriter tavana indirildi/);
+  assert.deepEqual([oku(bos).yerel_potansiyel, oku(bos).deger_zinciri, oku(bos).uygulanabilirlik], [YERELLIK_TAVANI, YERELLIK_TAVANI, YERELLIK_TAVANI]);
+  assert.equal(oku(bos).pazar_talep, 80, "yerellik dışındaki kriterlere dokunulmaz");
+
+  // Model belgeden ya da kendinden yazarsa (gerekçede geçmiyor) tavan yine uygulanır.
+  const uydurma = kur(["İlde tekstil organize sanayi bölgesi ve boyahane kapasitesi mevcuttur"]);
+  assert.ok(yerellikTavani(uydurma, gerekce));
+  assert.equal(oku(uydurma).yerel_potansiyel, YERELLIK_TAVANI);
+
+  // Zaten tavanın altındaki puan yükseltilmez.
+  const dusuk = { puanlar: puanlar(20), yerel_olgu: [] } as never as Parameters<typeof yerellikTavani>[0];
+  assert.equal(yerellikTavani(dusuk, gerekce), null);
+  assert.equal(oku(dusuk).yerel_potansiyel, 20);
+});
+
+test("yerellik tavanı: belgeden kopyalanan ifade gerekçeyle örtüşüyorsa ve gerekçe yere atıf yapıyorsa tavan yok", async () => {
+  const { yerellikTavani, YERELLIK_TAVANI } = await import("./gateway.ts");
+  const kur = (yerel_olgu: string[]) => ({ puanlar: puanlar(80), yerel_olgu }) as never as Parameters<typeof yerellikTavani>[0];
+  const yp = (v: ReturnType<typeof kur>) => v.puanlar.find((p) => p.kriter === "yerel_potansiyel")!.puan;
+  // Canlıda görülen: ifade belgeden, olgu gerekçede.
+  const yerel = "Kütahya'da seramik sanayi yerleşik; hammadde olarak kaolen ve feldspat il içinde çıkarılıyor.";
+  const a = kur(["Kaolen ve feldspat rezervleri il içindedir"]);
+  assert.equal(yerellikTavani(a, yerel, ["Kütahya"]), null);
+  assert.equal(yp(a), 80);
+  // Genel gerekçe hiçbir yere atıf yapmıyor: konuyla örtüşen ifade tavanı kaldıramaz.
+  const genel = "Tekstil ülkemiz için stratejik bir sektördür ve geri dönüşüm dünya genelinde önemli bir eğilimdir.";
+  const b = kur(["Tekstil geri dönüşüm sektörü stratejik öneme sahiptir"]);
+  assert.ok(yerellikTavani(b, genel, ["Uşak"]));
+  assert.equal(yp(b), YERELLIK_TAVANI);
+  // Yere atıf var ama ifade gerekçeyle örtüşmüyor: tavan uygulanır.
+  const c = kur(["Bor türevleri ve ileri malzeme üretimi için girdi avantajı sağlar"]);
+  assert.ok(yerellikTavani(c, yerel, ["Kütahya"]));
 });

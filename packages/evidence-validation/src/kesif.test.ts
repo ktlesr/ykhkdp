@@ -341,3 +341,53 @@ test("kısa başlıklı aday yalnızca kendisi düşer; iyi aday kalır", () => 
   assert.equal(r.adaylar[0].baslik, iyi.baslik);
   assert.match(r.dusenler[0].mesaj, /kısa/);
 });
+
+test("kopyalama kayması: alıntının birebir geçen kısmı kaynaktan kesilir; uydurma yine düşer", async () => {
+  const { alintilariDogrula } = await import("./index.ts");
+  const kaynak =
+    "Maliyetlerin azaltılabilmesi için tekstil sektöründe geri dönüşümün, tekstil atıklarının " +
+    "geri dönüşümü ile elde edilen malzemelerin yeniden üretime kazandırılması büyük önem taşımaktadır. Uşak bu alanda öndedir.";
+  const paket = paketKur("p", [{ id: 7, ad: "Rapor", metin: kaynak }]);
+  // Canlıda görülen kayma: "tekstil sektöründe geri dönüşümün" → "tekstil geri dönüşümünün".
+  const kaymis =
+    "Maliyetlerin azaltılabilmesi için tekstil geri dönüşümünün, tekstil atıklarının " +
+    "geri dönüşümü ile elde edilen malzemelerin yeniden üretime kazandırılması büyük önem taşımaktadır.";
+  const s = alintilariDogrula([{ no: 1, belge_id: 1, alinti: kaymis }], paket);
+  assert.equal(s.dogrulanan.length, 1, JSON.stringify(s.dusenler));
+  assert.ok(kaynak.includes(s.dogrulanan[0].alinti), "kayda giren metin kaynakta BİREBİR geçer");
+  assert.ok(!s.dogrulanan[0].alinti.includes("dönüşümünün"), "modelin değiştirdiği kelime kayda girmez");
+  assert.equal(s.dogrulanan[0].alinti, "tekstil atıklarının geri dönüşümü ile elde edilen malzemelerin yeniden üretime kazandırılması büyük önem taşımaktadır.");
+  assert.equal(s.duzeltilenler[0].kod, "alinti_kisaltildi");
+  assert.equal(s.konum.get(1), 0, "numara eşlemesi korunur");
+  // Birebir kısmı kısa olan (uydurma ağırlıklı) alıntı düşer.
+  const uydurma = "Uşak bu alanda öndedir ve yılda yüz bin ton kırpık atığı işleyen en büyük tesisler burada kuruludur; kapasite hızla artmaktadır.";
+  const u = alintilariDogrula([{ no: 1, belge_id: 1, alinti: uydurma }], paket);
+  assert.equal(u.dogrulanan.length, 0);
+  assert.equal(u.dusenler[0].kod, "alinti_eslesmiyor");
+});
+
+test("tamamlayıcı eşleme: notu doğrulanmış alıntıyla örtüşen boş kriter bağlanır; 'veri yok' diyen bağlanmaz", async () => {
+  const { degerlendirmeyiDogrula } = await import("./index.ts");
+  const kaynak = "Tekstil ürünleri imalatı ildeki istihdamın büyük bölümünü oluşturmaktadır. Tekstil organize sanayi bölgesi teknik tekstil üretimi için uygun altyapıya sahiptir.";
+  const paket = paketKur("p", [{ id: 3, ad: "Rapor", metin: kaynak }]);
+  const cikti = {
+    gerekce: "Uşak'ta tekstil sektörü güçlüdür ve altyapı elverişlidir.",
+    alintilar: [
+      { no: 1, belge_id: 1, alinti: "Tekstil ürünleri imalatı ildeki istihdamın büyük bölümünü oluşturmaktadır." },
+      { no: 2, belge_id: 1, alinti: "Tekstil organize sanayi bölgesi teknik tekstil üretimi için uygun altyapıya sahiptir." },
+    ],
+    puanlar: [
+      { kriter: "yerel_potansiyel", puan: 80, alinti_no: [2], not: "Tekstil organize sanayi bölgesi altyapısı elverişlidir." },
+      { kriter: "istihdam_katma_deger", puan: 65, alinti_no: [], not: "Tekstil ürünleri imalatı ildeki istihdamın büyük bölümünü oluşturuyor." },
+      { kriter: "pazar_talep", puan: 50, alinti_no: [], not: "Belgelerde konunun pazar talebi hakkında doğrudan bir veri bulunmamaktadır." },
+      { kriter: "plan_uyumu", puan: 50, alinti_no: [], not: "İhracat pazarlarına erişim ve lojistik maliyetleri belirleyici olacaktır." },
+    ],
+  };
+  const s = degerlendirmeyiDogrula(cikti, paket);
+  assert.ok(s.gecerli, JSON.stringify(s));
+  assert.deepEqual(s.kriterDayanagi.yerel_potansiyel, [1], "modelin verdiği eşleme değişmez");
+  assert.deepEqual(s.kriterDayanagi.istihdam_katma_deger, [0], "notu alıntıyla örtüşen boş kriter bağlandı");
+  assert.deepEqual(s.kriterDayanagi.pazar_talep, [], "'veri bulunmamaktadır' diyen not bağlanmaz");
+  assert.deepEqual(s.kriterDayanagi.plan_uyumu, [], "alıntıyla örtüşmeyen not bağlanmaz");
+  assert.equal(s.duzeltilenler.filter((d) => d.kod === "esleme_tamamlandi").length, 1);
+});
