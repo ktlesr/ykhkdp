@@ -52,6 +52,8 @@ export function TopluKesif({ yonetici, durum }: { yonetici: boolean; durum: Topl
     );
   }
   return (
+    <>
+    <OtoYenile aktif={false} />
     <EylemFormu
       eylem={kesifEylemi}
       onSonuc={(s) => s.ok && router.refresh()}
@@ -66,5 +68,6 @@ export function TopluKesif({ yonetici, durum }: { yonetici: boolean; durum: Topl
         {yonetici ? "Tüm illerde başlat" : "Bölgemde başlat"}
       </Gonder>
     </EylemFormu>
+    </>
   );
 }

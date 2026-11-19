@@ -3,6 +3,7 @@
 import { ayriSurecteCevir } from "./belge-cevir-surec.ts";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { cookies } from "next/headers";
 import {
   belgeEkle, belgeSil, KATEGORILER, type Kategori, metinDenetle, cikisYap, donemGetir, girisYap, islem, kayitOl, naceAra, naceDuzelt,
@@ -241,22 +242,34 @@ export async function degerlendirEylemi(_o: EylemSonucu | null, f: FormData): Pr
     return { ok: false, mesaj: "Öneri değerlendirme kuyruğunda değil; sayfayı yenileyin." };
   }
 
-  const s = await degerlendirmeYap(SERVIS, oneriId);
+  // Eylem koşuyu BEKLEMEZ. Bekleyen sunucu eylemi Next'in yönlendirici
+  // kuyruğunda `router.refresh()` çağrılarını arkasına alıyordu: koşu dakikalar
+  // sürerken ekran donuk kalıyor, adımlar ancak sayfa yenilenince görünüyordu.
+  // Koşu yanıttan sonra sürer; ilerleme ve hata `oneri.asama` / `son_hata`
+  // üzerinden 4 saniyelik tazelemeyle ekrana gelir.
+  //
+  // İlk adım burada yazılır ki ekran hemen "çalışıyor"a dönsün. Süren bir
+  // koşunun (işleyici almış olabilir) adımı ezilmez: yalnızca durmuş, sırada
+  // ya da takılmış öneri işaretlenir.
+  await islem(SERVIS, (sql) => sql`
+    update oneri set asama = 'alindi', asama_zamani = now(), son_hata = null
+    where id = ${oneriId} and durum = 'degerlendiriliyor'
+      and (son_hata is not null or asama is null or asama_zamani < now() - interval '10 minutes')
+  `);
+  after(async () => {
+    try {
+      const s = await degerlendirmeYap(SERVIS, oneriId);
+      // "mesgul": işleyici aynı öneriyi zaten yürütüyor; ilerleme ondan gelir.
+      if (!s.ok && s.asama !== "mesgul") log.uyari("elle_degerlendirme_tamamlanmadi", { oneriId, asama: s.asama, mesaj: s.mesaj });
+    } catch (e) {
+      // Neden `son_hata`ya yazıldı (degerlendirmeYap); burada yalnızca günlük.
+      log.hata("elle_degerlendirme_hata", { oneriId, hata: e instanceof Error ? e.message : String(e) });
+    }
+  });
   revalidatePath(`/oneri/${oneriId}`);
   revalidatePath("/onay");
-  if (!s.ok) return { ok: false, mesaj: `${ASAMA_ETIKET[s.asama]}: ${s.mesaj}` };
-  return { ok: true, mesaj: `Değerlendirme tamam — ${s.mesaj}` };
+  return { ok: true, mesaj: "Değerlendirme başladı; adımlar bu sayfada ilerler." };
 }
-
-const ASAMA_ETIKET: Record<string, string> = {
-  oneri: "Öneri okunamadı",
-  mesgul: "Zaten çalışıyor",
-  nace: "NACE adımı",
-  belge: "Belge adımı",
-  model: "Model adımı",
-  kayit: "Kayıt adımı",
-  tamam: "Tamam",
-};
 
 // ── ajans işlemleri ────────────────────────────────────────────────────────
 

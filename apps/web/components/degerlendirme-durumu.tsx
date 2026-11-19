@@ -223,9 +223,9 @@ export function DegerlendirmeDurumu({
               ? "İşleyici çalışmıyorsa öneri hiç alınmaz. Beklemek yerine şimdi başlatabilirsiniz."
               : "Ajans olarak değerlendirmeyi şimdi yeniden başlatabilirsiniz; aynı kuralla doğrulanır."}
           </p>
-          <EylemFormu eylem={degerlendirEylemi}>
+          <EylemFormu eylem={degerlendirEylemi} onSonuc={() => router.refresh()}>
             <input type="hidden" name="oneriId" value={oneriId} />
-            <Gonder bekleme="Değerlendiriliyor">
+            <Gonder bekleme="Başlatılıyor">
               {durum === "sirada" ? "Şimdi değerlendir" : "Yeniden değerlendir"}
             </Gonder>
           </EylemFormu>
