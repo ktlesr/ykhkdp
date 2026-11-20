@@ -20,6 +20,7 @@ import {
   raporSatirlari,
   rolAta,
   yakinKopyalar,
+  parcaMetinleri,
 } from "./sorgu.ts";
 
 /** Gerçek Postgres'e bağlanır; RLS'in gerçekten uygulandığını kanıtlar. */
@@ -107,6 +108,21 @@ test("yatırımcı belge yükleyemez, ajans yükler", async () => {
     /row-level security|new row violates/i,
   );
   await islem(ajans, (sql) => sql`insert into belge (ad, tur, metin) values ('Yetkili', 'diger', ${metin})`);
+});
+
+/**
+ * Canlıda ölçüldü (2026-11-20): madde numaralı belgeden (12. Kalkınma Planı)
+ * alıntı taşıyan her öneri sayfası 500 veriyordu — satır çifti IN sorgusu
+ * postgres.js'te hiç çalışmıyordu ve testi yoktu.
+ */
+test("parça metinleri: madde çıpalı parçalar tek ve çok çiftle bulunur", async () => {
+  const metin = "613.1. Deneme maddesi metni burada durur. ".repeat(10);
+  await islem(ajans, (sql) => sql`insert into belge (ad, bolum, tur, metin) values ('Madde Belgesi', 'madde 613.1–613.2', 'diger', ${metin}), ('Madde Belgesi', 'madde 614.1–614.2', 'diger', ${metin})`);
+  const bir = await parcaMetinleri(ajans, [{ ad: "Madde Belgesi", bolum: "madde 613.1–613.2" }, { ad: "Madde Belgesi", bolum: "s. 4" }]);
+  assert.equal(bir.size, 1);
+  const iki = await parcaMetinleri(ajans, [{ ad: "Madde Belgesi", bolum: "madde 613.1–613.2" }, { ad: "Madde Belgesi", bolum: "madde 614.1–614.2" }]);
+  assert.equal(iki.size, 2);
+  assert.equal((await parcaMetinleri(ajans, [{ ad: "Madde Belgesi", bolum: null }])).size, 0);
 });
 
 test("yatırımcı değerlendirme yazamaz", async () => {

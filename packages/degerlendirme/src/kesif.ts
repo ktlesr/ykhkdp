@@ -69,6 +69,8 @@ export const taramaKaynagi = (sql: Sql, k: ReturnType<Sql>, surum: string) => sq
 
 /** Aday üretim turu üst sınırı: ilk tur + en çok iki tamamlama turu. */
 const TUR_SINIRI = 3;
+/** İl başına keşif adayı hedefi: slotun bir buçuk katı (asıl + yedek payı). SQL karşılığı: `kesifGerekenDonemler`. */
+export const kesifAdayHedefi = (slot: number) => Math.ceil(slot * 1.5);
 /** Adayın girdiği ana çerçeve unsuru; modelin sınıflamasıdır, kayıtta bu etiketle ayrılır. */
 export const UNSUR_ETIKETI = "Temel unsur (yapay zekâ sınıflaması):";
 /** Gerekçe olgudur (kanıtta karşılığı var); sentez modelin çıkarımıdır ve kayıtta bu etiketle ayrılır. */
@@ -227,7 +229,23 @@ async function kesifKos(kesifId: number): Promise<KesifSonucu> {
    * bu, özet mesajında açıkça yazar. En çok `TUR_SINIRI` tur.
    */
   const tetikleyen: Baglam = { gonderenRef: k.tetikleyen_ref, rol: k.tetikleyen_rol };
-  const sinir = k.slot_sayisi * 2;
+  /**
+   * ADAY HEDEFİ slotun bir buçuk katıdır (4 slot → 6 aday). Canlıda ölçüldü
+   * (2026-11-20, 81 il, 401 aday): hedef "en az slot kadar" iken çoğu il tam 4
+   * adayda kaldı; tek bir aday dayanak eşiğinin altında kalınca slot boş
+   * kaldı (eşik 45'te 81 ilin 44'ü doldu) ve yedek neredeyse hiç çıkmadı.
+   * Dönemde zaten duran keşif adayları hedeften düşülür: yeniden koşan keşif
+   * yalnızca EKSİĞİ tamamlar, mevcut adaylar ve puanları kalır.
+   */
+  const [{ n: onceki }] = await islem(SERVIS, (sql) =>
+    sql<{ n: number }[]>`
+      select count(*)::int as n from oneri
+      where donem_id = ${k.donem_id} and kesif_id is not null and koken = 'yeni'
+        and durum in ('degerlendiriliyor', 'onay_bekliyor', 'listede')`,
+  );
+  const adayHedefi = kesifAdayHedefi(k.slot_sayisi);
+  const eksik = Math.max(1, adayHedefi - onceki);
+  const sinir = Math.max(eksik, k.slot_sayisi * 2 - onceki);
   const atlananlar: string[] = [];
   const desteklenen: string[] = [];
   const tekrarlar: Array<{ baslik: string; oncekiId: number; neden: string }> = [];
@@ -238,7 +256,7 @@ async function kesifKos(kesifId: number): Promise<KesifSonucu> {
   let tur = 0;
   for (; tur < TUR_SINIRI; tur++) {
   if (tur > 0) {
-    if (yazilan >= k.slot_sayisi) break;
+    if (yazilan >= eksik) break;
     // Görülmemiş yerel kanıt kalmadıysa AYNI defterle yeniden denenir: model o
     // ana kadar yazılan başlıkları görür ve farklı konu çıkarır. Önceki kural
     // burada kesiyordu; canlıda yerel kanıtı 120'nin altındaki illerde
@@ -437,8 +455,8 @@ ${UNSUR_ETIKETI} ${aday.unsur} — ${TEMEL_UNSURLAR[aday.unsur]}.` : "")},
     (atlananlar.length + tekrarlar.length
       ? ` ${atlananlar.length + tekrarlar.length} aday bu dönemde zaten önerilmiş bir konuyla aynı olduğu için alınmadı.`
       : "") +
-    (yazilan < k.slot_sayisi
-      ? ` Hedef en az ${k.slot_sayisi} adaydı; ${tur} turda kanıtlar ${yazilan} adaya yetti.`
+    (yazilan < eksik
+      ? ` Hedef en az ${adayHedefi} adaydı${onceki ? ` (${onceki} aday zaten vardı)` : ""}; ${tur} turda kanıtlar ${yazilan} yeni adaya yetti.`
       : "") +
     okunamayan;
   return bitir(true, ozet, yazilan);

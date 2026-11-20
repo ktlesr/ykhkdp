@@ -1301,8 +1301,9 @@ export async function kesifAc(b: Baglam, donemIdleri: readonly number[]): Promis
 }
 
 /**
- * Toplu başlatmada adayı HAZIR olan il atlanır: kuyrukta ya da listede en az
- * slot sayısı kadar keşif adayı olan dönem yeniden koşmaz. Durdurulan toplu
+ * Toplu başlatmada adayı HAZIR olan il atlanır: kuyrukta ya da listede aday
+ * hedefi kadar (slotun bir buçuk katı; `kesifAdayHedefi`) keşif adayı olan
+ * dönem yeniden koşmaz; eksiği olan il yalnızca eksiğini tamamlar. Durdurulan toplu
  * koşu yeniden başlatılınca yalnızca kalan iller çalışır; kuyruk topluca
  * silinirse bütün iller yeniden koşar. Tek il için elle başlatma bu süzgece
  * girmez — orada istek açıktır.
@@ -1316,7 +1317,7 @@ export async function kesifGerekenDonemler(b: Baglam, donemIdleri: readonly numb
       where d.id in ${sql(donemIdleri)}
         and (select count(*) from oneri o
              where o.donem_id = d.id and o.kesif_id is not null and o.koken = 'yeni'
-               and o.durum in ('degerlendiriliyor', 'onay_bekliyor', 'listede')) < s.slot_sayisi
+               and o.durum in ('degerlendiriliyor', 'onay_bekliyor', 'listede')) < ceil(s.slot_sayisi * 1.5)
     `,
   );
   return r.map((x) => Number(x.id));
@@ -1545,7 +1546,7 @@ export async function parcaMetinleri(b: Baglam, cipalar: ReadonlyArray<{ ad: str
   const r = await islem(b, (sql) =>
     sql<{ ad: string; bolum: string; metin: string }[]>`
       select ad, bolum, metin from belge
-      where (ad, bolum) in ${sql(tekil.map((c) => [c.ad, c.bolum!]) as never)}
+      where (ad, bolum) in (select * from unnest(${tekil.map((c) => c.ad)}::text[], ${tekil.map((c) => c.bolum!)}::text[]))
     `,
   );
   return new Map(r.map((x) => [`${x.ad}|${x.bolum}`, x.metin]));

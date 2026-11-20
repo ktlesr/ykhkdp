@@ -622,6 +622,15 @@ Uydurmasızlık kuralları — hepsi mekanik, modelin beyanı değil:
   Görülmemiş yerel kanıt kalmadıysa tamamlama turu AYNI defterle koşar
   (2026-11-19): önceki kural orada kesiyordu ve yerel kanıtı 120'nin altındaki
   illerde tur hiç koşmadı (canlıda 10 il slot sayısının altında kaldı).
+- **Aday hedefi slotun bir buçuk katı** (2026-11-20; 4 slot → 6 aday,
+  `kesifAdayHedefi`). Canlıda ölçüldü (81 il, 401 aday, dayanak ortancası 55,
+  eşik 45): çoğu il tam 4 adayda kaldı; tek bir aday eşiğin altında kalınca
+  slot boşaldı (81 ilin 44'ü doldu; eşiği 35'e indirmek bile yalnızca 59'a
+  çıkarıyordu) ve 81 il için toplam 31 yedek çıktı. Darboğaz eşik değil aday
+  sayısıydı. Dönemde zaten duran keşif adayları hedeften düşülür: yeniden
+  koşan keşif yalnızca eksiği tamamlar, mevcut adaylar ve puanları kalır.
+  Modelin gördüğü hedef cümlesi değişmedi (en az slot kadar, iki katına
+  kadar); değişen, tamamlama turunun ne zaman durduğudur.
 - **Modele ulaşılamayan koşu bitmez, sıraya döner** (2026-11-19). Aday
   üretiminde ağ kopması, zaman aşımı ya da 5xx çıktı reddi değildir: koşu en
   çok üç kez yeniden denenir ve hiç denenmemiş illerin arkasına geçer. Canlıda
@@ -637,8 +646,8 @@ Uydurmasızlık kuralları — hepsi mekanik, modelin beyanı değil:
   aday yalnızca kendisi düşer. Sınır önce şemadaydı; canlıda tek bir kısa
   başlık bir ilin bütün adaylarını reddettirdi.
 - **Toplu başlatma adayı hazır ili atlar** (2026-11-18). "Tüm illerde başlat"
-  (ve bölge için toplu başlatma) kuyrukta ya da listede en az slot sayısı
-  kadar keşif adayı olan dönemi yeniden koşturmaz: durdurulan toplu koşu
+  (ve bölge için toplu başlatma) kuyrukta ya da listede aday hedefi kadar
+  (slotun bir buçuk katı) keşif adayı olan dönemi yeniden koşturmaz: durdurulan toplu koşu
   yeniden başlatılınca yalnızca kalan iller çalışır. Bütün illeri sıfırdan
   koşturmak için önce onay kuyruğundaki keşif adayları topluca silinir. Tek il
   için elle başlatma bu süzgece girmez. Tarama eşzamanlılığı varsayılanı 6'dan
