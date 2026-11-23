@@ -60,6 +60,8 @@ async function isle(k: Konu): Promise<void> {
     console.log([...satir, `  —    : ${r.neden}`].join("\n"));
     return;
   }
+  // Kayıt en çok 8 ürün alır (oneri_kapsam_dizi); şema 10'a izin verir, fazlası sondan kesilir.
+  r.urunler = r.urunler.slice(0, 8);
   const isaret = (u: (typeof r.urunler)[number]) => (u.kanitIdleri.length ? (u.yerel ? "●" : "○") : "◌");
   satir.push(`  yeni : ${r.urunler.map((u) => `${isaret(u)} ${u.ad}`).join(" · ") || "(boş)"}`);
   for (const u of r.urunler) satir.push(`         ${u.ad} [unsur ${u.unsur ?? "-"}]: ${u.neden ?? ""}`);
@@ -111,7 +113,10 @@ async function ekNaceYenile(k: Konu, adlar: string[]): Promise<string> {
 }
 
 const sira = [...konular];
-await Promise.all(Array.from({ length: Math.min(ESZAMANLI, sira.length) }, async () => { for (let k = sira.shift(); k; k = sira.shift()) await isle(k); }));
+await Promise.all(Array.from({ length: Math.min(ESZAMANLI, sira.length) }, async () => { for (let k = sira.shift(); k; k = sira.shift()) {
+  // Tek konunun kayıt hatası koşuyu durdurmaz.
+  await isle(k).catch((e: unknown) => { sayac.hata++; console.log(`\n[${k.ilKod}] ${k.id} ${k.baslik}\n  —    : kayıt hatası: ${e instanceof Error ? e.message : e}`); });
+} }));
 
 console.log("\n● ilin kanıtına bağlı   ○ kanıta bağlı, il dışı   ◌ resmî örnek ya da katalogdan, belgeye bağlanmadı");
 console.log(`${konular.length} konu: ${a.yaz ? `${sayac.yazilan} yazıldı, ` : ""}${sayac.kalan} mevcut listeyle kaldı, ${sayac.hata} hata`);
