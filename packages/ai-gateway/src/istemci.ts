@@ -143,6 +143,10 @@ function uret(istek: ModelIstegi): unknown {
       : { karar: "uygun_degil", gerekce: "", sentez: "", neden: "Defterde konuyu bu ile bağlayan yerel kanıt yok.", kanit_no: [] };
   }
 
+  // Çevrimdışı istemci ürün uydurmaz: boş liste meşru sonuçtur, mevcut gruplar kalır.
+  if (istek.semaAdi === "urun_listesi") return { urunler: [] };
+  if (istek.semaAdi === "urun_eleme") return { cikar: [] };
+
   if (istek.semaAdi === "nace_kapsami") {
     // Her grubun listesindeki ilk kod; aynı kod ikinci kez verilmez.
     const kullanilan = new Set<string>();

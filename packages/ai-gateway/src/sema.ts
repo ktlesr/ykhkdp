@@ -282,7 +282,26 @@ export const KonuUygunlugu = z
   })
   .strict();
 
+/**
+ * Ürün listesi — tebliğdeki parantez içi gibi somut ürünler. `kanit_no` boş
+ * olabilir: defterde adı geçmeyen ama konudan türeyen ürün modelin önerisidir.
+ */
+export const UrunListesi = z
+  .object({
+    urunler: z
+      .array(z.object({ ad: z.string().min(2).max(80), kanit_no: z.array(z.number().int().min(1).max(200)).max(4) }).strict())
+      .max(10),
+  })
+  .strict();
+
+/** Ürün eleme — listeden ÇIKARILACAK ürünler. Model ekleme yapamaz; ad listedekiyle aynı olmalı. */
+export const UrunEleme = z
+  .object({ cikar: z.array(z.object({ ad: z.string().min(2).max(80), neden: z.string().min(3).max(200) }).strict()).max(10) })
+  .strict();
+
 export const SEMALAR = {
+  urun_eleme: UrunEleme,
+  urun_listesi: UrunListesi,
   konu_uygunlugu: KonuUygunlugu,
   degerlendirme: Degerlendirme,
   nace_onerisi: NaceOnerisi,

@@ -4,16 +4,18 @@ import {
   kanitlariDogrula,
   kaynaksizSayi,
   karsiGorusuDogrula,
+  urunListesiniDogrula,
   uygunluguDogrula,
   type DefterKaydi,
   type DogrulanmisAday,
   type DogrulanmisKanit,
   type DogrulanmisKarsiGorus,
+  type NetUrun,
   type Paket,
   type Uygunluk,
 } from "@ykh/evidence-validation";
 import type { z } from "zod";
-import { defterBloguKur, kaynakBloguKur, naceBloguKur, naceKapsamBloguKur, oneriBloguKur, PROMPTLAR, type BelgeSatiri } from "./prompt.ts";
+import { defterBloguKur, kaynakBloguKur, konuBloguKur, naceBloguKur, naceKapsamBloguKur, oneriBloguKur, PROMPTLAR, type BelgeSatiri } from "./prompt.ts";
 import { jsonSema, SEMALAR, type SemaAdi } from "./sema.ts";
 
 /**
@@ -411,6 +413,57 @@ export async function konuUygunlugu(
   if (r.maliyet) meta.modelSnapshot = r.maliyet.model;
   if (!r.ok) return { ...r, ...meta };
   return { ok: true, sonuc: uygunluguDogrula({ baslik: girdi.baslik, ...r.veri }, girdi.defter), maliyet: r.maliyet, ...meta };
+}
+
+/**
+ * Ürün listesi: konunun kapsadığı somut ürünler (tebliğdeki parantez içi).
+ * Model yalnızca ad ve kanıt numarası verir; bağ `urunListesiniDogrula` ile
+ * mekanik kurulur. Puanlamaz, kaydetmez.
+ */
+export async function urunListesi(
+  istemci: ModelIstemcisi,
+  modelSnapshot: string,
+  girdi: { il: string; baslik: string; gerekce: string; defter: ReadonlyArray<DefterKaydi & { tur: string; konu: string; kaynak: string }>; ornekler?: readonly string[]; katalog?: readonly string[] },
+): Promise<({ ok: true; urunler: NetUrun[]; dusenler: string[]; maliyet: Maliyet } & Meta) | Hatali> {
+  const meta = { modelSnapshot, promptSurum: PROMPTLAR.urun_listesi.surum };
+  // Başlık ve gerekçe kullanıcı/önceki model yazısıdır: kaçışlı veri bloğunda.
+  const konu =
+    konuBloguKur(girdi.baslik, girdi.gerekce) +
+    (girdi.ornekler?.length ? SATIR_SONU + oneriBloguKur(girdi.ornekler.map((o) => o.slice(0, 140))).replaceAll("onceki-oneriler", "resmi-ornekler") : "") +
+    (girdi.katalog?.length ? SATIR_SONU + oneriBloguKur(girdi.katalog.map((o) => o.slice(0, 140))).replaceAll("onceki-oneriler", "urun-katalogu") : "");
+  const r = await cagir(istemci, modelSnapshot, "urun_listesi", `${defterBloguKur(girdi.defter)}${SATIR_SONU}${konu}`, `İl: ${girdi.il}\n<konu> bloğundaki yatırım konusunun somut ürün listesini yaz.`);
+  if (r.maliyet) meta.modelSnapshot = r.maliyet.model;
+  if (!r.ok) return { ...r, ...meta };
+  const d = urunListesiniDogrula(girdi.baslik, r.veri.urunler, girdi.defter);
+  // ÇAPA: ürünün ayırt edici kelimesi başlıkta, resmî örneklerde ya da ürün
+  // kataloğunda geçiyor mu. Kanıta da çapaya da bağlanamayan ürün modelin genel
+  // bilgisidir ve kayda girmez; çapalı ürünü eleme çağrısı çıkaramaz.
+  const kok = (s: string) => s.toLocaleLowerCase("tr-TR").split(/[^\p{L}]+/u).filter((w) => w.length >= 4).map((w) => w.slice(0, 5));
+  const capa = new Set(kok([girdi.baslik, ...(girdi.ornekler ?? []), ...(girdi.katalog ?? [])].join(" ")));
+  const capali = (u: NetUrun) => kok(u.ad).some((k) => capa.has(k));
+  const basibos = d.urunler.filter((u) => !u.kanitIdleri.length && !capali(u));
+  d.dusenler.push(...basibos.map((u) => `“${u.ad}” kanıta, resmî örneğe ya da ürün kataloğuna bağlanamadı.`));
+  d.urunler = d.urunler.filter((u) => !basibos.includes(u));
+  if (d.urunler.every(capali)) return { ok: true, urunler: d.urunler, dusenler: d.dusenler, maliyet: r.maliyet, ...meta };
+
+  // İkinci çağrı YALNIZCA çıkarır: "bu ürün bu yatırımın çıktısı mı?" Zayıf model
+  // liste yazarken defterdeki her yerel ürünü sıralıyor (gıda tesisine kilim);
+  // tek tek evet/hayır sorusunda daha isabetli. Çağrı başarısızsa liste olduğu
+  // gibi kalır — eleme en iyi çabadır, ekleme yapamaz.
+  const e = await cagir(
+    istemci, modelSnapshot, "urun_eleme",
+    konuBloguKur(girdi.baslik, "") + SATIR_SONU + oneriBloguKur(d.urunler.map((u) => u.ad)).replaceAll("onceki-oneriler", "urun-listesi"),
+    `İl: ${girdi.il}
+<urun-listesi> bloğundaki ürünlerden <konu> başlığındaki yatırımın çıktısı OLMAYANLARI çıkar.`,
+  );
+  if (!e.ok) return { ok: true, urunler: d.urunler, dusenler: [...d.dusenler, "Eleme çağrısı tamamlanamadı; liste elenmeden bırakıldı."], maliyet: r.maliyet, ...meta };
+  const cikan = new Map(e.veri.cikar.map((c) => [c.ad.trim().toLocaleLowerCase("tr-TR"), c.neden]));
+  // Çapalı ürün elenemez: ölçüldü, model ilçeyi "il dışı" sanıp "Sultandağı
+  // kirazı"nı, konu dışı sayıp "elma kurusu"nu attı.
+  const elenir = (u: NetUrun) => cikan.has(u.ad.toLocaleLowerCase("tr-TR")) && !capali(u);
+  const kalan = d.urunler.filter((u) => !elenir(u));
+  const elenen = d.urunler.filter(elenir).map((u) => `“${u.ad}” elendi: ${cikan.get(u.ad.toLocaleLowerCase("tr-TR"))}`);
+  return { ok: true, urunler: kalan, dusenler: [...d.dusenler, ...elenen], maliyet: r.maliyet, ...meta };
 }
 
 /**

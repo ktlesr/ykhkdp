@@ -17,6 +17,7 @@
     "@ykh/evidence-validation": "workspace:*"
   },
   "scripts": {
-    "eval": "node --env-file-if-exists=../../.env src/eval.ts"
+    "eval": "node --env-file-if-exists=../../.env src/eval.ts",
+    "kapsam": "node --env-file-if-exists=../../.env src/kapsam-netlestir.ts"
   }
 }

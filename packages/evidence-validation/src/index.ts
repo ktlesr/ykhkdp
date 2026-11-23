@@ -951,6 +951,65 @@ function urunGruplariniDogrula(
   return sonuc;
 }
 
+/** Ürün adı tek başına şemsiye kalıyorsa ürün değildir ("işlenmiş tarım ve gıda ürünleri"). */
+const SEMSIYE_KOKLER = new Set([...GENEL_KOKLER, "tarım", "gıda", "ürün", "ürünl", "ürünü", "işlen", "işlem", "mamul", "mamül", "çeşit", "diğer", "yerel", "yöres", "coğra", "işare", "yükse", "nitel", "endüs", "imala", "paket", "ambal"]);
+
+/** Kelimeler: 5+ harfli → ilk 5 harf (ek atılır); 3–4 harfli → kelimenin kendisi ("süt", "bal", "elma"). */
+function urunKokleri(metin: string): string[] {
+  return metin.toLocaleLowerCase("tr-TR").split(/[^\p{L}]+/u).filter((w) => w.length >= 3).map((w) => w.slice(0, 5));
+}
+
+export type NetUrun = { ad: string; kanitIdleri: number[]; yerel: boolean };
+
+/**
+ * Ürün listesini doğrular — tebliğdeki parantez içi gibi: "(sucuk, salam,
+ * pastırma vb.)". `urunGruplariniDogrula`dan farkı: ürün adı SOMUT olmalı ve
+ * kanıta bağlanamayan ürün düşmez, BAĞSIZ kalır.
+ *
+ *  - Yalnızca şemsiye kelimelerden (ve başlığın kendi kelimelerinden) oluşan
+ *    ad düşer: ürün adı değil, başlığın tekrarı.
+ *  - Adın ayırt edici kökü atıf yaptığı kanıtta geçiyorsa ürün o kanıta
+ *    bağlanır (`yerel` = kanıtlardan biri bu ile özgü).
+ *  - Geçmiyorsa ürün kanıtsız kalır (kanitIdleri boş): modelin önerisidir,
+ *    ekranda "belgeye bağlanmadı" diye görünür. Rakam taşıyan bağsız ad düşer.
+ *
+ * ponytail: sözcüksel kontrol — "kiraz" kökü pasajda geçiyor mu; pasajın o
+ * ürünü bu il için gerçekten öne çıkarıp çıkarmadığını ajans tartar.
+ */
+export function urunListesiniDogrula(
+  baslik: string,
+  urunler: readonly HamUrunGrubu[],
+  defter: readonly DefterKaydi[],
+): { urunler: NetUrun[]; dusenler: string[] } {
+  const numara = new Map(defter.map((d) => [d.no, d]));
+  const baslikKokleri = new Set(urunKokleri(baslik));
+  const gorulen = new Set<string>();
+  const sonuc: NetUrun[] = [];
+  const dusenler: string[] = [];
+  for (const u of urunler.slice(0, 10)) {
+    const ad = u.ad.trim().replace(/\s+/g, " ").replace(/[.;,]+$/, "");
+    const anahtar = normalize(ad);
+    if (!ad || gorulen.has(anahtar)) continue;
+    const ayirt = urunKokleri(ad).filter((k) => !baslikKokleri.has(k) && !SEMSIYE_KOKLER.has(k));
+    if (!ayirt.length) {
+      dusenler.push(`“${ad}” somut bir ürün adı değil (şemsiye ifade ya da başlığın tekrarı).`);
+      continue;
+    }
+    const kanit = [...new Set(u.kanit_no)].map((n) => numara.get(n)).filter((d): d is DefterKaydi => Boolean(d));
+    const bagli = kanit.filter((d) => {
+      const kaynak = new Set(urunKokleri(d.metin));
+      return ayirt.some((k) => kaynak.has(k));
+    });
+    if (!bagli.length && /\d/.test(ad)) {
+      dusenler.push(`“${ad}” kanıta bağlanmayan sayı taşıyor.`);
+      continue;
+    }
+    gorulen.add(anahtar);
+    sonuc.push({ ad: ad.slice(0, 80), kanitIdleri: bagli.map((d) => d.kanitId), yerel: bagli.some((d) => d.yerel) });
+  }
+  return { urunler: sonuc, dusenler };
+}
+
 /**
  * Aday üretimini doğrular. Model yeni alıntı YAZAMAZ; yalnızca defterdeki
  * doğrulanmış kanıtlara numarayla atıf yapar.
