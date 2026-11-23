@@ -285,11 +285,22 @@ export const KonuUygunlugu = z
 /**
  * Ürün listesi — tebliğdeki parantez içi gibi somut ürünler. `kanit_no` boş
  * olabilir: defterde adı geçmeyen ama konudan türeyen ürün modelin önerisidir.
+ * `neden` ve `unsur` (urun-listesi-v2): ürünün katma değerini ve temel unsurunu
+ * söyler; neden cümlesi kanıtta ya da konu gerekçesinde karşılık bulmazsa ürün düşer.
  */
 export const UrunListesi = z
   .object({
     urunler: z
-      .array(z.object({ ad: z.string().min(2).max(80), kanit_no: z.array(z.number().int().min(1).max(200)).max(4) }).strict())
+      .array(
+        z
+          .object({
+            ad: z.string().min(2).max(80),
+            neden: z.string().max(300),
+            unsur: z.number().int().min(1).max(10),
+            kanit_no: z.array(z.number().int().min(1).max(200)).max(4),
+          })
+          .strict(),
+      )
       .max(10),
   })
   .strict();

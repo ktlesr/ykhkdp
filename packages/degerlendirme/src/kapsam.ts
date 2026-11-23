@@ -3,7 +3,7 @@ import { islem, type Baglam } from "@ykh/database";
 import { dengeliSec, yerelMi, type NetUrun } from "@ykh/evidence-validation";
 import { aiMaliyeti } from "@ykh/observability";
 import { konuKategorileri } from "@ykh/retrieval";
-import { taramaKaynagi } from "./kesif.ts";
+import { SENTEZ_ETIKETI, taramaKaynagi, UNSUR_ETIKETI } from "./kesif.ts";
 import { modelSec } from "./model-secimi.ts";
 import { baslikSorgusu } from "./uygunluk.ts";
 
@@ -86,7 +86,9 @@ export async function urunleriNetlestir(girdi: { ilKod: string; baslik: string; 
     : [];
 
   const { istemci, model } = await modelSec("yargi");
-  const r = await urunListesi(istemci, model, { il: il.ad, baslik: girdi.baslik, gerekce: girdi.gerekce, defter, ornekler, katalog });
+  // Ürün nedeni yalnızca gerekçenin DOĞRULANMIŞ kısmına dayanabilir: sentez modelin çıkarımıdır.
+  const olgu = girdi.gerekce.split(SENTEZ_ETIKETI)[0].split(UNSUR_ETIKETI)[0];
+  const r = await urunListesi(istemci, model, { il: il.ad, baslik: girdi.baslik, gerekce: girdi.gerekce, olgu, defter, ornekler, katalog });
   aiMaliyeti({ model: r.maliyet?.model ?? model, girdiToken: r.maliyet?.girdiToken ?? 0, ciktiToken: r.maliyet?.ciktiToken ?? 0, promptSurum: r.promptSurum, sonuc: r.ok ? "ok" : "red" });
   if (!r.ok) return { ok: false, neden: `Model çıktısı alınamadı (${r.asama}): ${(r.hatalar[0] ?? "").slice(0, 200)}` };
   return { ok: true, urunler: r.urunler, dusenler: r.dusenler, defterBoyu: defter.length, model: r.modelSnapshot, promptSurum: r.promptSurum };

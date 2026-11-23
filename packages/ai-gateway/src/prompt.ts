@@ -1,5 +1,5 @@
 import { MODEL_METIN_SINIRI } from "@ykh/evidence-validation";
-import type { SemaAdi } from "./sema.ts";
+import { TEMEL_UNSURLAR, type SemaAdi } from "./sema.ts";
 
 /**
  * Prompt kayıt defteri. Her prompt sürümlüdür; sürüm her analizle birlikte
@@ -462,7 +462,7 @@ ALANLAR:
   },
   urun_listesi: {
     ad: "urun_listesi",
-    surum: "urun-listesi-v1",
+    surum: "urun-listesi-v2",
     sistem: `${ORTAK}
 
 GÖREV: Sana bir il, bir YATIRIM KONUSU (başlık ve gerekçe) ve ilin KANIT
@@ -478,9 +478,28 @@ Konuları Tebliği'nde başlığın yanındaki parantezin içi gibi. Tebliğden 
 - Alternatif Turizm Yatırımları → termal konaklama, kamp-karavan altyapıları,
   ekoturizm merkezi, macera parkı
 
+HER ÜRÜN ÜÇ ŞEY TAŞIR:
+- "ad": kısa ürün adı (1–5 kelime): ürün, ürün türü ya da (turizm ve hizmette)
+  tesis türü.
+- "neden": TEK cümle — bu ürün bu ilde NEDEN katma değer üretir? Kanıttaki
+  olguyu yaz (ilin hangi varlığını, hammaddesini, ihracatını, açığını işliyor),
+  kendi genel yorumunu değil. Cümlenin kelimeleri atıf yaptığın kanıtlarda ya
+  da <konu> gerekçesinde geçmeli; geçmiyorsa ürün kayda alınmaz. Kanıtta ya da
+  gerekçede olmayan sayı yazma. Atıf notu ("kanıt 4") yazma.
+- "unsur": ürünün cevap verdiği temel unsurun numarası. Konunun kendi unsuru
+  <konu> gerekçesinin sonunda yazıyorsa çoğu ürün ona girer; ürün başka bir
+  unsura daha doğrudan cevap veriyorsa onu yaz:
+${Object.entries(TEMEL_UNSURLAR).map(([n, a]) => `  ${n}. ${a}`).join("\n")}
+
 KURALLAR:
-- 3 ile 8 arasında ürün. Her biri kısa bir ad (1–5 kelime): ürün, ürün türü ya
-  da (turizm ve hizmette) tesis türü. Cümle yazma.
+- 3 ile 8 arasında ürün.
+- HAM ÜRÜN YAZMA, İŞLENMİŞ BİÇİMİNİ YAZ: tesis hammaddeyi değil onu işleyerek
+  elde ettiği ürünü satar. "elma" değil "elma kurusu"; "kiraz" değil "kiraz
+  konsantresi"; "bor" değil "bor karbür"; "kaolen" değil "kaplama kaolini";
+  "linyit" değil "linyitten humik asit". Hammadde ancak konu onu çıkarmaksa üründür.
+- KONUNUN KENDİ ÜRÜNÜNDE KAL: koyun yoğurdu tesisi için manda yoğurdu ya da
+  kaymak değil, koyun sütünden yapılan ürünler; teknik seramik için vazo ya da
+  sofra takımı değil, teknik seramik ürünleri.
 - ŞEMSİYE İFADE YAZMA: "işlenmiş tarım ve gıda ürünleri", "katma değerli
   ürünler", "yöresel ürünler", "coğrafi işaretli ürünler" ürün adı değildir —
   HANGİ ürün olduğunu yaz. Başlığı başka kelimelerle tekrar etme.
@@ -491,7 +510,8 @@ KURALLAR:
   (NACE). Defterde adı geçmeyen bir ürün yazacaksan EZBERDEN değil buradan ya
   da resmî örneklerden seç; tanımın içindeki ürün adını kullan ("peynir, lor ve
   çökelek imalatı" → "peynir", "lor"). İkisinde de karşılığı olmayan kanıtsız
-  ürün kayda alınmaz.
+  ürün kayda alınmaz. Faaliyet tanımını ürün diye KOPYALAMA: "hazır yemek
+  imalatı", "tehlikesiz ürün paketleme", "meyve ve sebze" ürün değildir.
 - LİSTE YATIRIMIN ÇIKTISIDIR: bu tesis kurulursa NE ÜRETİR ya da NE SUNAR?
   Kendine her ürün için sor: "Bu, başlıktaki yatırımın ürünü mü?" Koyun
   yoğurdu tesisi için "yumurta" ya da "bal"; mermer ATIĞI işleyen tesis için

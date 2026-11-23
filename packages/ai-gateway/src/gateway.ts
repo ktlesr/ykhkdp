@@ -423,7 +423,8 @@ export async function konuUygunlugu(
 export async function urunListesi(
   istemci: ModelIstemcisi,
   modelSnapshot: string,
-  girdi: { il: string; baslik: string; gerekce: string; defter: ReadonlyArray<DefterKaydi & { tur: string; konu: string; kaynak: string }>; ornekler?: readonly string[]; katalog?: readonly string[] },
+  /** `olgu`: gerekçenin kanıta karşı doğrulanmış kısmı (sentez ve unsur etiketi hariç); ürün nedeni buna ya da kanıta dayanmalı. */
+  girdi: { il: string; baslik: string; gerekce: string; olgu: string; defter: ReadonlyArray<DefterKaydi & { tur: string; konu: string; kaynak: string }>; ornekler?: readonly string[]; katalog?: readonly string[] },
 ): Promise<({ ok: true; urunler: NetUrun[]; dusenler: string[]; maliyet: Maliyet } & Meta) | Hatali> {
   const meta = { modelSnapshot, promptSurum: PROMPTLAR.urun_listesi.surum };
   // Başlık ve gerekçe kullanıcı/önceki model yazısıdır: kaçışlı veri bloğunda.
@@ -434,7 +435,7 @@ export async function urunListesi(
   const r = await cagir(istemci, modelSnapshot, "urun_listesi", `${defterBloguKur(girdi.defter)}${SATIR_SONU}${konu}`, `İl: ${girdi.il}\n<konu> bloğundaki yatırım konusunun somut ürün listesini yaz.`);
   if (r.maliyet) meta.modelSnapshot = r.maliyet.model;
   if (!r.ok) return { ...r, ...meta };
-  const d = urunListesiniDogrula(girdi.baslik, r.veri.urunler, girdi.defter);
+  const d = urunListesiniDogrula(girdi.baslik, r.veri.urunler, girdi.defter, girdi.olgu);
   // ÇAPA: ürünün ayırt edici kelimesi başlıkta, resmî örneklerde ya da ürün
   // kataloğunda geçiyor mu. Kanıta da çapaya da bağlanamayan ürün modelin genel
   // bilgisidir ve kayda girmez; çapalı ürünü eleme çağrısı çıkaramaz.

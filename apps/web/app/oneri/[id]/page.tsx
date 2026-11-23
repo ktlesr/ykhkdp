@@ -187,6 +187,14 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
                     <span className={cn("etiket", g.kanit_id.length ? (g.yerel ? "text-verified" : "text-ink-soft") : "text-unverif")}>
                       {g.kanit_id.length ? (g.yerel ? "kanıtlı · ilin kabiliyeti" : "kanıtlı · ulusal öncelik") : "◌ yazıldı · belgeye bağlanmadı"}
                     </span>
+                    {g.neden && (
+                      <p className="basis-full text-[12.5px] leading-[1.5] text-ink-soft text-pretty">
+                        {g.unsur && TEMEL_UNSURLAR[g.unsur] ? (
+                          <span className="etiket text-ink-mute">Unsur <span className="num">{g.unsur}</span> · yapay zekâ sınıflaması · </span>
+                        ) : null}
+                        {g.neden}
+                      </p>
+                    )}
                   </li>
                 ))}
               </ul>

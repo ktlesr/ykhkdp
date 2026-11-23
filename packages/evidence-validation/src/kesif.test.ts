@@ -8,8 +8,23 @@ import {
   paketKur,
   paketteGeciyor,
   desteksizCumle,
+  urunListesiniDogrula,
   yerelMi,
 } from "./index.ts";
+
+test("ürün listesi v2: nedeni kanıtta karşılık bulmayan ya da kaynaksız sayı taşıyan ürün düşer", () => {
+  const defter = [{ no: 1, kanitId: 7, yerel: true, metin: "Sultandağı kirazı coğrafi işaretli olup ihracatı büyük ölçüde taze meyve olarak yapılmaktadır." }];
+  const r = urunListesiniDogrula("Kiraz İşleme Tesisi", [
+    { ad: "kiraz kurusu", kanit_no: [1], unsur: 4, neden: "Coğrafi işaretli Sultandağı kirazı ihracatta taze meyve olarak satılmaktadır." },
+    { ad: "kiraz likörü", kanit_no: [], unsur: 4, neden: "Avrupa pazarında premium içki talebi hızla büyümektedir." },
+    { ad: "kiraz suyu", kanit_no: [1], unsur: 4, neden: "Sultandağı kirazı ihracatının yüzde 40 kadarı taze yapılmaktadır." },
+    { ad: "kiraz reçeli", kanit_no: [1], unsur: 4, neden: "" },
+  ], defter, "İlde kiraz üretimi yüksektir.");
+  assert.deepEqual(r.urunler.map((u) => [u.ad, u.unsur, u.kanitIdleri]), [["kiraz kurusu", 4, []]]); // "kurusu" kanıtta yok: bağsız, ama nedeni kanıtta karşılık bulduğu için kalır
+  assert.equal(r.dusenler.length, 3);
+  // konuMetni verilmezse (keşifteki eski çağrı) neden aranmaz.
+  assert.equal(urunListesiniDogrula("Kiraz İşleme Tesisi", [{ ad: "kiraz reçeli", kanit_no: [] }], defter).urunler.length, 1);
+});
 
 const USAK =
   "Uşak’ta tekstil geri dönüşümü sektöründe   ülkenin en büyük kümesi bulunmaktadır. " +

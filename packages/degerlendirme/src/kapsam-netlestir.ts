@@ -30,7 +30,8 @@ if (!a.il && !a.hepsi) throw new Error("--il <kod,kod> ya da --hepsi verin.");
 if (a.yaz && a.baslik) throw new Error("--yaz elle verilen konuyla kullanılmaz.");
 
 type Konu = { id: number | null; ilKod: string; baslik: string; gerekce: string; naceKod: string | null; kanitIdleri: number[]; eski: unknown[] };
-const iller = a.il?.split(",") ?? null;
+// PowerShell virgüllü değeri boşlukla birleştirip verir; ikisi de kabul edilir.
+const iller = a.il?.split(/[\s,]+/).filter(Boolean) ?? null;
 const konular: Konu[] = a.baslik
   ? [{ id: null, ilKod: a.il!, baslik: a.baslik, gerekce: a.gerekce ?? "", naceKod: null, kanitIdleri: [], eski: [] }]
   : (
@@ -61,6 +62,7 @@ async function isle(k: Konu): Promise<void> {
   }
   const isaret = (u: (typeof r.urunler)[number]) => (u.kanitIdleri.length ? (u.yerel ? "●" : "○") : "◌");
   satir.push(`  yeni : ${r.urunler.map((u) => `${isaret(u)} ${u.ad}`).join(" · ") || "(boş)"}`);
+  for (const u of r.urunler) satir.push(`         ${u.ad} [unsur ${u.unsur ?? "-"}]: ${u.neden ?? ""}`);
   for (const d of r.dusenler) satir.push(`  düştü: ${d}`);
   if (r.urunler.length < 2) {
     sayac.kalan++;
@@ -68,7 +70,7 @@ async function isle(k: Konu): Promise<void> {
     return;
   }
   if (a.yaz && k.id) {
-    const kapsam = r.urunler.map((u) => ({ ad: u.ad, kanit_id: u.kanitIdleri, yerel: u.yerel }));
+    const kapsam = r.urunler.map((u) => ({ ad: u.ad, kanit_id: u.kanitIdleri, yerel: u.yerel, neden: u.neden, unsur: u.unsur }));
     const yazildi = await islem(SERVIS, async (sql) => {
       // Karar bu arada verildiyse (onay, ret, düzeltme) dokunma.
       const g = await sql`update oneri set kapsam = ${sql.json(kapsam as never)}, guncellendi = now() where id = ${k.id} and durum = 'onay_bekliyor'`;

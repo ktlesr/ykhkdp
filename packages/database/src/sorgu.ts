@@ -780,7 +780,7 @@ export async function oneriGetir(b: Baglam, id: number) {
         resmi_yillar: string | null;
         kesif_kanit: Array<{ belge_ad: string; bolum: string | null; tur: string; konu: string; alinti: string; yerel: boolean }> | null;
         /** ürün grupları; keşifte her biri kendi kanıtına bağlı, kullanıcı yazdıysa kanit_id boş */
-        kapsam: Array<{ ad: string; kanit_id: number[]; yerel?: boolean }> | null;
+        kapsam: Array<{ ad: string; kanit_id: number[]; yerel?: boolean; neden?: string; unsur?: number }> | null;
         /** ek NACE kodları — her biri bir ürün grubuna bağlı; ana kod nace_kod */
         ek_nace: Array<{ kod: string; tanim: string; urun_grubu: string; kaynak: string; guven: string | null }> | null;
         /** konu ölçeği notu — PUANA ETKİ ETMEZ */

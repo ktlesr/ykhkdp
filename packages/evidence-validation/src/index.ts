@@ -952,14 +952,16 @@ function urunGruplariniDogrula(
 }
 
 /** Ürün adı tek başına şemsiye kalıyorsa ürün değildir ("işlenmiş tarım ve gıda ürünleri"). */
-const SEMSIYE_KOKLER = new Set([...GENEL_KOKLER, "tarım", "gıda", "ürün", "ürünl", "ürünü", "işlen", "işlem", "mamul", "mamül", "çeşit", "diğer", "yerel", "yöres", "coğra", "işare", "yükse", "nitel", "endüs", "imala", "paket", "ambal"]);
+const SEMSIYE_KOKLER = new Set([...GENEL_KOKLER, "tarım", "gıda", "ürün", "ürünl", "ürünü", "işlen", "işlem", "mamul", "mamül", "çeşit", "diğer", "yerel", "yöres", "coğra", "işare", "yükse", "nitel", "endüs", "imala", "paket", "ambal", "meyve", "sebze"]);
 
 /** Kelimeler: 5+ harfli → ilk 5 harf (ek atılır); 3–4 harfli → kelimenin kendisi ("süt", "bal", "elma"). */
 function urunKokleri(metin: string): string[] {
   return metin.toLocaleLowerCase("tr-TR").split(/[^\p{L}]+/u).filter((w) => w.length >= 3).map((w) => w.slice(0, 5));
 }
 
-export type NetUrun = { ad: string; kanitIdleri: number[]; yerel: boolean };
+/** `neden`: ürünün bu ilde neden katma değer ürettiği (kanıtta ya da konu gerekçesinde karşılık bulan tek cümle). `unsur`: temel unsur (1–10), yapay zekâ sınıflaması. */
+export type NetUrun = { ad: string; kanitIdleri: number[]; yerel: boolean; neden?: string; unsur?: number };
+export type HamUrun = HamUrunGrubu & { neden?: string; unsur?: number };
 
 /**
  * Ürün listesini doğrular — tebliğdeki parantez içi gibi: "(sucuk, salam,
@@ -973,13 +975,20 @@ export type NetUrun = { ad: string; kanitIdleri: number[]; yerel: boolean };
  *  - Geçmiyorsa ürün kanıtsız kalır (kanitIdleri boş): modelin önerisidir,
  *    ekranda "belgeye bağlanmadı" diye görünür. Rakam taşıyan bağsız ad düşer.
  *
+ *  - `konuMetni` verilirse (urun-listesi-v2) her ürün bir NEDEN taşımalı:
+ *    kaynaksız sayı taşımayan ve içerik köklerinin en az yarısı atıf yapılan
+ *    kanıtlarda ya da konunun kendi başlık-gerekçesinde geçen tek cümle. Konu
+ *    gerekçesi keşifte zaten kanıta karşı doğrulandı. Nedeni tutmayan ürün düşer.
+ *
  * ponytail: sözcüksel kontrol — "kiraz" kökü pasajda geçiyor mu; pasajın o
- * ürünü bu il için gerçekten öne çıkarıp çıkarmadığını ajans tartar.
+ * ürünü bu il için gerçekten öne çıkarıp çıkarmadığını, ürünün gerçekten
+ * katma değerli olup olmadığını ajans tartar.
  */
 export function urunListesiniDogrula(
   baslik: string,
-  urunler: readonly HamUrunGrubu[],
+  urunler: readonly HamUrun[],
   defter: readonly DefterKaydi[],
+  konuMetni?: string,
 ): { urunler: NetUrun[]; dusenler: string[] } {
   const numara = new Map(defter.map((d) => [d.no, d]));
   const baslikKokleri = new Set(urunKokleri(baslik));
@@ -1004,8 +1013,29 @@ export function urunListesiniDogrula(
       dusenler.push(`“${ad}” kanıta bağlanmayan sayı taşıyor.`);
       continue;
     }
+    let neden: string | undefined;
+    if (konuMetni !== undefined) {
+      neden = (u.neden ?? "").replace(ATIF_NOTU, "").replace(/\s+/g, " ").trim();
+      const dayanak = [...kanit.map((d) => d.metin), baslik, konuMetni].join(" ");
+      if (neden.length < 15) {
+        dusenler.push(`“${ad}” neden katma değer ürettiğini söylemiyor.`);
+        continue;
+      }
+      const sayi = sayisalTokenlar(neden.replace(CIPLAK_ATIF, "")).find((t) => !sayiKaynakta(t, normalize(dayanak)));
+      if (sayi) {
+        dusenler.push(`“${ad}” nedeni kaynaksız sayı taşıyor (${sayi}).`);
+        continue;
+      }
+      if (desteksizCumle(neden, dayanak)) {
+        dusenler.push(`“${ad}” nedeni kanıtta ya da konu gerekçesinde karşılık bulmuyor: ${neden.slice(0, 140)}`);
+        continue;
+      }
+    }
     gorulen.add(anahtar);
-    sonuc.push({ ad: ad.slice(0, 80), kanitIdleri: bagli.map((d) => d.kanitId), yerel: bagli.some((d) => d.yerel) });
+    sonuc.push({
+      ad: ad.slice(0, 80), kanitIdleri: bagli.map((d) => d.kanitId), yerel: bagli.some((d) => d.yerel),
+      ...(neden ? { neden: neden.slice(0, 300), unsur: u.unsur } : {}),
+    });
   }
   return { urunler: sonuc, dusenler };
 }

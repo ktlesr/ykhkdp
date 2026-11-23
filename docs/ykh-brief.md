@@ -804,6 +804,32 @@ sistemleri" + ürün grupları.) Tasarım Codex incelemesiyle düzeltildi:
   aynı. Eksik: dar ↔ aile ↔ şişirme çiftlerini Aksaray belgeleriyle eval'e
   eklemek.
 
+### Ürün listesini netleştirme
+
+Keşfin yazdığı ürün grupları genel kalıyordu ("İşlenmiş Tarım ve Gıda
+Ürünleri"). `pnpm --filter @ykh/degerlendirme kapsam` onay bekleyen keşif
+adaylarının listesini tebliğdeki parantez içi gibi somut ürünlere çevirir
+(`urun-listesi-v2`). Tarama, aday üretimi ve puanlama yeniden koşmaz; ilin
+taranmış kanıtları, Bakanlığın benzer konulara yazdığı parantezli listeler ve
+NACE faaliyet tanımları (ürün kataloğu) okunur. `--yaz` olmadan hiçbir şey
+yazmaz; yazınca eski liste denetime gider (`kapsam_netlestirildi`), ek NACE
+yenilenir, ajansın düzelttiği öneri atlanır.
+
+Her ürün bir **neden** (bu ürün bu ilde neden katma değer üretir, tek cümle)
+ve bir **temel unsur** taşır (2026-11-23). Nedeni olmayan, kaynaksız sayı
+taşıyan ya da içerik köklerinin yarısı atıf yaptığı kanıtta veya gerekçenin
+doğrulanmış kısmında (sentez hariç) geçmeyen ürün düşer. Talimat ham ürünü
+(elma, bor) değil işlenmiş biçimini, konunun kendi ürününü ister; faaliyet
+tanımı ürün diye kopyalanmaz. Mekanik olan nedenin kanıtta karşılık
+bulmasıdır; ürünün gerçekten katma değerli olup olmadığı ve unsur
+sınıflaması yapay zekânın yargısıdır, ajans tartar. Sekiz kriter ürün başına
+puanlanmaz. Ölçüldü (gemma4-26b, Afyonkarahisar, elle kısa gerekçe, tek
+koşu): yumurta kabuğu → yumurta tozu, sıvı yumurta, kabuktan katkı maddesi,
+gübre, kozmetik hammaddesi; "İşlenmiş meyve ve sebzeler" gibi şemsiye ad ve
+nedeni kanıtsız ürünler düştü. Sınır: sözcüksel kontrol iyi bir ürünü de
+düşürebilir ("dondurulmuş patates"); ham ürün yine de gelebilir. Hiçbir
+modelde garanti yok, güvence mekanik kuraldır.
+
 ### Konu puanla
 
 Ajans `/il/[il]` içinde başlık ve "neden burada?" açıklaması girer; konu
