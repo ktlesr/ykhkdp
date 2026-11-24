@@ -622,8 +622,11 @@ export async function onayKuyrugu(b: Baglam, donemId?: number) {
   return islem(b, (sql) =>
     sql<(ListeSatiri & { il: string; il_kod: string; yil: string; dayanak_esigi: number; prompt_surum: string | null;
       asama: string | null; hatali: boolean; gonderildi: string; kesif_id: number | null; resmi_yillar: string | null;
-      ajans_kod: string; ajans: string; kisa_ad: string | null; gonderen_rol: string; misafir: boolean })[]>`
+      ajans_kod: string; ajans: string; kisa_ad: string | null; gonderen_rol: string; misafir: boolean; tek_nedenli: boolean })[]>`
       select o.id, o.baslik, o.kesif_id,
+             -- Ürün listesinin bütün ürünleri aynı nedeni taşıyor: neden ürünü ayırt etmiyor, ajans bakmalı.
+             coalesce((select count(*) >= 2 and count(distinct e->>'neden') = 1
+                       from jsonb_array_elements(o.kapsam) e where e->>'neden' is not null), false) as tek_nedenli,
              i.ajans_kod, a.ad as ajans, a.kisa_ad, coalesce(gg.rol::text, 'bilinmiyor') as gonderen_rol,
              coalesce(gg.misafir, false) as misafir,
              (select string_agg(distinct y.yil::text, ', ' order by y.yil::text) from yatirim_konusu y

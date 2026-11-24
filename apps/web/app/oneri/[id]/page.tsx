@@ -179,6 +179,15 @@ export default async function OneriDetay({ params }: { params: Promise<{ id: str
         {(o.kapsam?.length || o.kapsam_notu) && (
           <div className="mt-5 border border-hairline bg-surface">
             <div className="serit px-4 py-3 etiket text-ink">Kapsam · ürün grupları</div>
+            {(() => {
+              // /onay'daki "tek nedene dayanıyor" işaretiyle aynı ölçü.
+              const nedenler = (o.kapsam ?? []).flatMap((g) => (g.neden ? [g.neden] : []));
+              return nedenler.length >= 2 && new Set(nedenler).size === 1 ? (
+                <p className="border-b border-b-hairline-soft px-4 py-2 text-[12.5px] text-unverif text-pretty">
+                  ◌ Bütün ürünler aynı nedeni taşıyor: neden ürünleri birbirinden ayırmıyor. Listeyi “düzelt” ile gözden geçirin.
+                </p>
+              ) : null;
+            })()}
             {o.kapsam?.length ? (
               <ul className="px-4 py-3">
                 {o.kapsam.map((g, i) => (
