@@ -244,6 +244,23 @@ test("aday listesinde olmayan NACE kodu reddedilir", async () => {
   assert.ok(!s.ok && s.hatalar.some((h) => /olmayan NACE kodu/.test(h)));
 });
 
+test("işleme başlığına tarım kodu: bir kez yeniden sorulur, düzelirse geçer, düzelmezse reddedilir", async () => {
+  const adaylar = [...NACE_ADAYLAR, { kod: "01.45", tanim: "Koyun ve keçi yetiştiriciliği" }];
+  const sira = (...kodlar: string[]): ModelIstemcisi => {
+    let i = 0;
+    return { ad: "sira", async cagir() {
+      return { metin: JSON.stringify({ adaylar: [{ kod: kodlar[i++], gerekce: "ürünün sınıfı", guven: "orta" }] }), girdiToken: 1, ciktiToken: 1 };
+    } };
+  };
+  const girdi = { baslik: "Keçi Sütü İşleme Tesisi", gerekce: "y", adaylar };
+  const iyi = await naceOner(sira("01.45", "10.51"), "claude-opus-5-20260101", girdi);
+  assert.ok(iyi.ok && iyi.veri.adaylar[0].kod === "10.51");
+  const kotu = await naceOner(sira("01.45", "01.45"), "claude-opus-5-20260101", girdi);
+  assert.ok(!kotu.ok && kotu.hatalar.some((h) => /yetiştirme/.test(h)));
+  const yetistir = await naceOner(sira("01.45"), "claude-opus-5-20260101", { ...girdi, baslik: "Keçi Yetiştiriciliği" });
+  assert.ok(yetistir.ok);
+});
+
 test("boş aday listesi fail-closed", async () => {
   const s = await naceOner(cevrimdisiIstemci(), "claude-opus-5-20260101", {
     baslik: "x", gerekce: "y", adaylar: [],

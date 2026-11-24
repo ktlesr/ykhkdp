@@ -1,6 +1,6 @@
 /**
  * Ana NACE'yi yeniden seç — yapay zekânın atadığı ana kodu NACE'nin bütün
- * sınıflarından çıkarımla yeniden seçer (`nace-onerisi-v4`). Eski talimat kelime
+ * sınıflarından çıkarımla yeniden seçer (`nace-onerisi` güncel sürümü). Eski talimat kelime
  * aramasıyla gelen 25 aday arasından seçiyordu ve doğru kod çoğu zaman listede
  * yoktu (kaplıca → 84.12, soğan işleme → 46.61).
  *

@@ -846,6 +846,17 @@ olmayan kod reddedilir" kuralı aynen geçerli — liste artık bütün sınıfl
 yetiştiricilik), gpt-5.4-mini 9/9. Atama yine "AI önerdi · ajans onayı
 bekliyor"dur.
 
+**Mekanik geri bildirim** (`nace-onerisi-v5`). Canlı kuru koşuda (550 öneri)
+gemma işleme konusuna tarım kodu verdi (keçi sütü işleme → 01.45, deniz
+ürünleri işleme → 03.21; ~15 konu, dördünde doğru eski kodu bozuyordu) ve 3
+konuda Rev.2'den ezber kod yazdı (62.01; Rev.2.1'de 62.10). İki durumda model
+nedeniyle BİR kez daha sorulur (`naceKusurlari`): başlıkta işleme / imalat /
+ekstraksiyon / kompost geçiyor ve kod 01–03 ise; kod listede yoksa (aynı
+bölümün geçerli kodları gösterilir). İkincide de aynıysa reddedilir. Ölçüldü
+(gemma, sorunlu 17 başlık): 16'sı geçerli koda döndü; yapağı işleme iki
+denemede de 01.45 verdi ve reddedildi. Sınır: sözcükseldir; "Seracılık ve
+Sebze İşleme" gibi karma başlık imalat sınıfına zorlanır.
+
 Mevcut AI atamaları `pnpm --filter @ykh/degerlendirme nace -- --hepsi [--yaz]`
 ile yeniden seçilir: yalnızca onay bekleyen ve kodu yapay zekânın atadığı
 öneriler; eski kod denetime gider, ek NACE yeni ana koda göre yenilenir; puan

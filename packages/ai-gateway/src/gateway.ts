@@ -245,30 +245,40 @@ export async function naceOner(
     return { ok: false, asama: "dayanak", hatalar: ["Aday NACE listesi boş."], ...meta };
   }
 
-  const r = await cagir(
-    istemci,
-    modelSnapshot,
-    "nace_onerisi",
-    naceBloguKur(girdi.adaylar),
-    `Yatırım konusu: ${girdi.baslik}\nGerekçe: ${girdi.gerekce}`,
-  );
-  if (r.maliyet) meta.modelSnapshot = r.maliyet.model;
-  if (!r.ok) return { ...r, ...meta };
-
-  // Fail-closed: listede olmayan kod önerilirse reddet.
   const gecerli = new Set(girdi.adaylar.map((a) => a.kod));
-  const uydurma = r.veri.adaylar.filter((a) => !gecerli.has(a.kod));
-  if (uydurma.length) {
-    return {
-      ok: false,
-      asama: "dayanak",
-      hatalar: uydurma.map((a) => `Aday listesinde olmayan NACE kodu önerildi: ${a.kod}`),
-      maliyet: r.maliyet,
-      ...meta,
-    };
+  const blok = naceBloguKur(girdi.adaylar);
+  let gorev = `Yatırım konusu: ${girdi.baslik}\nGerekçe: ${girdi.gerekce}`;
+  // Model kuralı bilse de çiğnediği iki durumda nedeni söylenip BİR kez daha
+  // sorulur; ikincide de aynıysa reddedilir (fail-closed, sessiz kabul yok).
+  for (let deneme = 1; ; deneme++) {
+    const r = await cagir(istemci, modelSnapshot, "nace_onerisi", blok, gorev);
+    if (r.maliyet) meta.modelSnapshot = r.maliyet.model;
+    if (!r.ok) return { ...r, ...meta };
+    const hatalar = naceKusurlari(girdi.baslik, r.veri.adaylar, gecerli);
+    if (!hatalar.length) {
+      return { ok: true, veri: r.veri, dayanak: 0, dogrulanan: [], kriterDayanagi: {}, dusenler: [], duzeltilenler: [], maliyet: r.maliyet, ...meta };
+    }
+    if (deneme === 2) return { ok: false, asama: "dayanak", hatalar, maliyet: r.maliyet, ...meta };
+    gorev += `\n\nÖNCEKİ CEVABIN REDDEDİLDİ:\n- ${hatalar.join("\n- ")}\nYeniden seç.`;
   }
+}
 
-  return { ok: true, veri: r.veri, dayanak: 0, dogrulanan: [], kriterDayanagi: {}, dusenler: [], duzeltilenler: [], maliyet: r.maliyet, ...meta };
+/** Başlık ürünün işlenmesini anlatıyor; yetiştirme/çıkarma (01–03) değil. Ölçüldü: gemma "keçi sütü işleme"ye 01.45 verdi. */
+const ISLEME = /işleme|imalat|ekstraksiyon|kompost/; // küçük harfe Türkçe çevrilerek: /i bayrağı "İşleme"yi tutmaz
+
+/** NACE önerisinin mekanik kusurları; boşsa öneri geçer. */
+export function naceKusurlari(baslik: string, adaylar: readonly { kod: string }[], gecerli: ReadonlySet<string>): string[] {
+  const hatalar = adaylar.filter((a) => !gecerli.has(a.kod))
+    .map((a) => {
+      // Model eski Rev.2 kodunu ezberden yazıyor (62.01 → Rev.2.1'de 62.10): aynı bölümün geçerli kodları gösterilir.
+      const bolum = [...gecerli].filter((k) => k.startsWith(a.kod.slice(0, 3))).slice(0, 12);
+      return `Aday listesinde olmayan NACE kodu önerildi: ${a.kod} (NACE Rev.2.1'de yok${bolum.length ? `; bu bölümde geçerli olanlar: ${bolum.join(", ")}` : ""})`;
+    });
+  const ana = adaylar[0]?.kod;
+  if (ana && /^0[1-3]\./.test(ana) && ISLEME.test(baslik.toLocaleLowerCase("tr"))) {
+    hatalar.push(`Başlık işleme/imalat anlatıyor ama ${ana} yetiştirme ya da avcılık sınıfı; ürünün imalat sınıfını seç (gıda 10, içecek 11, tekstil 13, kimya 20…).`);
+  }
+  return hatalar;
 }
 
 /**

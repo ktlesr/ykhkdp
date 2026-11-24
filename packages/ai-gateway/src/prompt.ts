@@ -566,7 +566,7 @@ KURALLAR:
   },
   nace_onerisi: {
     ad: "nace_onerisi",
-    surum: "nace-onerisi-v4",
+    surum: "nace-onerisi-v5",
     sistem: `${ORTAK}
 
 GÖREV: Öneri başlığı ve gerekçesinden NACE kodu öner. <belgeler> bloğunda
