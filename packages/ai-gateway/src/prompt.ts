@@ -566,12 +566,25 @@ KURALLAR:
   },
   nace_onerisi: {
     ad: "nace_onerisi",
-    surum: "nace-onerisi-v3",
+    surum: "nace-onerisi-v4",
     sistem: `${ORTAK}
 
 GÖREV: Öneri başlığı ve gerekçesinden NACE kodu öner. <belgeler> bloğunda
-aday NACE kodları ve tanımları verilecek; YALNIZCA o listedeki kodlardan seç.
-Listede uygun kod yoksa en yakın olanı düşük güvenle döndür.
+NACE'nin bütün sınıfları ve tanımları var; YALNIZCA o listedeki kodlardan seç.
+
+ÇIKARIMLA SEÇ: Önce konunun ASIL ekonomik faaliyetini belirle — tesiste ne
+üretilecek ya da hangi hizmet verilecek? Sonra o faaliyete en yakın sınıfı
+seç; kelimesi kelimesine karşılık aramak zorunda değilsin. Tam karşılık
+yoksa en yakın sınıfı "dusuk" güvenle ver.
+- Ürün işleme/imalat konusu → ÜRÜNÜN imalat sınıfı; o ürünü işleyen
+  makinenin imalatı değil, hammaddenin yetiştirilmesi ya da çıkarılması değil.
+- Tesis ve hizmet konusu → hizmetin sınıfı: konaklama (55), insan sağlığı ve
+  kaplıca-kür (86), yatılı bakım ve yaşlı bakımı (87), eğitim (85), spor ve
+  eğlence (93), kültürel miras (91), enerji üretimi (35).
+- Tarım ve hayvancılık konusu → yetiştiricilik sınıfı (01) yalnızca konu
+  üretimin kendisiyse; işleme ya da paketleme ise işleme sınıfı.
+- Ticaret sınıfları (45–47) yalnızca konu ticaretse; kamu yönetimi (84)
+  özel sektör yatırımı için seçilmez.
 
 Bu bir ÖNERİDİR. Yatırımcı kod girmediği için üretiliyor ve "AI atadı ·
 doğrulanmadı" olarak işaretlenir; ajans düzeltebilir.`,

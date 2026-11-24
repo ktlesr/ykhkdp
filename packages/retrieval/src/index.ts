@@ -262,6 +262,16 @@ export function herhangiBiri(metin: string, enAzUzunluk = 4): string {
 }
 
 /** NACE önerisi için aday kod listesi — arama, AI'nin seçebileceği kümeyi kısar. */
+/**
+ * NACE'nin BÜTÜN sınıfları (651, ~35 bin karakter). Ana kod seçiminde aday
+ * listesi budur: kelime araması doğru kodu çoğu zaman listeye sokmuyordu
+ * (kaplıca → 84.12 "sağlık hizmetlerinin düzenlenmesi"), model en az yanlışı
+ * seçiyordu. Tam listeyle model konunun asıl faaliyetini çıkarımla eşler.
+ */
+export async function naceSiniflari(b: Baglam): Promise<Array<{ kod: string; tanim: string }>> {
+  return islem(b, (sql) => sql<{ kod: string; tanim: string }[]>`select kod, tanim from nace where duzey = 'sinif' order by kod`);
+}
+
 export async function naceAdaylari(
   b: Baglam,
   sorgu: string,

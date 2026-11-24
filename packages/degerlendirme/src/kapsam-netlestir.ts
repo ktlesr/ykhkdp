@@ -15,11 +15,8 @@
  * ürün çıkmayan adayda mevcut liste kalır.
  */
 import { parseArgs } from "node:util";
-import { naceKapsami } from "@ykh/ai-gateway";
 import { denetle, islem, kapat, type Baglam } from "@ykh/database";
-import { naceAdaylari } from "@ykh/retrieval";
-import { urunleriNetlestir } from "./kapsam.ts";
-import { modelSec } from "./model-secimi.ts";
+import { ekNaceYenile, urunleriNetlestir } from "./kapsam.ts";
 
 const SERVIS: Baglam = { gonderenRef: null, rol: "yonetici" };
 const ESZAMANLI = 3; // ponytail: sabit; işleyici aynı anahtarı ayrıca kullanıyor (sunucu sınırı 8)
@@ -82,34 +79,9 @@ async function isle(k: Konu): Promise<void> {
     });
     if (!yazildi) { sayac.kalan++; console.log([...satir, "  → yazılmadı: öneri artık onay beklemiyor"].join("\n")); return; }
     sayac.yazilan++;
-    satir.push(`  → yazıldı${await ekNaceYenile(k, r.urunler.map((u) => u.ad))}`);
+    satir.push(`  → yazıldı${await ekNaceYenile({ id: k.id, baslik: k.baslik, naceKod: k.naceKod }, r.urunler.map((u) => u.ad), "Ürün listesi netleştirildikten sonra yenilendi.")}`);
   }
   console.log(satir.join("\n"));
-}
-
-/** Ek NACE yeni ürün adlarına göre yenilenir (değerlendirme hattındaki adımın aynısı); ajansın kodlarına dokunulmaz. En iyi çaba. */
-async function ekNaceYenile(k: Konu, adlar: string[]): Promise<string> {
-  try {
-    const gruplar = await Promise.all(adlar.map(async (ad) => {
-      const [dar, genis] = await Promise.all([naceAdaylari(SERVIS, ad, 8), naceAdaylari(SERVIS, `${k.baslik} ${ad}`, 8)]);
-      return { ad, adaylar: [...new Map([...dar, ...genis].map((x) => [x.kod, x])).values()].slice(0, 14) };
-    }));
-    const { istemci, model } = await modelSec("yargi");
-    const e = await naceKapsami(istemci, model, { baslik: k.baslik, anaKod: k.naceKod, gruplar });
-    if (!e.ok) return " · ek NACE yenilenemedi (eskisi kaldı)";
-    await islem(SERVIS, async (sql) => {
-      await sql`delete from oneri_nace where oneri_id = ${k.id} and kaynak = 'ai'`;
-      let sira = 1;
-      for (const x of e.kodlar) {
-        await sql`insert into oneri_nace (oneri_id, nace_kod, urun_grubu, gerekce, guven, kaynak, sira)
-                  values (${k.id}, ${x.kod}, ${x.urunGrubu}, ${x.gerekce}, ${x.guven}, 'ai', ${sira++}) on conflict (oneri_id, nace_kod) do nothing`;
-      }
-      await denetle(sql, SERVIS, "ek_nace_ai_atandi", "oneri", k.id, { kodlar: e.kodlar, model: e.modelSnapshot, promptSurum: e.promptSurum, not: "Ürün listesi netleştirildikten sonra yenilendi." });
-    });
-    return ` · ${e.kodlar.length} ek NACE`;
-  } catch (h) {
-    return ` · ek NACE yenilenemedi: ${h instanceof Error ? h.message.slice(0, 80) : h}`;
-  }
 }
 
 const sira = [...konular];

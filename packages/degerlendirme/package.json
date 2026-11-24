@@ -18,6 +18,7 @@
   },
   "scripts": {
     "eval": "node --env-file-if-exists=../../.env src/eval.ts",
-    "kapsam": "node --env-file-if-exists=../../.env src/kapsam-netlestir.ts"
+    "kapsam": "node --env-file-if-exists=../../.env src/kapsam-netlestir.ts",
+    "nace": "node --env-file-if-exists=../../.env src/nace-yenile.ts"
   }
 }

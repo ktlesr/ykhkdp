@@ -1,7 +1,7 @@
 import { aciklamalariSuz, degerlendir, istemciSec, karsiGorus, modelSnapshot, naceKapsami, naceOner } from "@ykh/ai-gateway";
 import { ayrilmisIslem, denetle, islem, kilitHavuzu, type Baglam } from "@ykh/database";
 import { aiMaliyeti, log } from "@ykh/observability";
-import { belgePaketi, naceAdaylari } from "@ykh/retrieval";
+import { belgePaketi, naceAdaylari, naceSiniflari } from "@ykh/retrieval";
 
 export { MODEL_AYARI, modelOnbelleginiTemizle, modelSec, TARAMA_MODEL_AYARI } from "./model-secimi.ts";
 import { modelSec } from "./model-secimi.ts";
@@ -130,7 +130,7 @@ async function calistir(b: Baglam, oneriId: number, yaz: Yaz): Promise<Sonuc> {
   // ── 1. NACE · yalnızca kullanıcı girmediyse ──────────────────────────────
   if (!o.nace_kod) {
     await asama("nace");
-    const adaylar = await naceAdaylari(b, `${o.baslik} ${o.gerekce}`);
+    const adaylar = await naceSiniflari(b);
     const n = await naceOner(istemci, model, { baslik: o.baslik, gerekce: o.gerekce, adaylar });
     aiMaliyeti({
       model,

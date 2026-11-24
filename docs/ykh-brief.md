@@ -830,6 +830,29 @@ nedeni kanıtsız ürünler düştü. Sınır: sözcüksel kontrol iyi bir ürü
 düşürebilir ("dondurulmuş patates"); ham ürün yine de gelebilir. Hiçbir
 modelde garanti yok, güvence mekanik kuraldır.
 
+### Ana NACE · çıkarımla seçim
+
+Ana kodun aday listesi kelime aramasıydı (başlık + gerekçe, en çok 25 sınıf);
+doğru kod çoğu zaman listeye girmiyor, model en az yanlışı seçiyordu. Canlıda
+ölçüldü (2026-11-24, 38 keşif konusu): yaklaşık beşte biri yanlış bölümde —
+kaplıca → 84.12 "sağlık hizmetlerinin kamu düzenlemesi", soğan işleme → 46.61
+"tarım makinesi toptan ticareti", ürün kurutma → 74.11 "moda tasarımı".
+`nace-onerisi-v4` modele NACE'nin BÜTÜN sınıflarını (651) verir ve konunun
+asıl faaliyetini (ne üretiliyor, hangi hizmet veriliyor) çıkarımla en yakın
+sınıfa eşlemesini ister; tam karşılığı olmayan konu (geriatri merkezi, kür
+tesisi, jeotermal sera) da en yakın sınıfı düşük güvenle alır. "Listede
+olmayan kod reddedilir" kuralı aynen geçerli — liste artık bütün sınıflar.
+Ölçüldü (aynı dokuz başlık): gemma 8/9 makul (yapağı işleme hâlâ 01.45
+yetiştiricilik), gpt-5.4-mini 9/9. Atama yine "AI önerdi · ajans onayı
+bekliyor"dur.
+
+Mevcut AI atamaları `pnpm --filter @ykh/degerlendirme nace -- --hepsi [--yaz]`
+ile yeniden seçilir: yalnızca onay bekleyen ve kodu yapay zekânın atadığı
+öneriler; eski kod denetime gider, ek NACE yeni ana koda göre yenilenir; puan
+ve sıralama değişmez. Ek NACE'nin aday listesi hâlâ ürün adıyla kelime
+aramasıdır; ana koduyla karşılanan ürün (kestane püresi → 10.39) ayrıca kod
+almaz.
+
 ### Konu puanla
 
 Ajans `/il/[il]` içinde başlık ve "neden burada?" açıklaması girer; konu

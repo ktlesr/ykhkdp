@@ -1,8 +1,8 @@
-import { PROMPTLAR, urunListesi } from "@ykh/ai-gateway";
-import { islem, type Baglam } from "@ykh/database";
+import { naceKapsami, PROMPTLAR, urunListesi } from "@ykh/ai-gateway";
+import { denetle, islem, type Baglam } from "@ykh/database";
 import { dengeliSec, yerelMi, type NetUrun } from "@ykh/evidence-validation";
 import { aiMaliyeti } from "@ykh/observability";
-import { konuKategorileri } from "@ykh/retrieval";
+import { konuKategorileri, naceAdaylari } from "@ykh/retrieval";
 import { SENTEZ_ETIKETI, taramaKaynagi, UNSUR_ETIKETI } from "./kesif.ts";
 import { modelSec } from "./model-secimi.ts";
 import { baslikSorgusu } from "./uygunluk.ts";
@@ -20,6 +20,31 @@ const SERVIS: Baglam = { gonderenRef: null, rol: "yonetici" };
 /** Ürün adı taşıyan veri belgeleri — konu hangi kategoride olursa olsun deftere girer. */
 const URUN_KATEGORILERI = ["cografi_isaret", "tarim", "dis_ticaret"];
 const SINIR = { kendi: 12, veri: 36, eslesen: 24 };
+
+/** Ek NACE ürün adlarına göre yenilenir (değerlendirme hattındaki adımın aynısı); ajansın kodlarına dokunulmaz. En iyi çaba; sonucu ekrana yazılacak kısa metin olarak döner. */
+export async function ekNaceYenile(k: { id: number; baslik: string; naceKod: string | null }, adlar: string[], not: string): Promise<string> {
+  try {
+    const gruplar = await Promise.all(adlar.map(async (ad) => {
+      const [dar, genis] = await Promise.all([naceAdaylari(SERVIS, ad, 8), naceAdaylari(SERVIS, `${k.baslik} ${ad}`, 8)]);
+      return { ad, adaylar: [...new Map([...dar, ...genis].map((x) => [x.kod, x])).values()].slice(0, 14) };
+    }));
+    const { istemci, model } = await modelSec("yargi");
+    const e = await naceKapsami(istemci, model, { baslik: k.baslik, anaKod: k.naceKod, gruplar });
+    if (!e.ok) return " · ek NACE yenilenemedi (eskisi kaldı)";
+    await islem(SERVIS, async (sql) => {
+      await sql`delete from oneri_nace where oneri_id = ${k.id} and kaynak = 'ai'`;
+      let sira = 1;
+      for (const x of e.kodlar) {
+        await sql`insert into oneri_nace (oneri_id, nace_kod, urun_grubu, gerekce, guven, kaynak, sira)
+                  values (${k.id}, ${x.kod}, ${x.urunGrubu}, ${x.gerekce}, ${x.guven}, 'ai', ${sira++}) on conflict (oneri_id, nace_kod) do nothing`;
+      }
+      await denetle(sql, SERVIS, "ek_nace_ai_atandi", "oneri", k.id, { kodlar: e.kodlar, model: e.modelSnapshot, promptSurum: e.promptSurum, not });
+    });
+    return ` · ${e.kodlar.length} ek NACE`;
+  } catch (h) {
+    return ` · ek NACE yenilenemedi: ${h instanceof Error ? h.message.slice(0, 80) : h}`;
+  }
+}
 
 export type UrunSonucu =
   | { ok: true; urunler: NetUrun[]; dusenler: string[]; defterBoyu: number; model: string; promptSurum: string }
